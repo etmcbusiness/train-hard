@@ -1904,19 +1904,9 @@ loadModel(0, (entry) => {
   buildTestPanel();
   document.getElementById('test-panel').classList.add('visible');
 
-  // preload crossing arms model, then start the 60s cycle
+  // preload crossing arms model, then start the 60s standing timer
   if (MODELS.length > 1) {
-    loadModel(1, (crossEntry) => {
-      if (crossEntry.mixer) {
-        crossEntry.mixer.addEventListener('finished', () => {
-          if (activeIdx === 1) {
-            switchToModel(0);
-            startStandingTimer();
-          }
-        });
-      }
-      startStandingTimer();
-    });
+    loadModel(1, () => startStandingTimer());
   } else {
     startStandingTimer();
   }
@@ -1980,11 +1970,19 @@ let modelCycleTimer = null;
 
 function startStandingTimer() {
   clearTimeout(modelCycleTimer);
-  modelCycleTimer = setTimeout(() => switchToAnimated(), 60000);
+  modelCycleTimer = setTimeout(switchToAnimated, 60000);
 }
 
 function switchToAnimated() {
   const entry = modelCache[1];
+
+  // Get actual animation duration from clip, fall back to 17s
+  let animDuration = 17000;
+  if (entry.clips && entry.clips.length) {
+    animDuration = Math.max(...entry.clips.map(c => c.duration)) * 1000;
+  }
+
+  // Reset and play animation from the beginning
   if (entry.mixer && entry.clips.length) {
     entry.mixer.stopAllAction();
     entry.clips.forEach(clip => {
@@ -1995,7 +1993,15 @@ function switchToAnimated() {
       action.play();
     });
   }
+
   switchToModel(1);
+
+  // Switch back after animation finishes, then restart 60s standing timer
+  clearTimeout(modelCycleTimer);
+  modelCycleTimer = setTimeout(() => {
+    switchToModel(0);
+    startStandingTimer();
+  }, animDuration);
 }
 
 // ═══════════════════════════════════════════════════════════
