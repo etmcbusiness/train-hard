@@ -1435,6 +1435,16 @@
     <button id="hard-reset-btn" onclick="hardReset()">↺ reset app</button>
   </div>
 
+  <!-- Reset confirm modal -->
+  <div id="reset-modal" style="display:none;position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,0.75);align-items:center;justify-content:center;">
+    <div style="background:#0d1b3e;border:1px solid rgba(100,140,255,0.3);border-radius:20px;padding:28px 24px;margin:24px;text-align:center;max-width:300px;">
+      <div style="font-size:16px;font-weight:700;color:#fff;margin-bottom:10px;">Reset App?</div>
+      <div style="font-size:13px;color:#7a9ac0;margin-bottom:24px;">This will delete all your workout data and history. This cannot be undone.</div>
+      <button onclick="doHardReset()" style="width:100%;padding:13px;background:#e74c3c;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px;">Yes, Reset Everything</button>
+      <button onclick="document.getElementById('reset-modal').style.display='none'" style="width:100%;padding:13px;background:rgba(255,255,255,0.08);color:#aaa;border:none;border-radius:12px;font-size:15px;cursor:pointer;">Cancel</button>
+    </div>
+  </div>
+
   <!-- Focus Stats Panel -->
   <div id="focus-stats-panel"></div>
 
@@ -3343,25 +3353,18 @@ if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./sw.js').catch(() => {});
 }
 
-let hardResetArmed = false;
-let hardResetTimer = null;
+function hardReset() {
+  const modal = document.getElementById('reset-modal');
+  modal.style.display = 'flex';
+}
 
-async function hardReset() {
+async function doHardReset() {
+  document.getElementById('reset-modal').style.display = 'none';
   const btn = document.getElementById('hard-reset-btn');
-  if (!hardResetArmed) {
-    hardResetArmed = true;
-    if (btn) btn.textContent = '⚠ tap again to reset';
-    hardResetTimer = setTimeout(() => {
-      hardResetArmed = false;
-      if (btn) btn.textContent = '↺ reset app';
-    }, 3000);
-    return;
-  }
-  clearTimeout(hardResetTimer);
-  hardResetArmed = false;
   if (btn) btn.textContent = 'resetting...';
   try {
     localStorage.clear();
+    sessionStorage.clear();
     if ('caches' in window) {
       const keys = await caches.keys();
       await Promise.all(keys.map(k => caches.delete(k)));
@@ -3371,7 +3374,7 @@ async function hardReset() {
       await Promise.all(regs.map(r => r.unregister()));
     }
   } catch(e) {}
-  window.location.href = window.location.pathname + '?v=' + Date.now();
+  window.location.replace(window.location.pathname + '?reset=' + Date.now());
 }
 </script>
 </body>
