@@ -66,7 +66,7 @@
       overflow-y: auto;
       pointer-events: all;
       display: none;
-      padding: calc(20px + env(safe-area-inset-top, 0px)) 16px calc(105px + env(safe-area-inset-bottom, 0px));
+      padding: calc(20px + env(safe-area-inset-top, 0px)) 16px calc(72px + env(safe-area-inset-bottom, 0px));
     }
     .section.active { display: block; }
     #profile-section.active {
@@ -84,14 +84,14 @@
       border-top: 1.5px solid rgba(60,120,255,0.4);
       box-shadow: 0 -6px 32px rgba(10,40,180,0.4);
       display: flex;
-      align-items: flex-start;
+      align-items: stretch;
       z-index: 300;
       pointer-events: all;
     }
 
     .nav-btn {
       flex: 1;
-      height: 90px;
+      height: 60px;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -130,6 +130,17 @@
       white-space: nowrap;
     }
     #hair-badge { display: none; }
+    #update-stamp {
+      position: fixed;
+      left: 16px;
+      bottom: calc(68px + env(safe-area-inset-bottom, 0px));
+      font-size: 10px;
+      font-weight: 600;
+      color: rgba(100,140,220,0.55);
+      letter-spacing: 0.4px;
+      pointer-events: none;
+      z-index: 250;
+    }
 
     /* ── Test Panel ── */
     #test-panel {
@@ -533,7 +544,7 @@
     #hist-edit-modal {
       position: fixed;
       inset: 0;
-      bottom: 90px;
+      bottom: 60px;
       z-index: 350;
       background: transparent;
       display: none;
@@ -625,7 +636,7 @@
     #train-modal {
       position: fixed;
       top: 0; left: 0; right: 0;
-      bottom: calc(90px + env(safe-area-inset-bottom, 0px));
+      bottom: calc(60px + env(safe-area-inset-bottom, 0px));
       z-index: 200;
       background: transparent;
       display: none;
@@ -1359,7 +1370,7 @@
   <!-- Profile -->
   <div id="profile-section" class="section active">
     <div id="hair-badge"></div>
-
+    <div id="update-stamp"></div>
   </div>
 
   <!-- Focus Stats Panel -->
@@ -1650,7 +1661,21 @@ function loadState() {
   } catch { return defaultState(); }
 }
 
-function save() { localStorage.setItem('trainhard_v1', JSON.stringify(state)); }
+function fmtStamp(ts) {
+  const d = new Date(ts);
+  const h = d.getHours(), m = String(d.getMinutes()).padStart(2,'0');
+  return `updated ${h % 12 || 12}:${m}${h < 12 ? 'am' : 'pm'}`;
+}
+function refreshStamp() {
+  const ts = localStorage.getItem('trainhard_stamp');
+  const el = document.getElementById('update-stamp');
+  if (el) el.textContent = ts ? fmtStamp(Number(ts)) : '';
+}
+function save() {
+  localStorage.setItem('trainhard_v1', JSON.stringify(state));
+  localStorage.setItem('trainhard_stamp', Date.now());
+  refreshStamp();
+}
 
 let state = loadState();
 recalcAllRepPRs();
@@ -1908,6 +1933,7 @@ loadModel(0, (entry) => {
   document.getElementById('loading').style.display = 'none';
   document.getElementById('app').style.display = 'flex';
   document.getElementById('profile-name').textContent = state.userName;
+  refreshStamp();
   renderFocusStats();
   buildTestPanel();
   document.getElementById('test-panel').classList.add('visible');
