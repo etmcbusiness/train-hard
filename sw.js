@@ -4,8 +4,6 @@ const ASSETS = [
   './index.html',
   './manifest.json',
   './icons/icon.svg',
-  './Models/Standing+Still+Model.glb',
-  './Models/CrossingArmsModel.glb',
   './Backgrounds/1.png',
   './Backgrounds/2.jpg',
   './Backgrounds/3.jpg',
