@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Background -->
+  <rect width="512" height="512" rx="90" fill="#0a0a0a"/>
+  <rect x="40" y="40" width="432" height="432" rx="70" fill="#1a1a2e"/>
+  <!-- Dumbbell bar -->
+  <line x1="144" y1="256" x2="368" y2="256" stroke="#e0e0e0" stroke-width="32" stroke-linecap="round"/>
+  <!-- Left weight plate -->
+  <rect x="72" y="174" width="64" height="164" rx="14" fill="#6c63ff"/>
+  <!-- Right weight plate -->
+  <rect x="376" y="174" width="64" height="164" rx="14" fill="#6c63ff"/>
+  <!-- Lightning bolt -->
+  <polygon points="270,100 240,248 264,248 242,380 292,215 265,215 290,100" fill="#f59e0b"/>
+</svg>
