@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#0a0a0a" />
-  <meta name="app-version" content="6" />
+  <meta name="app-version" content="7" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -155,9 +155,11 @@
       border: 1px solid rgba(100,140,220,0.25);
       border-radius: 10px;
       cursor: pointer;
-      z-index: 250;
+      z-index: 1999;
       padding: 10px 16px;
+      display: none;
     }
+    #hard-reset-btn.visible { display: block; }
     #hard-reset-btn:active { color: #fff; background: rgba(100,140,220,0.2); }
 
     /* ── Test Panel ── */
@@ -1433,7 +1435,6 @@
   <div id="profile-section" class="section active">
     <div id="hair-badge"></div>
     <div id="update-stamp"></div>
-    <button id="hard-reset-btn" onclick="hardReset()">↺ reset app</button>
   </div>
 
 
@@ -2056,6 +2057,7 @@ function goToTab(tab) {
   document.getElementById('canvas-container').style.display = tab === 'profile' ? 'block' : 'none';
   document.getElementById('test-panel').classList.toggle('visible', tab === 'profile');
   document.getElementById('profile-btns').classList.toggle('visible', tab === 'profile');
+  document.getElementById('hard-reset-btn').classList.toggle('visible', tab === 'profile');
   if (tab !== 'profile') document.getElementById('focus-stats-panel').classList.remove('visible');
 
   if (tab === 'profile')   renderFocusStats();
@@ -2995,6 +2997,7 @@ document.getElementById('room-close-btn').addEventListener('click', () => {
 
 setRoom(activeRoom);
 document.getElementById('profile-btns').classList.add('visible');
+document.getElementById('hard-reset-btn').classList.add('visible');
 
 // ═══════════════════════════════════════════════════════════
 // REP PR TRACKING
@@ -3387,6 +3390,9 @@ async function doHardReset() {
   window.location.replace(window.location.pathname + '?reset=' + Date.now());
 }
 </script>
+<!-- Reset button & modal — outside #app so pointer-events work -->
+<button id="hard-reset-btn" onclick="hardReset()">↺ reset app</button>
+
 <!-- Reset confirm modal — outside #app so pointer-events work -->
 <div id="reset-modal" style="display:none;position:fixed;inset:0;z-index:2000;pointer-events:all;background:rgba(0,0,0,0.75);align-items:center;justify-content:center;">
   <div style="background:#0d1b3e;border:1px solid rgba(100,140,255,0.3);border-radius:20px;padding:28px 24px;margin:24px;text-align:center;max-width:300px;pointer-events:all;">
