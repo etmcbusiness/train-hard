@@ -1574,6 +1574,12 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
+window.onerror = (msg, src, line) => {
+  document.body.insertAdjacentHTML('beforeend',
+    `<div style="position:fixed;inset:0;background:red;color:#fff;padding:20px;z-index:99999;font-size:14px;overflow:auto;">
+      <b>JS ERROR</b><br>${msg}<br>Line ${line}<br>${src}</div>`);
+};
+
 // ═══════════════════════════════════════════════════════════
 // DATA
 // ═══════════════════════════════════════════════════════════
@@ -1897,16 +1903,16 @@ loadModel(0, (entry) => {
   mdl.visible = true;
   updateModel();
 
+  // start cycle immediately before any UI code can throw
+  startCycle();
+  if (MODELS.length > 1) loadModel(1, () => {});
+
   document.getElementById('loading').style.display = 'none';
   document.getElementById('app').style.display = 'flex';
   document.getElementById('profile-name').textContent = state.userName;
   renderFocusStats();
   buildTestPanel();
   document.getElementById('test-panel').classList.add('visible');
-
-  // start 60s cycle immediately; preload model 1 in background
-  startCycle();
-  if (MODELS.length > 1) loadModel(1, () => {});
 });
 
 window.addEventListener('resize', () => {
