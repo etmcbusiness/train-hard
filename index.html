@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#0a0a0a" />
+  <meta name="app-version" content="5" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -1644,6 +1645,18 @@
   </div>
 </div>
 
+<script>
+  (function() {
+    var v = document.querySelector('meta[name="app-version"]').content;
+    var stored = localStorage.getItem('__appv');
+    if (stored && stored !== v) {
+      localStorage.setItem('__appv', v);
+      window.location.reload(true);
+    } else {
+      localStorage.setItem('__appv', v);
+    }
+  })();
+</script>
 <script type="importmap">
 {
   "imports": {
