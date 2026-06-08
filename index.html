@@ -1904,8 +1904,8 @@ loadModel(0, (entry) => {
   buildTestPanel();
   document.getElementById('test-panel').classList.add('visible');
 
-  // start 60s timer immediately; preload model 1 in background
-  startStandingTimer();
+  // start 60s cycle immediately; preload model 1 in background
+  startCycle();
   if (MODELS.length > 1) loadModel(1, () => {});
 });
 
@@ -1963,49 +1963,62 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
   btn.addEventListener('click', () => goToTab(btn.dataset.tab));
 });
 
-let modelCycleTimer = null;
+// ── Model Auto-Cycle ─────────────────────────────────────────
+let cycleTimer = null;
 
-function startStandingTimer() {
-  clearTimeout(modelCycleTimer);
-  modelCycleTimer = setTimeout(switchToAnimated, 60000);
+function showModel(idx) {
+  const entry = modelCache[idx];
+  if (!entry || !entry.scene) return false;
+  modelCache.forEach((c, i) => { if (c.scene) c.scene.visible = (i === idx); });
+  activateMeshMap(entry.meshMap);
+  activeIdx = idx;
+  updateModel();
+  return true;
 }
 
-function switchToAnimated() {
+function startCycle() {
+  clearTimeout(cycleTimer);
+  cycleTimer = setTimeout(goToAnimation, 60000);
+}
+
+function goToAnimation() {
+  clearTimeout(cycleTimer);
   const entry = modelCache[1];
 
-  // If model 1 isn't loaded yet, retry in 5s
-  if (!entry.scene) {
-    modelCycleTimer = setTimeout(switchToAnimated, 5000);
+  if (!entry || !entry.scene) {
+    cycleTimer = setTimeout(goToAnimation, 3000);
     return;
   }
 
-  // Get actual animation duration from clips, fall back to 17s
-  let animDuration = 17000;
+  // Get clip duration (fallback 17s)
+  let dur = 17;
   if (entry.clips && entry.clips.length) {
-    animDuration = Math.max(...entry.clips.map(c => c.duration)) * 1000;
+    dur = Math.max(...entry.clips.map(c => c.duration));
   }
 
-  // Reset and play animation from the beginning
-  if (entry.mixer && entry.clips.length) {
+  // Reset animation to beginning
+  if (entry.mixer) {
     entry.mixer.stopAllAction();
-    entry.clips.forEach(clip => {
-      const action = entry.mixer.clipAction(clip);
-      action.reset();
-      action.setLoop(THREE.LoopOnce, 1);
-      action.clampWhenFinished = true;
-      action.play();
+    (entry.clips || []).forEach(clip => {
+      const a = entry.mixer.clipAction(clip);
+      a.reset();
+      a.setLoop(THREE.LoopOnce, 1);
+      a.clampWhenFinished = true;
+      a.play();
     });
   }
 
-  switchToModel(1);
+  showModel(1);
 
-  // Switch back after animation finishes, then restart 60s standing timer
-  clearTimeout(modelCycleTimer);
-  modelCycleTimer = setTimeout(() => {
-    switchToModel(0);
-    startStandingTimer();
-  }, animDuration);
+  cycleTimer = setTimeout(goToStanding, dur * 1000);
 }
+
+function goToStanding() {
+  clearTimeout(cycleTimer);
+  showModel(0);
+  startCycle();
+}
+// ─────────────────────────────────────────────────────────────
 
 // ═══════════════════════════════════════════════════════════
 // TEST PANEL
@@ -3133,7 +3146,14 @@ document.getElementById('goals-close-btn').addEventListener('click', () => {
 });
 
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('./sw.js').catch(() => {});
+  navigator.serviceWorker.register('./sw.js').then(reg => {
+    reg.addEventListener('updatefound', () => {
+      const sw = reg.installing;
+      sw.addEventListener('statechange', () => {
+        if (sw.state === 'activated') window.location.reload();
+      });
+    });
+  }).catch(() => {});
 }
 </script>
 </body>

@@ -1,14 +1,12 @@
-const CACHE = 'trainhard-v3';
+const CACHE = 'trainhard-v4';
 const ASSETS = [
-  './',
-  './index.html',
   './manifest.json',
   './icons/icon.svg',
-  './Backgrounds/1.png',
-  './Backgrounds/2.jpg',
-  './Backgrounds/3.jpg',
-  './Backgrounds/4.jpg',
-  './Backgrounds/5.jpg'
+  './backgrounds/1.png',
+  './backgrounds/2.jpg',
+  './backgrounds/3.jpg',
+  './backgrounds/4.jpg',
+  './backgrounds/5.jpg'
 ];
 
 self.addEventListener('install', e => {
@@ -28,39 +26,31 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
-  // Cache-first for local assets, network-first for CDN (Three.js)
   const url = new URL(e.request.url);
-  const isCDN = url.hostname.includes('jsdelivr.net');
 
-  if (isCDN) {
+  // Always fetch HTML fresh — never serve stale index.html from cache
+  if (e.request.destination === 'document') {
     e.respondWith(
-      caches.match(e.request).then(cached => {
-        const networkFetch = fetch(e.request).then(res => {
-          if (res && res.status === 200) {
-            const clone = res.clone();
-            caches.open(CACHE).then(cache => cache.put(e.request, clone));
-          }
-          return res;
-        });
-        return cached || networkFetch;
-      })
+      fetch(e.request).then(res => {
+        const clone = res.clone();
+        caches.open(CACHE).then(c => c.put(e.request, clone));
+        return res;
+      }).catch(() => caches.match(e.request))
     );
-  } else {
-    e.respondWith(
-      caches.match(e.request).then(cached => {
-        if (cached) return cached;
-        return fetch(e.request).then(res => {
-          if (res && res.status === 200) {
-            const clone = res.clone();
-            caches.open(CACHE).then(cache => cache.put(e.request, clone));
-          }
-          return res;
-        }).catch(() => {
-          if (e.request.destination === 'document') {
-            return caches.match('./index.html');
-          }
-        });
-      })
-    );
+    return;
   }
+
+  // Cache-first for all other local assets
+  e.respondWith(
+    caches.match(e.request).then(cached => {
+      if (cached) return cached;
+      return fetch(e.request).then(res => {
+        if (res && res.status === 200 && !url.hostname.includes('githubusercontent.com')) {
+          const clone = res.clone();
+          caches.open(CACHE).then(c => c.put(e.request, clone));
+        }
+        return res;
+      }).catch(() => null);
+    })
+  );
 });
