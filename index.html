@@ -1904,12 +1904,9 @@ loadModel(0, (entry) => {
   buildTestPanel();
   document.getElementById('test-panel').classList.add('visible');
 
-  // preload crossing arms model, then start the 60s standing timer
-  if (MODELS.length > 1) {
-    loadModel(1, () => startStandingTimer());
-  } else {
-    startStandingTimer();
-  }
+  // start 60s timer immediately; preload model 1 in background
+  startStandingTimer();
+  if (MODELS.length > 1) loadModel(1, () => {});
 });
 
 window.addEventListener('resize', () => {
@@ -1976,7 +1973,13 @@ function startStandingTimer() {
 function switchToAnimated() {
   const entry = modelCache[1];
 
-  // Get actual animation duration from clip, fall back to 17s
+  // If model 1 isn't loaded yet, retry in 5s
+  if (!entry.scene) {
+    modelCycleTimer = setTimeout(switchToAnimated, 5000);
+    return;
+  }
+
+  // Get actual animation duration from clips, fall back to 17s
   let animDuration = 17000;
   if (entry.clips && entry.clips.length) {
     animDuration = Math.max(...entry.clips.map(c => c.duration)) * 1000;
