@@ -1,4 +1,4 @@
-const CACHE = 'trainhard-v2';
+const CACHE = 'trainhard-v3';
 const ASSETS = [
   './',
   './index.html',
