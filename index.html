@@ -1976,8 +1976,20 @@ function showModel(idx) {
   return true;
 }
 
+function dbg(msg) {
+  let el = document.getElementById('__dbg');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = '__dbg';
+    el.style.cssText = 'position:fixed;top:8px;left:50%;transform:translateX(-50%);background:rgba(255,0,0,0.85);color:#fff;padding:6px 14px;border-radius:8px;z-index:9999;font-size:13px;font-weight:bold;pointer-events:none;';
+    document.body.appendChild(el);
+  }
+  el.textContent = msg;
+}
+
 function startCycle() {
   clearTimeout(cycleTimer);
+  dbg('Standing — switching in 15s');
   cycleTimer = setTimeout(goToAnimation, 15000);
 }
 
@@ -1986,6 +1998,7 @@ function goToAnimation() {
   const entry = modelCache[1];
 
   if (!entry || !entry.scene) {
+    dbg('Waiting for model 1 to load…');
     cycleTimer = setTimeout(goToAnimation, 3000);
     return;
   }
@@ -1995,6 +2008,8 @@ function goToAnimation() {
   if (entry.clips && entry.clips.length) {
     dur = Math.max(...entry.clips.map(c => c.duration));
   }
+
+  dbg('Playing crossing arms (' + dur.toFixed(1) + 's)');
 
   // Reset animation to beginning
   if (entry.mixer) {
