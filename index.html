@@ -79,11 +79,12 @@
     #nav {
       position: fixed;
       bottom: 0; left: 0; right: 0;
+      height: 60px;
       background: rgb(3,7,24);
       border-top: 1.5px solid rgba(60,120,255,0.4);
       box-shadow: 0 -6px 32px rgba(10,40,180,0.4);
       display: flex;
-      align-items: flex-start;
+      align-items: center;
       z-index: 300;
       pointer-events: all;
     }
@@ -3176,22 +3177,6 @@ document.getElementById('goals-close-btn').addEventListener('click', () => {
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./sw.js').catch(() => {});
 }
-
-// Force nav to the true bottom of the visible screen
-(function pinNav() {
-  const nav = document.getElementById('nav');
-  if (!nav) return;
-  const h = window.visualViewport ? window.visualViewport.height : window.innerHeight;
-  nav.style.position = 'fixed';
-  nav.style.top = h - 60 + 'px';
-  nav.style.bottom = 'auto';
-})();
-window.addEventListener('resize', function() {
-  const nav = document.getElementById('nav');
-  if (!nav) return;
-  const h = window.visualViewport ? window.visualViewport.height : window.innerHeight;
-  nav.style.top = h - 60 + 'px';
-});
 </script>
 </body>
 </html>
