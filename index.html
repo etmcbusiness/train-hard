@@ -66,7 +66,7 @@
       overflow-y: auto;
       pointer-events: all;
       display: none;
-      padding: 20px 16px 105px;
+      padding: calc(20px + env(safe-area-inset-top)) 16px calc(105px + env(safe-area-inset-bottom));
     }
     .section.active { display: block; }
     #profile-section.active {
@@ -79,7 +79,8 @@
     #nav {
       position: fixed;
       bottom: 0; left: 0; right: 0;
-      height: 90px;
+      height: calc(90px + env(safe-area-inset-bottom));
+      padding-bottom: env(safe-area-inset-bottom);
       background: linear-gradient(180deg, rgba(6,12,38,0.97) 0%, rgba(3,7,24,1) 100%);
       border-top: 1.5px solid rgba(60,120,255,0.4);
       box-shadow: 0 -6px 32px rgba(10,40,180,0.4);
@@ -118,7 +119,7 @@
     /* ── Profile ── */
     #profile-name {
       position: fixed;
-      top: 24px;
+      top: calc(24px + env(safe-area-inset-top));
       left: 50%;
       transform: translateX(-50%);
       font-size: 20px;
@@ -132,7 +133,7 @@
     /* ── Test Panel ── */
     #test-panel {
       position: fixed;
-      top: 20px;
+      top: calc(20px + env(safe-area-inset-top));
       left: 8px;
       z-index: 60;
       background: rgba(4,8,26,0.88);
@@ -248,7 +249,7 @@
     /* ── Focus Stats Panel ── */
     #focus-stats-panel {
       position: fixed;
-      top: 175px;
+      top: calc(175px + env(safe-area-inset-top));
       right: 10px;
       z-index: 20;
       display: none;
@@ -623,7 +624,7 @@
     #train-modal {
       position: fixed;
       top: 0; left: 0; right: 0;
-      bottom: 90px;
+      bottom: calc(90px + env(safe-area-inset-bottom));
       z-index: 200;
       background: transparent;
       display: none;
@@ -1025,7 +1026,7 @@
     /* ── Profile Buttons (top-right) ── */
     #profile-btns {
       position: fixed;
-      top: 16px;
+      top: calc(16px + env(safe-area-inset-top));
       right: 16px;
       z-index: 25;
       display: none;
