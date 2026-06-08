@@ -66,7 +66,7 @@
       overflow-y: auto;
       pointer-events: all;
       display: none;
-      padding: calc(20px + env(safe-area-inset-top)) 16px calc(105px + env(safe-area-inset-bottom));
+      padding: calc(20px + env(safe-area-inset-top, 0px)) 16px calc(105px + env(safe-area-inset-bottom, 0px));
     }
     .section.active { display: block; }
     #profile-section.active {
@@ -79,18 +79,19 @@
     #nav {
       position: fixed;
       bottom: 0; left: 0; right: 0;
-      height: calc(90px + env(safe-area-inset-bottom));
-      padding-bottom: env(safe-area-inset-bottom);
+      padding-bottom: env(safe-area-inset-bottom, 0px);
       background: linear-gradient(180deg, rgba(6,12,38,0.97) 0%, rgba(3,7,24,1) 100%);
       border-top: 1.5px solid rgba(60,120,255,0.4);
       box-shadow: 0 -6px 32px rgba(10,40,180,0.4);
       display: flex;
+      align-items: flex-start;
       z-index: 300;
       pointer-events: all;
     }
 
     .nav-btn {
       flex: 1;
+      height: 90px;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -624,7 +625,7 @@
     #train-modal {
       position: fixed;
       top: 0; left: 0; right: 0;
-      bottom: calc(90px + env(safe-area-inset-bottom));
+      bottom: calc(90px + env(safe-area-inset-bottom, 0px));
       z-index: 200;
       background: transparent;
       display: none;
