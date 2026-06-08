@@ -1995,7 +1995,7 @@ function dbg(msg) {
   if (!el) {
     el = document.createElement('div');
     el.id = '__dbg';
-    el.style.cssText = 'position:fixed;top:8px;left:50%;transform:translateX(-50%);background:rgba(255,0,0,0.85);color:#fff;padding:6px 14px;border-radius:8px;z-index:9999;font-size:13px;font-weight:bold;pointer-events:none;';
+    el.style.cssText = 'position:fixed;top:calc(8px + env(safe-area-inset-top, 0px));left:50%;transform:translateX(-50%);background:rgba(255,0,0,0.85);color:#fff;padding:6px 14px;border-radius:8px;z-index:9999;font-size:13px;font-weight:bold;pointer-events:none;';
     document.body.appendChild(el);
   }
   el.textContent = msg;
