@@ -14,6 +14,14 @@
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
+    html {
+      background-color: #050d1a;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+    }
+
     body {
       background: transparent;
       color: #fff;
@@ -2669,7 +2677,9 @@ function setRoom(num) {
   activeRoom = String(num);
   localStorage.setItem('trainhard_room', activeRoom);
   detectRoomSrc(num).then(src => {
-    document.getElementById('gravity-room').style.backgroundImage = `url('${src}')`;
+    const url = `url('${src}')`;
+    document.getElementById('gravity-room').style.backgroundImage = url;
+    document.documentElement.style.backgroundImage = url;
   });
   document.querySelectorAll('.room-face').forEach(f => {
     f.classList.toggle('selected', f.dataset.room === activeRoom);
