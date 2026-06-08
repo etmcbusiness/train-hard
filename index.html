@@ -3168,14 +3168,7 @@ document.getElementById('goals-close-btn').addEventListener('click', () => {
 });
 
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('./sw.js').then(reg => {
-    reg.addEventListener('updatefound', () => {
-      const sw = reg.installing;
-      sw.addEventListener('statechange', () => {
-        if (sw.state === 'activated') window.location.reload();
-      });
-    });
-  }).catch(() => {});
+  navigator.serviceWorker.register('./sw.js').catch(() => {});
 }
 </script>
 </body>
