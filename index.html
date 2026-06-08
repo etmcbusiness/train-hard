@@ -141,6 +141,21 @@
       pointer-events: none;
       z-index: 250;
     }
+    #hard-reset-btn {
+      position: fixed;
+      right: 16px;
+      bottom: 68px;
+      font-size: 10px;
+      font-weight: 700;
+      color: rgba(100,140,220,0.55);
+      letter-spacing: 0.4px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      z-index: 250;
+      padding: 0;
+    }
+    #hard-reset-btn:active { color: #fff; }
 
     /* ── Test Panel ── */
     #test-panel {
@@ -1371,6 +1386,7 @@
   <div id="profile-section" class="section active">
     <div id="hair-badge"></div>
     <div id="update-stamp"></div>
+    <button id="hard-reset-btn" onclick="hardReset()">↺ reset app</button>
   </div>
 
   <!-- Focus Stats Panel -->
@@ -3176,6 +3192,22 @@ document.getElementById('goals-close-btn').addEventListener('click', () => {
 
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./sw.js').catch(() => {});
+}
+
+async function hardReset() {
+  const btn = document.getElementById('hard-reset-btn');
+  if (btn) btn.textContent = '...';
+  try {
+    if ('caches' in window) {
+      const keys = await caches.keys();
+      await Promise.all(keys.map(k => caches.delete(k)));
+    }
+    if ('serviceWorker' in navigator) {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map(r => r.unregister()));
+    }
+  } catch(e) {}
+  window.location.href = window.location.pathname + '?v=' + Date.now();
 }
 </script>
 </body>
