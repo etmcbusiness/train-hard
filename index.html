@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -79,13 +79,22 @@
     #nav {
       position: fixed;
       bottom: 0; left: 0; right: 0;
-      background: linear-gradient(180deg, rgba(6,12,38,0.97) 0%, rgba(3,7,24,1) 100%);
+      background: rgb(3,7,24);
       border-top: 1.5px solid rgba(60,120,255,0.4);
       box-shadow: 0 -6px 32px rgba(10,40,180,0.4);
       display: flex;
       align-items: stretch;
       z-index: 300;
       pointer-events: all;
+    }
+    #nav::after {
+      content: '';
+      position: absolute;
+      bottom: -200px;
+      left: 0; right: 0;
+      height: 200px;
+      background: rgb(3,7,24);
+      pointer-events: none;
     }
 
     .nav-btn {
@@ -1395,32 +1404,31 @@
     <div class="section-header">Stats</div>
     <div id="stats-list"></div>
   </div>
-
-  <!-- Nav -->
-  <nav id="nav">
-    <button class="nav-btn active" data-tab="profile">
-      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
-      Profile
-    </button>
-    <button class="nav-btn" data-tab="history">
-      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 3a9 9 0 0 0-9 9H1l3.9 3.9.1.2L9 12H6a7 7 0 1 1 2 4.9l-1.4 1.4A9 9 0 1 0 13 3zm-1 5v5l4.3 2.5-.7 1.2L11 14V8h1z"/></svg>
-      History
-    </button>
-    <button class="nav-btn" data-tab="train">
-      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.57 14.86L22 13.43 20.57 12 17 15.57 8.43 7 12 3.43 10.57 2 9.14 3.43 7.71 2 5.57 4.14 4.14 2.71 2.71 4.14l1.43 1.43L2 7.71l1.43 1.43L2 10.57 3.43 12 7 8.43 15.57 17 12 20.57 13.43 22l1.43-1.43L16.29 22l2.14-2.14 1.43 1.43 1.43-1.43-1.43-1.43L22 16.29l-1.43-1.43z"/></svg>
-      Train
-    </button>
-    <button class="nav-btn" data-tab="exercises">
-      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
-      Exercises
-    </button>
-    <button class="nav-btn" data-tab="stats">
-      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg>
-      Stats
-    </button>
-  </nav>
 </div>
 
+<!-- Nav (outside #app so position:fixed is always viewport-relative) -->
+<nav id="nav">
+  <button class="nav-btn active" data-tab="profile">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
+    Profile
+  </button>
+  <button class="nav-btn" data-tab="history">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 3a9 9 0 0 0-9 9H1l3.9 3.9.1.2L9 12H6a7 7 0 1 1 2 4.9l-1.4 1.4A9 9 0 1 0 13 3zm-1 5v5l4.3 2.5-.7 1.2L11 14V8h1z"/></svg>
+    History
+  </button>
+  <button class="nav-btn" data-tab="train">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.57 14.86L22 13.43 20.57 12 17 15.57 8.43 7 12 3.43 10.57 2 9.14 3.43 7.71 2 5.57 4.14 4.14 2.71 2.71 4.14l1.43 1.43L2 7.71l1.43 1.43L2 10.57 3.43 12 7 8.43 15.57 17 12 20.57 13.43 22l1.43-1.43L16.29 22l2.14-2.14 1.43 1.43 1.43-1.43-1.43-1.43L22 16.29l-1.43-1.43z"/></svg>
+    Train
+  </button>
+  <button class="nav-btn" data-tab="exercises">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+    Exercises
+  </button>
+  <button class="nav-btn" data-tab="stats">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg>
+    Stats
+  </button>
+</nav>
 
 <!-- Train Modal -->
 <div id="train-modal">
