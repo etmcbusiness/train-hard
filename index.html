@@ -1357,7 +1357,7 @@
   <!-- Profile -->
   <div id="profile-section" class="section active">
     <div id="hair-badge"></div>
-    <button id="animate-toggle">Animate: Loading…</button>
+
   </div>
 
   <!-- Focus Stats Panel -->
@@ -1817,7 +1817,7 @@ function addShadow(model, radius, box) {
   model.add(shadowMesh);
 }
 
-const toggleBtn = document.getElementById('animate-toggle');
+const toggleBtn = { textContent: '', classList: { toggle: () => {}, remove: () => {}, add: () => {} } };
 
 function loadModel(idx, onReady) {
   const entry = modelCache[idx];
