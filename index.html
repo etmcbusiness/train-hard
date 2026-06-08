@@ -2009,10 +2009,10 @@ function goToAnimation() {
     return;
   }
 
-  // Get clip duration (fallback 17s)
+  // Get clip duration, minimum 17s
   let dur = 17;
   if (entry.clips && entry.clips.length) {
-    dur = Math.max(...entry.clips.map(c => c.duration));
+    dur = Math.max(17, Math.max(...entry.clips.map(c => c.duration)));
   }
 
   dbg('Playing crossing arms (' + dur.toFixed(1) + 's)');
