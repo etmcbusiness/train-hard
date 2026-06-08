@@ -1334,34 +1334,7 @@
     }
 
     /* ── Animate Toggle ── */
-    #animate-toggle {
-      position: fixed;
-      top: 60px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 80;
-      background: rgba(4,10,32,0.88);
-      border: 1px solid rgba(60,110,200,0.35);
-      border-radius: 12px;
-      color: #7aaacc;
-      font-size: 12px;
-      font-weight: 700;
-      padding: 9px 16px;
-      cursor: pointer;
-      letter-spacing: 0.5px;
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      white-space: nowrap;
-      pointer-events: auto;
-    }
-    #animate-toggle.on {
-      border-color: rgba(74,144,217,0.6);
-      color: #4A90D9;
-    }
-    #animate-toggle.loading {
-      opacity: 0.45;
-      cursor: default;
-    }
+    #animate-toggle { display: none; }
   </style>
 </head>
 <body>
@@ -1725,7 +1698,7 @@ const MODELS = [
 const meshMap = {};
 const clock   = new THREE.Clock();
 let activeIdx = 0;
-const modelCache = MODELS.map(() => ({ scene: null, meshMap: {}, mixer: null }));
+const modelCache = MODELS.map(() => ({ scene: null, meshMap: {}, mixer: null, clips: [] }));
 
 function activateMeshMap(source) {
   for (const key of Object.keys(meshMap)) delete meshMap[key];
@@ -1870,8 +1843,16 @@ function loadModel(idx, onReady) {
       setupModelMeshes(meshes, entry.meshMap);
 
       if (gltf.animations.length) {
+        entry.clips = gltf.animations;
         entry.mixer = new THREE.AnimationMixer(mdl);
-        gltf.animations.forEach(clip => entry.mixer.clipAction(clip).play());
+        gltf.animations.forEach(clip => {
+          const action = entry.mixer.clipAction(clip);
+          if (idx === 1) {
+            action.setLoop(THREE.LoopOnce, 1);
+            action.clampWhenFinished = true;
+          }
+          action.play();
+        });
       }
 
       entry.scene = mdl;
@@ -1923,11 +1904,22 @@ loadModel(0, (entry) => {
   buildTestPanel();
   document.getElementById('test-panel').classList.add('visible');
 
-  toggleBtn.textContent = `${MODELS[0].name} ▸`;
-  toggleBtn.classList.remove('loading');
-
-  // preload next model in background
-  if (MODELS.length > 1) loadModel(1, () => {});
+  // preload crossing arms model, then start the 60s cycle
+  if (MODELS.length > 1) {
+    loadModel(1, (crossEntry) => {
+      if (crossEntry.mixer) {
+        crossEntry.mixer.addEventListener('finished', () => {
+          if (activeIdx === 1) {
+            switchToModel(0);
+            startStandingTimer();
+          }
+        });
+      }
+      startStandingTimer();
+    });
+  } else {
+    startStandingTimer();
+  }
 });
 
 window.addEventListener('resize', () => {
@@ -1984,10 +1976,27 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
   btn.addEventListener('click', () => goToTab(btn.dataset.tab));
 });
 
-document.getElementById('animate-toggle').addEventListener('click', () => {
-  const next = (activeIdx + 1) % MODELS.length;
-  switchToModel(next);
-});
+let modelCycleTimer = null;
+
+function startStandingTimer() {
+  clearTimeout(modelCycleTimer);
+  modelCycleTimer = setTimeout(() => switchToAnimated(), 60000);
+}
+
+function switchToAnimated() {
+  const entry = modelCache[1];
+  if (entry.mixer && entry.clips.length) {
+    entry.mixer.stopAllAction();
+    entry.clips.forEach(clip => {
+      const action = entry.mixer.clipAction(clip);
+      action.reset();
+      action.setLoop(THREE.LoopOnce, 1);
+      action.clampWhenFinished = true;
+      action.play();
+    });
+  }
+  switchToModel(1);
+}
 
 // ═══════════════════════════════════════════════════════════
 // TEST PANEL
