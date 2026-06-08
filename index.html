@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#0a0a0a" />
-  <meta name="app-version" content="9" />
+  <meta name="app-version" content="10" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -142,25 +142,6 @@
       pointer-events: none;
       z-index: 250;
     }
-    #hard-reset-btn {
-      position: fixed;
-      right: 16px;
-      bottom: 68px;
-      pointer-events: all;
-      font-size: 13px;
-      font-weight: 700;
-      color: rgba(100,140,220,0.7);
-      letter-spacing: 0.4px;
-      background: rgba(255,255,255,0.07);
-      border: 1px solid rgba(100,140,220,0.25);
-      border-radius: 10px;
-      cursor: pointer;
-      z-index: 1999;
-      padding: 10px 16px;
-      display: none;
-    }
-    #hard-reset-btn.visible { display: block; }
-    #hard-reset-btn:active { color: #fff; background: rgba(100,140,220,0.2); }
 
     /* ── Test Panel ── */
     #test-panel {
@@ -962,6 +943,8 @@
       background: transparent;
       display: none;
       flex-direction: column;
+      padding-top: 60px;
+      padding-top: max(60px, env(safe-area-inset-top, 0px));
     }
     #picker.open {
       display: flex;
@@ -2059,7 +2042,6 @@ function goToTab(tab) {
   document.getElementById('canvas-container').style.display = tab === 'profile' ? 'block' : 'none';
   document.getElementById('test-panel').classList.toggle('visible', tab === 'profile');
   document.getElementById('profile-btns').classList.toggle('visible', tab === 'profile');
-  document.getElementById('hard-reset-btn').classList.toggle('visible', tab === 'profile');
   if (tab !== 'profile') document.getElementById('focus-stats-panel').classList.remove('visible');
 
   if (tab === 'profile')   renderFocusStats();
@@ -2999,7 +2981,6 @@ document.getElementById('room-close-btn').addEventListener('click', () => {
 
 setRoom(activeRoom);
 document.getElementById('profile-btns').classList.add('visible');
-document.getElementById('hard-reset-btn').classList.add('visible');
 
 // ═══════════════════════════════════════════════════════════
 // REP PR TRACKING
@@ -3368,41 +3349,7 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-function hardReset() {
-  const modal = document.getElementById('reset-modal');
-  modal.style.display = 'flex';
-}
-
-async function doHardReset() {
-  document.getElementById('reset-modal').style.display = 'none';
-  const btn = document.getElementById('hard-reset-btn');
-  if (btn) btn.textContent = 'resetting...';
-  try {
-    localStorage.clear();
-    sessionStorage.clear();
-    if ('caches' in window) {
-      const keys = await caches.keys();
-      await Promise.all(keys.map(k => caches.delete(k)));
-    }
-    if ('serviceWorker' in navigator) {
-      const regs = await navigator.serviceWorker.getRegistrations();
-      await Promise.all(regs.map(r => r.unregister()));
-    }
-  } catch(e) {}
-  window.location.replace(window.location.pathname + '?reset=' + Date.now());
-}
 </script>
 <!-- Reset button & modal — outside #app so pointer-events work -->
-<button id="hard-reset-btn" onclick="hardReset()">↺ reset app</button>
-
-<!-- Reset confirm modal — outside #app so pointer-events work -->
-<div id="reset-modal" style="display:none;position:fixed;inset:0;z-index:2000;pointer-events:all;background:rgba(0,0,0,0.75);align-items:center;justify-content:center;">
-  <div style="background:#0d1b3e;border:1px solid rgba(100,140,255,0.3);border-radius:20px;padding:28px 24px;margin:24px;text-align:center;max-width:300px;pointer-events:all;">
-    <div style="font-size:16px;font-weight:700;color:#fff;margin-bottom:10px;">Reset App?</div>
-    <div style="font-size:13px;color:#7a9ac0;margin-bottom:24px;">This will delete all your workout data and history. This cannot be undone.</div>
-    <button onclick="doHardReset()" style="width:100%;padding:13px;background:#e74c3c;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px;pointer-events:all;">Yes, Reset Everything</button>
-    <button onclick="document.getElementById('reset-modal').style.display='none'" style="width:100%;padding:13px;background:rgba(255,255,255,0.08);color:#aaa;border:none;border-radius:12px;font-size:15px;cursor:pointer;pointer-events:all;">Cancel</button>
-  </div>
-</div>
 </body>
 </html>
