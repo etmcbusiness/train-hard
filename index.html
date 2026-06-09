@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#0a0a0a" />
-  <meta name="app-version" content="10" />
+  <meta name="app-version" content="27" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -16,7 +16,7 @@
     * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
     html {
-      background-color: #050d1a;
+      background-color: rgb(3,7,24);
       background-size: cover;
       background-position: center;
       background-repeat: no-repeat;
@@ -67,7 +67,7 @@
       overflow-y: auto;
       pointer-events: all;
       display: none;
-      padding: calc(20px + env(safe-area-inset-top, 0px)) 16px 72px;
+      padding: calc(20px + env(safe-area-inset-top, 0px)) 16px 80px;
     }
     .section.active { display: block; }
     #profile-section.active {
@@ -84,7 +84,8 @@
       border-top: 1.5px solid rgba(60,120,255,0.4);
       box-shadow: 0 -6px 32px rgba(10,40,180,0.4);
       display: flex;
-      align-items: flex-start;
+      align-items: flex-end;
+      padding-top: 10px;
       padding-bottom: 0;
       z-index: 300;
       pointer-events: all;
@@ -131,42 +132,6 @@
       white-space: nowrap;
     }
     #hair-badge { display: none; }
-    #update-stamp {
-      position: fixed;
-      left: 16px;
-      bottom: 68px;
-      font-size: 10px;
-      font-weight: 600;
-      color: rgba(100,140,220,0.55);
-      letter-spacing: 0.4px;
-      pointer-events: none;
-      z-index: 250;
-    }
-
-    /* ── Test Panel ── */
-    #test-panel {
-      position: fixed;
-      top: calc(20px + env(safe-area-inset-top));
-      left: 8px;
-      z-index: 60;
-      background: rgba(4,8,26,0.88);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border: 1px solid rgba(40,80,180,0.25);
-      border-radius: 12px;
-      padding: 8px 6px;
-      display: none;
-      flex-direction: column;
-      gap: 3px;
-      max-height: 60vh;
-      overflow-y: auto;
-    }
-    #test-panel.visible { display: flex; }
-    .test-row { display: flex; align-items: center; gap: 4px; }
-    .test-label { font-size: 9px; color: #8aaad0; width: 68px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .test-count { font-size: 9px; color: #4A90D9; width: 16px; text-align: center; }
-    .test-btn { background: rgba(14,28,70,0.9); border: 1px solid rgba(40,80,180,0.3); color: #fff; border-radius: 4px; width: 20px; height: 20px; font-size: 13px; cursor: pointer; line-height: 1; display:flex; align-items:center; justify-content:center; }
-
     /* ── Section Header ── */
     .section-header {
       font-size: 26px;
@@ -199,8 +164,8 @@
     #exercises-section { background: transparent; }
 
     #exercises-list {
-      display: flex;
-      flex-direction: column;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
       gap: 6px;
     }
 
@@ -581,15 +546,39 @@
       letter-spacing: 0.3px;
       -webkit-tap-highlight-color: transparent;
     }
-    .hist-swipe-btn.hsb-edit   { background: #4A90D9; }
+    .hist-swipe-btn.hsb-edit   { background: #4A90D9; border-radius: 16px 0 0 16px; }
     .hist-swipe-btn.hsb-delete { background: #e74c3c; }
     .hist-swipe-btn svg { width: 20px; height: 20px; }
+
+    /* ── History desktop action buttons ── */
+    .hist-desktop-actions {
+      display: none;
+      gap: 8px;
+    }
+    .hist-desktop-btn {
+      border-radius: 8px;
+      cursor: pointer;
+      padding: 6px 10px;
+      font-size: 12px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: opacity 0.15s;
+    }
+    .hist-desktop-btn svg { width: 14px; height: 14px; flex-shrink: 0; }
+    .hist-desktop-btn.hdb-edit   { background: rgba(74,144,217,0.15); border: 1px solid rgba(74,144,217,0.4); color: #4A90D9; }
+    .hist-desktop-btn.hdb-delete { background: rgba(231,76,60,0.12); border: 1px solid rgba(231,76,60,0.4); color: #e74c3c; }
+    .hist-desktop-btn:hover { opacity: 0.8; }
+    @media (hover: hover) {
+      .hist-desktop-actions { display: flex; }
+    }
 
     /* ── History Edit Modal ── */
     #hist-edit-modal {
       position: fixed;
       inset: 0;
-      bottom: 60px;
+      bottom: 70px;
       z-index: 350;
       background: transparent;
       display: none;
@@ -681,7 +670,7 @@
     #train-modal {
       position: fixed;
       top: 0; left: 0; right: 0;
-      bottom: 60px;
+      bottom: 70px;
       padding-top: 60px;
       padding-top: max(60px, env(safe-area-inset-top, 0px));
       z-index: 200;
@@ -783,7 +772,7 @@
     /* Set column headers */
     .set-cols {
       display: grid;
-      grid-template-columns: 28px 52px 1fr 1fr 50px;
+      grid-template-columns: 26px 1fr 1fr 46px;
       gap: 8px;
       font-size: 10px;
       font-weight: 700;
@@ -797,24 +786,26 @@
     /* Set row */
     .set-row {
       display: grid;
-      grid-template-columns: 28px 52px 1fr 1fr 50px;
+      grid-template-columns: 26px 1fr 1fr 46px;
       gap: 8px;
       align-items: center;
       margin-bottom: 8px;
     }
+    /* PR badge shown above sets */
+    .train-ex-pr {
+      font-size: 11px;
+      color: #3a5a8a;
+      margin-bottom: 10px;
+      font-variant-numeric: tabular-nums;
+    }
+    .train-ex-pr span { color: #5a7aaa; font-weight: 600; }
     .set-num {
       font-size: 13px;
       font-weight: 800;
       color: #4a6aaa;
       text-align: center;
     }
-    .set-prev {
-      font-size: 11px;
-      color: #364a6a;
-      text-align: center;
-      line-height: 1.3;
-      font-variant-numeric: tabular-nums;
-    }
+
 
     /* ── Stepper Control ── */
     .stepper {
@@ -939,28 +930,43 @@
     #picker {
       position: fixed;
       inset: 0;
+      bottom: 70px;
       z-index: 300;
       background: transparent;
       display: none;
-      flex-direction: column;
-      padding-top: 60px;
-      padding-top: max(60px, env(safe-area-inset-top, 0px));
+      align-items: center;
+      justify-content: center;
+      padding: 16px 36px 36px;
+      padding-top: max(16px, env(safe-area-inset-top, 16px));
     }
     #picker.open {
       display: flex;
-      background: rgba(2,5,18,0.94);
-      backdrop-filter: blur(26px);
-      -webkit-backdrop-filter: blur(26px);
+      background: rgba(0,0,8,0.55);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+    }
+    #picker-inner {
+      background: rgba(5,12,40,0.97);
+      border: 1px solid rgba(50,100,210,0.3);
+      border-radius: 20px;
+      width: 100%;
+      max-width: 420px;
+      max-height: 80vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 8px 40px rgba(0,0,8,0.7);
     }
 
     #picker-top {
       display: flex;
       align-items: center;
-      gap: 12px;
-      padding: 14px 16px;
+      justify-content: space-between;
+      padding: 14px 18px;
       border-bottom: 1px solid rgba(40,80,180,0.2);
       flex-shrink: 0;
       background: rgba(4,8,28,0.9);
+      border-radius: 20px 20px 0 0;
     }
     #picker-close {
       background: none;
@@ -971,32 +977,98 @@
       cursor: pointer;
       white-space: nowrap;
     }
-    #picker-search {
-      flex: 1;
-      background: rgba(10,22,60,0.95);
-      border: 1px solid rgba(50,100,200,0.3);
-      border-radius: 12px;
+    #picker-heading {
+      font-size: 16px;
+      font-weight: 800;
       color: #fff;
-      font-size: 15px;
-      padding: 11px 14px;
     }
-    #picker-search:focus { outline: none; border-color: rgba(74,144,217,0.6); }
-    #picker-search::placeholder { color: #3a5070; }
-
-    #picker-list { flex: 1; overflow-y: auto; }
-    .picker-group-label {
-      font-size: 11px;
-      font-weight: 700;
+    #picker-muscle-grid {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      padding: 14px 16px;
+      align-content: start;
+      overflow-y: auto;
+    }
+    .picker-group-header {
+      grid-column: 1 / -1;
+      font-size: 10px;
+      font-weight: 800;
       color: #3a5a8a;
       text-transform: uppercase;
       letter-spacing: 1.5px;
-      padding: 16px 16px 6px;
+      padding: 10px 2px 2px;
     }
-    .picker-item {
+    .picker-group-header:first-child { padding-top: 2px; }
+
+    .picker-muscle-btn {
+      background: rgba(6,14,46,0.88);
+      border: 1px solid rgba(50,100,200,0.22);
+      border-radius: 14px;
+      padding: 14px 12px;
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      padding: 16px 16px;
+      gap: 10px;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+    .picker-muscle-btn:active { background: rgba(74,144,217,0.12); border-color: rgba(74,144,217,0.4); }
+    .picker-muscle-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .picker-muscle-name { font-size: 14px; font-weight: 700; color: #fff; line-height: 1.2; }
+    .picker-muscle-count { font-size: 11px; color: #4a6aaa; margin-top: 2px; }
+
+    /* ── Picker Exercise Popup ── */
+    #picker-ex-popup {
+      position: fixed;
+      inset: 0;
+      z-index: 350;
+      background: rgba(0,0,8,0.65);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    #picker-ex-popup.open { display: flex; }
+    #picker-ex-box {
+      background: rgba(5,12,40,0.97);
+      border: 1px solid rgba(50,100,210,0.3);
+      border-radius: 20px;
+      width: 100%;
+      max-width: 320px;
+      max-height: 65vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    #picker-ex-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 18px 14px;
+      border-bottom: 1px solid rgba(40,80,180,0.2);
+      flex-shrink: 0;
+    }
+    #picker-ex-left { display: flex; align-items: center; gap: 10px; }
+    #picker-ex-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+    #picker-ex-name { font-size: 18px; font-weight: 800; color: #fff; }
+    #picker-ex-close {
+      background: rgba(14,28,70,0.7);
+      border: 1px solid rgba(50,100,200,0.3);
+      border-radius: 50%;
+      color: #7a9acc;
+      font-size: 14px;
+      width: 32px; height: 32px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    #picker-ex-list { flex: 1; overflow-y: auto; }
+    .picker-item {
+      padding: 16px 18px;
       border-bottom: 1px solid rgba(30,50,120,0.2);
       cursor: pointer;
       font-size: 15px;
@@ -1004,65 +1076,130 @@
       transition: background 0.1s;
     }
     .picker-item:active { background: rgba(74,144,217,0.1); }
-    .picker-item-muscle { font-size: 12px; color: #3a5a8a; font-weight: 600; }
 
     /* ── Edit Modal ── */
     #edit-modal {
       position: fixed;
       inset: 0;
       z-index: 400;
-      background: rgba(0,0,0,0.75);
+      background: rgba(0,0,8,0.72);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
       display: none;
       align-items: center;
       justify-content: center;
-      padding: 20px;
+      padding: max(20px, env(safe-area-inset-top, 20px)) 20px max(20px, env(safe-area-inset-bottom, 20px));
     }
     #edit-modal.open { display: flex; }
-    .edit-box {
-      background: rgba(6,14,44,0.97);
-      border: 1px solid rgba(50,100,200,0.25);
+    #edit-box {
+      background: rgba(5,12,40,0.98);
+      border: 1px solid rgba(50,100,210,0.3);
       border-radius: 20px;
-      padding: 26px;
       width: 100%;
-      max-width: 360px;
+      max-width: 380px;
+      max-height: 86vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
     }
-    .edit-title { font-size: 18px; font-weight: 800; margin-bottom: 18px; color: #fff; }
-    .edit-input {
-      width: 100%;
-      background: rgba(10,22,60,0.95);
+    #edit-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 18px 14px;
+      border-bottom: 1px solid rgba(40,80,180,0.2);
+      flex-shrink: 0;
+    }
+    #edit-header-title { font-size: 17px; font-weight: 800; color: #fff; }
+    #edit-close-btn {
+      background: rgba(14,28,70,0.7);
       border: 1px solid rgba(50,100,200,0.3);
-      border-radius: 12px;
-      color: #fff;
-      font-size: 15px;
-      padding: 14px 16px;
-      margin-bottom: 18px;
+      border-radius: 50%;
+      color: #7a9acc;
+      font-size: 14px;
+      width: 32px; height: 32px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
     }
-    .edit-input:focus { outline: none; border-color: #4A90D9; }
-    .edit-actions { display: flex; gap: 10px; }
-    .edit-cancel {
+    #edit-body { flex: 1; overflow-y: auto; padding: 16px 18px 6px; }
+    #edit-footer {
+      display: flex;
+      gap: 10px;
+      padding: 14px 18px;
+      border-top: 1px solid rgba(40,80,180,0.2);
+      flex-shrink: 0;
+    }
+    #edit-cancel-btn {
       flex: 1;
-      padding: 14px;
+      padding: 13px;
       border-radius: 12px;
       border: 1px solid rgba(50,100,200,0.3);
       background: rgba(10,22,60,0.6);
       color: #7a9acc;
-      font-size: 15px;
+      font-size: 14px;
       font-weight: 600;
       cursor: pointer;
     }
-    .edit-save {
+    #edit-save-btn {
       flex: 1;
-      padding: 14px;
+      padding: 13px;
       border-radius: 12px;
       border: none;
       background: linear-gradient(135deg, #d03030, #a02020);
       color: #fff;
-      font-size: 15px;
+      font-size: 14px;
       font-weight: 700;
       cursor: pointer;
     }
+    #edit-delete-btn {
+      width: 100%;
+      margin-top: 8px;
+      margin-bottom: 4px;
+      padding: 13px;
+      border-radius: 12px;
+      border: 1px solid rgba(192,57,43,0.4);
+      background: rgba(192,57,43,0.08);
+      color: #e05a4a;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      display: none;
+    }
+    .edit-rest-ctrl {
+      display: flex;
+      align-items: center;
+      background: rgba(10,22,60,0.95);
+      border: 1px solid rgba(50,100,200,0.3);
+      border-radius: 12px;
+      overflow: hidden;
+      height: 50px;
+    }
+    .edit-rest-btn {
+      width: 50px;
+      height: 50px;
+      border: none;
+      background: transparent;
+      color: #4A90D9;
+      font-size: 24px;
+      font-weight: 300;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      touch-action: manipulation;
+      transition: background 0.1s;
+    }
+    .edit-rest-btn:active { background: rgba(74,144,217,0.18); }
+    #edit-rest-display {
+      flex: 1;
+      text-align: center;
+      font-size: 18px;
+      font-weight: 700;
+      color: #fff;
+      font-variant-numeric: tabular-nums;
+    }
+    #edit-pulley-row { display: none; }
+    #edit-pulley-row.visible { display: block; }
 
     /* ── Loading ── */
     #loading {
@@ -1084,20 +1221,20 @@
     }
     #load-sub { font-size: 13px; color: #4a6aaa; }
 
-    /* ── Profile Buttons (top-right) ── */
+    /* ── Profile Buttons (top-left) ── */
     #profile-btns {
       position: fixed;
       top: calc(16px + env(safe-area-inset-top));
-      right: 16px;
+      left: 16px;
       z-index: 25;
       display: none;
       flex-direction: column;
       gap: 8px;
-      align-items: flex-end;
+      align-items: flex-start;
       pointer-events: all;
     }
     #profile-btns.visible { display: flex; }
-    #room-btn, #personalize-btn, #goals-btn {
+    #room-btn, #personalize-btn, #goals-btn, #open-override-btn, #weekly-overview-btn {
       background: rgba(4,10,32,0.88);
       border: 1px solid rgba(60,110,200,0.35);
       border-radius: 12px;
@@ -1110,6 +1247,12 @@
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
       white-space: nowrap;
+      width: 140px;
+      height: 36px;
+      box-sizing: border-box;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     /* ── Focus Exercise Picker ── */
@@ -1229,8 +1372,10 @@
       display: none;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
-      padding: 20px 16px;
+      justify-content: flex-start;
+      padding: calc(env(safe-area-inset-top) + 24px) 16px calc(env(safe-area-inset-bottom) + 24px);
+      box-sizing: border-box;
+      overflow-y: auto;
       pointer-events: all;
     }
     #goals-overlay.open { display: flex; }
@@ -1240,10 +1385,23 @@
       border-radius: 20px;
       width: 100%;
       max-width: 480px;
-      max-height: 85vh;
       display: flex;
       flex-direction: column;
       overflow: hidden;
+    }
+    #goals-header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px 16px 0;
+      flex-shrink: 0;
+    }
+    #goals-title {
+      font-size: 13px;
+      font-weight: 800;
+      color: #c0d4f0;
+      letter-spacing: 2px;
+      text-transform: uppercase;
     }
     #goals-close-btn {
       background: rgba(4,10,32,0.7);
@@ -1259,35 +1417,48 @@
     }
     #goals-body {
       overflow-y: auto;
-      padding: 12px 14px 4px;
+      padding: 14px 14px 14px;
     }
     #goals-list {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 0 12px;
+      display: flex;
+      flex-direction: column;
     }
     .goal-row {
       display: flex;
-      flex-direction: column;
-      gap: 6px;
-      padding: 8px 0;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 4px;
       border-bottom: 1px solid rgba(40,80,180,0.15);
     }
-    .goal-row:nth-last-child(-n+2) { border-bottom: none; }
+    .goal-row:last-child { border-bottom: none; }
+    .goal-row-labels { flex: 1; overflow: visible; }
     .goal-muscle-name {
       font-size: 12px;
       font-weight: 700;
       color: #c0d4f0;
+      line-height: 1.8;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .goal-muscle-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
     }
     .goal-muscle-sub {
       font-size: 10px;
       color: #4a6aaa;
-      margin-top: -2px;
+      margin-top: 1px;
+      padding-left: 14px;
     }
-    .goal-stepper-wrap { width: 100%; }
-    .goal-stepper-wrap .stepper { height: 34px; }
-    .goal-stepper-wrap .stepper-btn { width: 26px; height: 34px; font-size: 16px; }
-    .goal-stepper-wrap .stepper-inp { font-size: 13px; }
+    .goal-stepper-wrap { flex-shrink: 0; width: 110px; }
+    .goal-stepper-wrap .stepper { height: 34px; width: 110px; }
+    .goal-stepper-wrap .stepper-btn { width: 30px; height: 34px; font-size: 16px; }
+    .goal-stepper-wrap .stepper-inp { font-size: 13px; width: 0; }
     .goal-card {
       background: rgba(8,18,54,0.8);
       border: 1px solid rgba(50,100,200,0.15);
@@ -1302,6 +1473,83 @@
       text-transform: uppercase;
       letter-spacing: 1px;
       margin-bottom: 6px;
+    }
+    /* ── Override Overlay ── */
+    #override-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 460;
+      background: rgba(0,0,8,0.88);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: calc(env(safe-area-inset-top) + 24px) 16px calc(env(safe-area-inset-bottom) + 24px);
+      box-sizing: border-box;
+      overflow-y: auto;
+      pointer-events: all;
+    }
+    #override-overlay.open { display: flex; }
+    #override-inner {
+      background: rgba(6,14,44,0.97);
+      border: 1px solid rgba(50,100,200,0.25);
+      border-radius: 20px;
+      width: 100%;
+      max-width: 480px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    #override-header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px 16px 0;
+      flex-shrink: 0;
+    }
+    #override-title {
+      font-size: 13px;
+      font-weight: 800;
+      color: #c0d4f0;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+    #override-body {
+      overflow-y: auto;
+      padding: 14px;
+    }
+    #override-reset-btn {
+      background: rgba(60,8,8,0.8);
+      border: 1px solid rgba(200,60,60,0.4);
+      border-radius: 12px;
+      color: #e07878;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 10px 40px;
+      cursor: pointer;
+      margin-top: 14px;
+      flex-shrink: 0;
+    }
+    #override-close-btn {
+      background: rgba(4,10,32,0.7);
+      border: 1px solid rgba(60,110,200,0.35);
+      border-radius: 12px;
+      color: #7aaace;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 10px 40px;
+      cursor: pointer;
+      margin-top: 10px;
+      flex-shrink: 0;
+    }
+    .ov-badge {
+      color: #e0a030;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      margin-left: 4px;
     }
 
     /* ── Cylinder Overlay ── */
@@ -1331,7 +1579,7 @@
     #cylinder-wrap {
       perspective: 1800px;
       width: 500px;
-      height: 480px;
+      height: 360px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -1340,22 +1588,22 @@
     }
     #cylinder-wrap:active { cursor: grabbing; }
     #cylinder {
-      width: 260px;
-      height: 260px;
+      width: 200px;
+      height: 200px;
       position: relative;
       transform-style: preserve-3d;
     }
     .room-face {
       position: absolute;
-      width: 240px;
-      height: 240px;
-      border-radius: 36px;
+      width: 180px;
+      height: 180px;
+      border-radius: 27px;
       border: 5px solid rgba(74,144,217,0.3);
       background: rgba(10,20,50,0.9) center/cover no-repeat;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 72px;
+      font-size: 54px;
       font-weight: 900;
       color: rgba(255,255,255,0.85);
       cursor: pointer;
@@ -1380,7 +1628,202 @@
       cursor: pointer;
     }
 
-    /* ── Train Mini Bar ── */
+    /* ── Rest Timer Bar ── */
+    #rest-timer-bar {
+      background: rgba(60,181,88,0.10);
+      border-bottom: 1px solid rgba(60,181,88,0.22);
+      padding: 8px 12px 6px;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      flex-shrink: 0;
+      gap: 4px;
+    }
+    #rest-timer-bar.active { display: flex; }
+    #rest-timer-row {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      gap: 8px;
+    }
+    .rest-adjust-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(60,181,88,0.35);
+      background: rgba(60,181,88,0.10);
+      color: #3cb558;
+      font-size: 24px;
+      font-weight: 300;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      touch-action: manipulation;
+      line-height: 1;
+      transition: background 0.1s;
+    }
+    .rest-adjust-btn:active { background: rgba(60,181,88,0.25); }
+    #rest-center {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1px;
+    }
+    #rest-timer-label {
+      font-size: 10px;
+      font-weight: 700;
+      color: rgba(60,181,88,0.65);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    #rest-timer-countdown {
+      font-size: 26px;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+      color: #3cb558;
+      letter-spacing: 2px;
+      text-shadow: 0 0 14px rgba(60,181,88,0.4);
+      line-height: 1;
+    }
+    #rest-timer-countdown.urgent { color: #e06030; text-shadow: 0 0 14px rgba(224,96,48,0.5); }
+    #rest-skip-btn {
+      background: none;
+      border: none;
+      color: rgba(60,181,88,0.5);
+      font-size: 10px;
+      font-weight: 700;
+      padding: 0;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    /* ── Rest Marker (between sets) ── */
+    .rest-marker {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 5px 2px;
+      color: rgba(60,181,88,0.5);
+      font-size: 11px;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 0.4px;
+      user-select: none;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition: color 0.15s;
+    }
+    .rest-marker:active { color: rgba(60,181,88,0.85); }
+    .rest-marker::before, .rest-marker::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: rgba(60,181,88,0.18);
+    }
+
+    /* ── Rest Edit Modal ── */
+    #rest-edit-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 500;
+      background: rgba(0,0,8,0.65);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    #rest-edit-modal.open { display: flex; }
+    #rest-edit-box {
+      background: rgba(5,12,40,0.98);
+      border: 1px solid rgba(60,181,88,0.25);
+      border-radius: 20px;
+      width: 100%;
+      max-width: 300px;
+      padding: 24px 22px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+    #rest-edit-title {
+      font-size: 16px;
+      font-weight: 800;
+      color: #fff;
+      text-align: center;
+    }
+    #rest-edit-sub {
+      font-size: 11px;
+      color: rgba(60,181,88,0.6);
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      margin-top: -10px;
+      text-transform: uppercase;
+    }
+    #rest-edit-stepper {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .red-btn {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(60,181,88,0.35);
+      background: rgba(60,181,88,0.10);
+      color: #3cb558;
+      font-size: 28px;
+      font-weight: 300;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      touch-action: manipulation;
+      transition: background 0.1s;
+    }
+    .red-btn:active { background: rgba(60,181,88,0.28); }
+    #rest-edit-display {
+      font-size: 38px;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+      color: #3cb558;
+      letter-spacing: 3px;
+      text-shadow: 0 0 18px rgba(60,181,88,0.4);
+      min-width: 90px;
+      text-align: center;
+    }
+    #rest-edit-actions {
+      display: flex;
+      gap: 10px;
+      width: 100%;
+    }
+    #rest-edit-cancel {
+      flex: 1;
+      padding: 13px;
+      border-radius: 12px;
+      border: 1px solid rgba(50,100,200,0.3);
+      background: rgba(10,22,60,0.6);
+      color: #7a9acc;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    #rest-edit-apply {
+      flex: 1;
+      padding: 13px;
+      border-radius: 12px;
+      border: none;
+      background: linear-gradient(135deg, #2a9a48, #1a7030);
+      color: #fff;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+    }
 
     /* ── Scrollbar ── */
     ::-webkit-scrollbar { width: 3px; }
@@ -1397,6 +1840,324 @@
 
     /* ── Animate Toggle ── */
     #animate-toggle { display: none; }
+
+    /* ── Exercise Detail Modal ── */
+    #ex-detail-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 360;
+      background: rgba(0,0,8,0.72);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: max(20px, env(safe-area-inset-top, 20px)) 20px max(20px, env(safe-area-inset-bottom, 20px));
+    }
+    #ex-detail-modal.open { display: flex; }
+    #ex-detail-box {
+      background: rgba(5,12,40,0.98);
+      border: 1px solid rgba(50,100,210,0.3);
+      border-radius: 20px;
+      width: 100%;
+      max-width: 420px;
+      max-height: 82vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    #ex-detail-header {
+      padding: 18px 18px 14px;
+      border-bottom: 1px solid rgba(40,80,180,0.2);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    #ex-detail-title-wrap { display: flex; align-items: center; gap: 10px; }
+    #ex-detail-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+    #ex-detail-name { font-size: 17px; font-weight: 800; color: #fff; }
+    #ex-detail-sub { font-size: 11px; color: #4a6aaa; margin-top: 2px; }
+    #ex-detail-close {
+      background: rgba(14,28,70,0.7);
+      border: 1px solid rgba(50,100,200,0.3);
+      border-radius: 50%;
+      color: #7a9acc;
+      font-size: 14px;
+      width: 32px; height: 32px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    #ex-detail-body { flex: 1; overflow-y: auto; padding: 16px; }
+    .exd-section {
+      font-size: 11px;
+      font-weight: 700;
+      color: #3a5a8a;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin: 20px 0 10px;
+    }
+    .exd-section:first-child { margin-top: 0; }
+    .exd-pr-grid {
+      background: rgba(6,14,44,0.88);
+      border: 1px solid rgba(50,100,200,0.2);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+    .exd-pr-head {
+      display: grid;
+      grid-template-columns: 48px 1fr 56px;
+      gap: 4px;
+      font-size: 10px;
+      font-weight: 700;
+      color: #2a3a5a;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 8px 14px;
+      border-bottom: 1px solid rgba(40,80,180,0.18);
+    }
+    .exd-pr-row {
+      display: grid;
+      grid-template-columns: 48px 1fr 56px;
+      gap: 4px;
+      align-items: center;
+      padding: 6px 14px;
+      border-bottom: 1px solid rgba(40,80,180,0.07);
+      font-size: 12px;
+    }
+    .exd-pr-row:last-child { border-bottom: none; }
+    .exd-pr-label { color: #3a5a8a; font-weight: 600; }
+    .exd-pr-val { color: #c0d4f0; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .exd-pr-date { color: #3a5070; font-size: 10px; text-align: right; font-variant-numeric: tabular-nums; }
+    .exd-pr-row.exd-pr-max .exd-pr-label,
+    .exd-pr-row.exd-pr-max .exd-pr-val { color: #4A90D9; }
+    .exd-history-entry {
+      background: rgba(6,14,44,0.85);
+      border: 1px solid rgba(50,100,200,0.18);
+      border-radius: 12px;
+      padding: 12px 14px;
+      margin-bottom: 8px;
+    }
+    .exd-entry-date {
+      font-size: 13px;
+      font-weight: 700;
+      color: #c0d4f0;
+      margin-bottom: 8px;
+    }
+    .exd-set-row {
+      display: grid;
+      grid-template-columns: 28px 1fr 1fr;
+      gap: 6px;
+      font-size: 12px;
+      padding: 4px 0;
+      border-bottom: 1px solid rgba(40,80,180,0.07);
+    }
+    .exd-set-row:last-child { border-bottom: none; }
+    .exd-set-num { color: #3a5a8a; font-weight: 700; }
+    .exd-set-val { color: #c0d4f0; font-variant-numeric: tabular-nums; }
+    .ex-item { cursor: pointer; }
+    .ex-item:active { background: rgba(74,144,217,0.06); }
+
+    /* ── Pulley Modal ── */
+    #pulley-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 500;
+      background: rgba(0,0,8,0.72);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    #pulley-modal.open { display: flex; }
+    #pulley-box {
+      background: rgba(5,12,40,0.98);
+      border: 1px solid rgba(50,100,210,0.3);
+      border-radius: 20px;
+      width: 100%;
+      max-width: 300px;
+      overflow: hidden;
+    }
+    #pulley-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 18px 14px;
+      border-bottom: 1px solid rgba(40,80,180,0.2);
+    }
+    #pulley-title { font-size: 17px; font-weight: 800; color: #fff; }
+    #pulley-close {
+      background: rgba(14,28,70,0.7);
+      border: 1px solid rgba(50,100,200,0.3);
+      border-radius: 50%;
+      color: #7a9acc;
+      font-size: 14px;
+      width: 32px; height: 32px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    #pulley-sub {
+      font-size: 12px;
+      color: #5a7aaa;
+      padding: 12px 18px 0;
+      line-height: 1.4;
+    }
+    #pulley-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      padding: 16px 18px 20px;
+    }
+    .pulley-btn {
+      background: rgba(10,22,60,0.85);
+      border: 1px solid rgba(50,100,200,0.25);
+      border-radius: 14px;
+      color: #fff;
+      font-size: 24px;
+      font-weight: 800;
+      padding: 18px 0;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+      touch-action: manipulation;
+    }
+    .pulley-btn:active {
+      background: rgba(74,144,217,0.2);
+      border-color: #4A90D9;
+    }
+
+    /* ── Weekly Overview Overlay ── */
+    #weekly-overview-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 460;
+      background: rgba(0,0,8,0.88);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: calc(env(safe-area-inset-top) + 24px) 16px calc(env(safe-area-inset-bottom) + 24px);
+      box-sizing: border-box;
+      overflow-y: auto;
+      pointer-events: all;
+    }
+    #weekly-overview-overlay.open { display: flex; }
+    #weekly-overview-inner {
+      background: rgba(6,14,44,0.97);
+      border: 1px solid rgba(50,100,200,0.25);
+      border-radius: 20px;
+      width: 100%;
+      max-width: 480px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    #weekly-overview-header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px 16px 0;
+      flex-shrink: 0;
+    }
+    #weekly-overview-title {
+      font-size: 13px;
+      font-weight: 800;
+      color: #c0d4f0;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+    #weekly-overview-body {
+      overflow-y: auto;
+      padding: 14px;
+    }
+    #weekly-overview-close-btn {
+      background: rgba(4,10,32,0.7);
+      border: 1px solid rgba(60,110,200,0.35);
+      border-radius: 12px;
+      color: #7aaace;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 10px 40px;
+      cursor: pointer;
+      margin-top: 14px;
+      flex-shrink: 0;
+    }
+    .wo-group-header {
+      font-size: 10px;
+      font-weight: 800;
+      color: #3a5a8a;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      padding: 10px 2px 6px;
+    }
+    .wo-group-header:first-child { padding-top: 2px; }
+    .wo-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      margin-bottom: 4px;
+    }
+    .wo-row {
+      background: rgba(8,18,54,0.8);
+      border: 1px solid rgba(50,100,200,0.15);
+      border-radius: 10px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .wo-row-top {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .wo-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .wo-name {
+      font-size: 12px;
+      font-weight: 700;
+      color: #c0d4f0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .wo-level {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+    }
+    .wo-sets {
+      font-size: 11px;
+      color: #5a7aaa;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* ── Cable Pulley Badge ── */
+    .cable-pulley-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(74,144,217,0.15);
+      border: 1px solid rgba(74,144,217,0.35);
+      border-radius: 8px;
+      color: #4A90D9;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 1px 5px;
+      margin-left: 5px;
+      vertical-align: middle;
+      letter-spacing: 0.3px;
+      white-space: nowrap;
+    }
   </style>
 </head>
 <body>
@@ -1419,7 +2180,6 @@
   <!-- Profile -->
   <div id="profile-section" class="section active">
     <div id="hair-badge"></div>
-    <div id="update-stamp"></div>
   </div>
 
 
@@ -1479,6 +2239,17 @@
     <div id="train-timer">00:00</div>
     <button id="finish-btn">Finish</button>
   </div>
+  <div id="rest-timer-bar">
+    <div id="rest-timer-row">
+      <button id="rest-minus-btn" class="rest-adjust-btn">−</button>
+      <div id="rest-center">
+        <span id="rest-timer-label">Rest</span>
+        <span id="rest-timer-countdown">1:30</span>
+      </div>
+      <button id="rest-plus-btn" class="rest-adjust-btn">+</button>
+    </div>
+    <button id="rest-skip-btn">Skip</button>
+  </div>
   <div id="train-body">
     <div id="train-exercises"></div>
     <button id="add-ex-main">+ Add Exercise</button>
@@ -1487,21 +2258,76 @@
 
 <!-- Exercise Picker -->
 <div id="picker">
-  <div id="picker-top">
-    <button id="picker-close">Cancel</button>
-    <input id="picker-search" type="search" placeholder="Search exercises…" autocomplete="off" />
+  <div id="picker-inner">
+    <div id="picker-top">
+      <button id="picker-close">Cancel</button>
+      <div id="picker-heading">Add Exercise</div>
+      <div style="width:60px;"></div>
+    </div>
+    <div id="picker-muscle-grid"></div>
   </div>
-  <div id="picker-list"></div>
+</div>
+
+<!-- Picker Exercise Popup -->
+<div id="picker-ex-popup">
+  <div id="picker-ex-box">
+    <div id="picker-ex-header">
+      <div id="picker-ex-left">
+        <div id="picker-ex-dot"></div>
+        <div id="picker-ex-name"></div>
+      </div>
+      <button id="picker-ex-close">✕</button>
+    </div>
+    <div id="picker-ex-list"></div>
+  </div>
 </div>
 
 <!-- Edit Modal -->
 <div id="edit-modal">
-  <div class="edit-box">
-    <div class="edit-title" id="edit-title">Edit Exercise</div>
-    <input class="edit-input" id="edit-input" type="text" autocomplete="off" />
-    <div class="edit-actions">
-      <button class="edit-cancel" id="edit-cancel-btn">Cancel</button>
-      <button class="edit-save" id="edit-save-btn">Save</button>
+  <div id="edit-box">
+    <div id="edit-header">
+      <div id="edit-header-title">Edit Exercise</div>
+      <button id="edit-close-btn">✕</button>
+    </div>
+    <div id="edit-body">
+      <div class="nex-label">Name</div>
+      <input class="nex-input" id="edit-input" type="text" autocomplete="off" placeholder="Exercise name" />
+
+      <div class="nex-label">Muscle Group</div>
+      <div class="nex-chips" id="edit-bodypart"></div>
+
+      <div class="nex-label">Category</div>
+      <div class="nex-chips" id="edit-category"></div>
+
+      <div id="edit-pulley-row">
+        <div class="nex-label">Pulleys</div>
+        <div class="nex-chips" id="edit-pulleys"></div>
+      </div>
+
+      <div class="nex-label">Rest Time</div>
+      <div class="edit-rest-ctrl">
+        <button class="edit-rest-btn" id="edit-rest-minus">−</button>
+        <div id="edit-rest-display">1:30</div>
+        <button class="edit-rest-btn" id="edit-rest-plus">+</button>
+      </div>
+
+      <button id="edit-delete-btn">Delete Exercise</button>
+    </div>
+    <div id="edit-footer">
+      <button id="edit-cancel-btn">Cancel</button>
+      <button id="edit-save-btn">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Exercise Delete Confirm Modal -->
+<div id="ex-delete-modal" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,8,0.72);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);align-items:center;justify-content:center;padding:20px;">
+  <div style="background:rgba(5,12,40,0.98);border:1px solid rgba(192,57,43,0.35);border-radius:20px;width:100%;max-width:320px;padding:26px;">
+    <div style="font-size:17px;font-weight:800;color:#fff;margin-bottom:10px;">Delete Exercise?</div>
+    <div style="font-size:14px;color:#7a9ac0;line-height:1.5;margin-bottom:22px;">This will permanently delete this exercise and remove all of its history from your logs.</div>
+    <div style="display:flex;gap:10px;">
+      <button id="ex-delete-no" style="flex:1;padding:13px;border-radius:12px;border:1px solid rgba(50,100,200,0.3);background:rgba(10,22,60,0.6);color:#7a9acc;font-size:14px;font-weight:600;cursor:pointer;">No</button>
+      <button id="ex-delete-yes" style="flex:1;padding:13px;border-radius:12px;border:none;background:linear-gradient(135deg,#c0392b,#922b21);color:#fff;font-size:14px;font-weight:700;cursor:pointer;">Yes, Delete</button>
     </div>
   </div>
 </div>
@@ -1530,6 +2356,25 @@
   </div>
 </div>
 
+<!-- Pulley Count Modal -->
+<div id="pulley-modal">
+  <div id="pulley-box">
+    <div id="pulley-header">
+      <div id="pulley-title">How many pulleys?</div>
+      <button id="pulley-close">✕</button>
+    </div>
+    <div id="pulley-sub">Select the number of pulleys used on this cable machine</div>
+    <div id="pulley-grid">
+      <button class="pulley-btn" data-count="1">1</button>
+      <button class="pulley-btn" data-count="2">2</button>
+      <button class="pulley-btn" data-count="3">3</button>
+      <button class="pulley-btn" data-count="4">4</button>
+      <button class="pulley-btn" data-count="5">5</button>
+      <button class="pulley-btn" data-count="6">6</button>
+    </div>
+  </div>
+</div>
+
 <!-- Muscle Exercise Popup -->
 <div id="ex-popup">
   <div id="ex-popup-box">
@@ -1553,6 +2398,8 @@
   <button id="room-btn">Training Room</button>
   <button id="personalize-btn">Avatar</button>
   <button id="goals-btn">Personalized Goals</button>
+  <button id="weekly-overview-btn">Weekly Overview</button>
+  <button id="open-override-btn">Override Sets</button>
 </div>
 
 <!-- Room Cylinder Overlay -->
@@ -1582,6 +2429,9 @@
 <!-- Goals Overlay -->
 <div id="goals-overlay">
   <div id="goals-inner">
+    <div id="goals-header">
+      <span id="goals-title">Personalized Goals</span>
+    </div>
     <div id="goals-body">
       <div class="goal-card">
         <div class="goal-card-title">Weekly Set Goals per Muscle</div>
@@ -1602,8 +2452,77 @@
   <button id="goals-close-btn">Done</button>
 </div>
 
-<!-- Test Panel -->
-<div id="test-panel"></div>
+<!-- Set Overrides Popup -->
+<div id="override-overlay">
+  <div id="override-inner">
+    <div id="override-header">
+      <span id="override-title">Set Overrides</span>
+    </div>
+    <div id="override-body">
+      <div class="goal-card">
+        <div class="goal-card-title">Override Weekly Sets</div>
+        <div style="font-size:12px;color:#7a9ac0;line-height:1.55;margin-top:6px;">
+          Manually set the displayed sets per muscle. Does not affect your logged workouts.
+        </div>
+      </div>
+      <div id="override-list"></div>
+    </div>
+  </div>
+  <div id="override-actions">
+    <button id="override-reset-btn">Reset All Overrides</button>
+    <button id="override-close-btn">Done</button>
+  </div>
+</div>
+
+<!-- Weekly Overview Overlay -->
+<div id="weekly-overview-overlay">
+  <div id="weekly-overview-inner">
+    <div id="weekly-overview-header">
+      <span id="weekly-overview-title">Weekly Overview</span>
+    </div>
+    <div id="weekly-overview-body">
+      <div id="weekly-overview-list"></div>
+    </div>
+  </div>
+  <button id="weekly-overview-close-btn">Done</button>
+</div>
+
+<!-- Rest Edit Modal (in-workout only) -->
+<div id="rest-edit-modal">
+  <div id="rest-edit-box">
+    <div id="rest-edit-title">Rest Duration</div>
+    <div id="rest-edit-sub">This workout only</div>
+    <div id="rest-edit-stepper">
+      <button id="rest-edit-minus" class="red-btn">−</button>
+      <div id="rest-edit-display">1:30</div>
+      <button id="rest-edit-plus" class="red-btn">+</button>
+    </div>
+    <div id="rest-edit-actions">
+      <button id="rest-edit-cancel">Cancel</button>
+      <button id="rest-edit-apply">Apply</button>
+    </div>
+  </div>
+</div>
+
+<!-- Exercise Detail Modal -->
+<div id="ex-detail-modal">
+  <div id="ex-detail-box">
+    <div id="ex-detail-header">
+      <div id="ex-detail-title-wrap">
+        <div id="ex-detail-dot"></div>
+        <div>
+          <div id="ex-detail-name"></div>
+          <div id="ex-detail-sub"></div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <button id="ex-detail-edit-btn" style="background:rgba(14,28,70,0.7);border:1px solid rgba(50,100,200,0.3);border-radius:10px;color:#7a9acc;font-size:13px;font-weight:600;padding:6px 14px;cursor:pointer;">Edit</button>
+        <button id="ex-detail-close" style="background:rgba(14,28,70,0.7);border:1px solid rgba(50,100,200,0.3);border-radius:50%;color:#7a9acc;font-size:14px;width:32px;height:32px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">✕</button>
+      </div>
+    </div>
+    <div id="ex-detail-body"></div>
+  </div>
+</div>
 
 <!-- History Edit Modal -->
 <div id="hist-edit-modal">
@@ -1653,21 +2572,26 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 // DATA
 // ═══════════════════════════════════════════════════════════
 
-const MUSCLES = ['Upper Back','Lower Back','Back','Biceps','Triceps','Forearms','Quads','Hamstrings','Calves','Chest','Abs','Shoulders','Neck','Traps'];
+const MUSCLES = ['Mid Back','Lats','Upper Back','Biceps','Triceps','Forearms','Quads','Hamstrings','Calves','Chest','Abs','Obliques','Shoulders','Neck','Traps'];
+
+const MUSCLE_GROUPS = [
+  { label: 'Upper Body', muscles: ['Chest','Shoulders','Traps','Mid Back','Lats','Upper Back','Biceps','Triceps','Forearms','Abs','Obliques','Neck'] },
+  { label: 'Lower Body', muscles: ['Quads','Hamstrings','Calves'] },
+];
 
 const INDEX_TO_PART = {
   0:  'Shorts',
   1:  'Chest',
   2:  'Hair',
   3:  'Shoulders',
-  4:  'Upper Back',
+  4:  'Mid Back',
   5:  'Quads',
   6:  'HairStatic',
   7:  'Boots',
-  8:  'Lower Back',
+  8:  'Lats',
   9:  'Biceps',
-  10: 'Abs',
-  11: 'Back',
+  10: 'Obliques',
+  11: 'Upper Back',
   12: 'Forearms',
   13: 'Neck',
   14: 'Face',
@@ -1696,7 +2620,9 @@ function defaultState() {
     exercises: Object.fromEntries(MUSCLES.map(m => [m, [m + ' Exercise']])),
     history: [],
     prs: {},
-    repPRs: {}
+    repPRs: {},
+    cablePulleys: {},
+    exerciseMeta: {}
   };
 }
 
@@ -1714,6 +2640,10 @@ function loadState() {
     if (s.exercises && !('Neck' in s.exercises)) s.exercises['Neck'] = ['Neck Exercise'];
     if (!('Traps' in s.weeklySets)) s.weeklySets['Traps'] = 0;
     if (s.exercises && !('Traps' in s.exercises)) s.exercises['Traps'] = ['Traps Exercise'];
+    if (!('Obliques' in s.weeklySets)) s.weeklySets['Obliques'] = 0;
+    if (s.exercises && !('Obliques' in s.exercises)) s.exercises['Obliques'] = ['Obliques Exercise'];
+    if (!s.cablePulleys) s.cablePulleys = {};
+    if (!s.exerciseMeta) s.exerciseMeta = {};
     if (s.lastReset !== getMondayStr()) {
       s.lastReset = getMondayStr();
       s.weeklySets = Object.fromEntries(MUSCLES.map(m => [m, 0]));
@@ -1722,23 +2652,12 @@ function loadState() {
   } catch { return defaultState(); }
 }
 
-function fmtStamp(ts) {
-  const d = new Date(ts);
-  const h = d.getHours(), m = String(d.getMinutes()).padStart(2,'0');
-  return `updated ${h % 12 || 12}:${m}${h < 12 ? 'am' : 'pm'}`;
-}
-function refreshStamp() {
-  const ts = localStorage.getItem('trainhard_stamp');
-  const el = document.getElementById('update-stamp');
-  if (el) el.textContent = ts ? fmtStamp(Number(ts)) : '';
-}
 function save() {
   localStorage.setItem('trainhard_v1', JSON.stringify(state));
-  localStorage.setItem('trainhard_stamp', Date.now());
-  refreshStamp();
 }
 
 let state = loadState();
+recalcAllPRs();
 recalcAllRepPRs();
 save();
 
@@ -1810,7 +2729,7 @@ function setupModelMeshes(allMeshes, targetMap) {
 
     const part = INDEX_TO_PART[i];
     if (!part) return;
-    if (MUSCLES.includes(part)) {
+if (MUSCLES.includes(part)) {
       if (!targetMap[part]) targetMap[part] = [];
       targetMap[part].push(mesh);
     } else if (part === 'HairStatic') {
@@ -1835,8 +2754,19 @@ function getGoal(muscle) {
   } catch { return 10; }
 }
 
+function loadOverrides() {
+  try { return JSON.parse(localStorage.getItem('trainhard_setoverrides') || '{}'); } catch { return {}; }
+}
+function saveOverrides(ov) {
+  localStorage.setItem('trainhard_setoverrides', JSON.stringify(ov));
+}
+function getDisplaySets(muscle) {
+  const ov = loadOverrides();
+  return (muscle in ov) ? ov[muscle] : (state.weeklySets[muscle] || 0);
+}
+
 function getLevel(muscle) {
-  const s = state.weeklySets[muscle] || 0;
+  const s = getDisplaySets(muscle);
   const goal = getGoal(muscle);
   if (s < 2)     return 1;
   if (s >= goal) return 5;
@@ -1971,7 +2901,7 @@ loadModel(0, (entry) => {
   const box    = new THREE.Box3().setFromObject(mdl);
   const radius = box.getBoundingSphere(new THREE.Sphere()).radius;
   const fovRad = THREE.MathUtils.degToRad(camera.fov);
-  const dist   = (radius / Math.sin(fovRad / 2)) * 1.82;
+  const dist   = (radius / Math.sin(fovRad / 2)) * 1.37;
 
   camera.position.set(0, 0, dist);
   camera.near = dist / 100;
@@ -1994,10 +2924,7 @@ loadModel(0, (entry) => {
   document.getElementById('loading').style.display = 'none';
   document.getElementById('app').style.display = 'flex';
   document.getElementById('profile-name').textContent = state.userName;
-  refreshStamp();
   renderFocusStats();
-  buildTestPanel();
-  document.getElementById('test-panel').classList.add('visible');
 });
 
 window.addEventListener('resize', () => {
@@ -2040,7 +2967,6 @@ function goToTab(tab) {
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   document.getElementById(tabSections[tab]).classList.add('active');
   document.getElementById('canvas-container').style.display = tab === 'profile' ? 'block' : 'none';
-  document.getElementById('test-panel').classList.toggle('visible', tab === 'profile');
   document.getElementById('profile-btns').classList.toggle('visible', tab === 'profile');
   if (tab !== 'profile') document.getElementById('focus-stats-panel').classList.remove('visible');
 
@@ -2112,37 +3038,6 @@ function goToStanding() {
 // ─────────────────────────────────────────────────────────────
 
 // ═══════════════════════════════════════════════════════════
-// TEST PANEL
-// ═══════════════════════════════════════════════════════════
-
-function buildTestPanel() {
-  const panel = document.getElementById('test-panel');
-  panel.innerHTML = '';
-  for (const muscle of MUSCLES) {
-    const sets = state.weeklySets[muscle] || 0;
-    const row = document.createElement('div');
-    row.className = 'test-row';
-    row.innerHTML = `
-      <div class="test-label">${muscle}</div>
-      <div class="test-count" id="tc-${muscle.replace(/\s/g,'_')}">${sets}</div>
-      <button class="test-btn test-minus">−</button>
-      <button class="test-btn test-plus">+</button>
-    `;
-    row.querySelector('.test-plus').addEventListener('click', () => {
-      state.weeklySets[muscle] = (state.weeklySets[muscle] || 0) + 1;
-      save(); updateModel(); buildTestPanel();
-    });
-    row.querySelector('.test-minus').addEventListener('click', () => {
-      state.weeklySets[muscle] = Math.max(0, (state.weeklySets[muscle] || 0) - 1);
-      save(); updateModel(); buildTestPanel();
-    });
-    panel.appendChild(row);
-  }
-}
-
-buildTestPanel();
-
-// ═══════════════════════════════════════════════════════════
 // HISTORY
 // ═══════════════════════════════════════════════════════════
 
@@ -2184,10 +3079,55 @@ function renderHistory() {
     const card = document.createElement('div');
     card.className = 'card';
     card.innerHTML = `
-      <div class="card-title">${w.date}</div>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:2px;">
+        <div class="card-title" style="margin-bottom:0;">${w.date}</div>
+        <div class="hist-desktop-actions">
+          <button class="hist-desktop-btn hdb-edit">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Edit
+          </button>
+          <button class="hist-desktop-btn hdb-delete">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+            Delete
+          </button>
+        </div>
+      </div>
       <div class="card-sub" style="margin-bottom:12px;">${fmtTime(w.duration)} &nbsp;·&nbsp; ${w.exercises.length} exercises &nbsp;·&nbsp; ${totalSets} sets</div>
-      ${w.exercises.map(e => `<div class="hist-ex"><span>${e.name}</span><span style="color:#3a5a80">${e.sets.length} sets</span></div>`).join('')}
+      ${w.exercises.map(e => {
+        const pc = state.cablePulleys && state.cablePulleys[e.name];
+        const badge = pc ? `<span class="cable-pulley-badge">${pc}P</span>` : '';
+        return `<div class="hist-ex"><span>${e.name}${badge}</span><span style="color:#3a5a80">${e.sets.length} sets</span></div>`;
+      }).join('')}
     `;
+
+    card.querySelector('.hdb-edit').addEventListener('click', () => {
+      openHistEdit(realIdx);
+    });
+    card.querySelector('.hdb-delete').addEventListener('click', () => {
+      wrapper.style.transition = 'opacity 0.2s ease, transform 0.2s ease';
+      wrapper.style.opacity = '0';
+      wrapper.style.transform = 'translateX(-100%)';
+      setTimeout(() => {
+        state.history.splice(realIdx, 1);
+        state.weeklySets = Object.fromEntries(MUSCLES.map(m => [m, 0]));
+        const monday = getMondayStr();
+        for (const w of state.history) {
+          if (w.date && isThisWeek(w.date, monday)) {
+            for (const ex of w.exercises) {
+              if (state.weeklySets[ex.muscle] !== undefined) {
+                state.weeklySets[ex.muscle] += ex.sets.length;
+              }
+            }
+          }
+        }
+        recalcAllPRs();
+        recalcAllRepPRs();
+        save();
+        updateModel();
+        renderFocusStats();
+        renderHistory();
+      }, 220);
+    });
 
     actions.querySelector('.hsb-edit').addEventListener('click', () => {
       closeAllSwipeCards();
@@ -2199,7 +3139,22 @@ function renderHistory() {
       wrapper.style.transform = 'translateX(-100%)';
       setTimeout(() => {
         state.history.splice(realIdx, 1);
+        state.weeklySets = Object.fromEntries(MUSCLES.map(m => [m, 0]));
+        const monday = getMondayStr();
+        for (const w of state.history) {
+          if (w.date && isThisWeek(w.date, monday)) {
+            for (const ex of w.exercises) {
+              if (state.weeklySets[ex.muscle] !== undefined) {
+                state.weeklySets[ex.muscle] += ex.sets.length;
+              }
+            }
+          }
+        }
+        recalcAllPRs();
+        recalcAllRepPRs();
         save();
+        updateModel();
+        renderFocusStats();
         renderHistory();
       }, 220);
     });
@@ -2379,6 +3334,7 @@ document.getElementById('hist-done-btn').addEventListener('click', () => {
     }
   }
 
+  recalcAllPRs();
   recalcAllRepPRs();
   save();
   updateModel();
@@ -2403,6 +3359,7 @@ document.getElementById('hist-delete-btn').addEventListener('click', () => {
     }
   }
 
+  recalcAllPRs();
   recalcAllRepPRs();
   save();
   updateModel();
@@ -2414,8 +3371,7 @@ document.getElementById('hist-delete-btn').addEventListener('click', () => {
 document.getElementById('hist-add-ex-btn').addEventListener('click', () => {
   const picker = document.getElementById('picker');
   picker._histMode = true;
-  document.getElementById('picker-search').value = '';
-  renderPickerList('');
+  renderPickerMuscleGrid();
   picker.classList.add('open');
 });
 
@@ -2487,18 +3443,132 @@ function renderExPopup() {
   exList.forEach((ex, i) => {
     const item = document.createElement('div');
     item.className = 'ex-item';
+    const pc = state.cablePulleys && state.cablePulleys[ex];
+    const badge = pc ? ` <span class="cable-pulley-badge">${pc}P</span>` : '';
     item.innerHTML = `
-      <span class="ex-item-name">${ex}</span>
+      <span class="ex-item-name">${ex}${badge}</span>
       <button class="ex-edit-btn">Edit</button>
     `;
+    item.addEventListener('click', (e) => {
+      if (!e.target.closest('.ex-edit-btn')) openExDetail(ex, muscle);
+    });
     item.querySelector('.ex-edit-btn').addEventListener('click', () => {
       openEdit(muscle, i);
     });
     list.appendChild(item);
   });
 
-  document.getElementById('ex-popup-add').onclick = () => openAddEx(muscle);
+  document.getElementById('ex-popup-add').onclick = () => {
+    document.getElementById('ex-popup').classList.remove('open');
+    openNewExModal(muscle);
+  };
 }
+
+function openExDetail(exName, muscle) {
+  const lv = getLevel(muscle);
+  const dotColor = LEVEL_COLORS[lv];
+  const pc = state.cablePulleys && state.cablePulleys[exName];
+  const exIdx = (state.exercises[muscle] || []).indexOf(exName);
+
+  document.getElementById('ex-detail-dot').style.cssText =
+    `background:${dotColor};box-shadow:0 0 8px ${dotColor};`;
+  document.getElementById('ex-detail-name').textContent = exName;
+  document.getElementById('ex-detail-sub').textContent =
+    muscle + (pc ? ` · ${pc} pulley${pc > 1 ? 's' : ''}` : '');
+
+  document.getElementById('ex-detail-edit-btn').onclick = () => {
+    document.getElementById('ex-detail-modal').classList.remove('open');
+    openEdit(muscle, exIdx);
+  };
+
+  const body = document.getElementById('ex-detail-body');
+  body.innerHTML = '';
+
+  // ── Rep PRs ──
+  const repPRs = (state.repPRs || {})[exName] || {};
+  const hasRepPRs = Object.keys(repPRs).length > 0;
+  if (hasRepPRs) {
+    const sec = document.createElement('div');
+    sec.className = 'exd-section';
+    sec.textContent = 'Personal Records';
+    body.appendChild(sec);
+
+    const grid = document.createElement('div');
+    grid.className = 'exd-pr-grid';
+
+    const head = document.createElement('div');
+    head.className = 'exd-pr-head';
+    head.innerHTML = '<span>Reps</span><span>Weight</span><span>Date</span>';
+    grid.appendChild(head);
+
+    for (let r = 1; r <= 12; r++) {
+      const entry = repPRs[r];
+      if (!entry) continue;
+      const w = typeof entry === 'object' ? entry.weight : entry;
+      const d = typeof entry === 'object' ? fmtPRDate(entry.date) : '—';
+      const row = document.createElement('div');
+      row.className = 'exd-pr-row';
+      row.innerHTML = `<span class="exd-pr-label">${r}RM</span><span class="exd-pr-val">${w} lbs</span><span class="exd-pr-date">${d}</span>`;
+      grid.appendChild(row);
+    }
+
+    const mx = repPRs.max;
+    if (mx) {
+      const maxRow = document.createElement('div');
+      maxRow.className = 'exd-pr-row exd-pr-max';
+      maxRow.innerHTML = `<span class="exd-pr-label">Max</span><span class="exd-pr-val">${mx.reps}r @ ${mx.weight} lbs</span><span class="exd-pr-date">${fmtPRDate(mx.date)}</span>`;
+      grid.appendChild(maxRow);
+    }
+
+    body.appendChild(grid);
+  }
+
+  // ── History ──
+  const entries = [];
+  for (const w of state.history) {
+    const ex = w.exercises.find(e => e.name === exName);
+    if (ex) entries.push({ date: w.date, sets: ex.sets.filter(s => s.weight || s.reps) });
+  }
+  entries.reverse();
+
+  const histSec = document.createElement('div');
+  histSec.className = 'exd-section';
+  histSec.textContent = entries.length ? 'History' : 'History — None yet';
+  body.appendChild(histSec);
+
+  entries.forEach(entry => {
+    const card = document.createElement('div');
+    card.className = 'exd-history-entry';
+
+    const dateEl = document.createElement('div');
+    dateEl.className = 'exd-entry-date';
+    dateEl.textContent = entry.date;
+    card.appendChild(dateEl);
+
+    entry.sets.forEach((s, i) => {
+      const row = document.createElement('div');
+      row.className = 'exd-set-row';
+      const wVal = s.weight ? `${s.weight} lbs` : '—';
+      const rVal = s.reps ? `${s.reps} reps` : '—';
+      row.innerHTML = `<span class="exd-set-num">${i + 1}</span><span class="exd-set-val">${wVal}</span><span class="exd-set-val">${rVal}</span>`;
+      card.appendChild(row);
+    });
+
+    body.appendChild(card);
+  });
+
+  document.getElementById('ex-detail-modal').classList.add('open');
+}
+
+document.getElementById('ex-detail-close').addEventListener('click', () => {
+  document.getElementById('ex-detail-modal').classList.remove('open');
+});
+
+document.getElementById('ex-detail-modal').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('ex-detail-modal')) {
+    document.getElementById('ex-detail-modal').classList.remove('open');
+  }
+});
 
 // ═══════════════════════════════════════════════════════════
 // STATS
@@ -2524,37 +3594,229 @@ function renderStats() {
 // ═══════════════════════════════════════════════════════════
 
 let editCtx = null;
+let editMuscle = null;
+let editCategory = null;
+let editPulleys = null;
+let editRestSecs = 90;
+
+function updateEditRestDisplay() {
+  document.getElementById('edit-rest-display').textContent = fmtRestSecs(editRestSecs);
+}
+
+function buildEditBodypartChips(selected) {
+  const wrap = document.getElementById('edit-bodypart');
+  wrap.innerHTML = '';
+  MUSCLES.forEach(m => {
+    const chip = document.createElement('div');
+    chip.className = 'nex-chip' + (m === selected ? ' selected' : '');
+    chip.textContent = m;
+    chip.addEventListener('click', () => {
+      wrap.querySelectorAll('.nex-chip').forEach(c => c.classList.remove('selected'));
+      chip.classList.add('selected');
+      editMuscle = m;
+    });
+    wrap.appendChild(chip);
+  });
+}
+
+function buildEditCategoryChips(selected) {
+  const wrap = document.getElementById('edit-category');
+  wrap.innerHTML = '';
+  NEX_CATEGORIES.forEach(cat => {
+    const chip = document.createElement('div');
+    chip.className = 'nex-chip' + (cat === selected ? ' selected' : '');
+    chip.textContent = cat;
+    chip.addEventListener('click', () => {
+      wrap.querySelectorAll('.nex-chip').forEach(c => c.classList.remove('selected'));
+      chip.classList.add('selected');
+      editCategory = cat;
+      document.getElementById('edit-pulley-row').classList.toggle('visible', cat === 'Cable Machine');
+    });
+    wrap.appendChild(chip);
+  });
+}
+
+function buildEditPulleyChips(selected) {
+  const wrap = document.getElementById('edit-pulleys');
+  wrap.innerHTML = '';
+  for (let i = 1; i <= 6; i++) {
+    const chip = document.createElement('div');
+    chip.className = 'nex-chip' + (i === selected ? ' selected' : '');
+    chip.textContent = i;
+    chip.addEventListener('click', () => {
+      wrap.querySelectorAll('.nex-chip').forEach(c => c.classList.remove('selected'));
+      chip.classList.add('selected');
+      editPulleys = i;
+    });
+    wrap.appendChild(chip);
+  }
+}
 
 function openEdit(muscle, idx) {
   editCtx = { muscle, idx };
-  document.getElementById('edit-title').textContent = 'Edit Exercise';
-  document.getElementById('edit-input').value = state.exercises[muscle][idx];
+  editMuscle = muscle;
+  const exName = state.exercises[muscle][idx];
+  const meta = (state.exerciseMeta || {})[exName] || {};
+  editCategory = meta.category || null;
+  editPulleys = (state.cablePulleys || {})[exName] || null;
+  editRestSecs = meta.restTime || 90;
+
+  document.getElementById('edit-header-title').textContent = 'Edit Exercise';
+  document.getElementById('edit-input').value = exName;
+  buildEditBodypartChips(muscle);
+  buildEditCategoryChips(editCategory);
+  buildEditPulleyChips(editPulleys);
+  document.getElementById('edit-pulley-row').classList.toggle('visible', editCategory === 'Cable Machine');
+  updateEditRestDisplay();
+  document.getElementById('edit-delete-btn').style.display = 'block';
   document.getElementById('edit-modal').classList.add('open');
   setTimeout(() => document.getElementById('edit-input').focus(), 100);
 }
 
 function openAddEx(muscle) {
   editCtx = { muscle, idx: -1 };
-  document.getElementById('edit-title').textContent = 'Add Exercise';
+  editMuscle = muscle;
+  editCategory = null;
+  editPulleys = null;
+  editRestSecs = 90;
+  document.getElementById('edit-header-title').textContent = 'Add Exercise';
   document.getElementById('edit-input').value = '';
+  buildEditBodypartChips(muscle);
+  buildEditCategoryChips(null);
+  buildEditPulleyChips(null);
+  document.getElementById('edit-pulley-row').classList.remove('visible');
+  updateEditRestDisplay();
+  document.getElementById('edit-delete-btn').style.display = 'none';
   document.getElementById('edit-modal').classList.add('open');
   setTimeout(() => document.getElementById('edit-input').focus(), 100);
 }
 
-document.getElementById('edit-cancel-btn').addEventListener('click', () => {
+function closeEditModal() {
   document.getElementById('edit-modal').classList.remove('open');
+}
+
+document.getElementById('edit-cancel-btn').addEventListener('click', closeEditModal);
+document.getElementById('edit-close-btn').addEventListener('click', closeEditModal);
+document.getElementById('edit-modal').addEventListener('click', e => {
+  if (e.target === document.getElementById('edit-modal')) closeEditModal();
+});
+
+document.getElementById('edit-rest-minus').addEventListener('click', () => {
+  editRestSecs = Math.max(15, editRestSecs - 15);
+  updateEditRestDisplay();
+});
+document.getElementById('edit-rest-plus').addEventListener('click', () => {
+  editRestSecs = Math.min(600, editRestSecs + 15);
+  updateEditRestDisplay();
 });
 
 document.getElementById('edit-save-btn').addEventListener('click', () => {
-  const val = document.getElementById('edit-input').value.trim();
-  if (!val) return;
-  const { muscle, idx } = editCtx;
-  if (idx === -1) state.exercises[muscle].push(val);
-  else state.exercises[muscle][idx] = val;
+  const newName = document.getElementById('edit-input').value.trim();
+  if (!newName) { alert('Please enter a name.'); return; }
+  if (!editMuscle) { alert('Please select a muscle group.'); return; }
+
+  const { muscle: oldMuscle, idx } = editCtx;
+
+  if (idx === -1) {
+    // Adding new exercise
+    if (!state.exercises[editMuscle]) state.exercises[editMuscle] = [];
+    state.exercises[editMuscle].push(newName);
+  } else {
+    const oldName = state.exercises[oldMuscle][idx];
+
+    if (oldName !== newName || oldMuscle !== editMuscle) {
+      state.exercises[oldMuscle].splice(idx, 1);
+      if (!state.exercises[editMuscle]) state.exercises[editMuscle] = [];
+      state.exercises[editMuscle].push(newName);
+    }
+
+    if (oldName !== newName) {
+      if (state.prs[oldName]) { state.prs[newName] = state.prs[oldName]; delete state.prs[oldName]; }
+      if (state.repPRs[oldName]) { state.repPRs[newName] = state.repPRs[oldName]; delete state.repPRs[oldName]; }
+      if (state.cablePulleys[oldName] !== undefined) { state.cablePulleys[newName] = state.cablePulleys[oldName]; delete state.cablePulleys[oldName]; }
+      if (state.exerciseMeta[oldName]) { state.exerciseMeta[newName] = state.exerciseMeta[oldName]; delete state.exerciseMeta[oldName]; }
+      for (const w of state.history) {
+        for (const ex of w.exercises) {
+          if (ex.name === oldName) { ex.name = newName; ex.muscle = editMuscle; }
+        }
+      }
+      const focus = loadFocus();
+      const fi = focus.indexOf(oldName);
+      if (fi !== -1) { focus[fi] = newName; saveFocus(focus); }
+    } else if (oldMuscle !== editMuscle) {
+      for (const w of state.history) {
+        for (const ex of w.exercises) {
+          if (ex.name === oldName) ex.muscle = editMuscle;
+        }
+      }
+    }
+  }
+
+  if (!state.exerciseMeta[newName]) state.exerciseMeta[newName] = {};
+  if (editCategory) state.exerciseMeta[newName].category = editCategory;
+  state.exerciseMeta[newName].restTime = editRestSecs;
+
+  if (editCategory === 'Cable Machine' && editPulleys) {
+    state.cablePulleys[newName] = editPulleys;
+  } else if (editCategory !== 'Cable Machine') {
+    delete state.cablePulleys[newName];
+  }
+
   save();
   renderExercises();
-  if (exPopupMuscle) renderExPopup();
+  exPopupMuscle = editMuscle;
+  renderExPopup();
+  closeEditModal();
+});
+
+document.getElementById('edit-delete-btn').addEventListener('click', () => {
   document.getElementById('edit-modal').classList.remove('open');
+  document.getElementById('ex-delete-modal').style.display = 'flex';
+});
+
+document.getElementById('ex-delete-no').addEventListener('click', () => {
+  document.getElementById('ex-delete-modal').style.display = 'none';
+  document.getElementById('edit-modal').classList.add('open');
+});
+
+document.getElementById('ex-delete-yes').addEventListener('click', () => {
+  const { muscle, idx } = editCtx;
+  const exName = state.exercises[muscle][idx];
+
+  // Remove from exercises list
+  state.exercises[muscle].splice(idx, 1);
+
+  // Remove from PRs and cable pulleys
+  delete state.prs[exName];
+  delete state.repPRs[exName];
+  if (state.cablePulleys) delete state.cablePulleys[exName];
+
+  // Strip from all history entries
+  for (const w of state.history) {
+    w.exercises = w.exercises.filter(e => e.name !== exName);
+  }
+  state.history = state.history.filter(w => w.exercises.length > 0);
+
+  // Recount weekly sets from remaining history
+  state.weeklySets = Object.fromEntries(MUSCLES.map(m => [m, 0]));
+  const monday = getMondayStr();
+  for (const w of state.history) {
+    if (w.date && isThisWeek(w.date, monday)) {
+      for (const ex of w.exercises) {
+        if (state.weeklySets[ex.muscle] !== undefined) {
+          state.weeklySets[ex.muscle] += ex.sets.length;
+        }
+      }
+    }
+  }
+
+  recalcAllRepPRs();
+  save();
+  updateModel();
+  renderExercises();
+  if (exPopupMuscle) renderExPopup();
+  document.getElementById('ex-delete-modal').style.display = 'none';
+  document.getElementById('ex-detail-modal').classList.remove('open');
 });
 
 // ═══════════════════════════════════════════════════════════
@@ -2627,6 +3889,105 @@ let timerSecs = 0;
 let trainActive = false;
 const session = [];
 
+let restDuration = 90;
+let restInterval = null;
+let restSecs = 0;
+
+function fmtRestSecs(secs) {
+  const m = Math.floor(secs / 60);
+  const s = secs % 60;
+  return `${m}:${String(s).padStart(2, '0')}`;
+}
+
+function updateRestMarkers() {
+  document.querySelectorAll('.rest-marker').forEach(el => {
+    el.textContent = fmtRestSecs(restDuration);
+  });
+}
+
+function startRestTimer(duration) {
+  clearInterval(restInterval);
+  restSecs = duration || restDuration;
+  updateRestDisplay();
+  document.getElementById('rest-timer-bar').classList.add('active');
+  restInterval = setInterval(() => {
+    restSecs--;
+    if (restSecs <= 0) {
+      stopRestTimer();
+    } else {
+      updateRestDisplay();
+    }
+  }, 1000);
+}
+
+function stopRestTimer() {
+  clearInterval(restInterval);
+  restInterval = null;
+  document.getElementById('rest-timer-bar').classList.remove('active');
+}
+
+function updateRestDisplay() {
+  const el = document.getElementById('rest-timer-countdown');
+  el.textContent = fmtRestSecs(restSecs);
+  el.classList.toggle('urgent', restSecs <= 10);
+}
+
+document.getElementById('rest-skip-btn').addEventListener('click', stopRestTimer);
+
+document.getElementById('rest-minus-btn').addEventListener('click', () => {
+  restDuration = Math.max(15, restDuration - 15);
+  if (restInterval) restSecs = Math.max(1, restSecs - 15);
+  updateRestDisplay();
+  updateRestMarkers();
+});
+
+document.getElementById('rest-plus-btn').addEventListener('click', () => {
+  restDuration = Math.min(600, restDuration + 15);
+  if (restInterval) restSecs = Math.min(restDuration, restSecs + 15);
+  updateRestDisplay();
+  updateRestMarkers();
+});
+
+// ── In-workout rest edit modal ──
+let restEditTemp = 90;
+
+function openRestEdit() {
+  restEditTemp = restDuration;
+  document.getElementById('rest-edit-display').textContent = fmtRestSecs(restEditTemp);
+  document.getElementById('rest-edit-modal').classList.add('open');
+}
+
+function closeRestEdit() {
+  document.getElementById('rest-edit-modal').classList.remove('open');
+}
+
+document.getElementById('rest-edit-minus').addEventListener('click', () => {
+  restEditTemp = Math.max(15, restEditTemp - 15);
+  document.getElementById('rest-edit-display').textContent = fmtRestSecs(restEditTemp);
+});
+
+document.getElementById('rest-edit-plus').addEventListener('click', () => {
+  restEditTemp = Math.min(600, restEditTemp + 15);
+  document.getElementById('rest-edit-display').textContent = fmtRestSecs(restEditTemp);
+});
+
+document.getElementById('rest-edit-apply').addEventListener('click', () => {
+  restDuration = restEditTemp;
+  if (restInterval) restSecs = Math.min(restSecs, restDuration);
+  updateRestDisplay();
+  updateRestMarkers();
+  closeRestEdit();
+});
+
+document.getElementById('rest-edit-cancel').addEventListener('click', closeRestEdit);
+document.getElementById('rest-edit-modal').addEventListener('click', e => {
+  if (e.target === document.getElementById('rest-edit-modal')) closeRestEdit();
+});
+
+document.getElementById('train-exercises').addEventListener('click', e => {
+  if (e.target.classList.contains('rest-marker')) openRestEdit();
+});
+
 function setTimerDisplay(t) {
   document.getElementById('train-timer').textContent = t;
 }
@@ -2634,6 +3995,7 @@ function setTimerDisplay(t) {
 function closeTrain() {
   trainActive = false;
   clearInterval(timerInterval);
+  stopRestTimer();
   const modal = document.getElementById('train-modal');
   modal.classList.remove('open');
   modal.style.display = 'none';
@@ -2658,6 +4020,7 @@ function openTrain() {
   session.length = 0;
   timerSecs = 0;
   setTimerDisplay('00:00');
+  stopRestTimer();
   document.getElementById('train-exercises').innerHTML = '';
   const modal = document.getElementById('train-modal');
   modal.style.display = 'flex';
@@ -2721,11 +4084,14 @@ function addExerciseBlock(name, muscle) {
   const block = document.createElement('div');
   block.className = 'train-ex';
 
+  const pulleyCount = state.cablePulleys && state.cablePulleys[name];
+  const pulleyBadge = pulleyCount ? `<span class="cable-pulley-badge">${pulleyCount}P</span>` : '';
+
   const top = document.createElement('div');
   top.className = 'train-ex-top';
   top.innerHTML = `
     <div>
-      <div class="train-ex-name">${name}</div>
+      <div class="train-ex-name">${name}${pulleyBadge}</div>
       <div class="train-ex-muscle">${muscle}</div>
     </div>
   `;
@@ -2739,9 +4105,14 @@ function addExerciseBlock(name, muscle) {
   });
   top.appendChild(removeBtn);
 
+  const pr = state.prs[name];
+  const prEl = document.createElement('div');
+  prEl.className = 'train-ex-pr';
+  prEl.innerHTML = pr ? `PR: <span>${pr.weight} lbs × ${pr.reps}</span>` : '';
+
   const cols = document.createElement('div');
   cols.className = 'set-cols';
-  cols.innerHTML = '<span>Set</span><span>Prev</span><span>lbs</span><span>Reps</span><span></span>';
+  cols.innerHTML = '<span>Set</span><span>lbs</span><span>Reps</span><span></span>';
 
   const setsContainer = document.createElement('div');
   setsContainer.className = 'sets-container';
@@ -2753,6 +4124,7 @@ function addExerciseBlock(name, muscle) {
   addSetBtn.addEventListener('click', () => addSet(idx, block));
 
   block.appendChild(top);
+  block.appendChild(prEl);
   block.appendChild(cols);
   block.appendChild(setsContainer);
   block.appendChild(addSetBtn);
@@ -2765,8 +4137,6 @@ function addSet(exIdx, block) {
   const ex = session[exIdx];
   if (!ex) return;
   const setIdx = ex.sets.length;
-  const pr = state.prs[ex.name];
-  const prevText = pr ? `${pr.weight}×${pr.reps}` : '—';
 
   ex.sets.push({ weight: '', reps: '', done: false });
 
@@ -2776,10 +4146,6 @@ function addSet(exIdx, block) {
   const numEl = document.createElement('div');
   numEl.className = 'set-num';
   numEl.textContent = setIdx + 1;
-
-  const prevEl = document.createElement('div');
-  prevEl.className = 'set-prev';
-  prevEl.textContent = prevText;
 
   const { wrap: wWrap } = makeStepper('', 5, 0, val => { ex.sets[setIdx].weight = val; });
   const { wrap: rWrap } = makeStepper('', 1, 0, val => { ex.sets[setIdx].reps = val; });
@@ -2791,15 +4157,25 @@ function addSet(exIdx, block) {
   checkBtn.addEventListener('click', () => {
     ex.sets[setIdx].done = !ex.sets[setIdx].done;
     checkBtn.classList.toggle('done', ex.sets[setIdx].done);
+    if (ex.sets[setIdx].done) {
+      const exRest = (state.exerciseMeta[ex.name] || {}).restTime;
+      startRestTimer(exRest || REST_DURATION);
+    }
   });
 
   row.appendChild(numEl);
-  row.appendChild(prevEl);
   row.appendChild(wWrap);
   row.appendChild(rWrap);
   row.appendChild(checkBtn);
 
-  block.querySelector('.sets-container').appendChild(row);
+  const container = block.querySelector('.sets-container');
+  if (setIdx > 0) {
+    const marker = document.createElement('div');
+    marker.className = 'rest-marker';
+    marker.textContent = fmtRestSecs(restDuration);
+    container.appendChild(marker);
+  }
+  container.appendChild(row);
 }
 
 document.getElementById('add-ex-main').addEventListener('click', openPicker);
@@ -2809,46 +4185,71 @@ document.getElementById('add-ex-main').addEventListener('click', openPicker);
 // ═══════════════════════════════════════════════════════════
 
 function openPicker() {
-  document.getElementById('picker-search').value = '';
-  renderPickerList('');
+  renderPickerMuscleGrid();
   document.getElementById('picker').classList.add('open');
-  setTimeout(() => document.getElementById('picker-search').focus(), 100);
 }
 
-function renderPickerList(query) {
-  const el = document.getElementById('picker-list');
-  const q = query.toLowerCase().trim();
-  let html = '';
-
-  for (const muscle of MUSCLES) {
-    const exs = (state.exercises[muscle] || []).filter(e =>
-      !q || e.toLowerCase().includes(q) || muscle.toLowerCase().includes(q)
-    );
-    if (!exs.length) continue;
-    html += `<div class="picker-group-label">${muscle}</div>`;
-    html += exs.map(ex => `
-      <div class="picker-item" data-name="${ex}" data-muscle="${muscle}">
-        <span>${ex}</span>
-        <span class="picker-item-muscle">${muscle}</span>
-      </div>
-    `).join('');
+function renderPickerMuscleGrid() {
+  const grid = document.getElementById('picker-muscle-grid');
+  grid.innerHTML = '';
+  for (const group of MUSCLE_GROUPS) {
+    const header = document.createElement('div');
+    header.className = 'picker-group-header';
+    header.textContent = group.label;
+    grid.appendChild(header);
+    for (const muscle of group.muscles) {
+      const exList = state.exercises[muscle] || [];
+      const lv = getLevel(muscle);
+      const dotColor = LEVEL_COLORS[lv];
+      const btn = document.createElement('button');
+      btn.className = 'picker-muscle-btn';
+      btn.innerHTML = `
+        <div class="picker-muscle-dot" style="background:${dotColor};box-shadow:0 0 6px ${dotColor};"></div>
+        <div>
+          <div class="picker-muscle-name">${muscle}</div>
+          <div class="picker-muscle-count">${exList.length} exercise${exList.length !== 1 ? 's' : ''}</div>
+        </div>
+      `;
+      btn.addEventListener('click', () => openPickerExPopup(muscle));
+      grid.appendChild(btn);
+    }
   }
+}
 
-  el.innerHTML = html || '<div class="empty-state">No exercises found</div>';
+function openPickerExPopup(muscle) {
+  const lv = getLevel(muscle);
+  const dotColor = LEVEL_COLORS[lv];
+  const exList = state.exercises[muscle] || [];
 
-  el.querySelectorAll('.picker-item').forEach(item => {
+  document.getElementById('picker-ex-dot').style.cssText =
+    `background:${dotColor};box-shadow:0 0 8px ${dotColor};width:12px;height:12px;border-radius:50%;flex-shrink:0;`;
+  document.getElementById('picker-ex-name').textContent = muscle;
+
+  const list = document.getElementById('picker-ex-list');
+  list.innerHTML = '';
+  exList.forEach(ex => {
+    const item = document.createElement('div');
+    item.className = 'picker-item';
+    const pc = state.cablePulleys && state.cablePulleys[ex];
+    item.innerHTML = pc
+      ? `${ex} <span class="cable-pulley-badge">${pc}P</span>`
+      : ex;
     item.addEventListener('click', () => {
+      document.getElementById('picker-ex-popup').classList.remove('open');
       const picker = document.getElementById('picker');
       picker.classList.remove('open');
       if (picker._histMode) {
         picker._histMode = false;
-        histEditData.exercises.push({ name: item.dataset.name, muscle: item.dataset.muscle, sets: [{ weight: '', reps: '', done: true }] });
+        histEditData.exercises.push({ name: ex, muscle, sets: [{ weight: '', reps: '', done: true }] });
         renderHistEditExercises();
       } else {
-        addExerciseBlock(item.dataset.name, item.dataset.muscle);
+        addExerciseBlock(ex, muscle);
       }
     });
+    list.appendChild(item);
   });
+
+  document.getElementById('picker-ex-popup').classList.add('open');
 }
 
 document.getElementById('ex-popup-close').addEventListener('click', () => {
@@ -2869,8 +4270,22 @@ document.getElementById('picker-close').addEventListener('click', () => {
   picker.classList.remove('open');
 });
 
-document.getElementById('picker-search').addEventListener('input', e => {
-  renderPickerList(e.target.value);
+document.getElementById('picker').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('picker')) {
+    const picker = document.getElementById('picker');
+    picker._histMode = false;
+    picker.classList.remove('open');
+  }
+});
+
+document.getElementById('picker-ex-close').addEventListener('click', () => {
+  document.getElementById('picker-ex-popup').classList.remove('open');
+});
+
+document.getElementById('picker-ex-popup').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('picker-ex-popup')) {
+    document.getElementById('picker-ex-popup').classList.remove('open');
+  }
 });
 
 // ═══════════════════════════════════════════════════════════
@@ -2953,7 +4368,7 @@ cylWrap.addEventListener('mousedown', e => {
 });
 window.addEventListener('mousemove', e => {
   if (!cylDragging) return;
-  cylAngle = cylDragStartAngle + (e.clientX - cylDragStartX) * 0.5;
+  cylAngle = cylDragStartAngle + (e.clientX - cylDragStartX) * 0.75;
 });
 window.addEventListener('mouseup', () => { cylDragging = false; });
 
@@ -2964,7 +4379,7 @@ cylWrap.addEventListener('touchstart', e => {
 }, { passive: true });
 window.addEventListener('touchmove', e => {
   if (!cylDragging) return;
-  cylAngle = cylDragStartAngle + (e.touches[0].clientX - cylDragStartX) * 0.5;
+  cylAngle = cylDragStartAngle + (e.touches[0].clientX - cylDragStartX) * 0.75;
 }, { passive: true });
 window.addEventListener('touchend', () => { cylDragging = false; });
 
@@ -3010,6 +4425,24 @@ function recalcAllRepPRs() {
         const weight = parseFloat(s.weight) || 0;
         const reps   = parseInt(s.reps) || 0;
         if (weight > 0 || reps > 0) updateRepPR(ex.name, weight, reps, w.date);
+      }
+    }
+  }
+}
+
+function recalcAllPRs() {
+  state.prs = {};
+  for (const w of state.history) {
+    for (const ex of w.exercises) {
+      for (const s of ex.sets) {
+        const weight = parseFloat(s.weight) || 0;
+        const reps   = parseInt(s.reps) || 0;
+        if (weight > 0 || reps > 0) {
+          const curr = state.prs[ex.name];
+          if (!curr || weight > curr.weight || (weight === curr.weight && reps > curr.reps)) {
+            state.prs[ex.name] = { weight, reps };
+          }
+        }
       }
     }
   }
@@ -3208,8 +4641,8 @@ const NEX_CATEGORIES = [
 let nexBodyPart = null;
 let nexCategory = null;
 
-function openNewExModal() {
-  nexBodyPart = null;
+function openNewExModal(preselectedMuscle) {
+  nexBodyPart = preselectedMuscle || null;
   nexCategory = null;
   document.getElementById('nex-name').value = '';
 
@@ -3219,6 +4652,7 @@ function openNewExModal() {
     const chip = document.createElement('div');
     chip.className = 'nex-chip';
     chip.textContent = m;
+    if (m === nexBodyPart) chip.classList.add('selected');
     chip.addEventListener('click', () => {
       bpWrap.querySelectorAll('.nex-chip').forEach(c => c.classList.remove('selected'));
       chip.classList.add('selected');
@@ -3261,17 +4695,61 @@ document.getElementById('new-ex-modal').addEventListener('click', (e) => {
   }
 });
 
+let pendingCableExercise = null;
+
 document.getElementById('new-ex-save').addEventListener('click', () => {
   const name = document.getElementById('nex-name').value.trim();
   if (!name) { alert('Please enter a name.'); return; }
   if (!nexBodyPart) { alert('Please select a body part.'); return; }
 
   const muscle = MUSCLES.includes(nexBodyPart) ? nexBodyPart : (MUSCLES[0]);
+
+  if (nexCategory === 'Cable Machine') {
+    pendingCableExercise = { name, muscle };
+    document.getElementById('new-ex-modal').classList.remove('open');
+    document.getElementById('pulley-modal').classList.add('open');
+    return;
+  }
+
   if (!state.exercises[muscle]) state.exercises[muscle] = [];
   state.exercises[muscle].push(name);
   save();
   renderExercises();
   document.getElementById('new-ex-modal').classList.remove('open');
+});
+
+// ═══════════════════════════════════════════════════════════
+// PULLEY MODAL
+// ═══════════════════════════════════════════════════════════
+
+function savePendingCableExercise(pulleyCount) {
+  if (!pendingCableExercise) return;
+  const { name, muscle } = pendingCableExercise;
+  if (!state.exercises[muscle]) state.exercises[muscle] = [];
+  state.exercises[muscle].push(name);
+  if (pulleyCount) state.cablePulleys[name] = pulleyCount;
+  save();
+  renderExercises();
+  pendingCableExercise = null;
+}
+
+document.querySelectorAll('.pulley-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    savePendingCableExercise(parseInt(btn.dataset.count));
+    document.getElementById('pulley-modal').classList.remove('open');
+  });
+});
+
+document.getElementById('pulley-close').addEventListener('click', () => {
+  savePendingCableExercise(null);
+  document.getElementById('pulley-modal').classList.remove('open');
+});
+
+document.getElementById('pulley-modal').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('pulley-modal')) {
+    savePendingCableExercise(null);
+    document.getElementById('pulley-modal').classList.remove('open');
+  }
 });
 
 // ═══════════════════════════════════════════════════════════
@@ -3303,11 +4781,11 @@ function buildGoalsList() {
     row.className = 'goal-row';
 
     row.innerHTML = `
-      <div>
+      <div class="goal-row-labels">
         <div class="goal-muscle-name">
-          <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${dotColor};margin-right:6px;box-shadow:0 0 5px ${dotColor};vertical-align:middle;"></span>${muscle}
+          <span class="goal-muscle-dot" style="background:${dotColor};box-shadow:0 0 5px ${dotColor};"></span>${muscle}
         </div>
-        <div class="goal-muscle-sub">${currentSets} sets · goal: <span id="goal-label-${muscle.replace(/\s/g,'_')}">${goalVal}</span></div>
+        <div class="goal-muscle-sub">${currentSets} sets this week &middot; goal: <span id="goal-label-${muscle.replace(/\s/g,'_')}">${goalVal}</span></div>
       </div>
     `;
 
@@ -3329,6 +4807,48 @@ function buildGoalsList() {
   }
 }
 
+function buildOverrideList() {
+  const ov = loadOverrides();
+  const list = document.getElementById('override-list');
+  list.innerHTML = '';
+
+  for (const muscle of MUSCLES) {
+    const lv = getLevel(muscle);
+    const dotColor = LEVEL_COLORS[lv];
+    const actual = state.weeklySets[muscle] || 0;
+    const isOverridden = muscle in ov;
+    const displayVal = isOverridden ? ov[muscle] : actual;
+    const key = muscle.replace(/\s/g, '_');
+
+    const row = document.createElement('div');
+    row.className = 'goal-row';
+    row.innerHTML = `
+      <div class="goal-row-labels">
+        <div class="goal-muscle-name">
+          <span class="goal-muscle-dot" style="background:${dotColor};box-shadow:0 0 5px ${dotColor};"></span>${muscle}${isOverridden ? '<span class="ov-badge">OVERRIDE</span>' : ''}
+        </div>
+        <div class="goal-muscle-sub">actual: ${actual} &middot; showing: <span id="ov-label-${key}">${displayVal}</span></div>
+      </div>
+    `;
+
+    const stepperWrap = document.createElement('div');
+    stepperWrap.className = 'goal-stepper-wrap';
+    const { wrap, inp } = makeStepper(displayVal, 1, 0, val => {
+      const o = loadOverrides();
+      const parsed = Math.max(0, parseInt(val) || 0);
+      o[muscle] = parsed;
+      inp.value = parsed;
+      saveOverrides(o);
+      const lbl = document.getElementById(`ov-label-${key}`);
+      if (lbl) lbl.textContent = parsed;
+      updateModel();
+    });
+    stepperWrap.appendChild(wrap);
+    row.appendChild(stepperWrap);
+    list.appendChild(row);
+  }
+}
+
 document.getElementById('goals-btn').addEventListener('click', () => {
   buildGoalsList();
   renderFocusSlots();
@@ -3337,6 +4857,63 @@ document.getElementById('goals-btn').addEventListener('click', () => {
 
 document.getElementById('goals-close-btn').addEventListener('click', () => {
   document.getElementById('goals-overlay').classList.remove('open');
+});
+
+document.getElementById('open-override-btn').addEventListener('click', () => {
+  buildOverrideList();
+  document.getElementById('override-overlay').classList.add('open');
+});
+
+document.getElementById('override-close-btn').addEventListener('click', () => {
+  document.getElementById('override-overlay').classList.remove('open');
+  buildGoalsList();
+});
+
+document.getElementById('override-reset-btn').addEventListener('click', () => {
+  saveOverrides({});
+  buildOverrideList();
+  updateModel();
+});
+
+function buildWeeklyOverview() {
+  const list = document.getElementById('weekly-overview-list');
+  list.innerHTML = '';
+  for (const group of MUSCLE_GROUPS) {
+    const header = document.createElement('div');
+    header.className = 'wo-group-header';
+    header.textContent = group.label;
+    list.appendChild(header);
+
+    const grid = document.createElement('div');
+    grid.className = 'wo-grid';
+    for (const muscle of group.muscles) {
+      const lv = getLevel(muscle);
+      const sets = state.weeklySets[muscle] || 0;
+      const goal = getGoal(muscle);
+      const color = LEVEL_COLORS[lv];
+
+      const row = document.createElement('div');
+      row.className = 'wo-row';
+      row.innerHTML =
+        `<div class="wo-row-top">` +
+          `<span class="wo-dot" style="background:${color};box-shadow:0 0 6px ${color}"></span>` +
+          `<span class="wo-name">${muscle}</span>` +
+        `</div>` +
+        `<div class="wo-level" style="color:${color}">Level ${lv}</div>` +
+        `<div class="wo-sets">${sets} / ${goal} sets</div>`;
+      grid.appendChild(row);
+    }
+    list.appendChild(grid);
+  }
+}
+
+document.getElementById('weekly-overview-btn').addEventListener('click', () => {
+  buildWeeklyOverview();
+  document.getElementById('weekly-overview-overlay').classList.add('open');
+});
+
+document.getElementById('weekly-overview-close-btn').addEventListener('click', () => {
+  document.getElementById('weekly-overview-overlay').classList.remove('open');
 });
 
 if ('serviceWorker' in navigator) {
