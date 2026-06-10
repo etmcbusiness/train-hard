@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#0a0a0a" />
-  <meta name="app-version" content="29" />
+  <meta name="app-version" content="30" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -330,7 +330,7 @@
       border-radius: 20px;
       width: 100%;
       max-width: 360px;
-      max-height: 82vh;
+      max-height: 82dvh;
       display: flex;
       flex-direction: column;
       overflow: hidden;
@@ -449,7 +449,7 @@
       border-radius: 20px;
       width: 100%;
       max-width: 320px;
-      max-height: 60vh;
+      max-height: 60dvh;
       display: flex;
       flex-direction: column;
       overflow: hidden;
@@ -596,7 +596,7 @@
       flex-direction: column;
       width: 100%;
       max-width: 500px;
-      max-height: 80vh;
+      max-height: 80dvh;
       background: rgba(4,8,28,0.97);
       border: 1px solid rgba(50,100,210,0.3);
       border-radius: 20px;
@@ -762,7 +762,7 @@
       border-radius: 20px;
       width: 100%;
       max-width: 340px;
-      max-height: 80vh;
+      max-height: 80dvh;
       display: flex;
       flex-direction: column;
       box-shadow: 0 8px 40px rgba(0,0,0,0.7);
@@ -1126,7 +1126,7 @@
       border-radius: 20px;
       width: 100%;
       max-width: 420px;
-      max-height: 80vh;
+      max-height: 80dvh;
       display: flex;
       flex-direction: column;
       overflow: hidden;
@@ -1214,7 +1214,7 @@
       border-radius: 20px;
       width: 100%;
       max-width: 320px;
-      max-height: 65vh;
+      max-height: 65dvh;
       display: flex;
       flex-direction: column;
       overflow: hidden;
@@ -1285,7 +1285,7 @@
       border-radius: 20px;
       width: 100%;
       max-width: 380px;
-      max-height: 86vh;
+      max-height: 86dvh;
       display: flex;
       flex-direction: column;
       overflow: hidden;
@@ -1463,7 +1463,7 @@
       border-radius: 20px;
       width: 100%;
       max-width: 380px;
-      max-height: 78vh;
+      max-height: 78dvh;
       display: flex;
       flex-direction: column;
       overflow: hidden;
@@ -2098,7 +2098,7 @@
       border-radius: 20px;
       width: 100%;
       max-width: 420px;
-      max-height: 82vh;
+      max-height: 82dvh;
       display: flex;
       flex-direction: column;
       overflow: hidden;
@@ -2541,6 +2541,51 @@
       -webkit-tap-highlight-color: transparent;
     }
     .tnp-complete-btn:active { opacity: 0.82; }
+
+    /* ── Custom Confirm Modal ── */
+    #custom-confirm {
+      position: fixed;
+      inset: 0;
+      z-index: 600;
+      background: rgba(0,0,8,0.72);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    #custom-confirm.open { display: flex; }
+    #custom-confirm-box {
+      background: rgba(5,12,40,0.98);
+      border: 1px solid rgba(50,100,210,0.3);
+      border-radius: 20px;
+      width: 100%;
+      max-width: 320px;
+      padding: 26px;
+    }
+    #custom-confirm-msg {
+      font-size: 16px;
+      font-weight: 600;
+      color: #c0d4f0;
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+    #custom-confirm-actions { display: flex; gap: 10px; }
+    #custom-confirm-no {
+      flex: 1; padding: 13px; border-radius: 12px;
+      border: 1px solid rgba(50,100,200,0.3);
+      background: rgba(10,22,60,0.6); color: #7a9acc;
+      font-size: 14px; font-weight: 600; cursor: pointer;
+      touch-action: manipulation;
+    }
+    #custom-confirm-yes {
+      flex: 1; padding: 13px; border-radius: 12px;
+      border: none;
+      background: linear-gradient(135deg, #c0392b, #922b21);
+      color: #fff; font-size: 14px; font-weight: 700; cursor: pointer;
+      touch-action: manipulation;
+    }
   </style>
 </head>
 <body>
@@ -2955,6 +3000,17 @@
   </div>
 </div>
 
+<!-- Custom Confirm Modal -->
+<div id="custom-confirm">
+  <div id="custom-confirm-box">
+    <div id="custom-confirm-msg"></div>
+    <div id="custom-confirm-actions">
+      <button id="custom-confirm-no">Cancel</button>
+      <button id="custom-confirm-yes">Confirm</button>
+    </div>
+  </div>
+</div>
+
 <script>
   (function() {
     var v = document.querySelector('meta[name="app-version"]').content;
@@ -3018,6 +3074,27 @@ const INDEX_TO_PART = {
 const LEVEL_COLORS = { 1: '#C8C8C8', 2: '#FAE89A', 3: '#F5A0B0', 4: '#A8D4F5', 5: '#E4A8E0' };
 const HAIR_COLORS  = { 1: '#1A1A1A', 2: '#F5C518', 3: '#E8305A', 4: '#3A8FD4', 5: '#C44BB0' };
 const STATIC_WHITE  = ['Boots','Shorts'];
+
+// ── Custom confirm (replaces window.confirm, broken in iOS PWA) ──
+function customConfirm(message, yesText = 'Confirm', noText = 'Cancel') {
+  return new Promise(resolve => {
+    const modal = document.getElementById('custom-confirm');
+    document.getElementById('custom-confirm-msg').textContent = message;
+    document.getElementById('custom-confirm-yes').textContent = yesText;
+    document.getElementById('custom-confirm-no').textContent = noText;
+    modal.classList.add('open');
+    function cleanup(result) {
+      modal.classList.remove('open');
+      document.getElementById('custom-confirm-yes').removeEventListener('click', onYes);
+      document.getElementById('custom-confirm-no').removeEventListener('click', onNo);
+      resolve(result);
+    }
+    function onYes() { cleanup(true); }
+    function onNo()  { cleanup(false); }
+    document.getElementById('custom-confirm-yes').addEventListener('click', onYes);
+    document.getElementById('custom-confirm-no').addEventListener('click', onNo);
+  });
+}
 
 function getMondayStr() {
   const d = new Date();
@@ -3774,8 +3851,9 @@ document.getElementById('hist-done-btn').addEventListener('click', () => {
   renderHistory();
 });
 
-document.getElementById('hist-delete-btn').addEventListener('click', () => {
-  if (!confirm('Delete this workout permanently?')) return;
+document.getElementById('hist-delete-btn').addEventListener('click', async () => {
+  const ok = await customConfirm('Delete this workout permanently?', 'Delete', 'Cancel');
+  if (!ok) return;
   state.history.splice(histEditIdx, 1);
   recalcStats();
   document.getElementById('hist-edit-modal').classList.remove('open');
@@ -4493,8 +4571,11 @@ function openTrain() {
 }
 
 
-document.getElementById('cancel-btn').addEventListener('click', () => {
-  if (session.length > 0 && !confirm('Cancel workout? Progress will be lost.')) return;
+document.getElementById('cancel-btn').addEventListener('click', async () => {
+  if (session.length > 0) {
+    const ok = await customConfirm('Cancel workout? Progress will be lost.', 'Cancel Workout', 'Keep Going');
+    if (!ok) return;
+  }
   closeTrain();
 });
 
@@ -4719,7 +4800,7 @@ function renderSets(exIdx, block) {
       checkBtn.classList.toggle('done', ex.sets[setIdx].done);
       if (ex.sets[setIdx].done) {
         const exRest = (state.exerciseMeta[ex.name] || {}).restTime;
-        startRestTimer(exRest || REST_DURATION);
+        startRestTimer(exRest || restDuration);
       }
     });
 
