@@ -5470,20 +5470,7 @@ let nexCategory = null;
 let nexFromPicker = null;
 
 function renderNexSuggestions() {
-  const wrap = document.getElementById('nex-suggestions');
-  wrap.innerHTML = '';
-  const catalog = (EXERCISE_CATALOG && nexBodyPart) ? (EXERCISE_CATALOG[nexBodyPart] || []) : [];
-  const existing = new Set((state.exercises[nexBodyPart] || []).map(e => e.toLowerCase()));
-  const suggestions = catalog.filter(e => !existing.has(e.toLowerCase()));
-  suggestions.forEach(name => {
-    const chip = document.createElement('div');
-    chip.className = 'nex-suggestion';
-    chip.textContent = name;
-    chip.addEventListener('click', () => {
-      document.getElementById('nex-name').value = name;
-    });
-    wrap.appendChild(chip);
-  });
+  document.getElementById('nex-suggestions').innerHTML = '';
 }
 
 function openNewExModal(preselectedMuscle) {
