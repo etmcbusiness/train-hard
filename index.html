@@ -353,7 +353,7 @@
       display: flex; align-items: center; justify-content: center;
       flex-shrink: 0;
     }
-    #new-ex-body { flex: 1; overflow-y: scroll; -webkit-overflow-scrolling: touch; padding: 16px 18px; }
+    #new-ex-body { flex: 1; overflow-y: auto; padding: 16px 18px; }
     .nex-label {
       font-size: 11px;
       font-weight: 700;
@@ -372,11 +372,6 @@
       color: #fff;
       font-size: 15px;
       padding: 13px 14px;
-      pointer-events: auto;
-      touch-action: manipulation;
-      -webkit-user-select: auto;
-      user-select: auto;
-      cursor: text;
     }
     .nex-input:focus { outline: none; border-color: #4A90D9; }
     .nex-input::placeholder { color: #2a3a5a; }
@@ -5516,6 +5511,12 @@ function openNewExModal(preselectedMuscle) {
 }
 
 document.getElementById('new-ex-btn').addEventListener('click', openNewExModal);
+
+// iOS PWA: inputs inside position:fixed won't focus on tap without this
+document.getElementById('nex-name').addEventListener('touchend', function(e) {
+  e.preventDefault();
+  this.focus();
+});
 
 document.getElementById('new-ex-close').addEventListener('click', () => {
   nexFromPicker = null;
