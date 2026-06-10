@@ -334,6 +334,8 @@
       display: flex;
       flex-direction: column;
       overflow: hidden;
+      transform: translateZ(0);
+      -webkit-transform: translateZ(0);
     }
     #new-ex-header {
       display: flex;
@@ -374,6 +376,11 @@
       color: #fff;
       font-size: 15px;
       padding: 13px 14px;
+      pointer-events: auto;
+      touch-action: manipulation;
+      -webkit-user-select: auto;
+      user-select: auto;
+      cursor: text;
     }
     .nex-input:focus { outline: none; border-color: #4A90D9; }
     .nex-input::placeholder { color: #2a3a5a; }
