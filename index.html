@@ -27,9 +27,9 @@
       background: transparent;
       color: #fff;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      overflow: hidden;
       height: 100%;
       min-height: 100dvh;
+      overscroll-behavior: none;
     }
 
     /* ── Background Image ── */
@@ -372,8 +372,12 @@
       border: 1px solid rgba(50,100,200,0.3);
       border-radius: 12px;
       color: #fff;
-      font-size: 15px;
-      padding: 13px 14px;
+      font-size: 16px;
+      padding: 12px 14px;
+      touch-action: manipulation;
+      -webkit-user-select: text;
+      user-select: text;
+      -webkit-appearance: none;
     }
     .nex-input:focus { outline: none; border-color: #4A90D9; }
     .nex-input::placeholder { color: #2a3a5a; }
@@ -5494,23 +5498,18 @@ function openNewExModal(preselectedMuscle) {
   document.getElementById('new-ex-modal').classList.add('open');
 }
 
+function closeNewExModal() {
+  document.getElementById('new-ex-modal').classList.remove('open');
+  nexFromPicker = null;
+}
+
 document.getElementById('new-ex-btn').addEventListener('click', () => openNewExModal());
 
-document.getElementById('new-ex-close').addEventListener('click', () => {
-  nexFromPicker = null;
-  document.getElementById('new-ex-modal').classList.remove('open');
-});
-
-document.getElementById('new-ex-cancel').addEventListener('click', () => {
-  nexFromPicker = null;
-  document.getElementById('new-ex-modal').classList.remove('open');
-});
+document.getElementById('new-ex-close').addEventListener('click', closeNewExModal);
+document.getElementById('new-ex-cancel').addEventListener('click', closeNewExModal);
 
 document.getElementById('new-ex-modal').addEventListener('click', (e) => {
-  if (e.target === document.getElementById('new-ex-modal')) {
-    nexFromPicker = null;
-    document.getElementById('new-ex-modal').classList.remove('open');
-  }
+  if (e.target === document.getElementById('new-ex-modal')) closeNewExModal();
 });
 
 let pendingCableExercise = null;
@@ -5524,7 +5523,7 @@ document.getElementById('new-ex-save').addEventListener('click', () => {
 
   if (nexCategory === 'Cable Machine') {
     pendingCableExercise = { name, muscle };
-    document.getElementById('new-ex-modal').classList.remove('open');
+    closeNewExModal();
     document.getElementById('pulley-modal').classList.add('open');
     return;
   }
@@ -5537,7 +5536,7 @@ document.getElementById('new-ex-save').addEventListener('click', () => {
   }
   save();
   renderExercises();
-  document.getElementById('new-ex-modal').classList.remove('open');
+  closeNewExModal();
 
   if (nexFromPicker) {
     addExerciseBlock(name, muscle);
