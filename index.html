@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#0a0a0a" />
-  <meta name="app-version" content="27" />
+  <meta name="app-version" content="28" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -3313,7 +3313,13 @@ function loadModel(idx, onReady) {
       entry.scene = mdl;
       onReady(entry);
     })
-    .catch(e => console.error(e));
+    .catch(e => {
+      console.error('Model load failed:', e);
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('app').style.display = 'flex';
+      document.getElementById('profile-name').textContent = state.userName;
+      renderFocusStats();
+    });
 }
 
 function switchToModel(idx) {
