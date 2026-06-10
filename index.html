@@ -1864,13 +1864,17 @@
     /* ── Rest Timer Bar ── */
     #rest-timer-bar {
       background: rgba(60,181,88,0.10);
-      border-bottom: 1px solid rgba(60,181,88,0.22);
+      border: 1px solid rgba(60,181,88,0.22);
+      border-radius: 14px;
       padding: 8px 12px 6px;
       display: none;
       flex-direction: column;
       align-items: center;
-      flex-shrink: 0;
       gap: 4px;
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      margin-bottom: 12px;
     }
     #rest-timer-bar.active { display: flex; }
     #rest-timer-row {
@@ -2618,18 +2622,18 @@
     <div id="train-timer">00:00</div>
     <button id="finish-btn">Finish</button>
   </div>
-  <div id="rest-timer-bar">
-    <div id="rest-timer-row">
-      <button id="rest-minus-btn" class="rest-adjust-btn">−</button>
-      <div id="rest-center">
-        <span id="rest-timer-label">Rest</span>
-        <span id="rest-timer-countdown">1:30</span>
-      </div>
-      <button id="rest-plus-btn" class="rest-adjust-btn">+</button>
-    </div>
-    <button id="rest-skip-btn">Skip</button>
-  </div>
   <div id="train-body">
+    <div id="rest-timer-bar">
+      <div id="rest-timer-row">
+        <button id="rest-minus-btn" class="rest-adjust-btn">−</button>
+        <div id="rest-center">
+          <span id="rest-timer-label">Rest</span>
+          <span id="rest-timer-countdown">1:30</span>
+        </div>
+        <button id="rest-plus-btn" class="rest-adjust-btn">+</button>
+      </div>
+      <button id="rest-skip-btn">Skip</button>
+    </div>
     <div id="train-exercises"></div>
     <button id="add-ex-main">+ Add Exercise</button>
   </div>
@@ -3059,9 +3063,18 @@ function loadState() {
       if (!s.exerciseMeta[ex]) s.exerciseMeta[ex] = {};
       if (!s.exerciseMeta[ex].category) s.exerciseMeta[ex].category = 'Cable Machine';
     }
-    if (s.lastReset !== getMondayStr()) {
-      s.lastReset = getMondayStr();
-      s.weeklySets = Object.fromEntries(MUSCLES.map(m => [m, 0]));
+    // Always recompute from history so the model reflects workouts on every load
+    s.lastReset = getMondayStr();
+    s.weeklySets = Object.fromEntries(MUSCLES.map(m => [m, 0]));
+    const monday = getMondayStr();
+    for (const w of (s.history || [])) {
+      if (w.date && isThisWeek(w.date, monday)) {
+        for (const ex of (w.exercises || [])) {
+          if (s.weeklySets[ex.muscle] !== undefined) {
+            s.weeklySets[ex.muscle] += ex.sets.length;
+          }
+        }
+      }
     }
     return s;
   } catch { return defaultState(); }
@@ -4323,6 +4336,7 @@ function startRestTimer(duration) {
   restSecs = secs;
   updateRestDisplay();
   document.getElementById('rest-timer-bar').classList.add('active');
+  document.getElementById('train-body').scrollTop = 0;
   restInterval = setInterval(tickRestTimer, 500);
 }
 
