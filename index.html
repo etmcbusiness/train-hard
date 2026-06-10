@@ -201,6 +201,8 @@
     }
     .ex-item:last-of-type { border-bottom: none; }
     .ex-item-name { font-size: 14px; color: #c0d4f0; }
+    .ex-item-cat { font-size: 11px; color: #4a6aaa; margin-top: 2px; }
+    .ex-item-last { font-size: 11px; color: #3a7a5a; margin-top: 1px; }
     .ex-edit-btn {
       background: rgba(14,28,70,0.6);
       border: 1px solid rgba(60,110,200,0.35);
@@ -491,8 +493,9 @@
 
     /* ── History ── */
     #history-section { background: transparent; }
-    .hist-ex { font-size: 13px; color: #7a9ac0; padding: 4px 0; display:flex; justify-content:space-between; }
+    .hist-ex { font-size: 13px; color: #7a9ac0; padding: 4px 0; display:flex; justify-content:space-between; align-items:center; }
     .hist-ex span { color: #4a6aaa; }
+    .hist-ex-cat { display:inline-block; margin-left:6px; font-size:10px; font-weight:600; color:#3a7aa0; background:rgba(50,120,180,0.15); border:1px solid rgba(50,120,180,0.25); border-radius:5px; padding:1px 5px; vertical-align:middle; }
     .hist-card-edit {
       margin-top: 12px;
       background: rgba(74,144,217,0.08);
@@ -578,19 +581,27 @@
     #hist-edit-modal {
       position: fixed;
       inset: 0;
-      bottom: 70px;
       z-index: 350;
-      background: transparent;
+      background: rgba(0,0,8,0.65);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
       display: none;
-      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: max(20px, env(safe-area-inset-top, 20px)) 16px max(20px, calc(70px + env(safe-area-inset-bottom, 0px))) 16px;
     }
-    #hist-edit-modal.open {
+    #hist-edit-modal.open { display: flex; }
+    #hist-edit-box {
       display: flex;
-      background: rgba(2,5,18,0.92);
-      backdrop-filter: blur(24px);
-      -webkit-backdrop-filter: blur(24px);
+      flex-direction: column;
+      width: 100%;
+      max-width: 500px;
+      max-height: 80vh;
+      background: rgba(4,8,28,0.97);
+      border: 1px solid rgba(50,100,210,0.3);
+      border-radius: 20px;
+      overflow: hidden;
     }
-    #hist-edit-box { display:flex; flex-direction:column; height:100%; }
     #hist-edit-header {
       padding: 16px;
       border-bottom: 1px solid rgba(40,80,180,0.25);
@@ -598,7 +609,6 @@
       align-items: center;
       justify-content: space-between;
       flex-shrink: 0;
-      background: rgba(4,8,28,0.8);
     }
     #hist-edit-date { font-size:15px; font-weight:700; color:#fff; }
     #hist-edit-actions { display:flex; gap:10px; }
@@ -730,6 +740,153 @@
       padding: 16px;
     }
 
+    /* Workout Summary Overlay */
+    #workout-summary {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 250;
+      background: rgba(2,5,18,0.72);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    #workout-summary.open {
+      display: flex;
+    }
+    #summary-card {
+      background: rgba(8,16,52,0.98);
+      border: 1px solid rgba(60,120,220,0.28);
+      border-radius: 20px;
+      width: 100%;
+      max-width: 340px;
+      max-height: 80vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.7);
+      overflow: hidden;
+    }
+    #summary-header {
+      padding: 14px 16px 10px;
+      border-bottom: 1px solid rgba(40,80,180,0.2);
+      flex-shrink: 0;
+    }
+    #summary-title {
+      font-size: 16px;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: 0.2px;
+      margin-bottom: 8px;
+    }
+    #summary-stats-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .summary-stat {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 12px;
+      color: #6a9abf;
+      font-weight: 500;
+    }
+    .summary-stat-icon {
+      font-size: 13px;
+    }
+    .summary-stat-val {
+      color: #c0d8f0;
+      font-weight: 700;
+    }
+    #summary-col-headers {
+      display: flex;
+      justify-content: space-between;
+      padding: 7px 16px 4px;
+      font-size: 10px;
+      font-weight: 700;
+      color: #3a5a7a;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      flex-shrink: 0;
+    }
+    #summary-list {
+      overflow-y: auto;
+      padding: 2px 16px 8px;
+    }
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 0;
+      border-bottom: 1px solid rgba(40,80,180,0.1);
+      gap: 8px;
+    }
+    .summary-row:last-child {
+      border-bottom: none;
+    }
+    .summary-row-left {
+      font-size: 12px;
+      color: #c0d8f0;
+      font-weight: 500;
+      min-width: 0;
+    }
+    .summary-row-exname {
+      font-weight: 700;
+      color: #5aabff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .summary-row-sets {
+      color: #4a7aaa;
+      font-size: 11px;
+    }
+    .summary-row-right {
+      font-size: 12px;
+      color: #c0d8f0;
+      font-weight: 600;
+      white-space: nowrap;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .summary-pr-badge {
+      display: inline-block;
+      color: #fff;
+      font-size: 9px;
+      font-weight: 800;
+      border-radius: 5px;
+      padding: 1px 5px;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+    }
+    .summary-pr-weight {
+      background: linear-gradient(135deg, #d4a017, #b8860b);
+    }
+    .summary-pr-rep {
+      background: linear-gradient(135deg, #2288dd, #1a66bb);
+    }
+    #summary-footer {
+      padding: 10px 14px 12px;
+      flex-shrink: 0;
+    }
+    #summary-done-btn {
+      width: 100%;
+      background: linear-gradient(135deg, #2255cc, #1a3da0);
+      border: none;
+      border-radius: 12px;
+      color: #fff;
+      font-size: 15px;
+      font-weight: 700;
+      padding: 11px;
+      cursor: pointer;
+      letter-spacing: 0.3px;
+      box-shadow: 0 4px 16px rgba(34,85,204,0.4);
+    }
+
     /* Exercise block in train */
     .train-ex {
       background: rgba(6,14,46,0.88);
@@ -772,7 +929,7 @@
     /* Set column headers */
     .set-cols {
       display: grid;
-      grid-template-columns: 26px 1fr 1fr 46px;
+      grid-template-columns: 26px 1fr 1fr 46px 28px;
       gap: 8px;
       font-size: 10px;
       font-weight: 700;
@@ -786,11 +943,29 @@
     /* Set row */
     .set-row {
       display: grid;
-      grid-template-columns: 26px 1fr 1fr 46px;
+      grid-template-columns: 26px 1fr 1fr 46px 28px;
       gap: 8px;
       align-items: center;
       margin-bottom: 8px;
     }
+
+    .set-delete {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      border: 1px solid rgba(180,60,60,0.3);
+      background: rgba(180,60,60,0.08);
+      color: rgba(220,80,80,0.7);
+      font-size: 18px;
+      line-height: 1;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      touch-action: manipulation;
+      transition: background 0.15s, color 0.15s;
+    }
+    .set-delete:active { background: rgba(180,60,60,0.22); color: #e05a4a; }
     /* PR badge shown above sets */
     .train-ex-pr {
       font-size: 11px;
@@ -1067,8 +1242,20 @@
       flex-shrink: 0;
     }
     #picker-ex-list { flex: 1; overflow-y: auto; }
+    #picker-ex-new {
+      margin: 10px 18px 18px;
+      padding: 14px;
+      background: rgba(74,144,217,0.06);
+      border: 1px dashed rgba(74,144,217,0.35);
+      border-radius: 12px;
+      color: #4A90D9;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
     .picker-item {
-      padding: 16px 18px;
+      padding: 14px 18px;
       border-bottom: 1px solid rgba(30,50,120,0.2);
       cursor: pointer;
       font-size: 15px;
@@ -1076,6 +1263,7 @@
       transition: background 0.1s;
     }
     .picker-item:active { background: rgba(74,144,217,0.1); }
+    .picker-item-sub { font-size: 12px; color: #4a6aaa; margin-top: 2px; }
 
     /* ── Edit Modal ── */
     #edit-modal {
@@ -1552,70 +1740,79 @@
       margin-left: 4px;
     }
 
-    /* ── Cylinder Overlay ── */
+    /* ── Arc Overlay ── */
     #room-overlay {
       position: fixed;
       inset: 0;
       z-index: 450;
-      background: rgba(0,0,8,0.82);
+      background: rgba(0,0,8,0.88);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
       display: none;
+      flex-direction: row;
+      pointer-events: all;
+      overflow: visible;
+    }
+    #room-overlay.open { display: flex; }
+    /* Arc panel: LEFT side — touch target only, no rendering */
+    #room-arc-panel {
+      width: 45%;
+      flex-shrink: 0;
+      touch-action: none;
+      -webkit-touch-callout: none;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    /* Separate fixed layer for nodes/ring — sits above overlay, never clipped by backdrop-filter */
+    #room-arc-layer {
+      position: fixed;
+      inset: 0;
+      z-index: 451;
+      pointer-events: none;
+      display: none;
+    }
+    #room-arc-layer.open { display: block; }
+    #room-arc-nodes {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+    /* Info panel: RIGHT side — inside the concave arc */
+    #room-arc-info {
+      flex: 1;
+      display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 36px;
-      pointer-events: all;
+      gap: 14px;
+      padding: calc(env(safe-area-inset-top, 20px) + 20px) 16px calc(env(safe-area-inset-bottom, 0px) + 90px);
     }
-    #room-overlay.open { display: flex; }
-    #room-overlay-title {
-      font-size: 14px;
+    #room-arc-title {
+      font-size: 11px;
       font-weight: 800;
       color: #fff;
       letter-spacing: 4px;
       text-transform: uppercase;
-      opacity: 0.6;
+      opacity: 0.55;
+      margin-bottom: 4px;
     }
-    #cylinder-wrap {
-      perspective: 1800px;
-      width: 500px;
-      height: 360px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: grab;
-      touch-action: none;
-    }
-    #cylinder-wrap:active { cursor: grabbing; }
-    #cylinder {
-      width: 200px;
-      height: 200px;
-      position: relative;
-      transform-style: preserve-3d;
-    }
-    .room-face {
-      position: absolute;
-      width: 180px;
-      height: 180px;
-      border-radius: 27px;
-      border: 5px solid rgba(74,144,217,0.3);
+    #room-arc-preview-img {
+      width: 170px;
+      height: 170px;
+      border-radius: 18px;
       background: rgba(10,20,50,0.9) center/cover no-repeat;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 54px;
-      font-weight: 900;
-      color: rgba(255,255,255,0.85);
-      cursor: pointer;
-      top: 10px;
-      left: 10px;
-      text-shadow: 0 2px 10px rgba(0,0,0,0.9);
-      user-select: none;
-      transition: border-color 0.25s, box-shadow 0.25s;
+      border: 3px solid rgba(74,144,217,0.7);
+      box-shadow: 0 0 36px rgba(74,144,217,0.35), inset 0 0 20px rgba(0,0,0,0.4);
+      flex-shrink: 0;
+      transition: opacity 0.2s ease;
     }
-    .room-face.selected {
-      border-color: #4A90D9;
-      box-shadow: 0 0 24px rgba(74,144,217,0.55);
+    #room-arc-preview-label {
+      font-size: 15px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.8);
     }
     #room-close-btn {
       background: rgba(4,10,32,0.7);
@@ -1624,8 +1821,44 @@
       color: #7aaace;
       font-size: 14px;
       font-weight: 600;
-      padding: 12px 40px;
+      padding: 12px 36px;
       cursor: pointer;
+      margin-top: 8px;
+    }
+    #room-arc-sel-ring {
+      position: fixed;
+      border-radius: 50%;
+      border: 3px solid rgba(74,144,217,0.35);
+      box-shadow: 0 0 12px 2px rgba(74,144,217,0.18);
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      z-index: 452;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    #room-arc-sel-ring.has-node {
+      border-color: rgba(74,144,217,0.9);
+      box-shadow: 0 0 32px 8px rgba(74,144,217,0.55), inset 0 0 20px rgba(74,144,217,0.15);
+    }
+    .room-node {
+      position: fixed;
+      border-radius: 50%;
+      background: rgba(10,20,50,0.9) center/cover no-repeat;
+      border: 3px solid rgba(74,144,217,0.25);
+      transform: translate(-50%, -50%);
+      cursor: pointer;
+      pointer-events: all;
+      transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.5);
+      z-index: 453;
+      -webkit-touch-callout: none;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .room-node.is-sel {
+      border-color: rgba(74,144,217,0.9);
+      box-shadow: 0 0 24px rgba(74,144,217,0.7);
+      transform: translate(-50%, -50%) scale(1.18);
+      z-index: 454;
     }
 
     /* ── Rest Timer Bar ── */
@@ -2053,6 +2286,7 @@
       border-radius: 20px;
       width: 100%;
       max-width: 480px;
+      max-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 48px);
       display: flex;
       flex-direction: column;
       overflow: hidden;
@@ -2061,11 +2295,11 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 16px 16px 0;
+      padding: 10px 16px 0;
       flex-shrink: 0;
     }
     #weekly-overview-title {
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 800;
       color: #c0d4f0;
       letter-spacing: 2px;
@@ -2073,57 +2307,57 @@
     }
     #weekly-overview-body {
       overflow-y: auto;
-      padding: 14px;
+      padding: 8px 10px;
     }
     #weekly-overview-close-btn {
       background: rgba(4,10,32,0.7);
       border: 1px solid rgba(60,110,200,0.35);
       border-radius: 12px;
       color: #7aaace;
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 600;
-      padding: 10px 40px;
+      padding: 8px 32px;
       cursor: pointer;
-      margin-top: 14px;
+      margin-top: 8px;
       flex-shrink: 0;
     }
     .wo-group-header {
-      font-size: 10px;
+      font-size: 9px;
       font-weight: 800;
       color: #3a5a8a;
       text-transform: uppercase;
       letter-spacing: 1.5px;
-      padding: 10px 2px 6px;
+      padding: 6px 2px 3px;
     }
     .wo-group-header:first-child { padding-top: 2px; }
     .wo-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 6px;
-      margin-bottom: 4px;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 4px;
+      margin-bottom: 2px;
     }
     .wo-row {
       background: rgba(8,18,54,0.8);
       border: 1px solid rgba(50,100,200,0.15);
-      border-radius: 10px;
-      padding: 10px 12px;
+      border-radius: 8px;
+      padding: 6px 8px;
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 2px;
     }
     .wo-row-top {
       display: flex;
       align-items: center;
-      gap: 7px;
+      gap: 5px;
     }
     .wo-dot {
-      width: 8px;
-      height: 8px;
+      width: 6px;
+      height: 6px;
       border-radius: 50%;
       flex-shrink: 0;
     }
     .wo-name {
-      font-size: 12px;
+      font-size: 10px;
       font-weight: 700;
       color: #c0d4f0;
       white-space: nowrap;
@@ -2131,12 +2365,12 @@
       text-overflow: ellipsis;
     }
     .wo-level {
-      font-size: 11px;
+      font-size: 10px;
       font-weight: 700;
       letter-spacing: 0.3px;
     }
     .wo-sets {
-      font-size: 11px;
+      font-size: 10px;
       color: #5a7aaa;
       font-variant-numeric: tabular-nums;
     }
@@ -2158,6 +2392,151 @@
       letter-spacing: 0.3px;
       white-space: nowrap;
     }
+
+    #rotation-toggle {
+      position: fixed;
+      top: calc(16px + env(safe-area-inset-top));
+      right: 16px;
+      z-index: 25;
+      display: none;
+      background: rgba(4,10,32,0.88);
+      border: 1px solid rgba(255,180,0,0.45);
+      border-radius: 12px;
+      color: #ffb300;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 9px 14px;
+      cursor: pointer;
+      letter-spacing: 0.5px;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      width: 140px;
+      height: 36px;
+      box-sizing: border-box;
+      pointer-events: all;
+    }
+    #rotation-toggle.visible { display: flex; align-items: center; justify-content: center; }
+    #rotation-toggle.paused { border-color: rgba(100,200,100,0.55); color: #5de080; }
+
+    /* ── Train Numpad Popup ── */
+    #train-numpad {
+      position: fixed;
+      inset: 0;
+      z-index: 2000;
+      display: flex;
+      align-items: flex-end;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    #train-numpad.open {
+      pointer-events: all;
+      opacity: 1;
+    }
+    .tnp-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+    }
+    .tnp-panel {
+      position: relative;
+      width: 100%;
+      background: rgb(6, 14, 40);
+      border-top: 1.5px solid rgba(60,120,255,0.4);
+      border-radius: 20px 20px 0 0;
+      padding: 16px 16px calc(16px + env(safe-area-inset-bottom, 0px));
+      transform: translateY(100%);
+      transition: transform 0.25s cubic-bezier(0.32,0.72,0,1);
+      box-shadow: 0 -8px 48px rgba(0,30,120,0.6);
+    }
+    #train-numpad.open .tnp-panel {
+      transform: translateY(0);
+    }
+    .tnp-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      padding: 0 4px;
+    }
+    .tnp-label {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      color: #4A90D9;
+      text-transform: uppercase;
+    }
+    .tnp-display {
+      font-size: 32px;
+      font-weight: 800;
+      color: #fff;
+      font-variant-numeric: tabular-nums;
+      min-width: 100px;
+      text-align: right;
+      letter-spacing: -1px;
+    }
+    .tnp-display.empty { color: #2a3a5a; }
+    .tnp-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .tnp-key {
+      height: 56px;
+      border-radius: 12px;
+      border: 1px solid rgba(50,100,200,0.25);
+      background: rgba(10,22,70,0.9);
+      color: #fff;
+      font-size: 22px;
+      font-weight: 600;
+      cursor: pointer;
+      touch-action: manipulation;
+      transition: background 0.1s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .tnp-key:active { background: rgba(74,144,217,0.22); }
+    .tnp-key.tnp-back { font-size: 20px; color: #8aa0cc; }
+    .tnp-actions {
+      display: flex;
+      gap: 8px;
+    }
+    .tnp-reps-btn {
+      flex: 1;
+      height: 52px;
+      border-radius: 14px;
+      border: 1.5px solid rgba(74,144,217,0.5);
+      background: rgba(74,144,217,0.12);
+      color: #4A90D9;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      cursor: pointer;
+      touch-action: manipulation;
+      transition: background 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .tnp-reps-btn:active { background: rgba(74,144,217,0.28); }
+    .tnp-complete-btn {
+      flex: 1;
+      height: 52px;
+      border-radius: 14px;
+      border: none;
+      background: linear-gradient(135deg, #3cb558, #267a38);
+      color: #fff;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      cursor: pointer;
+      touch-action: manipulation;
+      box-shadow: 0 3px 18px rgba(60,181,88,0.4);
+      transition: opacity 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .tnp-complete-btn:active { opacity: 0.82; }
   </style>
 </head>
 <body>
@@ -2256,6 +2635,27 @@
   </div>
 </div>
 
+<!-- Workout Summary Overlay -->
+<div id="workout-summary">
+  <div id="summary-card">
+    <div id="summary-header">
+      <div id="summary-title">Training Overview</div>
+      <div id="summary-stats-row">
+        <div class="summary-stat"><span class="summary-stat-icon">⏱</span><span id="summary-time" class="summary-stat-val"></span></div>
+        <div class="summary-stat"><span id="summary-prs" class="summary-stat-val"></span><span>PRs</span></div>
+      </div>
+    </div>
+    <div id="summary-col-headers">
+      <span>Exercises</span>
+      <span>Best Set</span>
+    </div>
+    <div id="summary-list"></div>
+    <div id="summary-footer">
+      <button id="summary-done-btn">Done</button>
+    </div>
+  </div>
+</div>
+
 <!-- Exercise Picker -->
 <div id="picker">
   <div id="picker-inner">
@@ -2279,6 +2679,7 @@
       <button id="picker-ex-close">✕</button>
     </div>
     <div id="picker-ex-list"></div>
+    <button id="picker-ex-new" style="display:none;">+ New Exercise</button>
   </div>
 </div>
 
@@ -2393,7 +2794,9 @@
   </div>
 </div>
 
-<!-- Profile Buttons -->
+
+<button id="rotation-toggle">⏸ Stop Rotation</button>
+
 <div id="profile-btns">
   <button id="room-btn">Training Room</button>
   <button id="personalize-btn">Avatar</button>
@@ -2402,13 +2805,20 @@
   <button id="open-override-btn">Override Sets</button>
 </div>
 
-<!-- Room Cylinder Overlay -->
+<!-- Room Arc Overlay -->
 <div id="room-overlay">
-  <div id="room-overlay-title">Training Room</div>
-  <div id="cylinder-wrap">
-    <div id="cylinder"></div>
+  <div id="room-arc-panel"></div>
+  <div id="room-arc-info">
+    <div id="room-arc-title">Training Room</div>
+    <div id="room-arc-preview-img"></div>
+    <div id="room-arc-preview-label"></div>
+    <button id="room-close-btn">Select</button>
   </div>
-  <button id="room-close-btn">Done</button>
+</div>
+<!-- Arc nodes in a separate fixed layer — outside the backdrop-filter element so nothing clips them -->
+<div id="room-arc-layer">
+  <div id="room-arc-sel-ring"></div>
+  <div id="room-arc-nodes"></div>
 </div>
 
 <!-- Focus Exercise Picker -->
@@ -2644,6 +3054,11 @@ function loadState() {
     if (s.exercises && !('Obliques' in s.exercises)) s.exercises['Obliques'] = ['Obliques Exercise'];
     if (!s.cablePulleys) s.cablePulleys = {};
     if (!s.exerciseMeta) s.exerciseMeta = {};
+    // Backfill cable machine category for exercises that have pulley data but no category
+    for (const ex of Object.keys(s.cablePulleys || {})) {
+      if (!s.exerciseMeta[ex]) s.exerciseMeta[ex] = {};
+      if (!s.exerciseMeta[ex].category) s.exerciseMeta[ex].category = 'Cable Machine';
+    }
     if (s.lastReset !== getMondayStr()) {
       s.lastReset = getMondayStr();
       s.weeklySets = Object.fromEntries(MUSCLES.map(m => [m, 0]));
@@ -2697,10 +3112,14 @@ const rimLight = new THREE.DirectionalLight(0xffffff, 1.0);
 rimLight.position.set(0, -2, -3);
 scene.add(rimLight);
 
+
+
+// ─────────────────────────────────────────────────────────────
+
 // ── Add new models here ──────────────────────────────────────
 const MODELS = [
-  { name: 'Standing',      file: 'https://raw.githubusercontent.com/etmcbusiness/train-hard-assets/master/Standing%2BStill%2BModel.glb' },
-  { name: 'Crossing Arms', file: 'https://raw.githubusercontent.com/etmcbusiness/train-hard-assets/master/CrossingArmsModel.glb' },
+  { name: 'Standing',      file: 'Models/Standing+Still+Model.glb' },
+  { name: 'Crossing Arms', file: 'Models/CrossingArmsModel.glb' },
 ];
 // ─────────────────────────────────────────────────────────────
 
@@ -2726,7 +3145,6 @@ function setupModelMeshes(allMeshes, targetMap) {
       if (Array.isArray(mesh.material)) mesh.material.forEach(fn);
       else fn(mesh.material);
     };
-
     const part = INDEX_TO_PART[i];
     if (!part) return;
 if (MUSCLES.includes(part)) {
@@ -2837,6 +3255,7 @@ function addShadow(model, radius, box) {
   model.add(shadowMesh);
 }
 
+
 const toggleBtn = { textContent: '', classList: { toggle: () => {}, remove: () => {}, add: () => {} } };
 
 function loadModel(idx, onReady) {
@@ -2936,8 +3355,10 @@ window.addEventListener('resize', () => {
 (function animate() {
   requestAnimationFrame(animate);
   controls.update();
+  const delta = clock.getDelta();
   const activeMixer = modelCache[activeIdx] && modelCache[activeIdx].mixer;
-  if (activeMixer) activeMixer.update(clock.getDelta());
+  if (activeMixer) activeMixer.update(delta);
+  const t = clock.elapsedTime;
   renderer.render(scene, camera);
 })();
 
@@ -2952,7 +3373,15 @@ const tabSections = {
   stats: 'stats-section'
 };
 
+function closePicker() {
+  document.getElementById('picker-ex-popup').classList.remove('open');
+  const picker = document.getElementById('picker');
+  picker._histMode = false;
+  picker.classList.remove('open');
+}
+
 function goToTab(tab) {
+  closePicker();
   if (tab === 'train') {
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === 'train'));
     if (trainActive) { restoreTrain(); return; }
@@ -2968,6 +3397,7 @@ function goToTab(tab) {
   document.getElementById(tabSections[tab]).classList.add('active');
   document.getElementById('canvas-container').style.display = tab === 'profile' ? 'block' : 'none';
   document.getElementById('profile-btns').classList.toggle('visible', tab === 'profile');
+  document.getElementById('rotation-toggle').classList.toggle('visible', tab === 'profile');
   if (tab !== 'profile') document.getElementById('focus-stats-panel').classList.remove('visible');
 
   if (tab === 'profile')   renderFocusStats();
@@ -3096,7 +3526,9 @@ function renderHistory() {
       ${w.exercises.map(e => {
         const pc = state.cablePulleys && state.cablePulleys[e.name];
         const badge = pc ? `<span class="cable-pulley-badge">${pc}P</span>` : '';
-        return `<div class="hist-ex"><span>${e.name}${badge}</span><span style="color:#3a5a80">${e.sets.length} sets</span></div>`;
+        const cat = (state.exerciseMeta[e.name] || {}).category;
+        const catTag = cat ? `<span class="hist-ex-cat">${cat}</span>` : '';
+        return `<div class="hist-ex"><span>${e.name}${badge}${catTag}</span><span style="color:#3a5a80">${e.sets.length} sets</span></div>`;
       }).join('')}
     `;
 
@@ -3109,22 +3541,7 @@ function renderHistory() {
       wrapper.style.transform = 'translateX(-100%)';
       setTimeout(() => {
         state.history.splice(realIdx, 1);
-        state.weeklySets = Object.fromEntries(MUSCLES.map(m => [m, 0]));
-        const monday = getMondayStr();
-        for (const w of state.history) {
-          if (w.date && isThisWeek(w.date, monday)) {
-            for (const ex of w.exercises) {
-              if (state.weeklySets[ex.muscle] !== undefined) {
-                state.weeklySets[ex.muscle] += ex.sets.length;
-              }
-            }
-          }
-        }
-        recalcAllPRs();
-        recalcAllRepPRs();
-        save();
-        updateModel();
-        renderFocusStats();
+        recalcStats();
         renderHistory();
       }, 220);
     });
@@ -3139,22 +3556,7 @@ function renderHistory() {
       wrapper.style.transform = 'translateX(-100%)';
       setTimeout(() => {
         state.history.splice(realIdx, 1);
-        state.weeklySets = Object.fromEntries(MUSCLES.map(m => [m, 0]));
-        const monday = getMondayStr();
-        for (const w of state.history) {
-          if (w.date && isThisWeek(w.date, monday)) {
-            for (const ex of w.exercises) {
-              if (state.weeklySets[ex.muscle] !== undefined) {
-                state.weeklySets[ex.muscle] += ex.sets.length;
-              }
-            }
-          }
-        }
-        recalcAllPRs();
-        recalcAllRepPRs();
-        save();
-        updateModel();
-        renderFocusStats();
+        recalcStats();
         renderHistory();
       }, 220);
     });
@@ -3232,6 +3634,27 @@ function attachHistSwipe(card) {
       if (openSwipeCard === card) openSwipeCard = null;
     }
   });
+}
+
+// ── Stats recalculation ──
+function recalcStats() {
+  state.weeklySets = Object.fromEntries(MUSCLES.map(m => [m, 0]));
+  const monday = getMondayStr();
+  for (const w of state.history) {
+    if (w.date && isThisWeek(w.date, monday)) {
+      for (const ex of w.exercises) {
+        if (state.weeklySets[ex.muscle] !== undefined) {
+          state.weeklySets[ex.muscle] += ex.sets.length;
+        }
+      }
+    }
+  }
+  recalcAllPRs();
+  recalcAllRepPRs();
+  save();
+  updateModel();
+  renderFocusStats();
+  renderStats();
 }
 
 // ── History Edit ──
@@ -3321,24 +3744,13 @@ document.getElementById('hist-done-btn').addEventListener('click', () => {
     .map(ex => ({ ...ex, sets: ex.sets.filter(s => s.weight !== '' || s.reps !== '') }))
     .filter(ex => ex.sets.length > 0);
 
-  state.weeklySets = Object.fromEntries(MUSCLES.map(m => [m, 0]));
-  state.history[histEditIdx] = histEditData;
-  const monday = getMondayStr();
-  for (const w of state.history) {
-    if (w.date && isThisWeek(w.date, monday)) {
-      for (const ex of w.exercises) {
-        if (state.weeklySets[ex.muscle] !== undefined) {
-          state.weeklySets[ex.muscle] += ex.sets.length;
-        }
-      }
-    }
+  if (histEditData.exercises.length === 0) {
+    state.history.splice(histEditIdx, 1);
+  } else {
+    state.history[histEditIdx] = histEditData;
   }
 
-  recalcAllPRs();
-  recalcAllRepPRs();
-  save();
-  updateModel();
-  renderFocusStats();
+  recalcStats();
   document.getElementById('hist-edit-modal').classList.remove('open');
   renderHistory();
 });
@@ -3346,24 +3758,7 @@ document.getElementById('hist-done-btn').addEventListener('click', () => {
 document.getElementById('hist-delete-btn').addEventListener('click', () => {
   if (!confirm('Delete this workout permanently?')) return;
   state.history.splice(histEditIdx, 1);
-
-  state.weeklySets = Object.fromEntries(MUSCLES.map(m => [m, 0]));
-  const monday = getMondayStr();
-  for (const w of state.history) {
-    if (w.date && isThisWeek(w.date, monday)) {
-      for (const ex of w.exercises) {
-        if (state.weeklySets[ex.muscle] !== undefined) {
-          state.weeklySets[ex.muscle] += ex.sets.length;
-        }
-      }
-    }
-  }
-
-  recalcAllPRs();
-  recalcAllRepPRs();
-  save();
-  updateModel();
-  renderFocusStats();
+  recalcStats();
   document.getElementById('hist-edit-modal').classList.remove('open');
   renderHistory();
 });
@@ -3391,29 +3786,35 @@ function renderExercises() {
   const el = document.getElementById('exercises-list');
   el.innerHTML = '';
 
-  for (const muscle of MUSCLES) {
-    const lv = getLevel(muscle);
-    const dotColor = LEVEL_COLORS[lv];
-    const sets = state.weeklySets[muscle] || 0;
-    const exList = state.exercises[muscle] || [];
+  for (const muscleGroup of MUSCLE_GROUPS) {
+    const header = document.createElement('div');
+    header.className = 'picker-group-header';
+    header.textContent = muscleGroup.label;
+    el.appendChild(header);
 
-    const group = document.createElement('div');
-    group.className = 'muscle-group';
-    group.innerHTML = `
-      <div class="muscle-header">
-        <div class="muscle-left">
-          <div class="muscle-dot" style="background:${dotColor};"></div>
-          <div>
-            <div class="muscle-name">${muscle}</div>
-            <div class="muscle-meta">${exList.length} exercise${exList.length !== 1 ? 's' : ''} · Level ${lv}</div>
+    for (const muscle of muscleGroup.muscles) {
+      const lv = getLevel(muscle);
+      const dotColor = LEVEL_COLORS[lv];
+      const exList = state.exercises[muscle] || [];
+
+      const group = document.createElement('div');
+      group.className = 'muscle-group';
+      group.innerHTML = `
+        <div class="muscle-header">
+          <div class="muscle-left">
+            <div class="muscle-dot" style="background:${dotColor};box-shadow:0 0 8px ${dotColor};"></div>
+            <div>
+              <div class="muscle-name">${muscle}</div>
+              <div class="muscle-meta">${exList.length} exercise${exList.length !== 1 ? 's' : ''} · Level ${lv}</div>
+            </div>
           </div>
+          <span class="chevron">›</span>
         </div>
-        <span class="chevron">›</span>
-      </div>
-    `;
+      `;
 
-    group.querySelector('.muscle-header').addEventListener('click', () => openExPopup(muscle));
-    el.appendChild(group);
+      group.querySelector('.muscle-header').addEventListener('click', () => openExPopup(muscle));
+      el.appendChild(group);
+    }
   }
 }
 
@@ -3445,8 +3846,12 @@ function renderExPopup() {
     item.className = 'ex-item';
     const pc = state.cablePulleys && state.cablePulleys[ex];
     const badge = pc ? ` <span class="cable-pulley-badge">${pc}P</span>` : '';
+    const cat = (state.exerciseMeta[ex] || {}).category;
+    const catLine = cat ? `<div class="ex-item-cat">${cat}</div>` : '';
+    const lw = fmtLastWorked(getLastWorked(ex));
+    const lastLine = lw ? `<div class="ex-item-last">${lw}</div>` : '';
     item.innerHTML = `
-      <span class="ex-item-name">${ex}${badge}</span>
+      <div><span class="ex-item-name">${ex}${badge}</span>${catLine}${lastLine}</div>
       <button class="ex-edit-btn">Edit</button>
     `;
     item.addEventListener('click', (e) => {
@@ -3473,8 +3878,9 @@ function openExDetail(exName, muscle) {
   document.getElementById('ex-detail-dot').style.cssText =
     `background:${dotColor};box-shadow:0 0 8px ${dotColor};`;
   document.getElementById('ex-detail-name').textContent = exName;
+  const _lw = fmtLastWorked(getLastWorked(exName));
   document.getElementById('ex-detail-sub').textContent =
-    muscle + (pc ? ` · ${pc} pulley${pc > 1 ? 's' : ''}` : '');
+    muscle + (pc ? ` · ${pc} pulley${pc > 1 ? 's' : ''}` : '') + (_lw ? ` · ${_lw}` : '');
 
   document.getElementById('ex-detail-edit-btn').onclick = () => {
     document.getElementById('ex-detail-modal').classList.remove('open');
@@ -3670,7 +4076,6 @@ function openEdit(muscle, idx) {
   updateEditRestDisplay();
   document.getElementById('edit-delete-btn').style.display = 'block';
   document.getElementById('edit-modal').classList.add('open');
-  setTimeout(() => document.getElementById('edit-input').focus(), 100);
 }
 
 function openAddEx(muscle) {
@@ -3688,7 +4093,6 @@ function openAddEx(muscle) {
   updateEditRestDisplay();
   document.getElementById('edit-delete-btn').style.display = 'none';
   document.getElementById('edit-modal').classList.add('open');
-  setTimeout(() => document.getElementById('edit-input').focus(), 100);
 }
 
 function closeEditModal() {
@@ -3889,6 +4293,12 @@ let timerSecs = 0;
 let trainActive = false;
 const session = [];
 
+let lastActivityTime = 0;
+let inactivityInterval = null;
+const INACTIVITY_LIMIT_MS = 2 * 60 * 60 * 1000; // 2 hours
+
+function touchActivity() { lastActivityTime = Date.now(); }
+
 let restDuration = 90;
 let restInterval = null;
 let restSecs = 0;
@@ -3995,11 +4405,14 @@ function setTimerDisplay(t) {
 function closeTrain() {
   trainActive = false;
   clearInterval(timerInterval);
+  clearInterval(inactivityInterval);
+  inactivityInterval = null;
   stopRestTimer();
   const modal = document.getElementById('train-modal');
   modal.classList.remove('open');
   modal.style.display = 'none';
   document.querySelector('.nav-btn[data-tab="train"]').classList.remove('train-live');
+  goToTab('profile');
 }
 
 function minimizeTrain() {
@@ -4020,6 +4433,7 @@ function openTrain() {
   session.length = 0;
   timerSecs = 0;
   setTimerDisplay('00:00');
+  document.getElementById('workout-summary').classList.remove('open');
   stopRestTimer();
   document.getElementById('train-exercises').innerHTML = '';
   const modal = document.getElementById('train-modal');
@@ -4030,6 +4444,13 @@ function openTrain() {
     timerSecs++;
     setTimerDisplay(fmtTime(timerSecs));
   }, 1000);
+  touchActivity();
+  clearInterval(inactivityInterval);
+  inactivityInterval = setInterval(() => {
+    if (trainActive && Date.now() - lastActivityTime > INACTIVITY_LIMIT_MS) {
+      closeTrain();
+    }
+  }, 60 * 1000);
 }
 
 
@@ -4054,6 +4475,11 @@ document.getElementById('finish-btn').addEventListener('click', () => {
   const date = new Date().toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric', year:'numeric' });
   const entry = { date, duration: timerSecs, exercises: validExercises };
 
+  const prsBefore = {};
+  for (const ex of validExercises) {
+    prsBefore[ex.name] = state.prs[ex.name] ? { ...state.prs[ex.name] } : null;
+  }
+
   for (const ex of validExercises) {
     state.weeklySets[ex.muscle] = (state.weeklySets[ex.muscle] || 0) + ex.sets.length;
     for (const s of ex.sets) {
@@ -4074,10 +4500,76 @@ document.getElementById('finish-btn').addEventListener('click', () => {
   updateModel();
   renderFocusStats();
 
+  showWorkoutSummary(validExercises, timerSecs, prsBefore);
+});
+
+function showWorkoutSummary(exercises, durationSecs, prsBefore) {
+  const h = Math.floor(durationSecs / 3600);
+  const m = Math.floor((durationSecs % 3600) / 60);
+  const timeStr = h > 0 ? `${h}h ${m}m` : `${m}m`;
+  document.getElementById('summary-time').textContent = timeStr;
+
+  const list = document.getElementById('summary-list');
+  list.innerHTML = '';
+  let prCount = 0;
+
+  for (const ex of exercises) {
+    const setCount = ex.sets.length;
+    const bestSet = ex.sets.reduce((best, s) => {
+      const w = parseFloat(s.weight) || 0;
+      const r = parseInt(s.reps) || 0;
+      if (!best) return { w, r };
+      if (w > best.w || (w === best.w && r > best.r)) return { w, r };
+      return best;
+    }, null);
+
+    const newPR = state.prs[ex.name];
+    const oldPR = prsBefore[ex.name];
+    let prType = null;
+    if (newPR) {
+      if (!oldPR || newPR.weight > oldPR.weight) prType = 'weight';
+      else if (newPR.weight === oldPR.weight && newPR.reps > oldPR.reps) prType = 'rep';
+    }
+    if (prType) prCount++;
+
+    let bestStr = '—';
+    if (bestSet) {
+      if (bestSet.w > 0 && bestSet.r > 0) bestStr = `${bestSet.w}lb × ${bestSet.r}`;
+      else if (bestSet.w > 0) bestStr = `${bestSet.w}lb`;
+      else if (bestSet.r > 0) bestStr = `${bestSet.r} reps`;
+    }
+
+    const prBadge = prType === 'weight'
+      ? `<span class="summary-pr-badge summary-pr-weight">WT PR</span>`
+      : prType === 'rep'
+      ? `<span class="summary-pr-badge summary-pr-rep">REP PR</span>`
+      : '';
+
+    const row = document.createElement('div');
+    row.className = 'summary-row';
+    row.innerHTML = `
+      <div class="summary-row-left">
+        <div class="summary-row-exname">${ex.name}</div>
+        <div class="summary-row-sets">${setCount} set${setCount !== 1 ? 's' : ''}</div>
+      </div>
+      <div class="summary-row-right">
+        ${bestStr}${prBadge ? ` ${prBadge}` : ''}
+      </div>
+    `;
+    list.appendChild(row);
+  }
+
+  document.getElementById('summary-prs').textContent = prCount;
+  document.getElementById('workout-summary').classList.add('open');
+}
+
+document.getElementById('summary-done-btn').addEventListener('click', () => {
+  document.getElementById('workout-summary').classList.remove('open');
   closeTrain();
 });
 
 function addExerciseBlock(name, muscle) {
+  touchActivity();
   const idx = session.length;
   session.push({ name, muscle, sets: [] });
 
@@ -4086,12 +4578,14 @@ function addExerciseBlock(name, muscle) {
 
   const pulleyCount = state.cablePulleys && state.cablePulleys[name];
   const pulleyBadge = pulleyCount ? `<span class="cable-pulley-badge">${pulleyCount}P</span>` : '';
+  const cat = (state.exerciseMeta[name] || {}).category;
+  const nameLabel = cat ? `${name} - ${cat}` : name;
 
   const top = document.createElement('div');
   top.className = 'train-ex-top';
   top.innerHTML = `
     <div>
-      <div class="train-ex-name">${name}${pulleyBadge}</div>
+      <div class="train-ex-name">${nameLabel}${pulleyBadge}</div>
       <div class="train-ex-muscle">${muscle}</div>
     </div>
   `;
@@ -4100,6 +4594,7 @@ function addExerciseBlock(name, muscle) {
   removeBtn.type = 'button';
   removeBtn.textContent = '×';
   removeBtn.addEventListener('click', () => {
+    touchActivity();
     session[idx] = null;
     block.remove();
   });
@@ -4112,7 +4607,7 @@ function addExerciseBlock(name, muscle) {
 
   const cols = document.createElement('div');
   cols.className = 'set-cols';
-  cols.innerHTML = '<span>Set</span><span>lbs</span><span>Reps</span><span></span>';
+  cols.innerHTML = '<span>Set</span><span>lbs</span><span>Reps</span><span></span><span></span>';
 
   const setsContainer = document.createElement('div');
   setsContainer.className = 'sets-container';
@@ -4121,7 +4616,7 @@ function addExerciseBlock(name, muscle) {
   addSetBtn.className = 'add-set-btn';
   addSetBtn.type = 'button';
   addSetBtn.textContent = '+ Add Set';
-  addSetBtn.addEventListener('click', () => addSet(idx, block));
+  addSetBtn.addEventListener('click', () => { touchActivity(); addSet(idx, block); });
 
   block.appendChild(top);
   block.appendChild(prEl);
@@ -4133,49 +4628,91 @@ function addExerciseBlock(name, muscle) {
   addSet(idx, block);
 }
 
+function renderSets(exIdx, block) {
+  const ex = session[exIdx];
+  if (!ex) return;
+  const container = block.querySelector('.sets-container');
+  container.innerHTML = '';
+  const weightInps = [];
+  const repInps = [];
+  for (let i = 0; i < ex.sets.length; i++) {
+    if (i > 0) {
+      const marker = document.createElement('div');
+      marker.className = 'rest-marker';
+      marker.textContent = fmtRestSecs(restDuration);
+      container.appendChild(marker);
+    }
+    const setIdx = i;
+    const row = document.createElement('div');
+    row.className = 'set-row';
+
+    const numEl = document.createElement('div');
+    numEl.className = 'set-num';
+    numEl.textContent = setIdx + 1;
+
+    const { wrap: wWrap, inp: wInp } = makeStepper(ex.sets[setIdx].weight, 5, 0, val => {
+      touchActivity();
+      ex.sets[setIdx].weight = val;
+      for (let j = setIdx + 1; j < ex.sets.length; j++) {
+        ex.sets[j].weight = val;
+        if (weightInps[j]) weightInps[j].value = val;
+      }
+    });
+    const { wrap: rWrap, inp: rInp } = makeStepper(ex.sets[setIdx].reps, 1, 0, val => {
+      touchActivity();
+      ex.sets[setIdx].reps = val;
+      for (let j = setIdx + 1; j < ex.sets.length; j++) {
+        ex.sets[j].reps = val;
+        if (repInps[j]) repInps[j].value = val;
+      }
+    });
+    weightInps[setIdx] = wInp;
+    repInps[setIdx] = rInp;
+
+    const checkBtn = document.createElement('button');
+    checkBtn.className = 'set-check';
+    checkBtn.type = 'button';
+    checkBtn.textContent = '✓';
+    if (ex.sets[setIdx].done) checkBtn.classList.add('done');
+    checkBtn.addEventListener('click', () => {
+      touchActivity();
+      ex.sets[setIdx].done = !ex.sets[setIdx].done;
+      checkBtn.classList.toggle('done', ex.sets[setIdx].done);
+      if (ex.sets[setIdx].done) {
+        const exRest = (state.exerciseMeta[ex.name] || {}).restTime;
+        startRestTimer(exRest || REST_DURATION);
+      }
+    });
+
+    // Attach custom numpad to weight and reps inputs
+    attachTrainNumpad(wInp, rInp, checkBtn, 'weight');
+    attachTrainNumpad(rInp, wInp, checkBtn, 'reps');
+
+    const delBtn = document.createElement('button');
+    delBtn.className = 'set-delete';
+    delBtn.type = 'button';
+    delBtn.textContent = '×';
+    delBtn.style.display = ex.sets.length > 1 ? '' : 'none';
+    delBtn.addEventListener('click', () => {
+      touchActivity();
+      ex.sets.splice(setIdx, 1);
+      renderSets(exIdx, block);
+    });
+
+    row.appendChild(numEl);
+    row.appendChild(wWrap);
+    row.appendChild(rWrap);
+    row.appendChild(checkBtn);
+    row.appendChild(delBtn);
+    container.appendChild(row);
+  }
+}
+
 function addSet(exIdx, block) {
   const ex = session[exIdx];
   if (!ex) return;
-  const setIdx = ex.sets.length;
-
   ex.sets.push({ weight: '', reps: '', done: false });
-
-  const row = document.createElement('div');
-  row.className = 'set-row';
-
-  const numEl = document.createElement('div');
-  numEl.className = 'set-num';
-  numEl.textContent = setIdx + 1;
-
-  const { wrap: wWrap } = makeStepper('', 5, 0, val => { ex.sets[setIdx].weight = val; });
-  const { wrap: rWrap } = makeStepper('', 1, 0, val => { ex.sets[setIdx].reps = val; });
-
-  const checkBtn = document.createElement('button');
-  checkBtn.className = 'set-check';
-  checkBtn.type = 'button';
-  checkBtn.textContent = '✓';
-  checkBtn.addEventListener('click', () => {
-    ex.sets[setIdx].done = !ex.sets[setIdx].done;
-    checkBtn.classList.toggle('done', ex.sets[setIdx].done);
-    if (ex.sets[setIdx].done) {
-      const exRest = (state.exerciseMeta[ex.name] || {}).restTime;
-      startRestTimer(exRest || REST_DURATION);
-    }
-  });
-
-  row.appendChild(numEl);
-  row.appendChild(wWrap);
-  row.appendChild(rWrap);
-  row.appendChild(checkBtn);
-
-  const container = block.querySelector('.sets-container');
-  if (setIdx > 0) {
-    const marker = document.createElement('div');
-    marker.className = 'rest-marker';
-    marker.textContent = fmtRestSecs(restDuration);
-    container.appendChild(marker);
-  }
-  container.appendChild(row);
+  renderSets(exIdx, block);
 }
 
 document.getElementById('add-ex-main').addEventListener('click', openPicker);
@@ -4231,9 +4768,12 @@ function openPickerExPopup(muscle) {
     const item = document.createElement('div');
     item.className = 'picker-item';
     const pc = state.cablePulleys && state.cablePulleys[ex];
-    item.innerHTML = pc
-      ? `${ex} <span class="cable-pulley-badge">${pc}P</span>`
-      : ex;
+    const cat = (state.exerciseMeta[ex] || {}).category;
+    const label = cat ? `${ex} - ${cat}` : ex;
+    const mainText = pc ? `${label} <span class="cable-pulley-badge">${pc}P</span>` : label;
+    const _plw = fmtLastWorked(getLastWorked(ex));
+    const lastSub = _plw ? ` · ${_plw}` : '';
+    item.innerHTML = `${mainText}<div class="picker-item-sub">${muscle}${lastSub}</div>`;
     item.addEventListener('click', () => {
       document.getElementById('picker-ex-popup').classList.remove('open');
       const picker = document.getElementById('picker');
@@ -4248,6 +4788,20 @@ function openPickerExPopup(muscle) {
     });
     list.appendChild(item);
   });
+
+  const picker = document.getElementById('picker');
+  const newBtn = document.getElementById('picker-ex-new');
+  if (picker._histMode) {
+    newBtn.style.display = 'none';
+  } else {
+    newBtn.style.display = 'block';
+    newBtn.onclick = () => {
+      document.getElementById('picker-ex-popup').classList.remove('open');
+      picker.classList.remove('open');
+      nexFromPicker = muscle;
+      openNewExModal(muscle);
+    };
+  }
 
   document.getElementById('picker-ex-popup').classList.add('open');
 }
@@ -4288,17 +4842,44 @@ document.getElementById('picker-ex-popup').addEventListener('click', (e) => {
   }
 });
 
+document.addEventListener('mousedown', (e) => {
+  const picker = document.getElementById('picker');
+  if (!picker.classList.contains('open')) return;
+  if (!document.getElementById('picker-inner').contains(e.target) &&
+      !document.getElementById('picker-ex-popup').contains(e.target)) {
+    closePicker();
+  }
+}, true);
+
+document.addEventListener('touchstart', (e) => {
+  const picker = document.getElementById('picker');
+  if (!picker.classList.contains('open')) return;
+  if (!document.getElementById('picker-inner').contains(e.target) &&
+      !document.getElementById('picker-ex-popup').contains(e.target)) {
+    closePicker();
+  }
+}, true);
+
 // ═══════════════════════════════════════════════════════════
 // TRAINING ROOM
 // ═══════════════════════════════════════════════════════════
 
-const ROOM_COUNT = 5;
-const CYL_RADIUS = 330;
-let cylAngle = 0;
-let cylDragging = false;
-let cylDragStartX = 0;
-let cylDragStartAngle = 0;
-let cylAnimId = null;
+const ROOM_COUNT = 8;
+const NODE_SIZE = 96;
+// θ = 0 at 12-o'clock, increases clockwise.
+// Arc is on the LEFT: circle center is off-screen to the left.
+// Selection point at 3-o'clock (θ = π/2) = rightmost point of circle = visible right edge of arc.
+const SEL_ANGLE = Math.PI / 2;
+// 60 seconds per full rotation, rotating downward (clockwise = arcOffset increases)
+const ARC_SPEED = (2 * Math.PI) / 60;
+
+let arcOffset = 0;
+let arcAnimId = null;
+let arcLastTime = null;
+let arcDragging = false;
+let arcDragStartY = 0;
+let arcDragStartOffset = 0;
+let arcNodes = [];
 let activeRoom = localStorage.getItem('trainhard_room') || '1';
 
 const roomSrcCache = {};
@@ -4322,80 +4903,160 @@ function setRoom(num) {
     document.getElementById('gravity-room').style.backgroundImage = url;
     document.documentElement.style.backgroundImage = url;
   });
-  document.querySelectorAll('.room-face').forEach(f => {
-    f.classList.toggle('selected', f.dataset.room === activeRoom);
-  });
 }
 
-function buildCylinder() {
-  const cyl = document.getElementById('cylinder');
-  cyl.innerHTML = '';
+function arcNodeAngle(i) {
+  return (i / ROOM_COUNT) * 2 * Math.PI + arcOffset;
+}
+
+
+let arcPreviewRoomNum = 0;
+function updateArcPreview(roomNum) {
+  const img = document.getElementById('room-arc-preview-img');
+  const label = document.getElementById('room-arc-preview-label');
+  if (arcPreviewRoomNum === roomNum) return;
+  arcPreviewRoomNum = roomNum;
+  detectRoomSrc(roomNum).then(src => {
+    img.style.opacity = '0';
+    setTimeout(() => {
+      img.style.backgroundImage = `url('${src}')`;
+      img.style.opacity = '1';
+    }, 180);
+  });
+  label.textContent = `Room ${roomNum}`;
+}
+
+function buildArcNodes() {
+  const nodesDiv = document.getElementById('room-arc-nodes');
+  nodesDiv.innerHTML = '';
+  arcNodes = [];
   for (let i = 0; i < ROOM_COUNT; i++) {
-    const face = document.createElement('div');
-    face.className = 'room-face';
-    face.dataset.room = String(i + 1);
-    face.textContent = i + 1;
-    detectRoomSrc(i + 1).then(src => { face.style.backgroundImage = `url('${src}')`; });
-    const deg = (i / ROOM_COUNT) * 360;
-    face.style.transform = `rotateY(${deg}deg) translateZ(${CYL_RADIUS}px)`;
-    if (face.dataset.room === activeRoom) face.classList.add('selected');
-    face.addEventListener('click', () => {
-      setRoom(i + 1);
-      setTimeout(() => {
-        document.getElementById('room-overlay').classList.remove('open');
-        stopCylAnim();
-      }, 180);
+    const node = document.createElement('div');
+    node.className = 'room-node';
+    node.style.width = NODE_SIZE + 'px';
+    node.style.height = NODE_SIZE + 'px';
+    detectRoomSrc(i + 1).then(src => { node.style.backgroundImage = `url('${src}')`; });
+    node.addEventListener('click', () => {
+      let diff = SEL_ANGLE - arcNodeAngle(i);
+      diff = ((diff % (2 * Math.PI)) + 3 * Math.PI) % (2 * Math.PI) - Math.PI;
+      arcOffset += diff;
     });
-    cyl.appendChild(face);
+    nodesDiv.appendChild(node);
+    arcNodes.push(node);
   }
 }
 
-function tickCyl() {
-  if (!cylDragging) cylAngle -= 0.12;
-  document.getElementById('cylinder').style.transform = `rotateY(${cylAngle}deg)`;
-  cylAnimId = requestAnimationFrame(tickCyl);
+function renderArc() {
+  // Use screen dimensions — nodes live in a fixed full-screen layer so coords are screen coords.
+  const panel = document.getElementById('room-arc-panel');
+  const cw = panel.offsetWidth;
+  const ch = window.innerHeight;
+  const R = cw;
+  const selX = cw - 40; // selection point x (screen x = panel x since panel starts at left:0)
+  const cx = selX - R;  // circle center x (negative = off-screen left)
+  const cy = ch / 2;
+
+  // Position selection ring
+  const ring = document.getElementById('room-arc-sel-ring');
+  const ringSize = NODE_SIZE + 16;
+  ring.style.left = selX + 'px';
+  ring.style.top = cy + 'px';
+  ring.style.width = ringSize + 'px';
+  ring.style.height = ringSize + 'px';
+
+  // Find nearest node and check if it's inside the selection ring
+  // Threshold ≈ 18° — node center must overlap the ring before confirming
+  const SEL_THRESHOLD = Math.PI / 10;
+  let selIdx = 0, selDist = Infinity;
+  for (let i = 0; i < ROOM_COUNT; i++) {
+    let d = arcNodeAngle(i) - SEL_ANGLE;
+    d = ((d % (2 * Math.PI)) + 3 * Math.PI) % (2 * Math.PI) - Math.PI;
+    if (Math.abs(d) < selDist) { selDist = Math.abs(d); selIdx = i; }
+  }
+  const confirmed = selDist < SEL_THRESHOLD;
+  ring.classList.toggle('has-node', confirmed);
+
+  if (confirmed) {
+    const selRoomNum = selIdx + 1;
+    if (String(selRoomNum) !== activeRoom) setRoom(selRoomNum);
+    updateArcPreview(selRoomNum);
+  }
+
+  // Update node positions (screen coordinates)
+  for (let i = 0; i < ROOM_COUNT; i++) {
+    const θ = arcNodeAngle(i);
+    const nx = cx + R * Math.sin(θ);
+    const ny = cy - R * Math.cos(θ);
+    const node = arcNodes[i];
+    node.style.left = nx + 'px';
+    node.style.top = ny + 'px';
+    node.classList.toggle('is-sel', i === selIdx && confirmed);
+    node.style.visibility = (ny < -NODE_SIZE || ny > ch + NODE_SIZE) ? 'hidden' : 'visible';
+  }
 }
 
-function startCylAnim() { if (!cylAnimId) cylAnimId = requestAnimationFrame(tickCyl); }
-function stopCylAnim()  { cancelAnimationFrame(cylAnimId); cylAnimId = null; }
+function tickArc(ts) {
+  if (arcLastTime !== null && !arcDragging) {
+    // Clockwise = increasing arcOffset = nodes move downward through the selection point
+    arcOffset += ARC_SPEED * ((ts - arcLastTime) / 1000);
+  }
+  arcLastTime = ts;
+  renderArc();
+  arcAnimId = requestAnimationFrame(tickArc);
+}
 
-const cylWrap = document.getElementById('cylinder-wrap');
+function startArcAnim() { arcLastTime = null; if (!arcAnimId) arcAnimId = requestAnimationFrame(tickArc); }
+function stopArcAnim()  { cancelAnimationFrame(arcAnimId); arcAnimId = null; arcLastTime = null; }
 
-cylWrap.addEventListener('mousedown', e => {
-  cylDragging = true;
-  cylDragStartX = e.clientX;
-  cylDragStartAngle = cylAngle;
+function openRoomOverlay() {
+  const i = parseInt(activeRoom) - 1;
+  arcOffset = SEL_ANGLE - (i / ROOM_COUNT) * 2 * Math.PI;
+  arcPreviewRoomNum = 0;
+  buildArcNodes();
+  document.getElementById('room-overlay').classList.add('open');
+  document.getElementById('room-arc-layer').classList.add('open');
+  startArcAnim();
+}
+
+const arcPanel = document.getElementById('room-arc-panel');
+
+arcPanel.addEventListener('mousedown', e => {
+  arcDragging = true;
+  arcDragStartY = e.clientY;
+  arcDragStartOffset = arcOffset;
+  e.preventDefault();
 });
 window.addEventListener('mousemove', e => {
-  if (!cylDragging) return;
-  cylAngle = cylDragStartAngle + (e.clientX - cylDragStartX) * 0.75;
+  if (!arcDragging) return;
+  const R = document.getElementById('room-arc-panel').offsetWidth;
+  // drag down → clockwise → arcOffset increases
+  arcOffset = arcDragStartOffset + (e.clientY - arcDragStartY) / R;
 });
-window.addEventListener('mouseup', () => { cylDragging = false; });
+window.addEventListener('mouseup', () => { arcDragging = false; });
 
-cylWrap.addEventListener('touchstart', e => {
-  cylDragging = true;
-  cylDragStartX = e.touches[0].clientX;
-  cylDragStartAngle = cylAngle;
+arcPanel.addEventListener('touchstart', e => {
+  arcDragging = true;
+  arcDragStartY = e.touches[0].clientY;
+  arcDragStartOffset = arcOffset;
 }, { passive: true });
 window.addEventListener('touchmove', e => {
-  if (!cylDragging) return;
-  cylAngle = cylDragStartAngle + (e.touches[0].clientX - cylDragStartX) * 0.75;
+  if (!arcDragging) return;
+  const R = document.getElementById('room-arc-panel').offsetWidth;
+  arcOffset = arcDragStartOffset + (e.touches[0].clientY - arcDragStartY) / R;
 }, { passive: true });
-window.addEventListener('touchend', () => { cylDragging = false; });
+window.addEventListener('touchend', () => { arcDragging = false; });
 
-document.getElementById('room-btn').addEventListener('click', () => {
-  buildCylinder();
-  document.getElementById('room-overlay').classList.add('open');
-  startCylAnim();
-});
+document.getElementById('room-btn').addEventListener('click', openRoomOverlay);
 
 document.getElementById('room-close-btn').addEventListener('click', () => {
   document.getElementById('room-overlay').classList.remove('open');
-  stopCylAnim();
+  document.getElementById('room-arc-layer').classList.remove('open');
+  stopArcAnim();
 });
 
 setRoom(activeRoom);
 document.getElementById('profile-btns').classList.add('visible');
+document.getElementById('rotation-toggle').classList.add('visible');
 
 // ═══════════════════════════════════════════════════════════
 // REP PR TRACKING
@@ -4484,6 +5145,26 @@ function renderFocusSlots() {
     }
     container.appendChild(slot);
   }
+}
+
+function getLastWorked(exName) {
+  for (let i = state.history.length - 1; i >= 0; i--) {
+    if (state.history[i].exercises.some(e => e.name === exName)) return state.history[i].date;
+  }
+  return null;
+}
+
+function fmtLastWorked(dateStr) {
+  if (!dateStr) return null;
+  const d = new Date(dateStr);
+  if (isNaN(d)) return null;
+  const today = new Date(); today.setHours(0,0,0,0);
+  d.setHours(0,0,0,0);
+  const days = Math.round((today - d) / 86400000);
+  if (days === 0) return 'Last worked: today';
+  if (days === 1) return 'Last worked: yesterday';
+  if (days < 14) return `Last worked: ${days} days ago`;
+  return `Last worked: ${d.getMonth()+1}/${d.getDate()}/${String(d.getFullYear()).slice(2)}`;
 }
 
 function fmtPRDate(dateStr) {
@@ -4640,6 +5321,7 @@ const NEX_CATEGORIES = [
 
 let nexBodyPart = null;
 let nexCategory = null;
+let nexFromPicker = null;
 
 function openNewExModal(preselectedMuscle) {
   nexBodyPart = preselectedMuscle || null;
@@ -4682,15 +5364,18 @@ function openNewExModal(preselectedMuscle) {
 document.getElementById('new-ex-btn').addEventListener('click', openNewExModal);
 
 document.getElementById('new-ex-close').addEventListener('click', () => {
+  nexFromPicker = null;
   document.getElementById('new-ex-modal').classList.remove('open');
 });
 
 document.getElementById('new-ex-cancel').addEventListener('click', () => {
+  nexFromPicker = null;
   document.getElementById('new-ex-modal').classList.remove('open');
 });
 
 document.getElementById('new-ex-modal').addEventListener('click', (e) => {
   if (e.target === document.getElementById('new-ex-modal')) {
+    nexFromPicker = null;
     document.getElementById('new-ex-modal').classList.remove('open');
   }
 });
@@ -4713,9 +5398,18 @@ document.getElementById('new-ex-save').addEventListener('click', () => {
 
   if (!state.exercises[muscle]) state.exercises[muscle] = [];
   state.exercises[muscle].push(name);
+  if (nexCategory) {
+    if (!state.exerciseMeta[name]) state.exerciseMeta[name] = {};
+    state.exerciseMeta[name].category = nexCategory;
+  }
   save();
   renderExercises();
   document.getElementById('new-ex-modal').classList.remove('open');
+
+  if (nexFromPicker) {
+    addExerciseBlock(name, muscle);
+    nexFromPicker = null;
+  }
 });
 
 // ═══════════════════════════════════════════════════════════
@@ -4728,9 +5422,16 @@ function savePendingCableExercise(pulleyCount) {
   if (!state.exercises[muscle]) state.exercises[muscle] = [];
   state.exercises[muscle].push(name);
   if (pulleyCount) state.cablePulleys[name] = pulleyCount;
+  if (!state.exerciseMeta[name]) state.exerciseMeta[name] = {};
+  state.exerciseMeta[name].category = 'Cable Machine';
   save();
   renderExercises();
   pendingCableExercise = null;
+
+  if (nexFromPicker) {
+    addExerciseBlock(name, muscle);
+    nexFromPicker = null;
+  }
 }
 
 document.querySelectorAll('.pulley-btn').forEach(btn => {
@@ -4926,7 +5627,163 @@ if ('serviceWorker' in navigator) {
   });
 }
 
+// ═══════════════════════════════════════════════════════════
+// TRAIN NUMPAD POPUP
+// ═══════════════════════════════════════════════════════════
+
+(function initTrainNumpad() {
+  const overlay  = document.getElementById('train-numpad');
+  const backdrop = document.getElementById('tnp-backdrop');
+  const labelEl  = document.getElementById('tnp-label');
+  const displayEl= document.getElementById('tnp-display');
+  const actionsEl= document.getElementById('tnp-actions');
+
+  let activeInp   = null;
+  let pairInp     = null;
+  let checkBtnRef = null;
+  let fieldType   = 'weight';
+  let currentStr  = '';
+
+  function updateDisplay() {
+    displayEl.textContent = currentStr === '' ? '0' : currentStr;
+    displayEl.classList.toggle('empty', currentStr === '');
+  }
+
+  function commitToInput() {
+    if (!activeInp) return;
+    activeInp.value = currentStr;
+    activeInp.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+
+  function openNumpad(inp, pair, checkBtn, field) {
+    activeInp   = inp;
+    pairInp     = pair;
+    checkBtnRef = checkBtn;
+    fieldType   = field;
+    currentStr  = '';           // always start fresh — type to set a new value
+
+    labelEl.textContent = field === 'weight' ? 'LBS' : 'REPS';
+    updateDisplay();
+    renderActions();
+    overlay.classList.add('open');
+  }
+
+  function closeNumpad() {
+    overlay.classList.remove('open');
+    activeInp = null;
+  }
+
+  function switchToField(inp, pair, checkBtn, field) {
+    commitToInput();
+    openNumpad(inp, pair, checkBtn, field);
+  }
+
+  function renderActions() {
+    actionsEl.innerHTML = '';
+    if (fieldType === 'weight') {
+      const repsBtn = document.createElement('button');
+      repsBtn.className = 'tnp-reps-btn';
+      repsBtn.textContent = 'REPS →';
+      repsBtn.addEventListener('click', () => {
+        switchToField(pairInp, activeInp, checkBtnRef, 'reps');
+      });
+      actionsEl.appendChild(repsBtn);
+    } else {
+      const completeBtn = document.createElement('button');
+      completeBtn.className = 'tnp-complete-btn';
+      completeBtn.textContent = 'COMPLETE SET';
+      completeBtn.addEventListener('click', () => {
+        commitToInput();
+        const repsVal = parseInt(activeInp.value) || 0;
+        if (repsVal < 1) return;
+        closeNumpad();
+        if (checkBtnRef && !checkBtnRef.classList.contains('done')) {
+          checkBtnRef.click();
+        }
+      });
+      actionsEl.appendChild(completeBtn);
+    }
+  }
+
+  // Numpad key presses
+  overlay.querySelectorAll('.tnp-key').forEach(key => {
+    key.addEventListener('click', () => {
+      const val = key.dataset.val;
+      if (val === 'back') {
+        currentStr = currentStr.slice(0, -1);
+      } else if (val === '.') {
+        if (fieldType === 'reps') return;
+        if (!currentStr.includes('.')) currentStr += '.';
+      } else {
+        if (currentStr === '0') currentStr = val;
+        else currentStr += val;
+      }
+      updateDisplay();
+      commitToInput();
+    });
+  });
+
+  // Backdrop tap closes
+  backdrop.addEventListener('click', () => {
+    commitToInput();
+    closeNumpad();
+  });
+
+  // Expose opener for renderSets
+  window._openTrainNumpad = openNumpad;
+})();
+
+function attachTrainNumpad(inp, pairInp, checkBtn, field) {
+  inp.readOnly = true;
+  inp.inputMode = 'none';
+  inp.style.cursor = 'pointer';
+  inp.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    window._openTrainNumpad(inp, pairInp, checkBtn, field);
+  });
+}
+
+// ── Rotation Toggle ───────────────────────────────────────────
+(function initRotationToggle() {
+  const btn = document.getElementById('rotation-toggle');
+  let rotating = true;
+  btn.addEventListener('click', () => {
+    rotating = !rotating;
+    controls.autoRotate = rotating;
+    btn.textContent = rotating ? '⏸ Stop Rotation' : '▶ Start Rotation';
+    btn.classList.toggle('paused', !rotating);
+  });
+})();
+// ─────────────────────────────────────────────────────────────
+
 </script>
 <!-- Reset button & modal — outside #app so pointer-events work -->
+
+<!-- Train Numpad Popup -->
+<div id="train-numpad">
+  <div class="tnp-backdrop" id="tnp-backdrop"></div>
+  <div class="tnp-panel">
+    <div class="tnp-header">
+      <span class="tnp-label" id="tnp-label">LBS</span>
+      <span class="tnp-display" id="tnp-display">0</span>
+    </div>
+    <div class="tnp-grid">
+      <button class="tnp-key" data-val="1">1</button>
+      <button class="tnp-key" data-val="2">2</button>
+      <button class="tnp-key" data-val="3">3</button>
+      <button class="tnp-key" data-val="4">4</button>
+      <button class="tnp-key" data-val="5">5</button>
+      <button class="tnp-key" data-val="6">6</button>
+      <button class="tnp-key" data-val="7">7</button>
+      <button class="tnp-key" data-val="8">8</button>
+      <button class="tnp-key" data-val="9">9</button>
+      <button class="tnp-key" data-val=".">.</button>
+      <button class="tnp-key" data-val="0">0</button>
+      <button class="tnp-key tnp-back" data-val="back">⌫</button>
+    </div>
+    <div class="tnp-actions" id="tnp-actions"></div>
+  </div>
+</div>
+
 </body>
 </html>
