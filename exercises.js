@@ -1,0 +1,17 @@
+const EXERCISE_CATALOG = {
+  Chest:     ['Bench Press', 'Incline Bench Press', 'Decline Bench Press', 'Dumbbell Fly', 'Cable Fly', 'Push-Up', 'Dip'],
+  Shoulders: ['Overhead Press', 'Dumbbell Lateral Raise', 'Arnold Press', 'Front Raise', 'Cable Lateral Raise', 'Face Pull'],
+  Traps:     ['Barbell Shrug', 'Dumbbell Shrug', 'Cable Shrug'],
+  'Mid Back': ['Barbell Row', 'Dumbbell Row', 'Cable Row', 'T-Bar Row'],
+  Lats:      ['Pull-Up', 'Lat Pulldown', 'Straight-Arm Pulldown', 'Cable Row'],
+  'Upper Back': ['Rear Delt Fly', 'Band Pull-Apart', 'Face Pull'],
+  Biceps:    ['Barbell Curl', 'Dumbbell Curl', 'Hammer Curl', 'Incline Dumbbell Curl', 'Cable Curl', 'Preacher Curl'],
+  Triceps:   ['Tricep Pushdown', 'Skull Crusher', 'Overhead Tricep Extension', 'Close-Grip Bench Press', 'Dip'],
+  Forearms:  ['Wrist Curl', 'Reverse Wrist Curl', 'Farmers Carry'],
+  Abs:       ['Crunch', 'Cable Crunch', 'Hanging Leg Raise', 'Plank', 'Ab Wheel'],
+  Obliques:  ['Side Plank', 'Russian Twist', 'Cable Woodchop'],
+  Neck:      ['Neck Extension', 'Neck Flexion', 'Neck Side Raise'],
+  Quads:     ['Squat', 'Leg Press', 'Hack Squat', 'Leg Extension', 'Bulgarian Split Squat', 'Lunges'],
+  Hamstrings:['Romanian Deadlift', 'Leg Curl', 'Good Morning', 'Nordic Curl'],
+  Calves:    ['Standing Calf Raise', 'Seated Calf Raise', 'Donkey Calf Raise'],
+};

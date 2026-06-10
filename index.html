@@ -429,6 +429,22 @@
       cursor: pointer;
     }
 
+    #nex-suggestions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    #nex-suggestions:empty { display: none; }
+    .nex-suggestion {
+      background: rgba(10,22,60,0.6);
+      border: 1px solid rgba(50,100,200,0.2);
+      border-radius: 20px;
+      color: #5a8acc;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 5px 11px;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+      white-space: nowrap;
+    }
+    .nex-suggestion:active { background: rgba(74,144,217,0.15); border-color: #4A90D9; color: #fff; }
+
     /* ── Muscle Exercise Popup ── */
     #ex-popup {
       position: fixed;
@@ -2792,6 +2808,7 @@
     <div id="new-ex-body">
       <div class="nex-label">Name</div>
       <input id="nex-name" class="nex-input" type="text" placeholder="Enter Name" autocomplete="off" />
+      <div id="nex-suggestions"></div>
 
       <div class="nex-label">Body Part</div>
       <div class="nex-chips" id="nex-bodypart"></div>
@@ -3011,6 +3028,7 @@
   </div>
 </div>
 
+<script src="exercises.js"></script>
 <script>
   (function() {
     var v = document.querySelector('meta[name="app-version"]').content;
@@ -3108,7 +3126,7 @@ function defaultState() {
     userName: 'Athlete',
     lastReset: getMondayStr(),
     weeklySets: Object.fromEntries(MUSCLES.map(m => [m, 0])),
-    exercises: Object.fromEntries(MUSCLES.map(m => [m, [m + ' Exercise']])),
+    exercises: Object.fromEntries(MUSCLES.map(m => [m, []])),
     history: [],
     prs: {},
     repPRs: {},
@@ -3128,13 +3146,21 @@ function loadState() {
     }
     if (!('Neck' in s.weeklySets)) s.weeklySets['Neck'] = 0;
     if (s.exercises && 'Hands' in s.exercises) { delete s.exercises['Hands']; }
-    if (s.exercises && !('Neck' in s.exercises)) s.exercises['Neck'] = ['Neck Exercise'];
+    if (s.exercises && !('Neck' in s.exercises)) s.exercises['Neck'] = [];
     if (!('Traps' in s.weeklySets)) s.weeklySets['Traps'] = 0;
-    if (s.exercises && !('Traps' in s.exercises)) s.exercises['Traps'] = ['Traps Exercise'];
+    if (s.exercises && !('Traps' in s.exercises)) s.exercises['Traps'] = [];
     if (!('Obliques' in s.weeklySets)) s.weeklySets['Obliques'] = 0;
-    if (s.exercises && !('Obliques' in s.exercises)) s.exercises['Obliques'] = ['Obliques Exercise'];
+    if (s.exercises && !('Obliques' in s.exercises)) s.exercises['Obliques'] = [];
     if (!s.cablePulleys) s.cablePulleys = {};
     if (!s.exerciseMeta) s.exerciseMeta = {};
+    // Remove auto-generated placeholder exercises (e.g. "Chest Exercise")
+    if (s.exercises) {
+      for (const m of MUSCLES) {
+        if (s.exercises[m]) {
+          s.exercises[m] = s.exercises[m].filter(ex => ex !== m + ' Exercise');
+        }
+      }
+    }
     // Backfill cable machine category for exercises that have pulley data but no category
     for (const ex of Object.keys(s.cablePulleys || {})) {
       if (!s.exerciseMeta[ex]) s.exerciseMeta[ex] = {};
@@ -5443,10 +5469,28 @@ let nexBodyPart = null;
 let nexCategory = null;
 let nexFromPicker = null;
 
+function renderNexSuggestions() {
+  const wrap = document.getElementById('nex-suggestions');
+  wrap.innerHTML = '';
+  const catalog = (EXERCISE_CATALOG && nexBodyPart) ? (EXERCISE_CATALOG[nexBodyPart] || []) : [];
+  const existing = new Set((state.exercises[nexBodyPart] || []).map(e => e.toLowerCase()));
+  const suggestions = catalog.filter(e => !existing.has(e.toLowerCase()));
+  suggestions.forEach(name => {
+    const chip = document.createElement('div');
+    chip.className = 'nex-suggestion';
+    chip.textContent = name;
+    chip.addEventListener('click', () => {
+      document.getElementById('nex-name').value = name;
+    });
+    wrap.appendChild(chip);
+  });
+}
+
 function openNewExModal(preselectedMuscle) {
   nexBodyPart = preselectedMuscle || null;
   nexCategory = null;
   document.getElementById('nex-name').value = '';
+  renderNexSuggestions();
 
   const bpWrap = document.getElementById('nex-bodypart');
   bpWrap.innerHTML = '';
@@ -5459,6 +5503,7 @@ function openNewExModal(preselectedMuscle) {
       bpWrap.querySelectorAll('.nex-chip').forEach(c => c.classList.remove('selected'));
       chip.classList.add('selected');
       nexBodyPart = m;
+      renderNexSuggestions();
     });
     bpWrap.appendChild(chip);
   });
