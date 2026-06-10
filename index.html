@@ -4,13 +4,13 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#0a0a0a" />
-  <meta name="app-version" content="28" />
+  <meta name="app-version" content="29" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Train Hard" />
   <link rel="manifest" href="manifest.json" />
-  <link rel="apple-touch-icon" href="icons/icon.svg" />
+  <link rel="apple-touch-icon" href="assets/icons/icon.svg" />
   <title>Train Hard</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -3131,8 +3131,8 @@ scene.add(rimLight);
 
 // ── Add new models here ──────────────────────────────────────
 const MODELS = [
-  { name: 'Standing',      file: 'Models/Standing+Still+Model.glb' },
-  { name: 'Crossing Arms', file: 'Models/CrossingArmsModel.glb' },
+  { name: 'Standing',      file: 'assets/models/standing.glb' },
+  { name: 'Crossing Arms', file: 'assets/models/crossing-arms.glb' },
 ];
 // ─────────────────────────────────────────────────────────────
 
@@ -4926,8 +4926,8 @@ function detectRoomSrc(num) {
   if (roomSrcCache[num]) return Promise.resolve(roomSrcCache[num]);
   return new Promise(resolve => {
     const img = new Image();
-    const png = `backgrounds/${num}.png`;
-    const jpg = `backgrounds/${num}.jpg`;
+    const png = `assets/backgrounds/${num}.png`;
+    const jpg = `assets/backgrounds/${num}.jpg`;
     img.onload  = () => { roomSrcCache[num] = png; resolve(png); };
     img.onerror = () => { roomSrcCache[num] = jpg; resolve(jpg); };
     img.src = png;
