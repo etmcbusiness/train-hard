@@ -4302,6 +4302,7 @@ function touchActivity() { lastActivityTime = Date.now(); }
 let restDuration = 90;
 let restInterval = null;
 let restSecs = 0;
+let restEndTime = 0; // absolute ms timestamp when rest expires
 
 function fmtRestSecs(secs) {
   const m = Math.floor(secs / 60);
@@ -4317,22 +4318,28 @@ function updateRestMarkers() {
 
 function startRestTimer(duration) {
   clearInterval(restInterval);
-  restSecs = duration || restDuration;
+  const secs = duration || restDuration;
+  restEndTime = Date.now() + secs * 1000;
+  restSecs = secs;
   updateRestDisplay();
   document.getElementById('rest-timer-bar').classList.add('active');
-  restInterval = setInterval(() => {
-    restSecs--;
-    if (restSecs <= 0) {
-      stopRestTimer();
-    } else {
-      updateRestDisplay();
-    }
-  }, 1000);
+  restInterval = setInterval(tickRestTimer, 500);
+}
+
+function tickRestTimer() {
+  const remaining = Math.ceil((restEndTime - Date.now()) / 1000);
+  if (remaining <= 0) {
+    stopRestTimer();
+  } else {
+    restSecs = remaining;
+    updateRestDisplay();
+  }
 }
 
 function stopRestTimer() {
   clearInterval(restInterval);
   restInterval = null;
+  restEndTime = 0;
   document.getElementById('rest-timer-bar').classList.remove('active');
 }
 
@@ -4342,19 +4349,28 @@ function updateRestDisplay() {
   el.classList.toggle('urgent', restSecs <= 10);
 }
 
+// Resync when screen wakes / tab becomes visible again
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && restEndTime) tickRestTimer();
+});
+
 document.getElementById('rest-skip-btn').addEventListener('click', stopRestTimer);
 
 document.getElementById('rest-minus-btn').addEventListener('click', () => {
   restDuration = Math.max(15, restDuration - 15);
-  if (restInterval) restSecs = Math.max(1, restSecs - 15);
-  updateRestDisplay();
+  if (restInterval) {
+    restEndTime = Math.max(Date.now() + 1000, restEndTime - 15000);
+    tickRestTimer();
+  }
   updateRestMarkers();
 });
 
 document.getElementById('rest-plus-btn').addEventListener('click', () => {
   restDuration = Math.min(600, restDuration + 15);
-  if (restInterval) restSecs = Math.min(restDuration, restSecs + 15);
-  updateRestDisplay();
+  if (restInterval) {
+    restEndTime = restEndTime + 15000;
+    tickRestTimer();
+  }
   updateRestMarkers();
 });
 
@@ -4383,8 +4399,11 @@ document.getElementById('rest-edit-plus').addEventListener('click', () => {
 
 document.getElementById('rest-edit-apply').addEventListener('click', () => {
   restDuration = restEditTemp;
-  if (restInterval) restSecs = Math.min(restSecs, restDuration);
-  updateRestDisplay();
+  if (restInterval) {
+    const newEnd = Date.now() + restDuration * 1000;
+    if (restEndTime > newEnd) restEndTime = newEnd;
+    tickRestTimer();
+  }
   updateRestMarkers();
   closeRestEdit();
 });
