@@ -1473,7 +1473,7 @@
       0%, 100% { opacity: 1; box-shadow: 0 0 4px 1px rgba(255,40,40,0.8); }
       50% { opacity: 0.35; box-shadow: none; }
     }
-    #room-btn, #personalize-btn, #goals-btn, #open-override-btn, #weekly-overview-btn {
+    #room-btn, #personalize-btn, #goals-btn, #open-override-btn, #weekly-overview-btn, #backup-btn {
       background: rgba(4,10,32,0.88);
       border: 1px solid rgba(60,110,200,0.35);
       border-radius: 12px;
@@ -2740,6 +2740,147 @@
       color: #fff; font-size: 14px; font-weight: 700; cursor: pointer;
       touch-action: manipulation;
     }
+
+    /* ── Data Backup Overlay ── */
+    #backup-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 460;
+      background: rgba(0,0,8,0.88);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      pointer-events: all;
+    }
+    #backup-overlay.open { display: flex; }
+    #backup-box {
+      background: rgba(6,14,44,0.97);
+      border: 1px solid rgba(50,100,200,0.25);
+      border-radius: 20px;
+      width: 100%;
+      max-width: 380px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    #backup-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 18px 14px;
+      border-bottom: 1px solid rgba(40,80,180,0.2);
+    }
+    #backup-title {
+      font-size: 13px;
+      font-weight: 800;
+      color: #c0d4f0;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+    #backup-close-btn {
+      background: rgba(14,28,70,0.7);
+      border: 1px solid rgba(50,100,200,0.3);
+      border-radius: 50%;
+      color: #7a9acc;
+      font-size: 14px;
+      width: 32px; height: 32px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+    }
+    #backup-body {
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .backup-section-label {
+      font-size: 10px;
+      font-weight: 800;
+      color: #3a5a8a;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 8px;
+    }
+    .backup-desc {
+      font-size: 12px;
+      color: #5a7aaa;
+      margin-bottom: 12px;
+      line-height: 1.5;
+    }
+    #backup-save-btn {
+      width: 100%;
+      padding: 14px;
+      background: rgba(74,144,217,0.1);
+      border: 1px solid rgba(74,144,217,0.4);
+      border-radius: 14px;
+      color: #4A90D9;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    #backup-load-btn {
+      width: 100%;
+      padding: 14px;
+      background: rgba(60,181,88,0.08);
+      border: 1px solid rgba(60,181,88,0.35);
+      border-radius: 14px;
+      color: #3cb558;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .backup-divider {
+      border: none;
+      border-top: 1px solid rgba(40,80,180,0.2);
+      margin: 0;
+    }
+    #backup-import-confirm {
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+      background: rgba(10,22,60,0.7);
+      border: 1px solid rgba(50,100,200,0.2);
+      border-radius: 14px;
+      padding: 14px;
+    }
+    #backup-import-confirm.visible { display: flex; }
+    #backup-import-filename {
+      font-size: 12px;
+      color: #4A90D9;
+      font-weight: 600;
+      word-break: break-all;
+    }
+    #backup-import-summary {
+      font-size: 11px;
+      color: #5a7aaa;
+      line-height: 1.5;
+    }
+    .backup-import-actions { display: flex; gap: 10px; }
+    #backup-merge-btn {
+      flex: 1;
+      padding: 12px;
+      background: rgba(74,144,217,0.1);
+      border: 1px solid rgba(74,144,217,0.4);
+      border-radius: 12px;
+      color: #4A90D9;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    #backup-replace-btn {
+      flex: 1;
+      padding: 12px;
+      background: rgba(192,57,43,0.08);
+      border: 1px solid rgba(192,57,43,0.4);
+      border-radius: 12px;
+      color: #e05a4a;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
@@ -3014,6 +3155,7 @@
   <button id="goals-btn">Personalized Goals</button>
   <button id="weekly-overview-btn">Weekly Overview</button>
   <button id="open-override-btn">Override Sets</button>
+  <button id="backup-btn">Data Backup</button>
 </div>
 
 <!-- Room Arc Overlay -->
@@ -6084,6 +6226,113 @@ function attachTrainNumpad(inp, pairInp, checkBtn, field) {
   });
 }
 
+// ── Data Backup ───────────────────────────────────────────────
+(function initDataBackup() {
+  let pendingBackup = null;
+
+  document.getElementById('backup-btn').addEventListener('click', () => {
+    pendingBackup = null;
+    document.getElementById('backup-import-confirm').classList.remove('visible');
+    document.getElementById('backup-overlay').classList.add('open');
+  });
+
+  document.getElementById('backup-close-btn').addEventListener('click', () => {
+    document.getElementById('backup-overlay').classList.remove('open');
+  });
+
+  document.getElementById('backup-save-btn').addEventListener('click', () => {
+    const backup = {
+      version: 1,
+      exported: new Date().toISOString(),
+      exercises: state.exercises,
+      exerciseMeta: state.exerciseMeta,
+      cablePulleys: state.cablePulleys,
+      history: state.history
+    };
+    const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `trainhard-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
+
+  document.getElementById('backup-load-btn').addEventListener('click', () => {
+    document.getElementById('backup-file-input').click();
+  });
+
+  document.getElementById('backup-file-input').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const data = JSON.parse(ev.target.result);
+        if (!data.exercises || !data.history) throw new Error('Invalid backup');
+        pendingBackup = data;
+        const exCount = Object.values(data.exercises).flat().length;
+        document.getElementById('backup-import-filename').textContent = file.name;
+        document.getElementById('backup-import-summary').textContent =
+          `${exCount} exercise${exCount !== 1 ? 's' : ''} · ${data.history.length} workout${data.history.length !== 1 ? 's' : ''}`;
+        document.getElementById('backup-import-confirm').classList.add('visible');
+      } catch {
+        alert('Invalid or unrecognised backup file.');
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  });
+
+  document.getElementById('backup-merge-btn').addEventListener('click', () => {
+    if (!pendingBackup) return;
+    for (const muscle of Object.keys(pendingBackup.exercises || {})) {
+      if (!state.exercises[muscle]) state.exercises[muscle] = [];
+      for (const ex of pendingBackup.exercises[muscle]) {
+        if (!state.exercises[muscle].includes(ex)) state.exercises[muscle].push(ex);
+      }
+    }
+    for (const [ex, meta] of Object.entries(pendingBackup.exerciseMeta || {})) {
+      if (!state.exerciseMeta[ex]) state.exerciseMeta[ex] = meta;
+    }
+    for (const [ex, val] of Object.entries(pendingBackup.cablePulleys || {})) {
+      if (state.cablePulleys[ex] === undefined) state.cablePulleys[ex] = val;
+    }
+    const localDates = new Set((state.history || []).map(w => w.date));
+    for (const workout of (pendingBackup.history || [])) {
+      if (!localDates.has(workout.date)) state.history.push(workout);
+    }
+    save();
+    recalcAllPRs();
+    recalcAllRepPRs();
+    renderExercises();
+    renderHistory();
+    pendingBackup = null;
+    document.getElementById('backup-import-confirm').classList.remove('visible');
+    document.getElementById('backup-overlay').classList.remove('open');
+  });
+
+  document.getElementById('backup-replace-btn').addEventListener('click', async () => {
+    const ok = await customConfirm('Replace all current exercises and history with the backup? This cannot be undone.');
+    if (!ok || !pendingBackup) return;
+    state.exercises = { ...defaultState().exercises, ...pendingBackup.exercises };
+    state.exerciseMeta = pendingBackup.exerciseMeta || {};
+    state.cablePulleys = pendingBackup.cablePulleys || {};
+    state.history = pendingBackup.history || [];
+    save();
+    recalcAllPRs();
+    recalcAllRepPRs();
+    renderExercises();
+    renderHistory();
+    pendingBackup = null;
+    document.getElementById('backup-import-confirm').classList.remove('visible');
+    document.getElementById('backup-overlay').classList.remove('open');
+  });
+})();
+// ─────────────────────────────────────────────────────────────
+
 // ── Rotation Toggle ───────────────────────────────────────────
 (function initRotationToggle() {
   const btn = document.getElementById('rotation-toggle');
@@ -6173,6 +6422,38 @@ function attachTrainNumpad(inp, pairInp, checkBtn, field) {
       <button class="tnp-key tnp-back" data-val="back">⌫</button>
     </div>
     <div class="tnp-actions" id="tnp-actions"></div>
+  </div>
+</div>
+
+<!-- Data Backup Overlay -->
+<div id="backup-overlay">
+  <div id="backup-box">
+    <div id="backup-header">
+      <span id="backup-title">Data Backup</span>
+      <button id="backup-close-btn">✕</button>
+    </div>
+    <div id="backup-body">
+      <div>
+        <div class="backup-section-label">Save</div>
+        <div class="backup-desc">Download your exercises and workout history as a file you can store anywhere.</div>
+        <button id="backup-save-btn">↓ Save Backup</button>
+      </div>
+      <hr class="backup-divider" />
+      <div>
+        <div class="backup-section-label">Load</div>
+        <div class="backup-desc">Restore from a backup file. Choose to merge with or replace your current data.</div>
+        <button id="backup-load-btn">↑ Choose Backup File</button>
+        <input type="file" id="backup-file-input" accept=".json" style="display:none" />
+      </div>
+      <div id="backup-import-confirm">
+        <div id="backup-import-filename"></div>
+        <div id="backup-import-summary"></div>
+        <div class="backup-import-actions">
+          <button id="backup-merge-btn">Merge</button>
+          <button id="backup-replace-btn">Replace All</button>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
