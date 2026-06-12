@@ -3951,6 +3951,7 @@ function loadModel(idx, onReady) {
       document.getElementById('app').style.display = 'flex';
       document.getElementById('profile-name').textContent = state.userName;
       renderFocusStats();
+      checkAndRestoreSession();
     });
 }
 
@@ -3995,6 +3996,7 @@ loadModel(0, (entry) => {
   document.getElementById('app').style.display = 'flex';
   document.getElementById('profile-name').textContent = state.userName;
   renderFocusStats();
+  checkAndRestoreSession();
 });
 
 window.addEventListener('resize', () => {
@@ -4989,6 +4991,77 @@ let timerSecs = 0;
 let trainActive = false;
 const session = [];
 
+const ACTIVE_SESSION_KEY = 'trainhard_active_session';
+
+function saveActiveSession() {
+  if (!trainActive) return;
+  try {
+    localStorage.setItem(ACTIVE_SESSION_KEY, JSON.stringify({
+      session: session.filter(Boolean),
+      timerSecs,
+      savedAt: Date.now()
+    }));
+  } catch(e) {}
+}
+
+function clearActiveSession() {
+  localStorage.removeItem(ACTIVE_SESSION_KEY);
+}
+
+async function checkAndRestoreSession() {
+  try {
+    const raw = localStorage.getItem(ACTIVE_SESSION_KEY);
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    if (!data || !Array.isArray(data.session) || !data.session.length) {
+      clearActiveSession();
+      return;
+    }
+    const elapsed = Math.floor((Date.now() - (data.savedAt || Date.now())) / 1000);
+    const totalSecs = (data.timerSecs || 0) + elapsed;
+    const mins = Math.round(totalSecs / 60);
+    const timeAgo = mins > 0 ? `${mins} min ago` : 'just now';
+    const ok = await customConfirm(
+      `You have an unfinished workout from ${timeAgo}. Resume?`,
+      'Resume',
+      'Discard'
+    );
+    if (!ok) {
+      clearActiveSession();
+      return;
+    }
+    trainActive = true;
+    document.querySelector('.nav-btn[data-tab="train"]').classList.add('train-live');
+    session.length = 0;
+    timerSecs = totalSecs;
+    setTimerDisplay(fmtTime(timerSecs));
+    document.getElementById('workout-summary').classList.remove('open');
+    stopRestTimer();
+    document.getElementById('train-exercises').innerHTML = '';
+    const modal = document.getElementById('train-modal');
+    modal.style.display = 'flex';
+    modal.classList.add('open');
+    clearInterval(timerInterval);
+    timerInterval = setInterval(() => {
+      timerSecs++;
+      setTimerDisplay(fmtTime(timerSecs));
+      if (timerSecs % 30 === 0) saveActiveSession();
+    }, 1000);
+    touchActivity();
+    clearInterval(inactivityInterval);
+    inactivityInterval = setInterval(() => {
+      if (trainActive && Date.now() - lastActivityTime > INACTIVITY_LIMIT_MS) {
+        closeTrain();
+      }
+    }, 60 * 1000);
+    for (const ex of data.session) {
+      addExerciseBlock(ex.name, ex.muscle, ex.sets);
+    }
+  } catch(e) {
+    clearActiveSession();
+  }
+}
+
 let lastActivityTime = 0;
 let inactivityInterval = null;
 const INACTIVITY_LIMIT_MS = 2 * 60 * 60 * 1000; // 2 hours
@@ -5126,6 +5199,7 @@ function closeTrain() {
   clearInterval(inactivityInterval);
   inactivityInterval = null;
   stopRestTimer();
+  clearActiveSession();
   const modal = document.getElementById('train-modal');
   modal.classList.remove('open');
   modal.style.display = 'none';
@@ -5161,6 +5235,7 @@ function openTrain() {
   timerInterval = setInterval(() => {
     timerSecs++;
     setTimerDisplay(fmtTime(timerSecs));
+    if (timerSecs % 30 === 0) saveActiveSession();
   }, 1000);
   touchActivity();
   clearInterval(inactivityInterval);
@@ -5218,6 +5293,7 @@ document.getElementById('finish-btn').addEventListener('click', () => {
 
   state.history.push(entry);
   save();
+  clearActiveSession();
   updateModel();
   renderFocusStats();
 
@@ -5557,7 +5633,7 @@ function addExerciseBlock(name, muscle, initialSets) {
   touchActivity();
   const idx = session.length;
   const preSets = initialSets && initialSets.length
-    ? initialSets.map(s => ({ weight: s.weight || '', reps: s.reps || '', done: false }))
+    ? initialSets.map(s => ({ weight: s.weight || '', reps: s.reps || '', done: s.done || false }))
     : [];
   session.push({ name, muscle, sets: preSets });
 
@@ -5585,6 +5661,7 @@ function addExerciseBlock(name, muscle, initialSets) {
     touchActivity();
     session[idx] = null;
     block.remove();
+    saveActiveSession();
   });
   top.appendChild(removeBtn);
 
@@ -5618,6 +5695,7 @@ function addExerciseBlock(name, muscle, initialSets) {
   } else {
     addSet(idx, block);
   }
+  saveActiveSession();
 }
 
 function renderSets(exIdx, block) {
@@ -5650,6 +5728,7 @@ function renderSets(exIdx, block) {
         ex.sets[j].weight = val;
         if (weightInps[j]) weightInps[j].value = val;
       }
+      saveActiveSession();
     });
     const { wrap: rWrap, inp: rInp } = makeStepper(ex.sets[setIdx].reps, 1, 0, val => {
       touchActivity();
@@ -5658,6 +5737,7 @@ function renderSets(exIdx, block) {
         ex.sets[j].reps = val;
         if (repInps[j]) repInps[j].value = val;
       }
+      saveActiveSession();
     });
     weightInps[setIdx] = wInp;
     repInps[setIdx] = rInp;
@@ -5675,6 +5755,7 @@ function renderSets(exIdx, block) {
         const exRest = (state.exerciseMeta[ex.name] || {}).restTime;
         startRestTimer(exRest || restDuration);
       }
+      saveActiveSession();
     });
 
     // Attach custom numpad to weight and reps inputs
@@ -5690,6 +5771,7 @@ function renderSets(exIdx, block) {
       touchActivity();
       ex.sets.splice(setIdx, 1);
       renderSets(exIdx, block);
+      saveActiveSession();
     });
 
     row.appendChild(numEl);
@@ -5706,6 +5788,7 @@ function addSet(exIdx, block) {
   if (!ex) return;
   ex.sets.push({ weight: '', reps: '', done: false });
   renderSets(exIdx, block);
+  saveActiveSession();
 }
 
 document.getElementById('add-ex-main').addEventListener('click', openPicker);
