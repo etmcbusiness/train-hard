@@ -1473,7 +1473,7 @@
       0%, 100% { opacity: 1; box-shadow: 0 0 4px 1px rgba(255,40,40,0.8); }
       50% { opacity: 0.35; box-shadow: none; }
     }
-    #room-btn, #personalize-btn, #goals-btn, #open-override-btn, #weekly-overview-btn, #backup-btn {
+    #room-btn, #personalize-btn, #goals-btn, #open-override-btn, #weekly-overview-btn {
       background: rgba(4,10,32,0.88);
       border: 1px solid rgba(60,110,200,0.35);
       border-radius: 12px;
@@ -2741,101 +2741,30 @@
       touch-action: manipulation;
     }
 
-    /* ── Data Backup Overlay ── */
-    #backup-overlay {
-      position: fixed;
-      inset: 0;
-      z-index: 460;
-      background: rgba(0,0,8,0.88);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-      pointer-events: all;
-    }
-    #backup-overlay.open { display: flex; }
-    #backup-box {
-      background: rgba(6,14,44,0.97);
-      border: 1px solid rgba(50,100,200,0.25);
-      border-radius: 20px;
+    /* ── Data Management (Stats tab) ── */
+    .dm-btn {
       width: 100%;
-      max-width: 380px;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
-    #backup-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 18px 18px 14px;
-      border-bottom: 1px solid rgba(40,80,180,0.2);
-    }
-    #backup-title {
-      font-size: 13px;
-      font-weight: 800;
-      color: #c0d4f0;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-    }
-    #backup-close-btn {
-      background: rgba(14,28,70,0.7);
-      border: 1px solid rgba(50,100,200,0.3);
-      border-radius: 50%;
-      color: #7a9acc;
+      padding: 13px;
+      border-radius: 12px;
       font-size: 14px;
-      width: 32px; height: 32px;
+      font-weight: 700;
       cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
+      letter-spacing: 0.3px;
     }
-    #backup-body {
-      padding: 18px;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-    .backup-section-label {
-      font-size: 10px;
-      font-weight: 800;
-      color: #3a5a8a;
-      text-transform: uppercase;
-      letter-spacing: 1.5px;
-      margin-bottom: 8px;
-    }
-    .backup-desc {
-      font-size: 12px;
-      color: #5a7aaa;
-      margin-bottom: 12px;
-      line-height: 1.5;
-    }
-    #backup-save-btn {
-      width: 100%;
-      padding: 14px;
+    .dm-btn-blue {
       background: rgba(74,144,217,0.1);
       border: 1px solid rgba(74,144,217,0.4);
-      border-radius: 14px;
       color: #4A90D9;
-      font-size: 15px;
-      font-weight: 700;
-      cursor: pointer;
     }
-    #backup-load-btn {
-      width: 100%;
-      padding: 14px;
+    .dm-btn-green {
       background: rgba(60,181,88,0.08);
       border: 1px solid rgba(60,181,88,0.35);
-      border-radius: 14px;
       color: #3cb558;
-      font-size: 15px;
-      font-weight: 700;
-      cursor: pointer;
     }
-    .backup-divider {
-      border: none;
-      border-top: 1px solid rgba(40,80,180,0.2);
-      margin: 0;
+    .dm-btn-red {
+      background: rgba(192,57,43,0.08);
+      border: 1px solid rgba(192,57,43,0.4);
+      color: #e05a4a;
     }
     #backup-import-confirm {
       display: none;
@@ -2845,6 +2774,7 @@
       border: 1px solid rgba(50,100,200,0.2);
       border-radius: 14px;
       padding: 14px;
+      margin-top: 12px;
     }
     #backup-import-confirm.visible { display: flex; }
     #backup-import-filename {
@@ -2928,6 +2858,36 @@
   <div id="stats-section" class="section">
     <div class="section-header">Stats</div>
     <div id="stats-list"></div>
+
+    <!-- Data Management -->
+    <div class="section-header" style="margin-top:28px;font-size:18px;">Data Management</div>
+
+    <div class="card" style="margin-bottom:12px;">
+      <div class="card-title" style="margin-bottom:6px;">Save Backup</div>
+      <div class="card-sub" style="margin-bottom:14px;line-height:1.5;">Download your exercises and workout history as a file you can store anywhere.</div>
+      <button id="backup-save-btn" class="dm-btn dm-btn-blue">↓ Save Backup</button>
+    </div>
+
+    <div class="card" style="margin-bottom:12px;">
+      <div class="card-title" style="margin-bottom:6px;">Load Backup</div>
+      <div class="card-sub" style="margin-bottom:14px;line-height:1.5;">Restore from a backup file. Choose to merge with or replace your current data.</div>
+      <button id="backup-load-btn" class="dm-btn dm-btn-green">↑ Choose Backup File</button>
+      <input type="file" id="backup-file-input" accept=".json" style="display:none" />
+      <div id="backup-import-confirm">
+        <div id="backup-import-filename"></div>
+        <div id="backup-import-summary"></div>
+        <div class="backup-import-actions">
+          <button id="backup-merge-btn">Merge</button>
+          <button id="backup-replace-btn">Replace All</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:12px;">
+      <div class="card-title" style="margin-bottom:6px;color:#e05a4a;">Delete All Data</div>
+      <div class="card-sub" style="margin-bottom:14px;line-height:1.5;">Permanently erase all exercises and workout history. This cannot be undone.</div>
+      <button id="backup-delete-btn" class="dm-btn dm-btn-red">Delete All Data</button>
+    </div>
   </div>
 </div>
 
@@ -3155,7 +3115,6 @@
   <button id="goals-btn">Personalized Goals</button>
   <button id="weekly-overview-btn">Weekly Overview</button>
   <button id="open-override-btn">Override Sets</button>
-  <button id="backup-btn">Data Backup</button>
 </div>
 
 <!-- Room Arc Overlay -->
@@ -6226,20 +6185,11 @@ function attachTrainNumpad(inp, pairInp, checkBtn, field) {
   });
 }
 
-// ── Data Backup ───────────────────────────────────────────────
-(function initDataBackup() {
+// ── Data Management ───────────────────────────────────────────
+(function initDataManagement() {
   let pendingBackup = null;
 
-  document.getElementById('backup-btn').addEventListener('click', () => {
-    pendingBackup = null;
-    document.getElementById('backup-import-confirm').classList.remove('visible');
-    document.getElementById('backup-overlay').classList.add('open');
-  });
-
-  document.getElementById('backup-close-btn').addEventListener('click', () => {
-    document.getElementById('backup-overlay').classList.remove('open');
-  });
-
+  // Save
   document.getElementById('backup-save-btn').addEventListener('click', () => {
     const backup = {
       version: 1,
@@ -6260,6 +6210,7 @@ function attachTrainNumpad(inp, pairInp, checkBtn, field) {
     URL.revokeObjectURL(url);
   });
 
+  // Load — open file picker
   document.getElementById('backup-load-btn').addEventListener('click', () => {
     document.getElementById('backup-file-input').click();
   });
@@ -6286,6 +6237,7 @@ function attachTrainNumpad(inp, pairInp, checkBtn, field) {
     e.target.value = '';
   });
 
+  // Merge
   document.getElementById('backup-merge-btn').addEventListener('click', () => {
     if (!pendingBackup) return;
     for (const muscle of Object.keys(pendingBackup.exercises || {})) {
@@ -6311,12 +6263,15 @@ function attachTrainNumpad(inp, pairInp, checkBtn, field) {
     renderHistory();
     pendingBackup = null;
     document.getElementById('backup-import-confirm').classList.remove('visible');
-    document.getElementById('backup-overlay').classList.remove('open');
   });
 
+  // Replace All — double confirm
   document.getElementById('backup-replace-btn').addEventListener('click', async () => {
-    const ok = await customConfirm('Replace all current exercises and history with the backup? This cannot be undone.');
-    if (!ok || !pendingBackup) return;
+    if (!pendingBackup) return;
+    const ok1 = await customConfirm('Replace all current exercises and history with the backup?', 'Continue', 'Cancel');
+    if (!ok1) return;
+    const ok2 = await customConfirm('Are you sure? This will permanently overwrite your current data and cannot be undone.', 'Replace All', 'Cancel');
+    if (!ok2 || !pendingBackup) return;
     state.exercises = { ...defaultState().exercises, ...pendingBackup.exercises };
     state.exerciseMeta = pendingBackup.exerciseMeta || {};
     state.cablePulleys = pendingBackup.cablePulleys || {};
@@ -6328,7 +6283,26 @@ function attachTrainNumpad(inp, pairInp, checkBtn, field) {
     renderHistory();
     pendingBackup = null;
     document.getElementById('backup-import-confirm').classList.remove('visible');
-    document.getElementById('backup-overlay').classList.remove('open');
+  });
+
+  // Delete All — double confirm
+  document.getElementById('backup-delete-btn').addEventListener('click', async () => {
+    const ok1 = await customConfirm('Delete all exercises and workout history?', 'Continue', 'Cancel');
+    if (!ok1) return;
+    const ok2 = await customConfirm('Are you absolutely sure? Everything will be permanently erased and cannot be recovered.', 'Delete Everything', 'Cancel');
+    if (!ok2) return;
+    const ds = defaultState();
+    state.exercises = ds.exercises;
+    state.exerciseMeta = {};
+    state.cablePulleys = {};
+    state.history = [];
+    state.prs = {};
+    state.repPRs = {};
+    state.weeklySets = ds.weeklySets;
+    save();
+    renderExercises();
+    renderHistory();
+    renderStats();
   });
 })();
 // ─────────────────────────────────────────────────────────────
@@ -6422,38 +6396,6 @@ function attachTrainNumpad(inp, pairInp, checkBtn, field) {
       <button class="tnp-key tnp-back" data-val="back">⌫</button>
     </div>
     <div class="tnp-actions" id="tnp-actions"></div>
-  </div>
-</div>
-
-<!-- Data Backup Overlay -->
-<div id="backup-overlay">
-  <div id="backup-box">
-    <div id="backup-header">
-      <span id="backup-title">Data Backup</span>
-      <button id="backup-close-btn">✕</button>
-    </div>
-    <div id="backup-body">
-      <div>
-        <div class="backup-section-label">Save</div>
-        <div class="backup-desc">Download your exercises and workout history as a file you can store anywhere.</div>
-        <button id="backup-save-btn">↓ Save Backup</button>
-      </div>
-      <hr class="backup-divider" />
-      <div>
-        <div class="backup-section-label">Load</div>
-        <div class="backup-desc">Restore from a backup file. Choose to merge with or replace your current data.</div>
-        <button id="backup-load-btn">↑ Choose Backup File</button>
-        <input type="file" id="backup-file-input" accept=".json" style="display:none" />
-      </div>
-      <div id="backup-import-confirm">
-        <div id="backup-import-filename"></div>
-        <div id="backup-import-summary"></div>
-        <div class="backup-import-actions">
-          <button id="backup-merge-btn">Merge</button>
-          <button id="backup-replace-btn">Replace All</button>
-        </div>
-      </div>
-    </div>
   </div>
 </div>
 
