@@ -2767,16 +2767,14 @@
     }
     #tpl-add-ex { margin-top: 8px; }
 
-    /* ── Pre-workout Screen ── */
-    #prestart-modal {
-      position: fixed; inset: 0; z-index: 400;
-      background: rgba(0,0,8,0.88);
-      backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
-      display: none; flex-direction: column;
-      align-items: center; justify-content: center;
-      padding: 30px 24px;
+    /* ── Train Tab Prestart ── */
+    #train-section {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
     }
-    #prestart-modal.open { display: flex; }
+    #train-section.active { display: flex; }
     #prestart-box { width: 100%; max-width: 360px; display: flex; flex-direction: column; gap: 14px; }
     #prestart-title { font-size: 24px; font-weight: 900; color: #fff; text-align: center; margin-bottom: 14px; letter-spacing: 0.5px; }
     #prestart-start {
@@ -2794,10 +2792,6 @@
       cursor: pointer; touch-action: manipulation;
     }
     #prestart-template:active { background: rgba(74,144,217,0.12); }
-    #prestart-cancel {
-      background: none; border: none; color: #4a6aaa; font-size: 14px;
-      padding: 10px; cursor: pointer; touch-action: manipulation; margin-top: 6px;
-    }
 
     /* ── Template Picker ── */
     #template-picker {
@@ -3465,13 +3459,12 @@
   </div>
 </div>
 
-<!-- Pre-workout Screen -->
-<div id="prestart-modal">
+<!-- Train Tab -->
+<div id="train-section" class="section">
   <div id="prestart-box">
     <div id="prestart-title">Ready to Train?</div>
     <button id="prestart-start">Start Training</button>
     <button id="prestart-template">Choose Template</button>
-    <button id="prestart-cancel">Cancel</button>
   </div>
 </div>
 
@@ -3978,6 +3971,7 @@ window.addEventListener('resize', () => {
 const tabSections = {
   profile: 'profile-section',
   history: 'history-section',
+  train: 'train-section',
   exercises: 'exercises-section',
   stats: 'stats-section'
 };
@@ -3994,16 +3988,15 @@ let prevTab = 'profile';
 
 function goToTab(tab) {
   closePicker();
-  if (tab === 'train') {
+  if (tab === 'train' && trainActive) {
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === 'train'));
-    if (trainActive) { restoreTrain(); return; }
-    openPrestart(); return;
+    restoreTrain();
+    return;
   }
-  prevTab = tab;
 
-  if (trainActive) {
-    minimizeTrain();
-  }
+  if (tab !== 'train') prevTab = tab;
+
+  if (trainActive) minimizeTrain();
 
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
@@ -5292,26 +5285,11 @@ document.getElementById('summary-save-tpl-btn').addEventListener('click', async 
 
 // ─── Pre-workout screen ───
 
-function openPrestart() {
-  document.getElementById('prestart-modal').classList.add('open');
-}
-
-function closePrestart() {
-  document.getElementById('prestart-modal').classList.remove('open');
-}
-
 document.getElementById('prestart-start').addEventListener('click', () => {
-  closePrestart();
   openTrain();
 });
 
-document.getElementById('prestart-cancel').addEventListener('click', () => {
-  closePrestart();
-  goToTab(prevTab);
-});
-
 document.getElementById('prestart-template').addEventListener('click', () => {
-  closePrestart();
   openTemplatePicker();
 });
 
@@ -5369,14 +5347,10 @@ function openTrainWithTemplate(tpl) {
 
 document.getElementById('template-picker-close').addEventListener('click', () => {
   closeTemplatePicker();
-  openPrestart();
 });
 
 document.getElementById('template-picker').addEventListener('click', (e) => {
-  if (e.target === document.getElementById('template-picker')) {
-    closeTemplatePicker();
-    openPrestart();
-  }
+  if (e.target === document.getElementById('template-picker')) closeTemplatePicker();
 });
 
 document.getElementById('tpl-new-btn').addEventListener('click', () => {
