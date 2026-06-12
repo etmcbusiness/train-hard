@@ -3686,49 +3686,56 @@ const scene = new THREE.Scene();
 scene.background = null;
 renderer.setClearColor(0x000000, 0);
 
+// All models live inside spinGroup so we can rotate them independently of the camera
+const spinGroup = new THREE.Group();
+scene.add(spinGroup);
+
 const camera = new THREE.PerspectiveCamera(40, innerWidth / innerHeight, 0.01, 10000);
 
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = false;
 controls.enablePan  = false;
 controls.enableZoom = false;
-controls.autoRotate = true;
-controls.autoRotateSpeed = 1.0;
-controls.rotateSpeed = 3.0;
+controls.autoRotate = false;
+controls.rotateSpeed = 2.5;
 controls.minPolarAngle = Math.PI / 2;
 controls.maxPolarAngle = Math.PI / 2;
 
-// ── Fidget-spinner momentum ────────────────────────────────────
-// autoRotateSpeed is read every frame by OrbitControls.update().
-// We set it high on a fast swipe, then smoothly decay toward SPIN_BASE.
-const SPIN_BASE = 1.0;
-let spinTouching = false;
-let spinSamples  = [];  // [{x, t}] recent touch positions
+// ── Spin / fidget-spinner momentum ───────────────────────────
+// We rotate spinGroup.rotation.y directly — no conflict with OrbitControls.
+// Velocity is tracked live during the drag (EMA) so release is seamless.
+const SPIN_BASE_VEL = (2 * Math.PI) / 60; // rad/s = 1 rev per 60 s
+const SPIN_SENSITIVITY = 3.0;             // radians per screen-height of drag
+let spinVelocity  = SPIN_BASE_VEL;
+let spinTouching  = false;
+let _lastSpinX    = 0;
+let _lastSpinT    = 0;
 let _spinFrameTime = performance.now();
 
 function _spinStart(x) {
-  spinTouching = true;
-  spinSamples  = [{ x, t: performance.now() }];
+  spinTouching    = true;
+  controls.enabled = false;   // prevent camera orbit while spinning
+  _lastSpinX      = x;
+  _lastSpinT      = performance.now();
 }
 function _spinMove(x) {
   if (!spinTouching) return;
-  spinSamples.push({ x, t: performance.now() });
-  if (spinSamples.length > 12) spinSamples.shift();
+  const now = performance.now();
+  const dt  = Math.max((now - _lastSpinT) / 1000, 0.004);
+  const dx  = x - _lastSpinX;
+  // Apply rotation to model directly — instant, zero latency
+  const radians = -dx / window.innerHeight * SPIN_SENSITIVITY * 2 * Math.PI;
+  spinGroup.rotation.y += radians;
+  // Track velocity via EMA for smooth hand-off on release
+  const instVel = radians / dt;
+  spinVelocity  = spinVelocity * 0.3 + instVel * 0.7;
+  _lastSpinX    = x;
+  _lastSpinT    = now;
 }
 function _spinEnd() {
-  spinTouching = false;
-  // Use only the last 80 ms of samples for instantaneous release velocity
-  const now    = performance.now();
-  const recent = spinSamples.filter(s => now - s.t < 80);
-  if (recent.length >= 2) {
-    const a = recent[0], b = recent[recent.length - 1];
-    const dt = Math.max((b.t - a.t) / 1000, 0.008);
-    const pxPerSec = (b.x - a.x) / dt;
-    // innerHeight matches OrbitControls' own reference dimension
-    // negative: left swipe = forward spin (same direction as auto-rotate)
-    const speed = -(pxPerSec / window.innerHeight) * controls.rotateSpeed * 60;
-    controls.autoRotateSpeed = Math.max(-400, Math.min(400, speed));
-  }
+  spinTouching     = false;
+  controls.enabled = true;
+  spinVelocity     = Math.max(-25, Math.min(25, spinVelocity));
 }
 
 const _ce = renderer.domElement;
@@ -3916,7 +3923,7 @@ function loadModel(idx, onReady) {
       const center = new THREE.Box3().setFromObject(mdl).getCenter(new THREE.Vector3());
       mdl.position.sub(center);
       mdl.visible = false;
-      scene.add(mdl);
+      spinGroup.add(mdl);
 
       const meshes = [];
       mdl.traverse(o => { if (o.isMesh) meshes.push(o); });
@@ -4001,9 +4008,10 @@ window.addEventListener('resize', () => {
   const now   = performance.now();
   const delta = Math.min((now - _spinFrameTime) / 1000, 0.1);
   _spinFrameTime = now;
-  // Smooth exponential decay toward base speed — time-based so frame rate doesn't matter
   if (!spinTouching) {
-    controls.autoRotateSpeed += (SPIN_BASE - controls.autoRotateSpeed) * Math.min(delta * 1.5, 1);
+    // Exponential decay toward base speed — seamless continuation from drag velocity
+    spinVelocity += (SPIN_BASE_VEL - spinVelocity) * Math.min(delta * 1.2, 1);
+    spinGroup.rotation.y += spinVelocity * delta;
   }
   controls.update();
   const mixDelta = clock.getDelta();
