@@ -4996,94 +4996,77 @@ const ACTIVE_SESSION_KEY = 'trainhard_active_session';
 function saveActiveSession() {
   if (!trainActive) return;
   try {
-    const payload = { session: session.filter(Boolean), timerSecs, savedAt: Date.now() };
-    localStorage.setItem(ACTIVE_SESSION_KEY, JSON.stringify(payload));
-    console.log('[save] session saved:', payload.session.length, 'exercises');
-  } catch(e) {
-    console.error('[save] failed:', e);
-  }
+    localStorage.setItem(ACTIVE_SESSION_KEY, JSON.stringify({
+      session: session.filter(Boolean),
+      timerSecs,
+      savedAt: Date.now()
+    }));
+  } catch(e) {}
 }
 
 function clearActiveSession() {
   localStorage.removeItem(ACTIVE_SESSION_KEY);
 }
 
-async function checkAndRestoreSession() {
+function checkAndRestoreSession() {
+  if (trainActive) return;
+
   let data;
   try {
     const raw = localStorage.getItem(ACTIVE_SESSION_KEY);
-    console.log('[restore] raw saved session:', raw ? raw.slice(0, 120) : 'none');
     if (!raw) return;
     data = JSON.parse(raw);
   } catch(e) {
-    console.error('[restore] parse error:', e);
     clearActiveSession();
     return;
   }
 
   if (!data || !Array.isArray(data.session) || !data.session.length) {
-    console.log('[restore] session empty or invalid, discarding');
     clearActiveSession();
     return;
   }
 
-  console.log('[restore] found session with', data.session.length, 'exercises, showing dialog');
   const elapsed = Math.floor((Date.now() - (data.savedAt || Date.now())) / 1000);
   const totalSecs = (data.timerSecs || 0) + elapsed;
-  const mins = Math.round(totalSecs / 60);
-  const timeAgo = mins > 0 ? `${mins} min ago` : 'just now';
 
-  let ok;
-  try {
-    ok = await customConfirm(
-      `You have an unfinished workout from ${timeAgo}. Resume?`,
-      'Resume',
-      'Discard'
-    );
-  } catch(e) {
-    console.error('[restore] dialog error:', e);
-    return;
-  }
-
-  if (!ok) {
-    clearActiveSession();
-    return;
-  }
-
-  try {
-    trainActive = true;
-    document.querySelector('.nav-btn[data-tab="train"]').classList.add('train-live');
-    session.length = 0;
-    timerSecs = totalSecs;
+  trainActive = true;
+  document.querySelector('.nav-btn[data-tab="train"]').classList.add('train-live');
+  session.length = 0;
+  timerSecs = totalSecs;
+  setTimerDisplay(fmtTime(timerSecs));
+  const wSummary = document.getElementById('workout-summary');
+  if (wSummary) wSummary.classList.remove('open');
+  stopRestTimer();
+  document.getElementById('train-exercises').innerHTML = '';
+  const modal = document.getElementById('train-modal');
+  modal.style.display = 'flex';
+  modal.classList.add('open');
+  clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    timerSecs++;
     setTimerDisplay(fmtTime(timerSecs));
-    const wSummary = document.getElementById('workout-summary');
-    if (wSummary) wSummary.classList.remove('open');
-    stopRestTimer();
-    document.getElementById('train-exercises').innerHTML = '';
-    const modal = document.getElementById('train-modal');
-    modal.style.display = 'flex';
-    modal.classList.add('open');
-    clearInterval(timerInterval);
-    timerInterval = setInterval(() => {
-      timerSecs++;
-      setTimerDisplay(fmtTime(timerSecs));
-      if (timerSecs % 30 === 0) saveActiveSession();
-    }, 1000);
-    touchActivity();
-    clearInterval(inactivityInterval);
-    inactivityInterval = setInterval(() => {
-      if (trainActive && Date.now() - lastActivityTime > INACTIVITY_LIMIT_MS) {
-        closeTrain();
-      }
-    }, 60 * 1000);
-    for (const ex of data.session) {
-      addExerciseBlock(ex.name, ex.muscle, ex.sets);
+    if (timerSecs % 30 === 0) saveActiveSession();
+  }, 1000);
+  touchActivity();
+  clearInterval(inactivityInterval);
+  inactivityInterval = setInterval(() => {
+    if (trainActive && Date.now() - lastActivityTime > INACTIVITY_LIMIT_MS) {
+      closeTrain();
     }
-    console.log('[restore] session restored successfully');
-  } catch(e) {
-    console.error('[restore] restore error (session preserved):', e);
+  }, 60 * 1000);
+  for (const ex of data.session) {
+    addExerciseBlock(ex.name, ex.muscle, ex.sets);
   }
 }
+
+// Save before page unloads / app backgrounds
+window.addEventListener('pagehide', () => { if (trainActive) saveActiveSession(); });
+document.addEventListener('visibilitychange', () => { if (document.hidden && trainActive) saveActiveSession(); });
+
+// Restore on every page show (covers fresh load, bfcache, and tab switch back)
+window.addEventListener('pageshow', () => {
+  if (!trainActive) checkAndRestoreSession();
+});
 
 let lastActivityTime = 0;
 let inactivityInterval = null;
