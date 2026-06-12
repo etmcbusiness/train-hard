@@ -4996,12 +4996,12 @@ const ACTIVE_SESSION_KEY = 'trainhard_active_session';
 function saveActiveSession() {
   if (!trainActive) return;
   try {
-    localStorage.setItem(ACTIVE_SESSION_KEY, JSON.stringify({
-      session: session.filter(Boolean),
-      timerSecs,
-      savedAt: Date.now()
-    }));
-  } catch(e) {}
+    const payload = { session: session.filter(Boolean), timerSecs, savedAt: Date.now() };
+    localStorage.setItem(ACTIVE_SESSION_KEY, JSON.stringify(payload));
+    console.log('[save] session saved:', payload.session.length, 'exercises');
+  } catch(e) {
+    console.error('[save] failed:', e);
+  }
 }
 
 function clearActiveSession() {
@@ -5009,33 +5009,55 @@ function clearActiveSession() {
 }
 
 async function checkAndRestoreSession() {
+  let data;
   try {
     const raw = localStorage.getItem(ACTIVE_SESSION_KEY);
+    console.log('[restore] raw saved session:', raw ? raw.slice(0, 120) : 'none');
     if (!raw) return;
-    const data = JSON.parse(raw);
-    if (!data || !Array.isArray(data.session) || !data.session.length) {
-      clearActiveSession();
-      return;
-    }
-    const elapsed = Math.floor((Date.now() - (data.savedAt || Date.now())) / 1000);
-    const totalSecs = (data.timerSecs || 0) + elapsed;
-    const mins = Math.round(totalSecs / 60);
-    const timeAgo = mins > 0 ? `${mins} min ago` : 'just now';
-    const ok = await customConfirm(
+    data = JSON.parse(raw);
+  } catch(e) {
+    console.error('[restore] parse error:', e);
+    clearActiveSession();
+    return;
+  }
+
+  if (!data || !Array.isArray(data.session) || !data.session.length) {
+    console.log('[restore] session empty or invalid, discarding');
+    clearActiveSession();
+    return;
+  }
+
+  console.log('[restore] found session with', data.session.length, 'exercises, showing dialog');
+  const elapsed = Math.floor((Date.now() - (data.savedAt || Date.now())) / 1000);
+  const totalSecs = (data.timerSecs || 0) + elapsed;
+  const mins = Math.round(totalSecs / 60);
+  const timeAgo = mins > 0 ? `${mins} min ago` : 'just now';
+
+  let ok;
+  try {
+    ok = await customConfirm(
       `You have an unfinished workout from ${timeAgo}. Resume?`,
       'Resume',
       'Discard'
     );
-    if (!ok) {
-      clearActiveSession();
-      return;
-    }
+  } catch(e) {
+    console.error('[restore] dialog error:', e);
+    return;
+  }
+
+  if (!ok) {
+    clearActiveSession();
+    return;
+  }
+
+  try {
     trainActive = true;
     document.querySelector('.nav-btn[data-tab="train"]').classList.add('train-live');
     session.length = 0;
     timerSecs = totalSecs;
     setTimerDisplay(fmtTime(timerSecs));
-    document.getElementById('workout-summary').classList.remove('open');
+    const wSummary = document.getElementById('workout-summary');
+    if (wSummary) wSummary.classList.remove('open');
     stopRestTimer();
     document.getElementById('train-exercises').innerHTML = '';
     const modal = document.getElementById('train-modal');
@@ -5057,8 +5079,9 @@ async function checkAndRestoreSession() {
     for (const ex of data.session) {
       addExerciseBlock(ex.name, ex.muscle, ex.sets);
     }
+    console.log('[restore] session restored successfully');
   } catch(e) {
-    clearActiveSession();
+    console.error('[restore] restore error (session preserved):', e);
   }
 }
 
