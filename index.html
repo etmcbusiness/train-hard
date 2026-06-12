@@ -1383,13 +1383,22 @@
       transition: background 0.1s;
     }
     .edit-rest-btn:active { background: rgba(74,144,217,0.18); }
-    #edit-rest-display {
+    #edit-rest-display, #nex-rest-display {
       flex: 1;
       text-align: center;
       font-size: 18px;
       font-weight: 700;
       color: #fff;
       font-variant-numeric: tabular-nums;
+      background: transparent;
+      border: none;
+      outline: none;
+      min-width: 0;
+      width: 0;
+      padding: 0;
+      font-family: inherit;
+      cursor: pointer;
+      caret-color: transparent;
     }
     #edit-pulley-row { display: none; }
     #edit-pulley-row.visible { display: block; }
@@ -2038,6 +2047,13 @@
       text-shadow: 0 0 18px rgba(60,181,88,0.4);
       min-width: 90px;
       text-align: center;
+      background: transparent;
+      border: none;
+      outline: none;
+      padding: 0;
+      font-family: inherit;
+      cursor: pointer;
+      caret-color: transparent;
     }
     #rest-edit-actions {
       display: flex;
@@ -2547,6 +2563,102 @@
     }
     .tnp-complete-btn:active { opacity: 0.82; }
 
+    /* ── Rest Time Numpad ── */
+    #rest-numpad {
+      position: fixed;
+      inset: 0;
+      z-index: 3000;
+      display: flex;
+      align-items: flex-end;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    #rest-numpad.open {
+      pointer-events: all;
+      opacity: 1;
+    }
+    #rnp-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.35);
+    }
+    #rnp-panel {
+      position: relative;
+      width: 100%;
+      background: rgb(6,14,40);
+      border-top: 1.5px solid rgba(60,120,255,0.4);
+      border-radius: 20px 20px 0 0;
+      padding: 18px 16px calc(20px + env(safe-area-inset-bottom, 0px));
+      transform: translateY(100%);
+      transition: transform 0.25s cubic-bezier(0.32,0.72,0,1);
+      box-shadow: 0 -8px 48px rgba(0,30,120,0.6);
+    }
+    #rest-numpad.open #rnp-panel { transform: translateY(0); }
+    #rnp-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      padding: 0 4px;
+    }
+    #rnp-label {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      color: #4A90D9;
+      text-transform: uppercase;
+    }
+    #rnp-display {
+      font-size: 32px;
+      font-weight: 800;
+      color: #fff;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -1px;
+    }
+    #rnp-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .rnp-key {
+      height: 56px;
+      border-radius: 12px;
+      border: 1px solid rgba(50,100,200,0.25);
+      background: rgba(10,22,70,0.9);
+      color: #fff;
+      font-size: 22px;
+      font-weight: 600;
+      cursor: pointer;
+      touch-action: manipulation;
+      transition: background 0.1s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .rnp-key:active { background: rgba(74,144,217,0.22); }
+    .rnp-key.rnp-colon { font-size: 28px; color: #7a9acc; }
+    .rnp-key.rnp-back  { font-size: 20px; color: #8aa0cc; }
+    #rnp-done {
+      width: 100%;
+      height: 52px;
+      border-radius: 14px;
+      border: none;
+      background: linear-gradient(135deg, #4A90D9, #2563c0);
+      color: #fff;
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      cursor: pointer;
+      touch-action: manipulation;
+      box-shadow: 0 3px 18px rgba(74,144,217,0.4);
+      transition: opacity 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    #rnp-done:active { opacity: 0.82; }
+
     /* ── Custom Confirm Modal ── */
     #custom-confirm {
       position: fixed;
@@ -2762,7 +2874,7 @@
       <div class="nex-label">Rest Time</div>
       <div class="edit-rest-ctrl">
         <button class="edit-rest-btn" id="edit-rest-minus">−</button>
-        <div id="edit-rest-display">1:30</div>
+        <input id="edit-rest-display" type="text" value="1:30" readonly autocomplete="off" />
         <button class="edit-rest-btn" id="edit-rest-plus">+</button>
       </div>
 
@@ -2803,6 +2915,13 @@
 
       <div class="nex-label">Category</div>
       <div class="nex-chips" id="nex-category"></div>
+
+      <div class="nex-label">Rest Time</div>
+      <div class="edit-rest-ctrl">
+        <button class="edit-rest-btn" id="nex-rest-minus">−</button>
+        <input id="nex-rest-display" type="text" value="1:30" readonly autocomplete="off" />
+        <button class="edit-rest-btn" id="nex-rest-plus">+</button>
+      </div>
     </div>
     <div id="new-ex-footer">
       <button id="new-ex-cancel">Cancel</button>
@@ -2958,7 +3077,7 @@
     <div id="rest-edit-sub">This workout only</div>
     <div id="rest-edit-stepper">
       <button id="rest-edit-minus" class="red-btn">−</button>
-      <div id="rest-edit-display">1:30</div>
+      <input id="rest-edit-display" type="text" value="1:30" readonly autocomplete="off" />
       <button id="rest-edit-plus" class="red-btn">+</button>
     </div>
     <div id="rest-edit-actions">
@@ -4116,8 +4235,20 @@ let editCategory = null;
 let editPulleys = null;
 let editRestSecs = 90;
 
+function parseRestInput(str) {
+  str = (str || '').trim();
+  let secs;
+  if (str.includes(':')) {
+    const parts = str.split(':');
+    secs = (parseInt(parts[0]) || 0) * 60 + (parseInt(parts[1]) || 0);
+  } else {
+    secs = parseInt(str) || 0;
+  }
+  return Math.min(600, Math.max(15, secs));
+}
+
 function updateEditRestDisplay() {
-  document.getElementById('edit-rest-display').textContent = fmtRestSecs(editRestSecs);
+  document.getElementById('edit-rest-display').value = fmtRestSecs(editRestSecs);
 }
 
 function buildEditBodypartChips(selected) {
@@ -4223,6 +4354,9 @@ document.getElementById('edit-rest-minus').addEventListener('click', () => {
 document.getElementById('edit-rest-plus').addEventListener('click', () => {
   editRestSecs = Math.min(600, editRestSecs + 15);
   updateEditRestDisplay();
+});
+document.getElementById('edit-rest-display').addEventListener('click', () => {
+  openRestNumpad(editRestSecs, secs => { editRestSecs = secs; updateEditRestDisplay(); });
 });
 
 document.getElementById('edit-save-btn').addEventListener('click', () => {
@@ -4474,7 +4608,6 @@ document.getElementById('rest-minus-btn').addEventListener('click', () => {
     restEndTime = Math.max(Date.now() + 1000, restEndTime - 15000);
     tickRestTimer();
   }
-  updateRestMarkers();
 });
 
 document.getElementById('rest-plus-btn').addEventListener('click', () => {
@@ -4483,7 +4616,6 @@ document.getElementById('rest-plus-btn').addEventListener('click', () => {
     restEndTime = restEndTime + 15000;
     tickRestTimer();
   }
-  updateRestMarkers();
 });
 
 // ── In-workout rest edit modal ──
@@ -4491,7 +4623,7 @@ let restEditTemp = 90;
 
 function openRestEdit() {
   restEditTemp = restDuration;
-  document.getElementById('rest-edit-display').textContent = fmtRestSecs(restEditTemp);
+  document.getElementById('rest-edit-display').value = fmtRestSecs(restEditTemp);
   document.getElementById('rest-edit-modal').classList.add('open');
 }
 
@@ -4501,12 +4633,12 @@ function closeRestEdit() {
 
 document.getElementById('rest-edit-minus').addEventListener('click', () => {
   restEditTemp = Math.max(15, restEditTemp - 15);
-  document.getElementById('rest-edit-display').textContent = fmtRestSecs(restEditTemp);
+  document.getElementById('rest-edit-display').value = fmtRestSecs(restEditTemp);
 });
 
 document.getElementById('rest-edit-plus').addEventListener('click', () => {
   restEditTemp = Math.min(600, restEditTemp + 15);
-  document.getElementById('rest-edit-display').textContent = fmtRestSecs(restEditTemp);
+  document.getElementById('rest-edit-display').value = fmtRestSecs(restEditTemp);
 });
 
 document.getElementById('rest-edit-apply').addEventListener('click', () => {
@@ -4516,13 +4648,18 @@ document.getElementById('rest-edit-apply').addEventListener('click', () => {
     if (restEndTime > newEnd) restEndTime = newEnd;
     tickRestTimer();
   }
-  updateRestMarkers();
   closeRestEdit();
 });
 
 document.getElementById('rest-edit-cancel').addEventListener('click', closeRestEdit);
 document.getElementById('rest-edit-modal').addEventListener('click', e => {
   if (e.target === document.getElementById('rest-edit-modal')) closeRestEdit();
+});
+document.getElementById('rest-edit-display').addEventListener('click', () => {
+  openRestNumpad(restEditTemp, secs => {
+    restEditTemp = secs;
+    document.getElementById('rest-edit-display').value = fmtRestSecs(restEditTemp);
+  });
 });
 
 document.getElementById('train-exercises').addEventListener('click', e => {
@@ -4773,7 +4910,8 @@ function renderSets(exIdx, block) {
     if (i > 0) {
       const marker = document.createElement('div');
       marker.className = 'rest-marker';
-      marker.textContent = fmtRestSecs(restDuration);
+      const exRestSecs = (state.exerciseMeta[ex.name] || {}).restTime || restDuration;
+      marker.textContent = fmtRestSecs(exRestSecs);
       container.appendChild(marker);
     }
     const setIdx = i;
@@ -5456,13 +5594,20 @@ const NEX_CATEGORIES = [
 let nexBodyPart = null;
 let nexCategory = null;
 let nexFromPicker = null;
+let nexRestSecs = 90;
+
+function updateNexRestDisplay() {
+  document.getElementById('nex-rest-display').value = fmtRestSecs(nexRestSecs);
+}
 
 function renderNexSuggestions() {}
 
 function openNewExModal(preselectedMuscle) {
   nexBodyPart = preselectedMuscle || null;
   nexCategory = null;
+  nexRestSecs = 90;
   document.getElementById('nex-name').value = '';
+  updateNexRestDisplay();
   renderNexSuggestions();
 
   const bpWrap = document.getElementById('nex-bodypart');
@@ -5512,6 +5657,18 @@ document.getElementById('new-ex-modal').addEventListener('click', (e) => {
   if (e.target === document.getElementById('new-ex-modal')) closeNewExModal();
 });
 
+document.getElementById('nex-rest-minus').addEventListener('click', () => {
+  nexRestSecs = Math.max(15, nexRestSecs - 15);
+  updateNexRestDisplay();
+});
+document.getElementById('nex-rest-plus').addEventListener('click', () => {
+  nexRestSecs = Math.min(600, nexRestSecs + 15);
+  updateNexRestDisplay();
+});
+document.getElementById('nex-rest-display').addEventListener('click', () => {
+  openRestNumpad(nexRestSecs, secs => { nexRestSecs = secs; updateNexRestDisplay(); });
+});
+
 let pendingCableExercise = null;
 
 document.getElementById('new-ex-save').addEventListener('click', () => {
@@ -5522,7 +5679,7 @@ document.getElementById('new-ex-save').addEventListener('click', () => {
   const muscle = MUSCLES.includes(nexBodyPart) ? nexBodyPart : (MUSCLES[0]);
 
   if (nexCategory === 'Cable Machine') {
-    pendingCableExercise = { name, muscle };
+    pendingCableExercise = { name, muscle, restSecs: nexRestSecs };
     closeNewExModal();
     document.getElementById('pulley-modal').classList.add('open');
     return;
@@ -5530,10 +5687,9 @@ document.getElementById('new-ex-save').addEventListener('click', () => {
 
   if (!state.exercises[muscle]) state.exercises[muscle] = [];
   state.exercises[muscle].push(name);
-  if (nexCategory) {
-    if (!state.exerciseMeta[name]) state.exerciseMeta[name] = {};
-    state.exerciseMeta[name].category = nexCategory;
-  }
+  if (!state.exerciseMeta[name]) state.exerciseMeta[name] = {};
+  if (nexCategory) state.exerciseMeta[name].category = nexCategory;
+  state.exerciseMeta[name].restTime = nexRestSecs;
   save();
   renderExercises();
   closeNewExModal();
@@ -5550,12 +5706,13 @@ document.getElementById('new-ex-save').addEventListener('click', () => {
 
 function savePendingCableExercise(pulleyCount) {
   if (!pendingCableExercise) return;
-  const { name, muscle } = pendingCableExercise;
+  const { name, muscle, restSecs } = pendingCableExercise;
   if (!state.exercises[muscle]) state.exercises[muscle] = [];
   state.exercises[muscle].push(name);
   if (pulleyCount) state.cablePulleys[name] = pulleyCount;
   if (!state.exerciseMeta[name]) state.exerciseMeta[name] = {};
   state.exerciseMeta[name].category = 'Cable Machine';
+  if (restSecs != null) state.exerciseMeta[name].restTime = restSecs;
   save();
   renderExercises();
   pendingCableExercise = null;
@@ -5888,6 +6045,56 @@ function attachTrainNumpad(inp, pairInp, checkBtn, field) {
 })();
 // ─────────────────────────────────────────────────────────────
 
+// ── Rest Time Numpad ─────────────────────────────────────────
+(function () {
+  let rnpTyped = '';
+  let rnpCallback = null;
+
+  const numpad   = document.getElementById('rest-numpad');
+  const backdrop = document.getElementById('rnp-backdrop');
+  const display  = document.getElementById('rnp-display');
+
+  window.openRestNumpad = function (currentSecs, onDone) {
+    rnpTyped = '';
+    rnpCallback = onDone;
+    display.textContent = fmtRestSecs(currentSecs);
+    numpad.classList.add('open');
+  };
+
+  function closeNumpad() {
+    numpad.classList.remove('open');
+    rnpCallback = null;
+    rnpTyped = '';
+  }
+
+  function commit() {
+    if (rnpCallback) {
+      const secs = rnpTyped ? parseRestInput(rnpTyped) : null;
+      if (secs !== null) rnpCallback(secs);
+    }
+    closeNumpad();
+  }
+
+  function handleKey(val) {
+    if (val === 'back') {
+      rnpTyped = rnpTyped.slice(0, -1);
+    } else if (val === ':') {
+      if (!rnpTyped.includes(':')) rnpTyped += ':';
+    } else {
+      rnpTyped += val;
+    }
+    display.textContent = rnpTyped || '—';
+  }
+
+  numpad.querySelectorAll('.rnp-key').forEach(btn => {
+    btn.addEventListener('click', () => handleKey(btn.dataset.val));
+  });
+
+  document.getElementById('rnp-done').addEventListener('click', commit);
+  backdrop.addEventListener('click', closeNumpad);
+})();
+// ─────────────────────────────────────────────────────────────
+
 </script>
 <!-- Reset button & modal — outside #app so pointer-events work -->
 
@@ -5914,6 +6121,32 @@ function attachTrainNumpad(inp, pairInp, checkBtn, field) {
       <button class="tnp-key tnp-back" data-val="back">⌫</button>
     </div>
     <div class="tnp-actions" id="tnp-actions"></div>
+  </div>
+</div>
+
+<!-- Rest Time Numpad -->
+<div id="rest-numpad">
+  <div id="rnp-backdrop"></div>
+  <div id="rnp-panel">
+    <div id="rnp-header">
+      <span id="rnp-label">REST TIME</span>
+      <span id="rnp-display">1:30</span>
+    </div>
+    <div id="rnp-grid">
+      <button class="rnp-key" data-val="1">1</button>
+      <button class="rnp-key" data-val="2">2</button>
+      <button class="rnp-key" data-val="3">3</button>
+      <button class="rnp-key" data-val="4">4</button>
+      <button class="rnp-key" data-val="5">5</button>
+      <button class="rnp-key" data-val="6">6</button>
+      <button class="rnp-key" data-val="7">7</button>
+      <button class="rnp-key" data-val="8">8</button>
+      <button class="rnp-key" data-val="9">9</button>
+      <button class="rnp-key rnp-colon" data-val=":">:</button>
+      <button class="rnp-key" data-val="0">0</button>
+      <button class="rnp-key rnp-back" data-val="back">⌫</button>
+    </div>
+    <button id="rnp-done">Done</button>
   </div>
 </div>
 
