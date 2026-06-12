@@ -3705,7 +3705,7 @@ controls.maxPolarAngle = Math.PI / 2;
 // We rotate spinGroup.rotation.y directly — no conflict with OrbitControls.
 // Velocity is tracked live during the drag (EMA) so release is seamless.
 const SPIN_BASE_VEL = (2 * Math.PI) / 60; // rad/s = 1 rev per 60 s
-const SPIN_SENSITIVITY = 3.0;             // radians per screen-height of drag
+const SPIN_SENSITIVITY = 2.0;             // radians per screen-height of drag
 let spinVelocity  = SPIN_BASE_VEL;
 let spinTouching  = false;
 let _lastSpinX    = 0;
@@ -3724,7 +3724,7 @@ function _spinMove(x) {
   const dt  = Math.max((now - _lastSpinT) / 1000, 0.004);
   const dx  = x - _lastSpinX;
   // Apply rotation to model directly — instant, zero latency
-  const radians = -dx / window.innerHeight * SPIN_SENSITIVITY * 2 * Math.PI;
+  const radians = dx / window.innerHeight * SPIN_SENSITIVITY * 2 * Math.PI;
   spinGroup.rotation.y += radians;
   // Track velocity via EMA for smooth hand-off on release
   const instVel = radians / dt;
@@ -3735,7 +3735,7 @@ function _spinMove(x) {
 function _spinEnd() {
   spinTouching     = false;
   controls.enabled = true;
-  spinVelocity     = Math.max(-25, Math.min(25, spinVelocity));
+  spinVelocity     = SPIN_BASE_VEL; // snap back to constant idle — no momentum
 }
 
 const _ce = renderer.domElement;
@@ -4009,9 +4009,7 @@ window.addEventListener('resize', () => {
   const delta = Math.min((now - _spinFrameTime) / 1000, 0.1);
   _spinFrameTime = now;
   if (!spinTouching) {
-    // Exponential decay toward base speed — seamless continuation from drag velocity
-    spinVelocity += (SPIN_BASE_VEL - spinVelocity) * Math.min(delta * 1.2, 1);
-    spinGroup.rotation.y += spinVelocity * delta;
+    spinGroup.rotation.y += SPIN_BASE_VEL * delta;
   }
   controls.update();
   const mixDelta = clock.getDelta();
@@ -5872,15 +5870,18 @@ const NODE_SIZE = 96;
 // Arc is on the LEFT: circle center is off-screen to the left.
 // Selection point at 3-o'clock (θ = π/2) = rightmost point of circle = visible right edge of arc.
 const SEL_ANGLE = Math.PI / 2;
-// 60 seconds per full rotation, rotating downward (clockwise = arcOffset increases)
-const ARC_SPEED = (2 * Math.PI) / 60;
+// Fidget-spinner physics: velocity decays to this fraction each second when coasting
+const ARC_FRICTION = 0.45;
+const ARC_IDLE = (2 * Math.PI) / 30; // 1 rev per 30s baseline spin
 
 let arcOffset = 0;
+let arcVelocity = ARC_IDLE;
 let arcAnimId = null;
 let arcLastTime = null;
 let arcDragging = false;
-let arcDragStartY = 0;
-let arcDragStartOffset = 0;
+let arcDragLastY = 0;
+let arcDragLastT = 0;
+let arcDragVelSamples = []; // {dy, dt} pairs for velocity estimation
 let arcNodes = [];
 let activeRoom = localStorage.getItem('trainhard_room') || '1';
 
@@ -5999,8 +6000,14 @@ function renderArc() {
 
 function tickArc(ts) {
   if (arcLastTime !== null && !arcDragging) {
-    // Clockwise = increasing arcOffset = nodes move downward through the selection point
-    arcOffset += ARC_SPEED * ((ts - arcLastTime) / 1000);
+    const dt = (ts - arcLastTime) / 1000;
+    arcOffset += arcVelocity * dt;
+    // Apply friction decay
+    arcVelocity *= Math.pow(ARC_FRICTION, dt);
+    // Gently ease back up to idle speed if below it
+    if (arcVelocity < ARC_IDLE) {
+      arcVelocity += (ARC_IDLE - arcVelocity) * Math.min(dt * 2, 1);
+    }
   }
   arcLastTime = ts;
   renderArc();
@@ -6022,31 +6029,60 @@ function openRoomOverlay() {
 
 const arcPanel = document.getElementById('room-arc-panel');
 
-arcPanel.addEventListener('mousedown', e => {
+function arcDragStart(clientY) {
   arcDragging = true;
-  arcDragStartY = e.clientY;
-  arcDragStartOffset = arcOffset;
+  arcDragLastY = clientY;
+  arcDragLastT = performance.now();
+  arcDragVelSamples = [];
+}
+
+function arcDragMove(clientY) {
+  if (!arcDragging) return;
+  const R = document.getElementById('room-arc-panel').offsetWidth;
+  const now = performance.now();
+  const dy = clientY - arcDragLastY;
+  const dt = (now - arcDragLastT) / 1000;
+  arcOffset += dy / R;
+  if (dt > 0) {
+    arcDragVelSamples.push({ v: (dy / R) / dt, t: now });
+    // keep only the last 80ms of samples
+    const cutoff = now - 80;
+    arcDragVelSamples = arcDragVelSamples.filter(s => s.t >= cutoff);
+  }
+  arcDragLastY = clientY;
+  arcDragLastT = now;
+}
+
+function arcDragEnd() {
+  if (!arcDragging) return;
+  arcDragging = false;
+  if (arcDragVelSamples.length > 0) {
+    const avg = arcDragVelSamples.reduce((s, x) => s + x.v, 0) / arcDragVelSamples.length;
+    arcVelocity = avg;
+  } else {
+    arcVelocity = 0;
+  }
+  arcDragVelSamples = [];
+}
+
+function isRoomOverlayOpen() {
+  return document.getElementById('room-overlay').classList.contains('open');
+}
+
+window.addEventListener('mousedown', e => {
+  if (!isRoomOverlayOpen()) return;
+  arcDragStart(e.clientY);
   e.preventDefault();
 });
-window.addEventListener('mousemove', e => {
-  if (!arcDragging) return;
-  const R = document.getElementById('room-arc-panel').offsetWidth;
-  // drag down → clockwise → arcOffset increases
-  arcOffset = arcDragStartOffset + (e.clientY - arcDragStartY) / R;
-});
-window.addEventListener('mouseup', () => { arcDragging = false; });
+window.addEventListener('mousemove', e => { arcDragMove(e.clientY); });
+window.addEventListener('mouseup', () => { arcDragEnd(); });
 
-arcPanel.addEventListener('touchstart', e => {
-  arcDragging = true;
-  arcDragStartY = e.touches[0].clientY;
-  arcDragStartOffset = arcOffset;
+window.addEventListener('touchstart', e => {
+  if (!isRoomOverlayOpen()) return;
+  arcDragStart(e.touches[0].clientY);
 }, { passive: true });
-window.addEventListener('touchmove', e => {
-  if (!arcDragging) return;
-  const R = document.getElementById('room-arc-panel').offsetWidth;
-  arcOffset = arcDragStartOffset + (e.touches[0].clientY - arcDragStartY) / R;
-}, { passive: true });
-window.addEventListener('touchend', () => { arcDragging = false; });
+window.addEventListener('touchmove', e => { if (arcDragging) arcDragMove(e.touches[0].clientY); }, { passive: true });
+window.addEventListener('touchend', () => { arcDragEnd(); });
 
 document.getElementById('room-btn').addEventListener('click', openRoomOverlay);
 
