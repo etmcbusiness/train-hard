@@ -3689,8 +3689,7 @@ renderer.setClearColor(0x000000, 0);
 const camera = new THREE.PerspectiveCamera(40, innerWidth / innerHeight, 0.01, 10000);
 
 const controls = new OrbitControls(camera, renderer.domElement);
-controls.enableDamping = true;
-controls.dampingFactor = 0.08;
+controls.enableDamping = false;
 controls.enablePan  = false;
 controls.enableZoom = false;
 controls.autoRotate = true;
@@ -3700,22 +3699,38 @@ controls.minPolarAngle = Math.PI / 2;
 controls.maxPolarAngle = Math.PI / 2;
 
 // ── Fidget-spinner momentum ────────────────────────────────────
+// autoRotateSpeed is read every frame by OrbitControls.update().
+// We set it high on a fast swipe, then smoothly decay toward SPIN_BASE.
 const SPIN_BASE = 1.0;
 let spinTouching = false;
-let spinSamples  = [];
-function _spinStart(x) { spinTouching = true; spinSamples = [{ x, t: performance.now() }]; }
-function _spinMove(x)  { if (!spinTouching) return; spinSamples.push({ x, t: performance.now() }); if (spinSamples.length > 8) spinSamples.shift(); }
+let spinSamples  = [];  // [{x, t}] recent touch positions
+let _spinFrameTime = performance.now();
+
+function _spinStart(x) {
+  spinTouching = true;
+  spinSamples  = [{ x, t: performance.now() }];
+}
+function _spinMove(x) {
+  if (!spinTouching) return;
+  spinSamples.push({ x, t: performance.now() });
+  if (spinSamples.length > 12) spinSamples.shift();
+}
 function _spinEnd() {
   spinTouching = false;
-  if (spinSamples.length >= 2) {
-    const last = spinSamples[spinSamples.length - 1], first = spinSamples[0];
-    const dt = (last.t - first.t) / 1000;
-    if (dt > 0 && dt < 0.3) {
-      const radPerSec = -(last.x - first.x) / window.innerWidth * controls.rotateSpeed * 2 * Math.PI / dt;
-      controls.autoRotateSpeed = Math.max(-250, Math.min(250, radPerSec * 60 / (2 * Math.PI)));
-    }
+  // Use only the last 80 ms of samples for instantaneous release velocity
+  const now    = performance.now();
+  const recent = spinSamples.filter(s => now - s.t < 80);
+  if (recent.length >= 2) {
+    const a = recent[0], b = recent[recent.length - 1];
+    const dt = Math.max((b.t - a.t) / 1000, 0.008);
+    const pxPerSec = (b.x - a.x) / dt;
+    // innerHeight matches OrbitControls' own reference dimension
+    // negative: left swipe = forward spin (same direction as auto-rotate)
+    const speed = -(pxPerSec / window.innerHeight) * controls.rotateSpeed * 60;
+    controls.autoRotateSpeed = Math.max(-400, Math.min(400, speed));
   }
 }
+
 const _ce = renderer.domElement;
 _ce.addEventListener('touchstart', e => _spinStart(e.touches[0].clientX), { passive: true });
 _ce.addEventListener('touchmove',  e => _spinMove(e.touches[0].clientX),  { passive: true });
@@ -3983,11 +3998,17 @@ window.addEventListener('resize', () => {
 
 (function animate() {
   requestAnimationFrame(animate);
-  if (!spinTouching) controls.autoRotateSpeed += (SPIN_BASE - controls.autoRotateSpeed) * 0.02;
+  const now   = performance.now();
+  const delta = Math.min((now - _spinFrameTime) / 1000, 0.1);
+  _spinFrameTime = now;
+  // Smooth exponential decay toward base speed — time-based so frame rate doesn't matter
+  if (!spinTouching) {
+    controls.autoRotateSpeed += (SPIN_BASE - controls.autoRotateSpeed) * Math.min(delta * 1.5, 1);
+  }
   controls.update();
-  const delta = clock.getDelta();
+  const mixDelta = clock.getDelta();
   const activeMixer = modelCache[activeIdx] && modelCache[activeIdx].mixer;
-  if (activeMixer) activeMixer.update(delta);
+  if (activeMixer) activeMixer.update(mixDelta);
   renderer.render(scene, camera);
 })();
 
