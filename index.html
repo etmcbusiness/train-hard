@@ -3690,11 +3690,12 @@ const camera = new THREE.PerspectiveCamera(40, innerWidth / innerHeight, 0.01, 1
 
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
-controls.dampingFactor = 0.06;
+controls.dampingFactor = 0.08;
 controls.enablePan  = false;
 controls.enableZoom = false;
 controls.autoRotate = true;
 controls.autoRotateSpeed = 1.0;
+controls.rotateSpeed = 3.0;
 controls.minPolarAngle = Math.PI / 2;
 controls.maxPolarAngle = Math.PI / 2;
 
