@@ -3699,6 +3699,31 @@ controls.rotateSpeed = 3.0;
 controls.minPolarAngle = Math.PI / 2;
 controls.maxPolarAngle = Math.PI / 2;
 
+// ── Fidget-spinner momentum ────────────────────────────────────
+const SPIN_BASE = 1.0;
+let spinTouching = false;
+let spinSamples  = [];
+function _spinStart(x) { spinTouching = true; spinSamples = [{ x, t: performance.now() }]; }
+function _spinMove(x)  { if (!spinTouching) return; spinSamples.push({ x, t: performance.now() }); if (spinSamples.length > 8) spinSamples.shift(); }
+function _spinEnd() {
+  spinTouching = false;
+  if (spinSamples.length >= 2) {
+    const last = spinSamples[spinSamples.length - 1], first = spinSamples[0];
+    const dt = (last.t - first.t) / 1000;
+    if (dt > 0 && dt < 0.3) {
+      const radPerSec = -(last.x - first.x) / window.innerWidth * controls.rotateSpeed * 2 * Math.PI / dt;
+      controls.autoRotateSpeed = Math.max(-250, Math.min(250, radPerSec * 60 / (2 * Math.PI)));
+    }
+  }
+}
+const _ce = renderer.domElement;
+_ce.addEventListener('touchstart', e => _spinStart(e.touches[0].clientX), { passive: true });
+_ce.addEventListener('touchmove',  e => _spinMove(e.touches[0].clientX),  { passive: true });
+_ce.addEventListener('touchend',   () => _spinEnd());
+_ce.addEventListener('mousedown',  e => _spinStart(e.clientX));
+window.addEventListener('mousemove', e => { if (spinTouching) _spinMove(e.clientX); });
+window.addEventListener('mouseup',   () => { if (spinTouching) _spinEnd(); });
+
 scene.add(new THREE.AmbientLight(0xffffff, 0.4));
 const keyLight = new THREE.DirectionalLight(0xffffff, 2.2);
 keyLight.position.set(1.5, 3, 2);
@@ -3958,11 +3983,11 @@ window.addEventListener('resize', () => {
 
 (function animate() {
   requestAnimationFrame(animate);
+  if (!spinTouching) controls.autoRotateSpeed += (SPIN_BASE - controls.autoRotateSpeed) * 0.02;
   controls.update();
   const delta = clock.getDelta();
   const activeMixer = modelCache[activeIdx] && modelCache[activeIdx].mixer;
   if (activeMixer) activeMixer.update(delta);
-  const t = clock.elapsedTime;
   renderer.render(scene, camera);
 })();
 
