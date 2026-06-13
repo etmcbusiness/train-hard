@@ -2432,30 +2432,6 @@
       white-space: nowrap;
     }
 
-    #rotation-toggle {
-      position: fixed;
-      top: calc(16px + env(safe-area-inset-top));
-      right: 16px;
-      z-index: 25;
-      display: none;
-      background: rgba(4,10,32,0.88);
-      border: 1px solid rgba(255,180,0,0.45);
-      border-radius: 12px;
-      color: #ffb300;
-      font-size: 12px;
-      font-weight: 700;
-      padding: 9px 14px;
-      cursor: pointer;
-      letter-spacing: 0.5px;
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      width: 140px;
-      height: 36px;
-      box-sizing: border-box;
-      pointer-events: all;
-    }
-    #rotation-toggle.visible { display: flex; align-items: center; justify-content: center; }
-    #rotation-toggle.paused { border-color: rgba(100,200,100,0.55); color: #5de080; }
 
     /* ── Train Numpad Popup ── */
     #train-numpad {
@@ -3248,7 +3224,6 @@
 </div>
 
 
-<button id="rotation-toggle">⏸ Stop Rotation</button>
 
 <div id="profile-btns">
   <button id="room-btn">Training Room</button>
@@ -3981,7 +3956,6 @@ function goToTab(tab) {
   document.getElementById(tabSections[tab]).classList.add('active');
   document.getElementById('canvas-container').style.display = tab === 'profile' ? 'block' : 'none';
   document.getElementById('profile-btns').classList.toggle('visible', tab === 'profile');
-  document.getElementById('rotation-toggle').classList.toggle('visible', tab === 'profile');
   if (tab === 'history')   renderHistory();
   if (tab === 'exercises') renderExercises();
   if (tab === 'stats')     { renderFocusStats(); renderStats(); }
@@ -6070,7 +6044,6 @@ document.getElementById('room-close-btn').addEventListener('click', () => {
 
 setRoom(activeRoom);
 document.getElementById('profile-btns').classList.add('visible');
-document.getElementById('rotation-toggle').classList.add('visible');
 
 // ═══════════════════════════════════════════════════════════
 // REP PR TRACKING
@@ -6893,18 +6866,6 @@ function attachTrainNumpad(inp, pairInp, checkBtn, field) {
 })();
 // ─────────────────────────────────────────────────────────────
 
-// ── Rotation Toggle ───────────────────────────────────────────
-(function initRotationToggle() {
-  const btn = document.getElementById('rotation-toggle');
-  let rotating = true;
-  btn.addEventListener('click', () => {
-    rotating = !rotating;
-    controls.autoRotate = rotating;
-    btn.textContent = rotating ? '⏸ Stop Rotation' : '▶ Start Rotation';
-    btn.classList.toggle('paused', !rotating);
-  });
-})();
-// ─────────────────────────────────────────────────────────────
 
 // ── Rest Time Numpad ─────────────────────────────────────────
 (function () {
