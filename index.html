@@ -5702,16 +5702,17 @@ function renderPickerMuscleGrid() {
     header.textContent = group.label;
     grid.appendChild(header);
     for (const muscle of group.muscles) {
-      const exList = state.exercises[muscle] || [];
       const lv = getLevel(muscle);
       const dotColor = LEVEL_COLORS[lv];
+      const sets = getDisplaySets(muscle);
+      const goal = getGoal(muscle);
       const btn = document.createElement('button');
       btn.className = 'picker-muscle-btn';
       btn.innerHTML = `
         <div class="picker-muscle-dot" style="background:${dotColor};box-shadow:0 0 6px ${dotColor};"></div>
         <div>
           <div class="picker-muscle-name">${muscle}</div>
-          <div class="picker-muscle-count">${exList.length} exercise${exList.length !== 1 ? 's' : ''}</div>
+          <div class="picker-muscle-count" style="font-size:10px;opacity:0.6;"><span style="color:${dotColor}">Lv ${lv}</span> · ${sets}/${goal}</div>
         </div>
       `;
       btn.addEventListener('click', () => openPickerExPopup(muscle));
