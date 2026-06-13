@@ -2992,6 +2992,7 @@
     <div id="exercises-list"></div>
   </div>
 
+
   <!-- Stats -->
   <div id="stats-section" class="section">
     <!-- Focus Stats Panel -->
@@ -3634,7 +3635,7 @@ save();
 // 3D
 // ═══════════════════════════════════════════════════════════
 
-const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
 renderer.setPixelRatio(devicePixelRatio);
 renderer.setSize(innerWidth, innerHeight);
 document.getElementById('canvas-container').appendChild(renderer.domElement);
@@ -3949,7 +3950,7 @@ const tabSections = {
   history: 'history-section',
   train: 'train-section',
   exercises: 'exercises-section',
-  stats: 'stats-section'
+  stats: 'stats-section',
 };
 
 function closePicker() {
@@ -4341,6 +4342,7 @@ function renderExercises() {
     }
   }
 }
+
 
 let exPopupMuscle = null;
 
@@ -7006,6 +7008,7 @@ function attachTrainNumpad(inp, pairInp, checkBtn, field) {
     <button id="rnp-done">Done</button>
   </div>
 </div>
+
 
 </body>
 </html>
