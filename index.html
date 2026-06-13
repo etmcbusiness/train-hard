@@ -3720,15 +3720,13 @@ scene.add(rimLight);
 
 // ── Add new models here ──────────────────────────────────────
 const MODELS = [
-  { name: 'Standing',      file: 'assets/models/standing.glb' },
-  { name: 'Crossing Arms', file: 'assets/models/crossing-arms.glb' },
+  { name: 'Standing', file: 'assets/models/standing.glb' },
 ];
 // ─────────────────────────────────────────────────────────────
 
 const meshMap = {};
-const clock   = new THREE.Clock();
 let activeIdx = 0;
-const modelCache = MODELS.map(() => ({ scene: null, meshMap: {}, mixer: null, clips: [] }));
+const modelCache = MODELS.map(() => ({ scene: null, meshMap: {} }));
 
 function activateMeshMap(source) {
   for (const key of Object.keys(meshMap)) delete meshMap[key];
@@ -3858,14 +3856,11 @@ function addShadow(model, radius, box) {
 }
 
 
-const toggleBtn = { textContent: '', classList: { toggle: () => {}, remove: () => {}, add: () => {} } };
-
 function loadModel(idx, onReady) {
   const entry = modelCache[idx];
   if (entry.scene) { onReady(entry); return; }
 
   const cfg = MODELS[idx];
-  toggleBtn.textContent = idx === 0 ? 'Loading…' : `Loading ${cfg.name}…`;
 
   fetch(cfg.file)
     .then(r => {
@@ -3886,19 +3881,6 @@ function loadModel(idx, onReady) {
       mdl.traverse(o => { if (o.isMesh) meshes.push(o); });
       setupModelMeshes(meshes, entry.meshMap);
 
-      if (gltf.animations.length) {
-        entry.clips = gltf.animations;
-        entry.mixer = new THREE.AnimationMixer(mdl);
-        gltf.animations.forEach(clip => {
-          const action = entry.mixer.clipAction(clip);
-          if (idx === 1) {
-            action.setLoop(THREE.LoopOnce, 1);
-            action.clampWhenFinished = true;
-          }
-          action.play();
-        });
-      }
-
       entry.scene = mdl;
       onReady(entry);
     })
@@ -3910,18 +3892,6 @@ function loadModel(idx, onReady) {
       renderFocusStats();
       checkAndRestoreSession();
     });
-}
-
-function switchToModel(idx) {
-  loadModel(idx, (entry) => {
-    modelCache.forEach((c, i) => { if (c.scene) c.scene.visible = (i === idx); });
-    activateMeshMap(entry.meshMap);
-    activeIdx = idx;
-    updateModel();
-    const next = MODELS[(idx + 1) % MODELS.length].name;
-    toggleBtn.textContent = `${MODELS[idx].name} ▸`;
-    toggleBtn.classList.toggle('on', idx !== 0);
-  });
 }
 
 loadModel(0, (entry) => {
@@ -3945,10 +3915,6 @@ loadModel(0, (entry) => {
   mdl.visible = true;
   updateModel();
 
-  // start cycle immediately before any UI code can throw
-  startCycle();
-  if (MODELS.length > 1) loadModel(1, () => {});
-
   document.getElementById('loading').style.display = 'none';
   document.getElementById('app').style.display = 'flex';
   document.getElementById('profile-name').textContent = state.userName;
@@ -3971,9 +3937,6 @@ window.addEventListener('resize', () => {
     spinGroup.rotation.y += SPIN_BASE_VEL * delta;
   }
   controls.update();
-  const mixDelta = clock.getDelta();
-  const activeMixer = modelCache[activeIdx] && modelCache[activeIdx].mixer;
-  if (activeMixer) activeMixer.update(mixDelta);
   renderer.render(scene, camera);
 })();
 
@@ -4026,62 +3989,6 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
   btn.addEventListener('click', () => goToTab(btn.dataset.tab));
 });
 
-// ── Model Auto-Cycle ─────────────────────────────────────────
-let cycleTimer = null;
-
-function showModel(idx) {
-  const entry = modelCache[idx];
-  if (!entry || !entry.scene) return false;
-  modelCache.forEach((c, i) => { if (c.scene) c.scene.visible = (i === idx); });
-  activateMeshMap(entry.meshMap);
-  activeIdx = idx;
-  updateModel();
-  return true;
-}
-
-function startCycle() {
-  clearTimeout(cycleTimer);
-  cycleTimer = setTimeout(goToAnimation, 60000);
-}
-
-function goToAnimation() {
-  clearTimeout(cycleTimer);
-  const entry = modelCache[1];
-
-  if (!entry || !entry.scene) {
-    cycleTimer = setTimeout(goToAnimation, 3000);
-    return;
-  }
-
-  // Get clip duration, minimum 17s
-  let dur = 17;
-  if (entry.clips && entry.clips.length) {
-    dur = Math.max(17, Math.max(...entry.clips.map(c => c.duration)));
-  }
-
-  // Reset animation to beginning
-  if (entry.mixer) {
-    entry.mixer.stopAllAction();
-    (entry.clips || []).forEach(clip => {
-      const a = entry.mixer.clipAction(clip);
-      a.reset();
-      a.setLoop(THREE.LoopOnce, 1);
-      a.clampWhenFinished = true;
-      a.play();
-    });
-  }
-
-  showModel(1);
-
-  cycleTimer = setTimeout(goToStanding, dur * 1000);
-}
-
-function goToStanding() {
-  clearTimeout(cycleTimer);
-  showModel(0);
-  startCycle();
-}
-// ─────────────────────────────────────────────────────────────
 
 // ═══════════════════════════════════════════════════════════
 // HISTORY
