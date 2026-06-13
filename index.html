@@ -3914,6 +3914,7 @@ loadModel(0, (entry) => {
   addShadow(mdl, radius, box);
   activateMeshMap(entry.meshMap);
   mdl.visible = true;
+  spinGroup.rotation.y = -Math.PI / 2;
   updateModel();
 
   document.getElementById('loading').style.display = 'none';
