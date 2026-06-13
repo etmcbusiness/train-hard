@@ -231,15 +231,11 @@
 
     /* ── Focus Stats Panel ── */
     #focus-stats-panel {
-      position: fixed;
-      top: calc(175px + env(safe-area-inset-top));
-      right: 10px;
-      z-index: 20;
       display: none;
-      flex-direction: column;
+      flex-direction: row;
+      flex-wrap: wrap;
       gap: 8px;
-      pointer-events: none;
-      width: 190px;
+      margin-bottom: 18px;
     }
     #focus-stats-panel.visible { display: flex; }
     .focus-card {
@@ -249,16 +245,14 @@
       padding: 9px 10px;
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
+      flex: 1 1 140px;
     }
     .focus-card-name {
-      font-size: 10px;
+      font-size: 11px;
       font-weight: 800;
       color: #4A90D9;
       margin-bottom: 5px;
       letter-spacing: 0.3px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
     }
     .focus-rep-header {
       display: grid;
@@ -1057,6 +1051,7 @@
     .stepper-inp::-webkit-inner-spin-button { -webkit-appearance: none; }
     .stepper-inp[type=number] { -moz-appearance: textfield; appearance: textfield; }
     .stepper-inp::placeholder { color: #2a3a5a; }
+    .stepper-inp.hist-hint::placeholder { color: rgba(255,255,255,0.28); }
 
     /* Check button */
     .set-check {
@@ -1455,41 +1450,7 @@
       pointer-events: all;
     }
     #profile-btns.visible { display: flex; }
-    #live-btn {
-      background: rgba(180,0,0,0.15);
-      border: 1px solid rgba(255,40,40,0.7);
-      border-radius: 12px;
-      color: #ff3333;
-      font-size: 12px;
-      font-weight: 800;
-      padding: 9px 14px;
-      cursor: pointer;
-      letter-spacing: 1.5px;
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      white-space: nowrap;
-      width: 140px;
-      height: 36px;
-      box-sizing: border-box;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 7px;
-      box-shadow: 0 0 10px rgba(255,40,40,0.35);
-    }
-    .live-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: #ff3333;
-      flex-shrink: 0;
-      animation: live-pulse 1.4s ease-in-out infinite;
-    }
-    @keyframes live-pulse {
-      0%, 100% { opacity: 1; box-shadow: 0 0 4px 1px rgba(255,40,40,0.8); }
-      50% { opacity: 0.35; box-shadow: none; }
-    }
-    #room-btn, #personalize-btn, #goals-btn, #open-override-btn, #weekly-overview-btn {
+    #room-btn, #goals-btn, #weekly-overview-btn {
       background: rgba(4,10,32,0.88);
       border: 1px solid rgba(60,110,200,0.35);
       border-radius: 12px;
@@ -3007,9 +2968,6 @@
   </div>
 
 
-  <!-- Focus Stats Panel -->
-  <div id="focus-stats-panel"></div>
-
   <!-- History -->
   <div id="history-section" class="section">
     <div class="section-header">History</div>
@@ -3036,6 +2994,8 @@
 
   <!-- Stats -->
   <div id="stats-section" class="section">
+    <!-- Focus Stats Panel -->
+    <div id="focus-stats-panel"></div>
     <div class="section-header">Stats</div>
     <div id="stats-list"></div>
 
@@ -3290,12 +3250,9 @@
 <button id="rotation-toggle">⏸ Stop Rotation</button>
 
 <div id="profile-btns">
-  <button id="live-btn"><span class="live-dot"></span>LIVE</button>
   <button id="room-btn">Training Room</button>
-  <button id="personalize-btn">Avatar</button>
   <button id="goals-btn">Personalized Goals</button>
   <button id="weekly-overview-btn">Weekly Overview</button>
-  <button id="open-override-btn">Override Sets</button>
 </div>
 
 <!-- Room Arc Overlay -->
@@ -4060,12 +4017,9 @@ function goToTab(tab) {
   document.getElementById('canvas-container').style.display = tab === 'profile' ? 'block' : 'none';
   document.getElementById('profile-btns').classList.toggle('visible', tab === 'profile');
   document.getElementById('rotation-toggle').classList.toggle('visible', tab === 'profile');
-  if (tab !== 'profile') document.getElementById('focus-stats-panel').classList.remove('visible');
-
-  if (tab === 'profile')   renderFocusStats();
   if (tab === 'history')   renderHistory();
   if (tab === 'exercises') renderExercises();
-  if (tab === 'stats')     renderStats();
+  if (tab === 'stats')     { renderFocusStats(); renderStats(); }
 }
 
 document.querySelectorAll('.nav-btn').forEach(btn => {
@@ -5704,6 +5658,15 @@ function addExerciseBlock(name, muscle, initialSets) {
   saveActiveSession();
 }
 
+function getLastSetsForExercise(name) {
+  for (let i = state.history.length - 1; i >= 0; i--) {
+    const entry = state.history[i];
+    const ex = entry.exercises.find(e => e.name === name);
+    if (ex && ex.sets && ex.sets.length) return ex.sets;
+  }
+  return null;
+}
+
 function renderSets(exIdx, block) {
   const ex = session[exIdx];
   if (!ex) return;
@@ -5711,6 +5674,7 @@ function renderSets(exIdx, block) {
   container.innerHTML = '';
   const weightInps = [];
   const repInps = [];
+  const lastSets = getLastSetsForExercise(ex.name);
   for (let i = 0; i < ex.sets.length; i++) {
     if (i > 0) {
       const marker = document.createElement('div');
@@ -5747,6 +5711,18 @@ function renderSets(exIdx, block) {
     });
     weightInps[setIdx] = wInp;
     repInps[setIdx] = rInp;
+
+    if (lastSets) {
+      const hint = lastSets[Math.min(setIdx, lastSets.length - 1)];
+      if ((ex.sets[setIdx].weight === '' || ex.sets[setIdx].weight == null) && hint && hint.weight !== '' && hint.weight != null) {
+        wInp.placeholder = String(hint.weight);
+        wInp.classList.add('hist-hint');
+      }
+      if ((ex.sets[setIdx].reps === '' || ex.sets[setIdx].reps == null) && hint && hint.reps !== '' && hint.reps != null) {
+        rInp.placeholder = String(hint.reps);
+        rInp.classList.add('hist-hint');
+      }
+    }
 
     const checkBtn = document.createElement('button');
     checkBtn.className = 'set-check';
@@ -6704,11 +6680,6 @@ document.getElementById('goals-btn').addEventListener('click', () => {
 
 document.getElementById('goals-close-btn').addEventListener('click', () => {
   document.getElementById('goals-overlay').classList.remove('open');
-});
-
-document.getElementById('open-override-btn').addEventListener('click', () => {
-  buildOverrideList();
-  document.getElementById('override-overlay').classList.add('open');
 });
 
 document.getElementById('override-close-btn').addEventListener('click', () => {
