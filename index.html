@@ -2631,21 +2631,23 @@
       letter-spacing: 0.3px;
     }
     .wo-sets {
-      font-size: 9px;
+      font-size: 8.5px;
       color: #5a7aaa;
       font-variant-numeric: tabular-nums;
       display: flex;
       align-items: center;
       flex-wrap: wrap;
-      gap: 1px;
+      gap: 0;
+      line-height: 1.4;
+      word-break: break-all;
     }
     .wo-sets-cur {
       font-weight: 800;
-      font-size: 10px;
+      font-size: 9.5px;
     }
     .wo-sets-sep {
       color: #2a3a5a;
-      margin: 0 1px;
+      margin: 0 0.5px;
     }
     .wo-sets-th {
       color: #3a5070;
@@ -7014,13 +7016,22 @@ document.getElementById('override-reset-btn').addEventListener('click', () => {
   updateModel();
 });
 
+const _MONTH_IDX = { Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11 };
+function _parseDateStr(str) {
+  // Safari fails on "Mon, Jan 6, 2025" — parse manually instead
+  if (!str) return null;
+  const m = str.match(/\w{3},\s+(\w{3})\s+(\d+),\s+(\d{4})/);
+  if (!m || _MONTH_IDX[m[1]] === undefined) return null;
+  return new Date(parseInt(m[3]), _MONTH_IDX[m[1]], parseInt(m[2]));
+}
+
 function getLastWorkedDaysAgo(muscle) {
   let latestMs = null;
   for (const w of state.history) {
     if (!w.exercises || !w.date) continue;
     if (!w.exercises.some(ex => ex.muscle === muscle && ex.sets && ex.sets.length > 0)) continue;
-    const d = new Date(w.date);
-    if (isNaN(d.getTime())) continue;
+    const d = _parseDateStr(w.date);
+    if (!d) continue;
     if (latestMs === null || d.getTime() > latestMs) latestMs = d.getTime();
   }
   if (latestMs === null) return null;
