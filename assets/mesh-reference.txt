@@ -1,0 +1,82 @@
+TRAIN HARD — 3D MODEL MESH REFERENCE
+======================================
+Model file: assets/models/standing.glb
+Engine: Three.js — meshes are accessed by their load order index
+
+Each mesh is identified by its position index in the GLB scene's mesh array.
+The INDEX_TO_PART map (index.html line ~3484) translates index → label.
+
+
+────────────────────────────────────────────────────────────────
+INDEX   LABEL           TYPE        NOTES
+────────────────────────────────────────────────────────────────
+0       Shorts          Static      White/emissive, no muscle tracking
+1       Chest           Muscle      Tracks "Chest" workout sets
+2       Hair            Dynamic     Color driven by overall hair level (see Hair Levels below)
+3       Shoulders       Muscle      Tracks "Shoulders" workout sets
+4       Mid Back        Muscle      Tracks "Mid Back" workout sets
+5       Quads           Muscle      Tracks "Quads" workout sets
+6       HairStatic      Dynamic     Base purple (#9B5FC0), blended 50% toward hair level color
+7       Boots           Static      White/emissive, no muscle tracking
+8       Lats            Muscle      Tracks "Lats" workout sets
+9       Biceps          Muscle      Tracks "Biceps" workout sets
+10      Obliques        Muscle      Tracks "Obliques" workout sets
+11      Upper Back      Muscle      Tracks "Upper Back" workout sets
+12      Forearms        Muscle      Tracks "Forearms" workout sets
+13      Neck            Muscle      Tracks "Neck" workout sets
+14      Face            Static      White/emissive, no muscle tracking
+15      Abs             Muscle      Tracks "Abs" workout sets
+16      Triceps         Muscle      Tracks "Triceps" workout sets
+17      Calves          Muscle      Tracks "Calves" workout sets
+18      Hamstrings      Muscle      Tracks "Hamstrings" workout sets
+19      Traps           Muscle      Tracks "Traps" workout sets
+────────────────────────────────────────────────────────────────
+
+
+MESH TYPES
+──────────
+Muscle      Color-coded by weekly set count vs. goal. Uses emissive property.
+            Default goal: 10 sets/week (configurable per muscle in settings).
+
+Dynamic     Hair meshes. Color reflects overall muscle progress across ALL muscles.
+
+Static      Fixed appearance. White with 0.4 emissive intensity. Not affected by workouts.
+
+
+MUSCLE LEVEL COLORS  (applied via mesh.material.emissive)
+──────────────────────────────────────────────────────────
+Level 1 — #C8C8C8  Gray      Less than 2 sets this week (no meaningful activity)
+Level 2 — #FAE89A  Yellow    2+ sets, below 1/3 of the way to goal
+Level 3 — #F5A0B0  Pink      2+ sets, past 1/3 but below 2/3 of goal
+Level 4 — #A8D4F5  Blue      2+ sets, past 2/3 of goal
+Level 5 — #E4A8E0  Purple    At or above goal (default: 10 sets)
+
+Level formula (goal G, sets S):
+  S < 2              → Level 1
+  S >= G             → Level 5
+  step = (G-2) / 3
+  S >= 2 + step*2    → Level 4
+  S >= 2 + step*1    → Level 3
+  else               → Level 2
+
+
+HAIR LEVEL COLORS  (applied via mesh.material.color)
+─────────────────────────────────────────────────────
+Hair level is determined by the MINIMUM level held by ALL 15 muscles.
+Every muscle must reach a level before hair upgrades.
+
+Hair Level 1 — #1A1A1A  Black          Default / not all muscles at L2
+Hair Level 2 — #F5C518  Yellow         All muscles Level 2+ (Super Saiyan)
+Hair Level 3 — #E8305A  Red            All muscles Level 3+ (Super Saiyan God)
+Hair Level 4 — #3A8FD4  Blue           All muscles Level 4+ (Super Saiyan Blue)
+Hair Level 5 — #C44BB0  Purple         All muscles Level 5  (Ultra Ego)
+
+HairStatic (index 6) blends: lerp(#9B5FC0, hairLevelColor, 0.5)
+  At Hair Level 1 it stays solid #9B5FC0 (no blend).
+
+
+ALL 15 TRACKED MUSCLES (in MUSCLES array order)
+────────────────────────────────────────────────
+Mid Back, Lats, Upper Back, Biceps, Triceps, Forearms,
+Quads, Hamstrings, Calves, Chest, Abs, Obliques,
+Shoulders, Neck, Traps

@@ -1690,6 +1690,141 @@
       letter-spacing: 1px;
       margin-bottom: 6px;
     }
+    /* ── Avatar Overlay ── */
+    #avatar-btn {
+      background: rgba(4,10,32,0.88);
+      border: 1px solid rgba(60,110,200,0.35);
+      border-radius: 12px;
+      color: #7aaacc;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 9px 14px;
+      cursor: pointer;
+      letter-spacing: 0.5px;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      white-space: nowrap;
+      width: 140px;
+      height: 36px;
+      box-sizing: border-box;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #avatar-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 450;
+      background: rgba(0,0,8,0.82);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: calc(env(safe-area-inset-top) + 24px) 16px calc(env(safe-area-inset-bottom) + 24px);
+      box-sizing: border-box;
+      overflow-y: auto;
+      pointer-events: all;
+    }
+    #avatar-overlay.open { display: flex; }
+    #avatar-inner {
+      background: rgba(6,14,44,0.97);
+      border: 1px solid rgba(50,100,200,0.25);
+      border-radius: 20px;
+      width: 100%;
+      max-width: 480px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    #avatar-header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px 16px 0;
+      flex-shrink: 0;
+    }
+    #avatar-title {
+      font-size: 13px;
+      font-weight: 800;
+      color: #c0d4f0;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+    #avatar-body {
+      padding: 18px 16px 20px;
+    }
+    .avatar-section-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: #3a5a8a;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 14px;
+    }
+    #avatar-hair-options,
+    #avatar-ui-options,
+    #avatar-inspiration-options {
+      display: flex;
+      gap: 10px;
+    }
+    .avatar-hair-card,
+    .avatar-inspiration-btn {
+      flex: 1;
+      height: 72px;
+      box-sizing: border-box;
+      background: rgba(4,10,32,0.88);
+      border: 1px solid rgba(60,110,200,0.35);
+      border-radius: 12px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      transition: border-color 0.18s, background 0.18s;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+    .avatar-hair-card.selected,
+    .avatar-inspiration-btn.selected {
+      border-color: rgba(120,180,255,0.7);
+      background: rgba(14,34,90,0.9);
+    }
+    .avatar-hair-swatches {
+      display: flex;
+      gap: 5px;
+    }
+    .avatar-swatch {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.12);
+    }
+    .avatar-hair-name,
+    .avatar-inspiration-btn {
+      font-size: 11px;
+      font-weight: 700;
+      color: #7aaacc;
+      text-align: center;
+      letter-spacing: 0.5px;
+    }
+    .avatar-inspiration-btn.selected {
+      color: #c0d4f0;
+    }
+    #avatar-close-btn {
+      background: rgba(4,10,32,0.7);
+      border: 1px solid rgba(60,110,200,0.35);
+      border-radius: 12px;
+      color: #7aaace;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 10px 40px;
+      cursor: pointer;
+      margin-top: 14px;
+      flex-shrink: 0;
+    }
     /* ── Override Overlay ── */
     #override-overlay {
       position: fixed;
@@ -1852,6 +1987,70 @@
       padding: 12px 36px;
       cursor: pointer;
       margin-top: 8px;
+    }
+    #custom-rooms-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+    }
+    #custom-rooms-label {
+      font-size: 10px;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      opacity: 0.45;
+    }
+    #custom-rooms-aspect {
+      font-size: 10px;
+      font-weight: 600;
+      color: #4a90d9;
+      opacity: 0.7;
+      letter-spacing: 0.3px;
+    }
+    #custom-rooms-slots {
+      display: flex;
+      gap: 8px;
+    }
+    .custom-room-slot {
+      width: 52px;
+      height: 52px;
+      border-radius: 10px;
+      border: 1px dashed rgba(74,144,217,0.4);
+      background: rgba(10,20,50,0.7) center/cover no-repeat;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      color: rgba(74,144,217,0.5);
+      transition: border-color 0.18s, box-shadow 0.18s;
+      flex-shrink: 0;
+      position: relative;
+    }
+    .custom-room-slot:not(.filled)::after { content: '+'; }
+    .custom-room-slot.active-slot {
+      border: 2px solid rgba(74,144,217,0.9);
+      box-shadow: 0 0 14px rgba(74,144,217,0.45);
+    }
+    .custom-room-slot .slot-remove {
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: rgba(20,10,40,0.95);
+      border: 1px solid rgba(200,100,100,0.5);
+      color: rgba(220,100,100,0.9);
+      font-size: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      line-height: 1;
     }
     #room-arc-sel-ring {
       position: fixed;
@@ -2333,9 +2532,32 @@
     #weekly-overview-header {
       display: flex;
       align-items: center;
-      justify-content: center;
-      padding: 10px 16px 0;
+      justify-content: space-between;
+      padding: 14px 16px 0;
       flex-shrink: 0;
+    }
+    #catchup-btn {
+      background: rgba(4,10,32,0.88);
+      border: 1px solid rgba(60,110,200,0.35);
+      border-radius: 10px;
+      color: #7aaacc;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 6px 12px;
+      cursor: pointer;
+      letter-spacing: 0.4px;
+      white-space: nowrap;
+    }
+    #catchup-btn.active {
+      border-color: #C8C8C8;
+      color: #C8C8C8;
+      box-shadow: 0 0 10px rgba(200,200,200,0.25);
+    }
+    .wo-row.catchup-highlight {
+      background: rgba(200,200,200,0.07);
+      border-radius: 10px;
+      outline: 1px solid rgba(200,200,200,0.35);
+      box-shadow: 0 0 10px rgba(200,200,200,0.12);
     }
     #weekly-overview-title {
       font-size: 12px;
@@ -2409,9 +2631,30 @@
       letter-spacing: 0.3px;
     }
     .wo-sets {
-      font-size: 10px;
+      font-size: 9px;
       color: #5a7aaa;
       font-variant-numeric: tabular-nums;
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1px;
+    }
+    .wo-sets-cur {
+      font-weight: 800;
+      font-size: 10px;
+    }
+    .wo-sets-sep {
+      color: #2a3a5a;
+      margin: 0 1px;
+    }
+    .wo-sets-th {
+      color: #3a5070;
+    }
+    .wo-last {
+      font-size: 9px;
+      color: #3a5070;
+      font-variant-numeric: tabular-nums;
+      margin-top: 1px;
     }
 
     /* ── Cable Pulley Badge ── */
@@ -3229,6 +3472,7 @@
   <button id="room-btn">Training Room</button>
   <button id="goals-btn">Personalized Goals</button>
   <button id="weekly-overview-btn">Weekly Overview</button>
+  <button id="avatar-btn">Avatar</button>
 </div>
 
 <!-- Room Arc Overlay -->
@@ -3239,8 +3483,18 @@
     <div id="room-arc-preview-img"></div>
     <div id="room-arc-preview-label"></div>
     <button id="room-close-btn">Select</button>
+    <div id="custom-rooms-section">
+      <div id="custom-rooms-label">Custom Rooms</div>
+      <div id="custom-rooms-aspect">Best results: Wpx × Hpx</div>
+      <div id="custom-rooms-slots">
+        <div class="custom-room-slot" data-slot="0"></div>
+        <div class="custom-room-slot" data-slot="1"></div>
+        <div class="custom-room-slot" data-slot="2"></div>
+      </div>
+    </div>
   </div>
 </div>
+<input type="file" id="custom-room-input" accept="image/*" style="display:none;" />
 <!-- Arc nodes in a separate fixed layer — outside the backdrop-filter element so nothing clips them -->
 <div id="room-arc-layer">
   <div id="room-arc-sel-ring"></div>
@@ -3310,11 +3564,59 @@
   </div>
 </div>
 
+<!-- Avatar Overlay -->
+<div id="avatar-overlay">
+  <div id="avatar-inner">
+    <div id="avatar-header">
+      <span id="avatar-title">Avatar</span>
+    </div>
+    <div id="avatar-body">
+      <div class="avatar-section-label">Hair Color</div>
+      <div id="avatar-hair-options">
+        <div class="avatar-hair-card" data-option="1">
+          <div class="avatar-hair-swatches">
+            <div class="avatar-swatch" style="background:#1A1A1A;"></div>
+            <div class="avatar-swatch" style="background:#9B5FC0;"></div>
+          </div>
+          <div class="avatar-hair-name">Dark &amp; Purple</div>
+        </div>
+        <div class="avatar-hair-card" data-option="2">
+          <div class="avatar-hair-swatches">
+            <div class="avatar-swatch" style="background:#1A1A1A;"></div>
+            <div class="avatar-swatch" style="background:#1A1A1A;"></div>
+          </div>
+          <div class="avatar-hair-name">All Dark</div>
+        </div>
+        <div class="avatar-hair-card" data-option="3">
+          <div class="avatar-hair-swatches">
+            <div class="avatar-swatch" style="background:#9B5FC0;"></div>
+            <div class="avatar-swatch" style="background:#9B5FC0;"></div>
+          </div>
+          <div class="avatar-hair-name">All Purple</div>
+        </div>
+      </div>
+      <div class="avatar-section-label" style="margin-top:22px;">Change UI</div>
+      <div id="avatar-ui-options">
+        <button class="avatar-inspiration-btn">Classic</button>
+        <button class="avatar-inspiration-btn">Neon</button>
+        <button class="avatar-inspiration-btn">Minimal</button>
+      </div>
+      <div class="avatar-section-label" style="margin-top:22px;">Inspiration</div>
+      <div id="avatar-inspiration-options">
+        <button class="avatar-inspiration-btn selected" id="inspiration-vegeta">Vegeta</button>
+        <button class="avatar-inspiration-btn" id="inspiration-goku">Goku</button>
+      </div>
+    </div>
+  </div>
+  <button id="avatar-close-btn">Done</button>
+</div>
+
 <!-- Weekly Overview Overlay -->
 <div id="weekly-overview-overlay">
   <div id="weekly-overview-inner">
     <div id="weekly-overview-header">
       <span id="weekly-overview-title">Weekly Overview</span>
+      <button id="catchup-btn">Catch Up</button>
     </div>
     <div id="weekly-overview-body">
       <div id="weekly-overview-list"></div>
@@ -3506,6 +3808,18 @@ const INDEX_TO_PART = {
 const LEVEL_COLORS = { 1: '#C8C8C8', 2: '#FAE89A', 3: '#F5A0B0', 4: '#A8D4F5', 5: '#E4A8E0' };
 const HAIR_COLORS  = { 1: '#1A1A1A', 2: '#F5C518', 3: '#E8305A', 4: '#3A8FD4', 5: '#C44BB0' };
 const STATIC_WHITE  = ['Boots','Shorts'];
+const HAIR_OPTIONS = {
+  1: { hair: '#1A1A1A', static: '#9B5FC0' },
+  2: { hair: '#1A1A1A', static: '#1A1A1A' },
+  3: { hair: '#9B5FC0', static: '#9B5FC0' },
+};
+function loadHairOption() {
+  const v = parseInt(localStorage.getItem('trainhard_hair_option'));
+  return HAIR_OPTIONS[v] || HAIR_OPTIONS[1];
+}
+function saveHairOption(n) {
+  localStorage.setItem('trainhard_hair_option', n);
+}
 
 // ── Custom confirm (replaces window.confirm, broken in iOS PWA) ──
 function customConfirm(message, yesText = 'Confirm', noText = 'Cancel') {
@@ -3733,7 +4047,7 @@ if (MUSCLES.includes(part)) {
     } else if (part === 'Hair') {
       if (!targetMap['Hair']) targetMap['Hair'] = [];
       targetMap['Hair'].push(mesh);
-      setAll(m => { m.map = null; m.color.set(HAIR_COLORS[1]); });
+      setAll(m => { m.map = null; m.color.set(loadHairOption().hair); });
     } else if (part === 'Boots' || part === 'Shorts' || part === 'Face') {
       setAll(m => { m.map = null; m.color.set(0xffffff); m.emissive.set(0xffffff); m.emissiveIntensity = 0.4; });
     }
@@ -3744,8 +4058,8 @@ function getGoal(muscle) {
   try {
     const goals = JSON.parse(localStorage.getItem('trainhard_goals') || '{}');
     const val = parseInt(goals[muscle]);
-    return (!isNaN(val) && val >= 5) ? val : 10;
-  } catch { return 10; }
+    return (!isNaN(val) && val >= 5) ? val : 15;
+  } catch { return 15; }
 }
 
 function loadOverrides() {
@@ -3791,19 +4105,20 @@ function updateModel() {
   }
 
   const hl = getHairLevel();
+  const hairOpt = loadHairOption();
 
   const hair = meshMap['Hair'];
   if (hair) {
-    for (const h of hair) h.material.color.set(HAIR_COLORS[hl]);
+    for (const h of hair) h.material.color.set(hl === 1 ? hairOpt.hair : HAIR_COLORS[hl]);
   }
 
   const hairStatic = meshMap['HairStatic'];
   if (hairStatic) {
     for (const h of hairStatic) {
       if (hl === 1) {
-        h.material.color.set('#9B5FC0');
+        h.material.color.set(hairOpt.static);
       } else {
-        const blended = new THREE.Color('#9B5FC0').lerp(new THREE.Color(HAIR_COLORS[hl]), 0.5);
+        const blended = new THREE.Color(hairOpt.static).lerp(new THREE.Color(HAIR_COLORS[hl]), 0.5);
         h.material.color.set(blended);
       }
     }
@@ -5121,7 +5436,6 @@ document.getElementById('finish-btn').addEventListener('click', () => {
   }
 
   for (const ex of validExercises) {
-    state.weeklySets[ex.muscle] = (state.weeklySets[ex.muscle] || 0) + ex.sets.length;
     for (const s of ex.sets) {
       const w = parseFloat(s.weight) || 0;
       const r = parseInt(s.reps) || 0;
@@ -5136,10 +5450,8 @@ document.getElementById('finish-btn').addEventListener('click', () => {
   }
 
   state.history.push(entry);
-  save();
+  recalcStats();
   clearActiveSession();
-  updateModel();
-  renderFocusStats();
 
   showWorkoutSummary(validExercises, timerSecs, prsBefore);
 });
@@ -5814,7 +6126,17 @@ document.addEventListener('touchstart', (e) => {
 // TRAINING ROOM
 // ═══════════════════════════════════════════════════════════
 
-const ROOM_COUNT = 8;
+const ROOMS = [
+  { name: 'Hyperbolic Time Chamber', file: 'assets/backgrounds/hyperbolic-time-chamber.png' },
+  { name: 'Capsule Corporation',      file: 'assets/backgrounds/hyperbolic-time-chamber.jpg' },
+  { name: 'World Tournament Arena',   file: 'assets/backgrounds/world-tournament-arena.jpg' },
+  { name: "Supreme Kai's World",      file: 'assets/backgrounds/supreme-kais-world.jpg' },
+  { name: 'Planet Namek',             file: 'assets/backgrounds/planet-namek.jpg' },
+  { name: 'Mount Paozu',              file: 'assets/backgrounds/mount-paozu.jpg' },
+  { name: 'Kame Island',              file: 'assets/backgrounds/kame-island.jpg' },
+  { name: 'Tournament Arena (Night)', file: 'assets/backgrounds/tournament-arena-night.jpg' },
+];
+const ROOM_COUNT = ROOMS.length;
 const NODE_SIZE = 96;
 // θ = 0 at 12-o'clock, increases clockwise.
 // Arc is on the LEFT: circle center is off-screen to the left.
@@ -5834,29 +6156,116 @@ let arcDragLastT = 0;
 let arcDragVelSamples = []; // {dy, dt} pairs for velocity estimation
 let arcNodes = [];
 let activeRoom = localStorage.getItem('trainhard_room') || '1';
+// Restore custom room background on load
+if (activeRoom.startsWith('c')) {
+  const _cidx = parseInt(activeRoom[1]) - 1;
+  const _csrc = (loadCustomRooms())[_cidx];
+  if (_csrc) {
+    const _curl = `url('${_csrc}')`;
+    document.getElementById('gravity-room').style.backgroundImage = _curl;
+    document.documentElement.style.backgroundImage = _curl;
+  } else {
+    activeRoom = '1';
+  }
+}
 
-const roomSrcCache = {};
 function detectRoomSrc(num) {
-  if (roomSrcCache[num]) return Promise.resolve(roomSrcCache[num]);
-  return new Promise(resolve => {
-    const img = new Image();
-    const png = `assets/backgrounds/${num}.png`;
-    const jpg = `assets/backgrounds/${num}.jpg`;
-    img.onload  = () => { roomSrcCache[num] = png; resolve(png); };
-    img.onerror = () => { roomSrcCache[num] = jpg; resolve(jpg); };
-    img.src = png;
-  });
+  const room = ROOMS[num - 1];
+  return Promise.resolve(room ? room.file : '');
+}
+
+function loadCustomRooms() {
+  try { return JSON.parse(localStorage.getItem('trainhard_custom_rooms') || 'null') || [null, null, null]; }
+  catch { return [null, null, null]; }
+}
+function saveCustomRooms(arr) {
+  localStorage.setItem('trainhard_custom_rooms', JSON.stringify(arr));
 }
 
 function setRoom(num) {
   activeRoom = String(num);
   localStorage.setItem('trainhard_room', activeRoom);
+  if (String(num).startsWith('c')) {
+    const idx = parseInt(String(num)[1]) - 1;
+    const src = loadCustomRooms()[idx];
+    if (src) {
+      const url = `url('${src}')`;
+      document.getElementById('gravity-room').style.backgroundImage = url;
+      document.documentElement.style.backgroundImage = url;
+    }
+    return;
+  }
   detectRoomSrc(num).then(src => {
     const url = `url('${src}')`;
     document.getElementById('gravity-room').style.backgroundImage = url;
     document.documentElement.style.backgroundImage = url;
   });
 }
+
+function renderCustomSlots() {
+  const customs = loadCustomRooms();
+  document.querySelectorAll('.custom-room-slot').forEach((slot, i) => {
+    const src = customs[i];
+    slot.classList.toggle('filled', !!src);
+    slot.classList.toggle('active-slot', activeRoom === `c${i + 1}`);
+    slot.style.backgroundImage = src ? `url('${src}')` : '';
+    const existing = slot.querySelector('.slot-remove');
+    if (existing) existing.remove();
+    if (src) {
+      const rm = document.createElement('div');
+      rm.className = 'slot-remove';
+      rm.textContent = '✕';
+      rm.addEventListener('click', e => {
+        e.stopPropagation();
+        const arr = loadCustomRooms();
+        arr[i] = null;
+        saveCustomRooms(arr);
+        if (activeRoom === `c${i + 1}`) setRoom(1);
+        renderCustomSlots();
+      });
+      slot.appendChild(rm);
+    }
+  });
+}
+
+let customUploadTargetSlot = -1;
+const customRoomInput = document.getElementById('custom-room-input');
+
+document.querySelectorAll('.custom-room-slot').forEach((slot, i) => {
+  slot.addEventListener('click', () => {
+    const customs = loadCustomRooms();
+    if (customs[i]) {
+      setRoom(`c${i + 1}`);
+      renderCustomSlots();
+      updateArcPreview._customSrc = customs[i];
+      const img = document.getElementById('room-arc-preview-img');
+      img.style.backgroundImage = `url('${customs[i]}')`;
+      document.getElementById('room-arc-preview-label').textContent = `Custom ${i + 1}`;
+    } else {
+      customUploadTargetSlot = i;
+      customRoomInput.value = '';
+      customRoomInput.click();
+    }
+  });
+});
+
+customRoomInput.addEventListener('change', () => {
+  const file = customRoomInput.files[0];
+  if (!file || customUploadTargetSlot < 0) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const arr = loadCustomRooms();
+    arr[customUploadTargetSlot] = e.target.result;
+    saveCustomRooms(arr);
+    setRoom(`c${customUploadTargetSlot + 1}`);
+    renderCustomSlots();
+    const img = document.getElementById('room-arc-preview-img');
+    img.style.backgroundImage = `url('${e.target.result}')`;
+    document.getElementById('room-arc-preview-label').textContent = `Custom ${customUploadTargetSlot + 1}`;
+    customUploadTargetSlot = -1;
+  };
+  reader.readAsDataURL(file);
+});
 
 function arcNodeAngle(i) {
   return (i / ROOM_COUNT) * 2 * Math.PI + arcOffset;
@@ -5876,7 +6285,7 @@ function updateArcPreview(roomNum) {
       img.style.opacity = '1';
     }, 180);
   });
-  label.textContent = `Room ${roomNum}`;
+  label.textContent = (ROOMS[roomNum - 1] && ROOMS[roomNum - 1].name) || `Room ${roomNum}`;
 }
 
 function buildArcNodes() {
@@ -5931,8 +6340,8 @@ function renderArc() {
 
   if (confirmed) {
     const selRoomNum = selIdx + 1;
-    if (String(selRoomNum) !== activeRoom) setRoom(selRoomNum);
-    updateArcPreview(selRoomNum);
+    if (!activeRoom.startsWith('c') && String(selRoomNum) !== activeRoom) setRoom(selRoomNum);
+    if (!activeRoom.startsWith('c')) updateArcPreview(selRoomNum);
   }
 
   // Update node positions (screen coordinates)
@@ -5968,10 +6377,11 @@ function startArcAnim() { arcLastTime = null; if (!arcAnimId) arcAnimId = reques
 function stopArcAnim()  { cancelAnimationFrame(arcAnimId); arcAnimId = null; arcLastTime = null; }
 
 function openRoomOverlay() {
-  const i = parseInt(activeRoom) - 1;
-  arcOffset = SEL_ANGLE - (i / ROOM_COUNT) * 2 * Math.PI;
+  const numRoom = activeRoom.startsWith('c') ? 1 : parseInt(activeRoom);
+  arcOffset = SEL_ANGLE - ((numRoom - 1) / ROOM_COUNT) * 2 * Math.PI;
   arcPreviewRoomNum = 0;
   buildArcNodes();
+  renderCustomSlots();
   document.getElementById('room-overlay').classList.add('open');
   document.getElementById('room-arc-layer').classList.add('open');
   startArcAnim();
@@ -5981,6 +6391,7 @@ const arcPanel = document.getElementById('room-arc-panel');
 
 function arcDragStart(clientY) {
   arcDragging = true;
+  if (activeRoom.startsWith('c')) activeRoom = '1';
   arcDragLastY = clientY;
   arcDragLastT = performance.now();
   arcDragVelSamples = [];
@@ -6482,7 +6893,7 @@ function buildGoalsList() {
     const lv = getLevel(muscle);
     const dotColor = LEVEL_COLORS[lv];
     const currentSets = state.weeklySets[muscle] || 0;
-    const goalVal = goals[muscle] !== undefined ? goals[muscle] : 10;
+    const goalVal = goals[muscle] !== undefined ? goals[muscle] : 15;
 
     const row = document.createElement('div');
     row.className = 'goal-row';
@@ -6562,6 +6973,32 @@ document.getElementById('goals-btn').addEventListener('click', () => {
   document.getElementById('goals-overlay').classList.add('open');
 });
 
+// ── Avatar overlay ──
+function syncAvatarSelection() {
+  const saved = parseInt(localStorage.getItem('trainhard_hair_option')) || 1;
+  document.querySelectorAll('.avatar-hair-card').forEach(card => {
+    card.classList.toggle('selected', parseInt(card.dataset.option) === saved);
+  });
+}
+
+document.getElementById('avatar-btn').addEventListener('click', () => {
+  syncAvatarSelection();
+  document.getElementById('avatar-overlay').classList.add('open');
+});
+
+document.getElementById('avatar-close-btn').addEventListener('click', () => {
+  document.getElementById('avatar-overlay').classList.remove('open');
+});
+
+document.querySelectorAll('.avatar-hair-card').forEach(card => {
+  card.addEventListener('click', () => {
+    const opt = parseInt(card.dataset.option);
+    saveHairOption(opt);
+    syncAvatarSelection();
+    updateModel();
+  });
+});
+
 document.getElementById('goals-close-btn').addEventListener('click', () => {
   document.getElementById('goals-overlay').classList.remove('open');
 });
@@ -6576,6 +7013,21 @@ document.getElementById('override-reset-btn').addEventListener('click', () => {
   buildOverrideList();
   updateModel();
 });
+
+function getLastWorkedDaysAgo(muscle) {
+  let latestMs = null;
+  for (const w of state.history) {
+    if (!w.exercises || !w.date) continue;
+    if (!w.exercises.some(ex => ex.muscle === muscle && ex.sets && ex.sets.length > 0)) continue;
+    const d = new Date(w.date);
+    if (isNaN(d.getTime())) continue;
+    if (latestMs === null || d.getTime() > latestMs) latestMs = d.getTime();
+  }
+  if (latestMs === null) return null;
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  return Math.max(0, Math.round((todayStart.getTime() - latestMs) / 86400000));
+}
 
 function buildWeeklyOverview() {
   const list = document.getElementById('weekly-overview-list');
@@ -6593,16 +7045,23 @@ function buildWeeklyOverview() {
       const sets = state.weeklySets[muscle] || 0;
       const goal = getGoal(muscle);
       const color = LEVEL_COLORS[lv];
+      const daysAgo = getLastWorkedDaysAgo(muscle);
+      const lastLabel = daysAgo === null ? 'never' : daysAgo === 0 ? 'today' : daysAgo === 1 ? 'yesterday' : `${daysAgo}d ago`;
+      const thresholds = [1, 2, 3, 4, 5].map(i => Math.round(goal * i / 5));
+      const setsLine = `<span class="wo-sets-cur" style="color:${color}">${sets}</span>`
+        + thresholds.map(t => `<span class="wo-sets-sep">/</span><span class="wo-sets-th">${t}</span>`).join('');
 
       const row = document.createElement('div');
       row.className = 'wo-row';
+      row.dataset.level = lv;
       row.innerHTML =
         `<div class="wo-row-top">` +
           `<span class="wo-dot" style="background:${color};box-shadow:0 0 6px ${color}"></span>` +
           `<span class="wo-name">${muscle}</span>` +
         `</div>` +
         `<div class="wo-level" style="color:${color}">Level ${lv}</div>` +
-        `<div class="wo-sets">${sets} / ${goal} sets</div>`;
+        `<div class="wo-sets">${setsLine}</div>` +
+        `<div class="wo-last">${lastLabel}</div>`;
       grid.appendChild(row);
     }
     list.appendChild(grid);
@@ -6611,11 +7070,24 @@ function buildWeeklyOverview() {
 
 document.getElementById('weekly-overview-btn').addEventListener('click', () => {
   buildWeeklyOverview();
+  document.getElementById('catchup-btn').classList.remove('active');
   document.getElementById('weekly-overview-overlay').classList.add('open');
 });
 
 document.getElementById('weekly-overview-close-btn').addEventListener('click', () => {
   document.getElementById('weekly-overview-overlay').classList.remove('open');
+});
+
+document.getElementById('catchup-btn').addEventListener('click', () => {
+  const btn = document.getElementById('catchup-btn');
+  const isActive = btn.classList.toggle('active');
+  const rows = document.querySelectorAll('.wo-row');
+  if (isActive) {
+    const lowestLevel = Math.min(...[...rows].map(r => parseInt(r.dataset.level)));
+    rows.forEach(r => r.classList.toggle('catchup-highlight', parseInt(r.dataset.level) === lowestLevel));
+  } else {
+    rows.forEach(r => r.classList.remove('catchup-highlight'));
+  }
 });
 
 if ('serviceWorker' in navigator) {
