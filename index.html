@@ -5291,6 +5291,8 @@ let restDuration = 90;
 let restInterval = null;
 let restSecs = 0;
 let restEndTime = 0; // absolute ms timestamp when rest expires
+let restCurrentExercise = null;
+let restCurrentDuration = 90;
 
 function fmtRestSecs(secs) {
   const m = Math.floor(secs / 60);
@@ -5304,9 +5306,16 @@ function updateRestMarkers() {
   });
 }
 
+function updateExerciseRestMarkers(exName, secs) {
+  document.querySelectorAll('.rest-marker').forEach(el => {
+    if (el.dataset.exercise === exName) el.textContent = fmtRestSecs(secs);
+  });
+}
+
 function startRestTimer(duration) {
   clearInterval(restInterval);
   const secs = duration || restDuration;
+  restCurrentDuration = secs;
   restEndTime = Date.now() + secs * 1000;
   restSecs = secs;
   updateRestDisplay();
@@ -5345,7 +5354,17 @@ document.addEventListener('visibilitychange', () => {
 document.getElementById('rest-skip-btn').addEventListener('click', stopRestTimer);
 
 document.getElementById('rest-minus-btn').addEventListener('click', () => {
-  restDuration = Math.max(15, restDuration - 15);
+  const newDur = Math.max(15, restCurrentDuration - 15);
+  restCurrentDuration = newDur;
+  if (restCurrentExercise) {
+    if (!state.exerciseMeta[restCurrentExercise]) state.exerciseMeta[restCurrentExercise] = {};
+    state.exerciseMeta[restCurrentExercise].restTime = newDur;
+    updateExerciseRestMarkers(restCurrentExercise, newDur);
+    saveActiveSession();
+  } else {
+    restDuration = newDur;
+    updateRestMarkers();
+  }
   if (restInterval) {
     restEndTime = Math.max(Date.now() + 1000, restEndTime - 15000);
     tickRestTimer();
@@ -5353,7 +5372,17 @@ document.getElementById('rest-minus-btn').addEventListener('click', () => {
 });
 
 document.getElementById('rest-plus-btn').addEventListener('click', () => {
-  restDuration = Math.min(600, restDuration + 15);
+  const newDur = Math.min(600, restCurrentDuration + 15);
+  restCurrentDuration = newDur;
+  if (restCurrentExercise) {
+    if (!state.exerciseMeta[restCurrentExercise]) state.exerciseMeta[restCurrentExercise] = {};
+    state.exerciseMeta[restCurrentExercise].restTime = newDur;
+    updateExerciseRestMarkers(restCurrentExercise, newDur);
+    saveActiveSession();
+  } else {
+    restDuration = newDur;
+    updateRestMarkers();
+  }
   if (restInterval) {
     restEndTime = restEndTime + 15000;
     tickRestTimer();
@@ -5362,9 +5391,12 @@ document.getElementById('rest-plus-btn').addEventListener('click', () => {
 
 // ── In-workout rest edit modal ──
 let restEditTemp = 90;
+let restEditExercise = null;
 
-function openRestEdit() {
-  restEditTemp = restDuration;
+function openRestEdit(exName) {
+  restEditExercise = exName || null;
+  const currentRest = (exName && state.exerciseMeta[exName] && state.exerciseMeta[exName].restTime) || restDuration;
+  restEditTemp = currentRest;
   document.getElementById('rest-edit-display').value = fmtRestSecs(restEditTemp);
   document.getElementById('rest-edit-modal').classList.add('open');
 }
@@ -5384,11 +5416,14 @@ document.getElementById('rest-edit-plus').addEventListener('click', () => {
 });
 
 document.getElementById('rest-edit-apply').addEventListener('click', () => {
-  restDuration = restEditTemp;
-  if (restInterval) {
-    const newEnd = Date.now() + restDuration * 1000;
-    if (restEndTime > newEnd) restEndTime = newEnd;
-    tickRestTimer();
+  if (restEditExercise) {
+    if (!state.exerciseMeta[restEditExercise]) state.exerciseMeta[restEditExercise] = {};
+    state.exerciseMeta[restEditExercise].restTime = restEditTemp;
+    updateExerciseRestMarkers(restEditExercise, restEditTemp);
+    saveActiveSession();
+  } else {
+    restDuration = restEditTemp;
+    updateRestMarkers();
   }
   closeRestEdit();
 });
@@ -5405,7 +5440,7 @@ document.getElementById('rest-edit-display').addEventListener('click', () => {
 });
 
 document.getElementById('train-exercises').addEventListener('click', e => {
-  if (e.target.classList.contains('rest-marker')) openRestEdit();
+  if (e.target.classList.contains('rest-marker')) openRestEdit(e.target.dataset.exercise);
 });
 
 function setTimerDisplay(t) {
@@ -6075,6 +6110,7 @@ function renderSets(exIdx, block) {
     if (i > 0) {
       const marker = document.createElement('div');
       marker.className = 'rest-marker';
+      marker.dataset.exercise = ex.name;
       const exRestSecs = (state.exerciseMeta[ex.name] || {}).restTime || restDuration;
       marker.textContent = fmtRestSecs(exRestSecs);
       container.appendChild(marker);
@@ -6130,6 +6166,7 @@ function renderSets(exIdx, block) {
       ex.sets[setIdx].done = !ex.sets[setIdx].done;
       checkBtn.classList.toggle('done', ex.sets[setIdx].done);
       if (ex.sets[setIdx].done) {
+        restCurrentExercise = ex.name;
         const exRest = (state.exerciseMeta[ex.name] || {}).restTime;
         startRestTimer(exRest || restDuration);
       }
