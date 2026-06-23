@@ -912,7 +912,32 @@
       border-radius: 18px;
       padding: 16px;
       margin-bottom: 16px;
+      transition: opacity 0.15s, border-color 0.15s;
     }
+    .train-ex.dragging { opacity: 0.25; }
+    .train-ex.drop-above { border-top: 2px solid #5aabff; }
+    .train-ex.drop-below { border-bottom: 2px solid #5aabff; }
+    .drag-ghost {
+      border-radius: 18px !important;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.7), 0 0 0 1px rgba(90,171,255,0.35) !important;
+      transform: scale(1.015);
+      transition: none !important;
+    }
+    .drag-handle {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      /* 44×44 minimum touch target for mobile */
+      min-width: 44px;
+      min-height: 44px;
+      flex-shrink: 0;
+      cursor: grab;
+      touch-action: none;
+      -webkit-touch-callout: none;
+      user-select: none;
+      opacity: 0.4;
+    }
+    .drag-handle svg { display: block; }
     .train-ex-top {
       display: flex;
       justify-content: space-between;
@@ -1422,20 +1447,43 @@
       position: fixed;
       inset: 0;
       z-index: 500;
-      background: transparent;
+      background: rgb(3,7,24);
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 14px;
+      gap: 2px;
     }
-    #load-title {
-      font-size: 34px;
+    #load-word-train {
+      font-size: 56px;
       font-weight: 900;
-      letter-spacing: 3px;
-      text-shadow: 0 2px 20px rgba(74,144,217,0.5);
+      letter-spacing: 6px;
+      color: #fff;
+      opacity: 0;
+      animation: wordReveal 0.55s cubic-bezier(0.22, 1, 0.36, 1) 0.1s forwards,
+                 wordGlow 2.8s ease-in-out 0.65s infinite alternate;
     }
-    #load-sub { font-size: 13px; color: #4a6aaa; }
+    #load-word-hard {
+      font-size: 56px;
+      font-weight: 900;
+      letter-spacing: 6px;
+      color: #4A90D9;
+      opacity: 0;
+      animation: wordReveal 0.55s cubic-bezier(0.22, 1, 0.36, 1) 0.38s forwards,
+                 wordGlowBlue 2.8s ease-in-out 0.93s infinite alternate;
+    }
+    @keyframes wordReveal {
+      from { opacity: 0; transform: translateY(32px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes wordGlow {
+      from { text-shadow: 0 2px 18px rgba(200,220,255,0.2); }
+      to   { text-shadow: 0 2px 50px rgba(200,220,255,0.7), 0 0 80px rgba(74,144,217,0.35); }
+    }
+    @keyframes wordGlowBlue {
+      from { text-shadow: 0 2px 18px rgba(74,144,217,0.3); }
+      to   { text-shadow: 0 2px 60px rgba(74,144,217,1), 0 0 100px rgba(74,144,217,0.6); }
+    }
 
     /* ── Profile Buttons (top-left) ── */
     #profile-btns {
@@ -3173,8 +3221,8 @@
 
 <!-- Loading -->
 <div id="loading">
-  <div id="load-title">TRAIN HARD</div>
-  <div id="load-sub">Loading…</div>
+  <div id="load-word-train">Train</div>
+  <div id="load-word-hard">Hard</div>
 </div>
 
 <!-- 3D Canvas -->
@@ -3359,7 +3407,7 @@
     </div>
     <div id="edit-body">
       <div class="nex-label">Name</div>
-      <input class="nex-input" id="edit-input" type="text" autocomplete="off" placeholder="Exercise name" />
+      <input class="nex-input" id="edit-input" type="text" autocomplete="off" autocapitalize="words" placeholder="Exercise name" />
 
       <div class="nex-label">Muscle Group</div>
       <div class="nex-chips" id="edit-bodypart"></div>
@@ -3409,7 +3457,7 @@
     </div>
     <div id="new-ex-body">
       <div class="nex-label">Name</div>
-      <input id="nex-name" class="nex-input" type="text" placeholder="Enter Name" autocomplete="off" />
+      <input id="nex-name" class="nex-input" type="text" placeholder="Enter Name" autocomplete="off" autocapitalize="words" />
 
       <div class="nex-label">Body Part</div>
       <div class="nex-chips" id="nex-bodypart"></div>
@@ -3848,7 +3896,7 @@ function getMondayStr() {
   const d = new Date();
   const diff = d.getDay() === 0 ? -6 : 1 - d.getDay();
   d.setDate(d.getDate() + diff);
-  return d.toISOString().slice(0, 10);
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
 
 function defaultState() {
@@ -4207,7 +4255,7 @@ loadModel(0, (entry) => {
   activateMeshMap(entry.meshMap);
   mdl.visible = true;
   spinGroup.rotation.y = -Math.PI / 2;
-  updateModel();
+  recalcStats();
 
   document.getElementById('loading').style.display = 'none';
   document.getElementById('app').style.display = 'flex';
@@ -4589,8 +4637,18 @@ document.getElementById('hist-add-ex-btn').addEventListener('click', () => {
 
 function isThisWeek(dateStr, monday) {
   try {
-    const d = new Date(dateStr);
-    const ds = d.toISOString().slice(0, 10);
+    // "Mon, Jun 22, 2026" format — new Date() fails on Safari, parse manually
+    const m = dateStr && dateStr.match(/\w{3},\s+(\w{3})\s+(\d+),\s+(\d{4})/);
+    let d;
+    if (m) {
+      const mo = { Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11 };
+      if (mo[m[1]] === undefined) return false;
+      d = new Date(parseInt(m[3]), mo[m[1]], parseInt(m[2]));
+    } else {
+      d = new Date(dateStr);
+    }
+    if (isNaN(d.getTime())) return false;
+    const ds = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
     return ds >= monday;
   } catch { return false; }
 }
@@ -5797,6 +5855,7 @@ function addExerciseBlock(name, muscle, initialSets) {
 
   const block = document.createElement('div');
   block.className = 'train-ex';
+  block.dataset.sessionIdx = idx;
 
   const pulleyCount = state.cablePulleys && state.cablePulleys[name];
   const pulleyBadge = pulleyCount ? `<span class="cable-pulley-badge">${pulleyCount}P</span>` : '';
@@ -5805,19 +5864,27 @@ function addExerciseBlock(name, muscle, initialSets) {
 
   const top = document.createElement('div');
   top.className = 'train-ex-top';
-  top.innerHTML = `
-    <div>
-      <div class="train-ex-name">${nameLabel}${pulleyBadge}</div>
-      <div class="train-ex-muscle">${muscle}</div>
-    </div>
+
+  const dragHandle = document.createElement('div');
+  dragHandle.className = 'drag-handle';
+  dragHandle.innerHTML = `<svg width="20" height="20" viewBox="0 0 20 20" fill="rgba(90,150,255,0.7)"><circle cx="4" cy="4" r="2.2"/><circle cx="10" cy="4" r="2.2"/><circle cx="16" cy="4" r="2.2"/><circle cx="4" cy="10" r="2.2"/><circle cx="10" cy="10" r="2.2"/><circle cx="16" cy="10" r="2.2"/><circle cx="4" cy="16" r="2.2"/><circle cx="10" cy="16" r="2.2"/><circle cx="16" cy="16" r="2.2"/></svg>`;
+  top.appendChild(dragHandle);
+
+  const nameDiv = document.createElement('div');
+  nameDiv.style.flex = '1';
+  nameDiv.innerHTML = `
+    <div class="train-ex-name">${nameLabel}${pulleyBadge}</div>
+    <div class="train-ex-muscle">${muscle}</div>
   `;
+  top.appendChild(nameDiv);
+
   const removeBtn = document.createElement('button');
   removeBtn.className = 'remove-ex';
   removeBtn.type = 'button';
   removeBtn.textContent = '×';
   removeBtn.addEventListener('click', () => {
     touchActivity();
-    session[idx] = null;
+    session[parseInt(block.dataset.sessionIdx)] = null;
     block.remove();
     saveActiveSession();
   });
@@ -5839,7 +5906,7 @@ function addExerciseBlock(name, muscle, initialSets) {
   addSetBtn.className = 'add-set-btn';
   addSetBtn.type = 'button';
   addSetBtn.textContent = '+ Add Set';
-  addSetBtn.addEventListener('click', () => { touchActivity(); addSet(idx, block); });
+  addSetBtn.addEventListener('click', () => { touchActivity(); addSet(parseInt(block.dataset.sessionIdx), block); });
 
   block.appendChild(top);
   block.appendChild(prEl);
@@ -5855,6 +5922,137 @@ function addExerciseBlock(name, muscle, initialSets) {
   }
   saveActiveSession();
 }
+
+// ─── Drag-to-reorder exercises (long-press on handle) ───────
+(function() {
+  const LONG_PRESS_MS = 280;
+  const CANCEL_MOVE_PX = 10;
+
+  let dragEl = null;
+  let ghostEl = null;
+  let dragOffsetY = 0;
+  let longPressTimer = null;
+  let touchStartY = 0;
+  let active = false;
+
+  const trainExContainer = document.getElementById('train-exercises');
+
+  trainExContainer.addEventListener('touchstart', e => {
+    if (!e.target.closest('.drag-handle')) return;
+    const block = e.target.closest('.train-ex');
+    if (!block) return;
+    const touch = e.touches[0];
+    touchStartY = touch.clientY;
+    longPressTimer = setTimeout(() => startDrag(block, touch.clientY), LONG_PRESS_MS);
+  }, { passive: true });
+
+  // Cancel long-press if the finger scrolls before timer fires
+  trainExContainer.addEventListener('touchmove', e => {
+    if (active) return;
+    if (Math.abs(e.touches[0].clientY - touchStartY) > CANCEL_MOVE_PX) {
+      clearTimeout(longPressTimer);
+    }
+  }, { passive: true });
+
+  document.addEventListener('touchmove', e => {
+    if (!active) return;
+    e.preventDefault();
+    const touch = e.touches[0];
+    if (ghostEl) ghostEl.style.top = (touch.clientY - dragOffsetY) + 'px';
+    updateDropIndicator(touch.clientY);
+  }, { passive: false });
+
+  document.addEventListener('touchend', () => {
+    clearTimeout(longPressTimer);
+    if (active) finishDrag();
+  });
+
+  document.addEventListener('touchcancel', () => {
+    clearTimeout(longPressTimer);
+    if (active) cancelDrag();
+  });
+
+  function startDrag(block, clientY) {
+    active = true;
+    dragEl = block;
+    const rect = block.getBoundingClientRect();
+    dragOffsetY = clientY - rect.top;
+
+    // Lock train-body scroll so rubber-band/inertia doesn't fight the drag
+    const trainBody = document.getElementById('train-body');
+    trainBody.style.overflow = 'hidden';
+
+    ghostEl = block.cloneNode(true);
+    // Zero transitions before adding to DOM to avoid flicker on first frame
+    ghostEl.style.transition = 'none';
+    ghostEl.classList.add('drag-ghost');
+    Object.assign(ghostEl.style, {
+      position: 'fixed',
+      left: rect.left + 'px',
+      top: (clientY - dragOffsetY) + 'px',
+      width: rect.width + 'px',
+      opacity: '0.9',
+      pointerEvents: 'none',
+      zIndex: '9999',
+      margin: '0',
+    });
+    document.body.appendChild(ghostEl);
+    block.classList.add('dragging');
+    if (navigator.vibrate) navigator.vibrate(25);
+  }
+
+  function updateDropIndicator(clientY) {
+    const blocks = [...trainExContainer.querySelectorAll('.train-ex:not(.dragging)')];
+    blocks.forEach(b => b.classList.remove('drop-above', 'drop-below'));
+    for (const b of blocks) {
+      const r = b.getBoundingClientRect();
+      if (clientY < r.top + r.height / 2) {
+        b.classList.add('drop-above');
+        return;
+      }
+    }
+    if (blocks.length) blocks[blocks.length - 1].classList.add('drop-below');
+  }
+
+  function unlockScroll() {
+    document.getElementById('train-body').style.overflow = '';
+  }
+
+  function finishDrag() {
+    const blocks = [...trainExContainer.querySelectorAll('.train-ex:not(.dragging)')];
+    const dropAbove = blocks.find(b => b.classList.contains('drop-above'));
+    blocks.forEach(b => b.classList.remove('drop-above', 'drop-below'));
+    dragEl.classList.remove('dragging');
+
+    if (dropAbove) trainExContainer.insertBefore(dragEl, dropAbove);
+    else trainExContainer.appendChild(dragEl);
+
+    ghostEl.remove();
+    ghostEl = null;
+    dragEl = null;
+    active = false;
+    unlockScroll();
+
+    // Sync session array and data attributes to match new DOM order
+    const allBlocks = [...trainExContainer.querySelectorAll('.train-ex')];
+    const reordered = allBlocks.map(b => session[parseInt(b.dataset.sessionIdx)]).filter(Boolean);
+    session.length = 0;
+    reordered.forEach(ex => session.push(ex));
+    allBlocks.forEach((b, i) => { b.dataset.sessionIdx = i; });
+    saveActiveSession();
+  }
+
+  function cancelDrag() {
+    [...trainExContainer.querySelectorAll('.train-ex')].forEach(b =>
+      b.classList.remove('drop-above', 'drop-below', 'dragging')
+    );
+    ghostEl?.remove();
+    ghostEl = null;
+    dragEl = null;
+    active = false;
+    unlockScroll();
+  }
+})();
 
 function getLastSetsForExercise(name) {
   for (let i = state.history.length - 1; i >= 0; i--) {
@@ -5950,7 +6148,7 @@ function renderSets(exIdx, block) {
     delBtn.addEventListener('click', () => {
       touchActivity();
       ex.sets.splice(setIdx, 1);
-      renderSets(exIdx, block);
+      renderSets(parseInt(block.dataset.sessionIdx), block);
       saveActiveSession();
     });
 
@@ -6781,6 +6979,14 @@ document.getElementById('new-ex-btn').addEventListener('click', () => openNewExM
 document.getElementById('new-ex-close').addEventListener('click', closeNewExModal);
 document.getElementById('new-ex-cancel').addEventListener('click', closeNewExModal);
 
+(function() {
+  const nexName = document.getElementById('nex-name');
+  nexName.addEventListener('keydown', e => { if (e.key === 'Enter') nexName.blur(); });
+
+  const editInput = document.getElementById('edit-input');
+  editInput.addEventListener('keydown', e => { if (e.key === 'Enter') editInput.blur(); });
+})();
+
 document.getElementById('new-ex-modal').addEventListener('click', (e) => {
   if (e.target === document.getElementById('new-ex-modal')) closeNewExModal();
 });
@@ -7298,9 +7504,7 @@ function attachTrainNumpad(inp, pairInp, checkBtn, field) {
     for (const workout of (pendingBackup.history || [])) {
       if (!localDates.has(workout.date)) state.history.push(workout);
     }
-    save();
-    recalcAllPRs();
-    recalcAllRepPRs();
+    recalcStats();
     renderExercises();
     renderHistory();
     pendingBackup = null;
@@ -7318,9 +7522,7 @@ function attachTrainNumpad(inp, pairInp, checkBtn, field) {
     state.exerciseMeta = pendingBackup.exerciseMeta || {};
     state.cablePulleys = pendingBackup.cablePulleys || {};
     state.history = pendingBackup.history || [];
-    save();
-    recalcAllPRs();
-    recalcAllRepPRs();
+    recalcStats();
     renderExercises();
     renderHistory();
     pendingBackup = null;
