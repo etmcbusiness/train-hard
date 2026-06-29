@@ -958,6 +958,7 @@
       font-weight: 500;
       letter-spacing: 0.3px;
     }
+    .train-ex-sets { font-size: 11px; margin-top: 4px; }
     .remove-ex {
       background: rgba(192,57,43,0.1);
       border: 1px solid rgba(192,57,43,0.3);
@@ -1237,6 +1238,28 @@
     .picker-muscle-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
     .picker-muscle-name { font-size: 14px; font-weight: 700; color: #fff; line-height: 1.2; }
     .picker-muscle-count { font-size: 11px; color: #4a6aaa; margin-top: 2px; }
+    #picker-catchup-btn {
+      background: rgba(4,10,32,0.88);
+      border: 1px solid rgba(60,110,200,0.35);
+      border-radius: 10px;
+      color: #7aaacc;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 6px 12px;
+      cursor: pointer;
+      letter-spacing: 0.4px;
+      white-space: nowrap;
+    }
+    #picker-catchup-btn.active {
+      border-color: #C8C8C8;
+      color: #C8C8C8;
+      box-shadow: 0 0 10px rgba(200,200,200,0.25);
+    }
+    .picker-muscle-btn.catchup-highlight {
+      background: rgba(200,200,200,0.07);
+      outline: 1px solid rgba(200,200,200,0.35);
+      box-shadow: 0 0 10px rgba(200,200,200,0.12);
+    }
 
     /* ── Picker Exercise Popup ── */
     #picker-ex-popup {
@@ -1271,9 +1294,10 @@
       border-bottom: 1px solid rgba(40,80,180,0.2);
       flex-shrink: 0;
     }
-    #picker-ex-left { display: flex; align-items: center; gap: 10px; }
-    #picker-ex-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+    #picker-ex-left { display: flex; align-items: flex-start; gap: 10px; }
+    #picker-ex-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
     #picker-ex-name { font-size: 18px; font-weight: 800; color: #fff; }
+    #picker-ex-sets { font-size: 11px; margin-top: 3px; }
     #picker-ex-close {
       background: rgba(14,28,70,0.7);
       border: 1px solid rgba(50,100,200,0.3);
@@ -1684,19 +1708,22 @@
       padding: 14px 14px 14px;
     }
     #goals-list {
-      display: flex;
-      flex-direction: column;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
     }
     .goal-row {
       display: flex;
+      flex-direction: column;
       align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      padding: 10px 4px;
-      border-bottom: 1px solid rgba(40,80,180,0.15);
+      gap: 6px;
+      padding: 10px 6px;
+      background: rgba(8,18,54,0.5);
+      border: 1px solid rgba(40,80,180,0.18);
+      border-radius: 10px;
+      text-align: center;
     }
-    .goal-row:last-child { border-bottom: none; }
-    .goal-row-labels { flex: 1; overflow: visible; }
+    .goal-row-labels { width: 100%; }
     .goal-muscle-name {
       font-size: 12px;
       font-weight: 700;
@@ -1704,6 +1731,7 @@
       line-height: 1.8;
       display: flex;
       align-items: center;
+      justify-content: center;
       gap: 6px;
     }
     .goal-muscle-dot {
@@ -1717,7 +1745,8 @@
       font-size: 10px;
       color: #4a6aaa;
       margin-top: 1px;
-      padding-left: 14px;
+      padding-left: 0;
+      text-align: center;
     }
     .goal-stepper-wrap { flex-shrink: 0; width: 110px; }
     .goal-stepper-wrap .stepper { height: 34px; width: 110px; }
@@ -2545,6 +2574,10 @@
     }
     .pulley-btn:active {
       background: rgba(74,144,217,0.2);
+      border-color: #4A90D9;
+    }
+    .pulley-btn-active {
+      background: rgba(74,144,217,0.25);
       border-color: #4A90D9;
     }
 
@@ -3377,7 +3410,7 @@
     <div id="picker-top">
       <button id="picker-close">Cancel</button>
       <div id="picker-heading">Add Exercise</div>
-      <div style="width:60px;"></div>
+      <button id="picker-catchup-btn">Catch Up</button>
     </div>
     <div id="picker-muscle-grid"></div>
   </div>
@@ -3389,7 +3422,10 @@
     <div id="picker-ex-header">
       <div id="picker-ex-left">
         <div id="picker-ex-dot"></div>
-        <div id="picker-ex-name"></div>
+        <div>
+          <div id="picker-ex-name"></div>
+          <div id="picker-ex-sets"></div>
+        </div>
       </div>
       <button id="picker-ex-close">✕</button>
     </div>
@@ -4123,15 +4159,26 @@ function getDisplaySets(muscle) {
   return (muscle in ov) ? ov[muscle] : (state.weeklySets[muscle] || 0);
 }
 
+function getLiveSessionSets(muscle) {
+  if (!livePreviewActive) return 0;
+  let count = 0;
+  for (const ex of session) {
+    if (ex && ex.muscle === muscle) {
+      count += ex.sets.filter(s => s.done).length;
+    }
+  }
+  return count;
+}
+
 function getLevel(muscle) {
-  const s = getDisplaySets(muscle);
+  const s = getDisplaySets(muscle) + getLiveSessionSets(muscle);
   const goal = getGoal(muscle);
-  if (s < 2)     return 1;
   if (s >= goal) return 5;
-  const step = (goal - 2) / 3;
-  if (s >= 2 + step * 2) return 4;
-  if (s >= 2 + step * 1) return 3;
-  return 2;
+  const step = goal / 4;
+  if (s >= Math.floor(step * 3)) return 4;
+  if (s >= Math.floor(step * 2)) return 3;
+  if (s >= Math.floor(step * 1)) return 2;
+  return 1;
 }
 
 function getHairLevel() {
@@ -4388,11 +4435,11 @@ function renderHistory() {
       </div>
       <div class="card-sub" style="margin-bottom:12px;">${fmtTime(w.duration)} &nbsp;·&nbsp; ${w.exercises.length} exercises &nbsp;·&nbsp; ${totalSets} sets</div>
       ${w.exercises.map(e => {
-        const pc = state.cablePulleys && state.cablePulleys[e.name];
-        const badge = pc ? `<span class="cable-pulley-badge">${pc}P</span>` : '';
+        const { displayName: _hdn, pulleyCount: _hpc } = parseCableExName(e.name);
+        const badge = _hpc ? `<span class="cable-pulley-badge">${_hpc}P</span>` : '';
         const cat = (state.exerciseMeta[e.name] || {}).category;
         const catTag = cat ? `<span class="hist-ex-cat">${cat}</span>` : '';
-        return `<div class="hist-ex"><span>${e.name}${badge}${catTag}</span><span style="color:#3a5a80">${e.sets.length} sets</span></div>`;
+        return `<div class="hist-ex"><span>${_hdn}${badge}${catTag}</span><span style="color:#3a5a80">${e.sets.length} sets</span></div>`;
       }).join('')}
     `;
 
@@ -4542,7 +4589,7 @@ function renderHistEditExercises() {
     block.innerHTML = `
       <div class="hedit-ex-top">
         <div>
-          <div class="hedit-ex-name">${ex.name}</div>
+          <div class="hedit-ex-name">${parseCableExName(ex.name).displayName}</div>
           <div class="hedit-ex-muscle">${ex.muscle}</div>
         </div>
         <button class="hedit-remove-ex" data-ex="${exIdx}">×</button>
@@ -4720,14 +4767,14 @@ function renderExPopup() {
   exList.forEach((ex, i) => {
     const item = document.createElement('div');
     item.className = 'ex-item';
-    const pc = state.cablePulleys && state.cablePulleys[ex];
-    const badge = pc ? ` <span class="cable-pulley-badge">${pc}P</span>` : '';
+    const { displayName: _pdn, pulleyCount: _ppc } = parseCableExName(ex);
+    const badge = _ppc ? ` <span class="cable-pulley-badge">${_ppc}P</span>` : '';
     const cat = (state.exerciseMeta[ex] || {}).category;
     const catLine = cat ? `<div class="ex-item-cat">${cat}</div>` : '';
     const lw = fmtLastWorked(getLastWorked(ex));
     const lastLine = lw ? `<div class="ex-item-last">${lw}</div>` : '';
     item.innerHTML = `
-      <div><span class="ex-item-name">${ex}${badge}</span>${catLine}${lastLine}</div>
+      <div><span class="ex-item-name">${_pdn}${badge}</span>${catLine}${lastLine}</div>
       <button class="ex-edit-btn">Edit</button>
     `;
     item.addEventListener('click', (e) => {
@@ -4748,12 +4795,12 @@ function renderExPopup() {
 function openExDetail(exName, muscle) {
   const lv = getLevel(muscle);
   const dotColor = LEVEL_COLORS[lv];
-  const pc = state.cablePulleys && state.cablePulleys[exName];
+  const { displayName: _edn, pulleyCount: pc } = parseCableExName(exName);
   const exIdx = (state.exercises[muscle] || []).indexOf(exName);
 
   document.getElementById('ex-detail-dot').style.cssText =
     `background:${dotColor};box-shadow:0 0 8px ${dotColor};`;
-  document.getElementById('ex-detail-name').textContent = exName;
+  document.getElementById('ex-detail-name').textContent = _edn;
   const _lw = fmtLastWorked(getLastWorked(exName));
   document.getElementById('ex-detail-sub').textContent =
     muscle + (pc ? ` · ${pc} pulley${pc > 1 ? 's' : ''}` : '') + (_lw ? ` · ${_lw}` : '');
@@ -4967,6 +5014,13 @@ function openEdit(muscle, idx) {
     }
   }
 
+  // For cable exercises, strip the "(NP)" pulley suffix from the display name
+  if (editCategory === 'Cable Machine') {
+    const parsed = parseCableExName(exName);
+    displayName = parsed.displayName;
+    if (parsed.pulleyCount && !editPulleys) editPulleys = parsed.pulleyCount;
+  }
+
   document.getElementById('edit-header-title').textContent = 'Edit Exercise';
   document.getElementById('edit-input').value = displayName;
   buildEditBodypartChips(muscle);
@@ -5022,8 +5076,15 @@ document.getElementById('edit-save-btn').addEventListener('click', () => {
   if (!newName) { alert('Please enter a name.'); return; }
   if (!editMuscle) { alert('Please select a muscle group.'); return; }
 
-  // Embed category into stored name for non-Cable exercises (keeps keys unique across categories)
-  const storedName = (editCategory && editCategory !== 'Cable Machine') ? `${newName} - ${editCategory}` : newName;
+  // Embed category/pulleys into stored name to keep keys unique
+  let storedName;
+  if (editCategory === 'Cable Machine') {
+    storedName = editPulleys ? `${newName} (${editPulleys}P)` : newName;
+  } else if (editCategory) {
+    storedName = `${newName} - ${editCategory}`;
+  } else {
+    storedName = newName;
+  }
 
   const { muscle: oldMuscle, idx } = editCtx;
 
@@ -5201,7 +5262,10 @@ function makeStepper(initVal, step, min, onChange) {
 
 let timerInterval = null;
 let timerSecs = 0;
+let workoutStartEpoch = 0; // ms epoch so timer stays accurate when phone is locked
+let lastSessionSave = 0;
 let trainActive = false;
+let livePreviewActive = false; // true only while workout is in progress (not after finish)
 const session = [];
 
 const ACTIVE_SESSION_KEY = 'trainhard_active_session';
@@ -5211,8 +5275,7 @@ function saveActiveSession() {
   try {
     localStorage.setItem(ACTIVE_SESSION_KEY, JSON.stringify({
       session: session.filter(Boolean),
-      timerSecs,
-      savedAt: Date.now()
+      workoutStartEpoch,
     }));
   } catch(e) {}
 }
@@ -5239,13 +5302,19 @@ function checkAndRestoreSession() {
     return;
   }
 
-  const elapsed = Math.floor((Date.now() - (data.savedAt || Date.now())) / 1000);
-  const totalSecs = (data.timerSecs || 0) + elapsed;
+  // Restore epoch; fall back to legacy savedAt+timerSecs for old saved sessions
+  if (data.workoutStartEpoch) {
+    workoutStartEpoch = data.workoutStartEpoch;
+  } else {
+    const elapsed = Math.floor((Date.now() - (data.savedAt || Date.now())) / 1000);
+    workoutStartEpoch = Date.now() - ((data.timerSecs || 0) + elapsed) * 1000;
+  }
+  timerSecs = Math.floor((Date.now() - workoutStartEpoch) / 1000);
 
   trainActive = true;
+  livePreviewActive = true;
   document.querySelector('.nav-btn[data-tab="train"]').classList.add('train-live');
   session.length = 0;
-  timerSecs = totalSecs;
   setTimerDisplay(fmtTime(timerSecs));
   const wSummary = document.getElementById('workout-summary');
   if (wSummary) wSummary.classList.remove('open');
@@ -5255,10 +5324,11 @@ function checkAndRestoreSession() {
   modal.style.display = 'flex';
   modal.classList.add('open');
   clearInterval(timerInterval);
+  lastSessionSave = Date.now();
   timerInterval = setInterval(() => {
-    timerSecs++;
+    timerSecs = Math.floor((Date.now() - workoutStartEpoch) / 1000);
     setTimerDisplay(fmtTime(timerSecs));
-    if (timerSecs % 30 === 0) saveActiveSession();
+    if (Date.now() - lastSessionSave >= 30000) { lastSessionSave = Date.now(); saveActiveSession(); }
   }, 1000);
   touchActivity();
   clearInterval(inactivityInterval);
@@ -5272,9 +5342,19 @@ function checkAndRestoreSession() {
   }
 }
 
-// Save before page unloads / app backgrounds
+// Save before page unloads / app backgrounds; re-sync timer on unlock
 window.addEventListener('pagehide', () => { if (trainActive) saveActiveSession(); });
-document.addEventListener('visibilitychange', () => { if (document.hidden && trainActive) saveActiveSession(); });
+document.addEventListener('visibilitychange', () => {
+  if (trainActive) {
+    if (document.hidden) {
+      saveActiveSession();
+    } else {
+      // Re-sync immediately after phone unlock — interval may have been throttled
+      timerSecs = Math.floor((Date.now() - workoutStartEpoch) / 1000);
+      setTimerDisplay(fmtTime(timerSecs));
+    }
+  }
+});
 
 // Restore on every page show (covers fresh load, bfcache, and tab switch back)
 window.addEventListener('pageshow', () => {
@@ -5449,6 +5529,9 @@ function setTimerDisplay(t) {
 
 function closeTrain() {
   trainActive = false;
+  livePreviewActive = false;
+  updateModel();
+  refreshPickerIfOpen();
   clearInterval(timerInterval);
   clearInterval(inactivityInterval);
   inactivityInterval = null;
@@ -5475,8 +5558,10 @@ function restoreTrain() {
 
 function openTrain() {
   trainActive = true;
+  livePreviewActive = true;
   document.querySelector('.nav-btn[data-tab="train"]').classList.add('train-live');
   session.length = 0;
+  workoutStartEpoch = Date.now();
   timerSecs = 0;
   setTimerDisplay('00:00');
   document.getElementById('workout-summary').classList.remove('open');
@@ -5486,10 +5571,11 @@ function openTrain() {
   modal.style.display = 'flex';
   modal.classList.add('open');
   clearInterval(timerInterval);
+  lastSessionSave = Date.now();
   timerInterval = setInterval(() => {
-    timerSecs++;
+    timerSecs = Math.floor((Date.now() - workoutStartEpoch) / 1000);
     setTimerDisplay(fmtTime(timerSecs));
-    if (timerSecs % 30 === 0) saveActiveSession();
+    if (Date.now() - lastSessionSave >= 30000) { lastSessionSave = Date.now(); saveActiveSession(); }
   }, 1000);
   touchActivity();
   clearInterval(inactivityInterval);
@@ -5544,8 +5630,11 @@ document.getElementById('finish-btn').addEventListener('click', () => {
     }
   }
 
+  livePreviewActive = false; // stop live preview before recalc so history-based model is authoritative
   state.history.push(entry);
   recalcStats();
+  updateAllTrainExSets();
+  refreshPickerIfOpen();
   clearActiveSession();
 
   showWorkoutSummary(validExercises, timerSecs, prsBefore);
@@ -5597,7 +5686,7 @@ function showWorkoutSummary(exercises, durationSecs, prsBefore) {
     row.className = 'summary-row';
     row.innerHTML = `
       <div class="summary-row-left">
-        <div class="summary-row-exname">${ex.name}</div>
+        <div class="summary-row-exname">${parseCableExName(ex.name).displayName}</div>
         <div class="summary-row-sets">${setCount} set${setCount !== 1 ? 's' : ''}</div>
       </div>
       <div class="summary-row-right">
@@ -5698,7 +5787,7 @@ function renderTemplatePicker() {
     item.className = 'tpl-item';
     const info = document.createElement('div');
     info.className = 'tpl-item-info';
-    info.innerHTML = `<div class="tpl-name">${tpl.name}</div><div class="tpl-exercises">${tpl.exercises.map(e => e.name).join(' · ')}</div>`;
+    info.innerHTML = `<div class="tpl-name">${tpl.name}</div><div class="tpl-exercises">${tpl.exercises.map(e => parseCableExName(e.name).displayName).join(' · ')}</div>`;
     info.addEventListener('click', () => {
       closeTemplatePicker();
       openTrainWithTemplate(tpl);
@@ -5763,10 +5852,10 @@ function addTplExerciseBlock(name, muscle) {
   const block = document.createElement('div');
   block.className = 'train-ex';
 
-  const pulleyCount = state.cablePulleys && state.cablePulleys[name];
-  const pulleyBadge = pulleyCount ? `<span class="cable-pulley-badge">${pulleyCount}P</span>` : '';
+  const { displayName: _tdn, pulleyCount: _tpc } = parseCableExName(name);
+  const pulleyBadge = _tpc ? `<span class="cable-pulley-badge">${_tpc}P</span>` : '';
   const cat = (state.exerciseMeta[name] || {}).category;
-  const nameLabel = cat ? `${name} - ${cat}` : name;
+  const nameLabel = cat ? `${_tdn} - ${cat}` : _tdn;
 
   const top = document.createElement('div');
   top.className = 'train-ex-top';
@@ -5892,10 +5981,10 @@ function addExerciseBlock(name, muscle, initialSets) {
   block.className = 'train-ex';
   block.dataset.sessionIdx = idx;
 
-  const pulleyCount = state.cablePulleys && state.cablePulleys[name];
-  const pulleyBadge = pulleyCount ? `<span class="cable-pulley-badge">${pulleyCount}P</span>` : '';
+  const { displayName: _adn, pulleyCount: _apc } = parseCableExName(name);
+  const pulleyBadge = _apc ? `<span class="cable-pulley-badge">${_apc}P</span>` : '';
   const cat = (state.exerciseMeta[name] || {}).category;
-  const nameLabel = cat ? `${name} - ${cat}` : name;
+  const nameLabel = cat ? `${_adn} - ${cat}` : _adn;
 
   const top = document.createElement('div');
   top.className = 'train-ex-top';
@@ -5910,6 +5999,7 @@ function addExerciseBlock(name, muscle, initialSets) {
   nameDiv.innerHTML = `
     <div class="train-ex-name">${nameLabel}${pulleyBadge}</div>
     <div class="train-ex-muscle">${muscle}</div>
+    <div class="train-ex-sets"></div>
   `;
   top.appendChild(nameDiv);
 
@@ -5950,6 +6040,8 @@ function addExerciseBlock(name, muscle, initialSets) {
   block.appendChild(addSetBtn);
 
   document.getElementById('train-exercises').appendChild(block);
+  const setsEl = block.querySelector('.train-ex-sets');
+  if (setsEl) setsEl.innerHTML = buildSetsLine(muscle);
   if (preSets.length > 0) {
     renderSets(idx, block);
   } else {
@@ -6163,6 +6255,8 @@ function renderSets(exIdx, block) {
     if (ex.sets[setIdx].done) checkBtn.classList.add('done');
     checkBtn.addEventListener('click', () => {
       touchActivity();
+      const reps = parseInt(ex.sets[setIdx].reps) || 0;
+      if (!ex.sets[setIdx].done && reps === 0) return;
       ex.sets[setIdx].done = !ex.sets[setIdx].done;
       checkBtn.classList.toggle('done', ex.sets[setIdx].done);
       if (ex.sets[setIdx].done) {
@@ -6171,6 +6265,9 @@ function renderSets(exIdx, block) {
         startRestTimer(exRest || restDuration);
       }
       saveActiveSession();
+      updateModel();
+      updateAllTrainExSets();
+      refreshPickerIfOpen();
     });
 
     // Attach custom numpad to weight and reps inputs
@@ -6187,6 +6284,9 @@ function renderSets(exIdx, block) {
       ex.sets.splice(setIdx, 1);
       renderSets(parseInt(block.dataset.sessionIdx), block);
       saveActiveSession();
+      updateModel();
+      updateAllTrainExSets();
+      refreshPickerIfOpen();
     });
 
     row.appendChild(numEl);
@@ -6217,9 +6317,43 @@ function openPicker() {
   document.getElementById('picker').classList.add('open');
 }
 
+function buildSetsLine(muscle) {
+  const lv = getLevel(muscle);
+  const color = LEVEL_COLORS[lv];
+  const sets = (getDisplaySets(muscle) || 0) + getLiveSessionSets(muscle);
+  const goal = getGoal(muscle);
+  const step = goal / 4;
+  const thresholds = [Math.floor(step), Math.floor(step * 2), Math.floor(step * 3), goal];
+  return `<span class="wo-sets-cur" style="color:${color}">${sets}</span>`
+    + thresholds.map(t => `<span class="wo-sets-sep">/</span><span class="wo-sets-th">${t}</span>`).join('');
+}
+
+function updateAllTrainExSets() {
+  document.querySelectorAll('.train-ex').forEach(block => {
+    const idx = parseInt(block.dataset.sessionIdx);
+    const ex = session[idx];
+    if (!ex) return;
+    const el = block.querySelector('.train-ex-sets');
+    if (el) el.innerHTML = buildSetsLine(ex.muscle);
+  });
+}
+
+function refreshPickerIfOpen() {
+  if (!document.getElementById('picker').classList.contains('open')) return;
+  const catchupWasActive = document.getElementById('picker-catchup-btn').classList.contains('active');
+  renderPickerMuscleGrid();
+  if (catchupWasActive) {
+    document.getElementById('picker-catchup-btn').classList.add('active');
+    const btns = document.querySelectorAll('.picker-muscle-btn');
+    const lowestLevel = Math.min(...[...btns].map(b => parseInt(b.dataset.level)));
+    btns.forEach(b => b.classList.toggle('catchup-highlight', parseInt(b.dataset.level) === lowestLevel));
+  }
+}
+
 function renderPickerMuscleGrid() {
   const grid = document.getElementById('picker-muscle-grid');
   grid.innerHTML = '';
+  document.getElementById('picker-catchup-btn').classList.remove('active');
   for (const group of MUSCLE_GROUPS) {
     const header = document.createElement('div');
     header.className = 'picker-group-header';
@@ -6228,15 +6362,15 @@ function renderPickerMuscleGrid() {
     for (const muscle of group.muscles) {
       const lv = getLevel(muscle);
       const dotColor = LEVEL_COLORS[lv];
-      const sets = getDisplaySets(muscle);
-      const goal = getGoal(muscle);
+      const setsLine = buildSetsLine(muscle);
       const btn = document.createElement('button');
       btn.className = 'picker-muscle-btn';
+      btn.dataset.level = lv;
       btn.innerHTML = `
         <div class="picker-muscle-dot" style="background:${dotColor};box-shadow:0 0 6px ${dotColor};"></div>
         <div>
           <div class="picker-muscle-name">${muscle}</div>
-          <div class="picker-muscle-count" style="font-size:10px;opacity:0.6;"><span style="color:${dotColor}">Lv ${lv}</span> · ${sets}/${goal}</div>
+          <div class="picker-muscle-count" style="font-size:10px;"><span style="color:${dotColor}">Lv ${lv}</span> · ${setsLine}</div>
         </div>
       `;
       btn.addEventListener('click', () => openPickerExPopup(muscle));
@@ -6254,14 +6388,16 @@ function openPickerExPopup(muscle) {
     `background:${dotColor};box-shadow:0 0 8px ${dotColor};width:12px;height:12px;border-radius:50%;flex-shrink:0;`;
   document.getElementById('picker-ex-name').textContent = muscle;
 
+  document.getElementById('picker-ex-sets').innerHTML = buildSetsLine(muscle);
+
   const list = document.getElementById('picker-ex-list');
   list.innerHTML = '';
   exList.forEach(ex => {
     const item = document.createElement('div');
     item.className = 'picker-item';
-    const pc = state.cablePulleys && state.cablePulleys[ex];
+    const { displayName: _kdn, pulleyCount: pc } = parseCableExName(ex);
     const cat = (state.exerciseMeta[ex] || {}).category;
-    const label = cat ? `${ex} - ${cat}` : ex;
+    const label = cat ? `${_kdn} - ${cat}` : _kdn;
     const mainText = pc ? `${label} <span class="cable-pulley-badge">${pc}P</span>` : label;
     const _plw = fmtLastWorked(getLastWorked(ex));
     const lastSub = _plw ? ` · ${_plw}` : '';
@@ -6274,6 +6410,17 @@ function openPickerExPopup(muscle) {
         picker._histMode = false;
         histEditData.exercises.push({ name: ex, muscle, sets: [{ weight: '', reps: '', done: true }] });
         renderHistEditExercises();
+      } else if ((state.exerciseMeta[ex] || {}).category === 'Cable Machine') {
+        // Cable exercise: always ask for pulley count so each block can be a different variant
+        const isTpl = picker._tplMode;
+        picker._tplMode = false;
+        const { displayName: baseName, pulleyCount: currentPc } = parseCableExName(ex);
+        pendingCableExercise = { name: baseName, muscle, restSecs: null, fromPicker: true, isTpl };
+        // Pre-highlight the current pulley count
+        document.querySelectorAll('.pulley-btn').forEach(btn => {
+          btn.classList.toggle('pulley-btn-active', parseInt(btn.dataset.count) === currentPc);
+        });
+        document.getElementById('pulley-modal').classList.add('open');
       } else if (picker._tplMode) {
         picker._tplMode = false;
         addTplExerciseBlock(ex, muscle);
@@ -6320,6 +6467,18 @@ document.getElementById('picker-close').addEventListener('click', () => {
   picker._histMode = false;
   picker._tplMode = false;
   picker.classList.remove('open');
+});
+
+document.getElementById('picker-catchup-btn').addEventListener('click', () => {
+  const btn = document.getElementById('picker-catchup-btn');
+  const isActive = btn.classList.toggle('active');
+  const btns = document.querySelectorAll('.picker-muscle-btn');
+  if (isActive) {
+    const lowestLevel = Math.min(...[...btns].map(b => parseInt(b.dataset.level)));
+    btns.forEach(b => b.classList.toggle('catchup-highlight', parseInt(b.dataset.level) === lowestLevel));
+  } else {
+    btns.forEach(b => b.classList.remove('catchup-highlight'));
+  }
 });
 
 document.getElementById('picker').addEventListener('click', (e) => {
@@ -6840,7 +6999,7 @@ function renderFocusStats() {
       <span class="focus-rep-date" style="color:#4A90D9;">${mx ? fmtPRDate(mx.date) : '—'}</span>
     </div>`;
 
-    card.innerHTML = `<div class="focus-card-name">${exName}</div>${rows}`;
+    card.innerHTML = `<div class="focus-card-name">${parseCableExName(exName).displayName}</div>${rows}`;
     panel.appendChild(card);
   });
   panel.classList.add('visible');
@@ -7078,21 +7237,38 @@ document.getElementById('new-ex-save').addEventListener('click', () => {
 // PULLEY MODAL
 // ═══════════════════════════════════════════════════════════
 
+// Returns {displayName, pulleyCount} from a stored exercise name.
+// New cable exercises embed pulley count as " (NP)" suffix.
+// Falls back to state.cablePulleys for legacy entries.
+function parseCableExName(storedName) {
+  const m = storedName.match(/^(.+?) \((\d+)P\)$/);
+  if (m) return { displayName: m[1], pulleyCount: parseInt(m[2]) };
+  const pc = state.cablePulleys && state.cablePulleys[storedName];
+  return { displayName: storedName, pulleyCount: pc || null };
+}
+
 function savePendingCableExercise(pulleyCount) {
   if (!pendingCableExercise) return;
   const { name, muscle, restSecs, fromPicker, isTpl } = pendingCableExercise;
-  if (!state.exercises[muscle]) state.exercises[muscle] = [];
-  state.exercises[muscle].push(name);
-  if (pulleyCount) state.cablePulleys[name] = pulleyCount;
-  if (!state.exerciseMeta[name]) state.exerciseMeta[name] = {};
-  state.exerciseMeta[name].category = 'Cable Machine';
-  if (restSecs != null) state.exerciseMeta[name].restTime = restSecs;
-  save();
-  renderExercises();
   pendingCableExercise = null;
+  document.querySelectorAll('.pulley-btn').forEach(b => b.classList.remove('pulley-btn-active'));
+
+  const storedName = pulleyCount ? `${name} (${pulleyCount}P)` : name;
+  if (!state.exercises[muscle]) state.exercises[muscle] = [];
+
+  // Only add to library if this variant doesn't already exist
+  if (!state.exercises[muscle].includes(storedName)) {
+    state.exercises[muscle].push(storedName);
+    if (pulleyCount) state.cablePulleys[storedName] = pulleyCount;
+    if (!state.exerciseMeta[storedName]) state.exerciseMeta[storedName] = {};
+    state.exerciseMeta[storedName].category = 'Cable Machine';
+    if (restSecs != null) state.exerciseMeta[storedName].restTime = restSecs;
+    save();
+    renderExercises();
+  }
 
   if (fromPicker) {
-    if (isTpl) { addTplExerciseBlock(name, muscle); } else { addExerciseBlock(name, muscle); }
+    if (isTpl) { addTplExerciseBlock(storedName, muscle); } else { addExerciseBlock(storedName, muscle); }
   }
 }
 
@@ -7104,6 +7280,7 @@ document.querySelectorAll('.pulley-btn').forEach(btn => {
 });
 
 document.getElementById('pulley-close').addEventListener('click', () => {
+  document.querySelectorAll('.pulley-btn').forEach(b => b.classList.remove('pulley-btn-active'));
   savePendingCableExercise(null);
   document.getElementById('pulley-modal').classList.remove('open');
 });
@@ -7134,39 +7311,46 @@ function buildGoalsList() {
   const list = document.getElementById('goals-list');
   list.innerHTML = '';
 
-  for (const muscle of MUSCLES) {
-    const lv = getLevel(muscle);
-    const dotColor = LEVEL_COLORS[lv];
-    const currentSets = state.weeklySets[muscle] || 0;
-    const goalVal = goals[muscle] !== undefined ? goals[muscle] : 15;
+  for (const muscleGroup of MUSCLE_GROUPS) {
+    const header = document.createElement('div');
+    header.className = 'picker-group-header';
+    header.textContent = muscleGroup.label;
+    list.appendChild(header);
 
-    const row = document.createElement('div');
-    row.className = 'goal-row';
+    for (const muscle of muscleGroup.muscles) {
+      const lv = getLevel(muscle);
+      const dotColor = LEVEL_COLORS[lv];
+      const currentSets = state.weeklySets[muscle] || 0;
+      const goalVal = goals[muscle] !== undefined ? goals[muscle] : 15;
 
-    row.innerHTML = `
-      <div class="goal-row-labels">
-        <div class="goal-muscle-name">
-          <span class="goal-muscle-dot" style="background:${dotColor};box-shadow:0 0 5px ${dotColor};"></span>${muscle}
+      const row = document.createElement('div');
+      row.className = 'goal-row';
+
+      row.innerHTML = `
+        <div class="goal-row-labels">
+          <div class="goal-muscle-name">
+            <span class="goal-muscle-dot" style="background:${dotColor};box-shadow:0 0 5px ${dotColor};"></span>${muscle}
+          </div>
+          <div class="goal-muscle-sub">${currentSets} sets this week &middot; goal: <span id="goal-label-${muscle.replace(/\s/g,'_')}">${goalVal}</span></div>
         </div>
-        <div class="goal-muscle-sub">${currentSets} sets this week &middot; goal: <span id="goal-label-${muscle.replace(/\s/g,'_')}">${goalVal}</span></div>
-      </div>
-    `;
+      `;
 
-    const stepperWrap = document.createElement('div');
-    stepperWrap.className = 'goal-stepper-wrap';
-    const { wrap, inp } = makeStepper(goalVal, 1, 5, val => {
-      const g = loadGoals();
-      g[muscle] = Math.max(5, parseInt(val) || 5);
-      saveGoals(g);
-      inp.value = g[muscle];
-      const lbl = document.getElementById(`goal-label-${muscle.replace(/\s/g,'_')}`);
-      if (lbl) lbl.textContent = g[muscle];
-      updateModel();
-    });
-    stepperWrap.appendChild(wrap);
+      const stepperWrap = document.createElement('div');
+      stepperWrap.className = 'goal-stepper-wrap';
+      const { wrap, inp } = makeStepper(goalVal, 1, 5, val => {
+        const g = loadGoals();
+        g[muscle] = Math.max(5, parseInt(val) || 5);
+        saveGoals(g);
+        inp.value = g[muscle];
+        const lbl = document.getElementById(`goal-label-${muscle.replace(/\s/g,'_')}`);
+        if (lbl) lbl.textContent = g[muscle];
+        updateModel();
+      });
+      stepperWrap.appendChild(wrap);
 
-    row.appendChild(stepperWrap);
-    list.appendChild(row);
+      row.appendChild(stepperWrap);
+      list.appendChild(row);
+    }
   }
 }
 
@@ -7301,7 +7485,8 @@ function buildWeeklyOverview() {
       const color = LEVEL_COLORS[lv];
       const daysAgo = getLastWorkedDaysAgo(muscle);
       const lastLabel = daysAgo === null ? 'never' : daysAgo === 0 ? 'today' : daysAgo === 1 ? 'yesterday' : `${daysAgo}d ago`;
-      const thresholds = [1, 2, 3, 4, 5].map(i => Math.round(goal * i / 5));
+      const step = goal / 4;
+      const thresholds = [Math.floor(step), Math.floor(step * 2), Math.floor(step * 3), goal];
       const setsLine = `<span class="wo-sets-cur" style="color:${color}">${sets}</span>`
         + thresholds.map(t => `<span class="wo-sets-sep">/</span><span class="wo-sets-th">${t}</span>`).join('');
 
