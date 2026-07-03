@@ -6363,13 +6363,14 @@ function renderPickerMuscleGrid() {
       const lv = getLevel(muscle);
       const dotColor = LEVEL_COLORS[lv];
       const setsLine = buildSetsLine(muscle);
+      const lastLabel = fmtMuscleLastTrained(getMuscleLastTrainedInfo(muscle));
       const btn = document.createElement('button');
       btn.className = 'picker-muscle-btn';
       btn.dataset.level = lv;
       btn.innerHTML = `
         <div class="picker-muscle-dot" style="background:${dotColor};box-shadow:0 0 6px ${dotColor};"></div>
         <div>
-          <div class="picker-muscle-name">${muscle}</div>
+          <div class="picker-muscle-name">${muscle}${lastLabel ? `<span style="font-size:9px;color:#4a6aaa;opacity:0.7;font-weight:400;margin-left:5px;">${lastLabel}</span>` : ''}</div>
           <div class="picker-muscle-count" style="font-size:10px;"><span style="color:${dotColor}">Lv ${lv}</span> · ${setsLine}</div>
         </div>
       `;
@@ -7450,6 +7451,26 @@ function _parseDateStr(str) {
   const m = str.match(/\w{3},\s+(\w{3})\s+(\d+),\s+(\d{4})/);
   if (!m || _MONTH_IDX[m[1]] === undefined) return null;
   return new Date(parseInt(m[3]), _MONTH_IDX[m[1]], parseInt(m[2]));
+}
+
+function getMuscleLastTrainedInfo(muscle) {
+  let latestDay = null;
+  for (const w of state.history) {
+    if (!w.exercises || !w.date) continue;
+    if (!w.exercises.some(ex => ex.muscle === muscle && ex.sets && ex.sets.length > 0)) continue;
+    const d = _parseDateStr(w.date);
+    if (!d) continue;
+    if (latestDay === null || d.getTime() > latestDay.getTime()) latestDay = d;
+  }
+  if (!latestDay) return null;
+  const hoursAgo = Math.floor((Date.now() - latestDay.getTime()) / 3600000);
+  return { hoursAgo, date: latestDay };
+}
+
+function fmtMuscleLastTrained(info) {
+  if (!info) return null;
+  if (info.hoursAgo < 72) return `${info.hoursAgo}h ago`;
+  return `${Math.floor(info.hoursAgo / 24)}d ago`;
 }
 
 function getLastWorkedDaysAgo(muscle) {
