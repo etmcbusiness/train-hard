@@ -1522,7 +1522,7 @@
       pointer-events: all;
     }
     #profile-btns.visible { display: flex; }
-    #room-btn, #goals-btn, #weekly-overview-btn {
+    #room-btn, #goals-btn, #weekly-overview-btn, #testing-btn, #exit-testing-btn {
       background: rgba(4,10,32,0.88);
       border: 1px solid rgba(60,110,200,0.35);
       border-radius: 12px;
@@ -1842,7 +1842,8 @@
     }
     #avatar-hair-options,
     #avatar-ui-options,
-    #avatar-inspiration-options {
+    #avatar-inspiration-options,
+    #avatar-rotation-options {
       display: flex;
       gap: 10px;
     }
@@ -3559,6 +3560,8 @@
   <button id="goals-btn">Personalized Goals</button>
   <button id="weekly-overview-btn">Weekly Overview</button>
   <button id="avatar-btn">Avatar</button>
+  <button id="testing-btn">Testing</button>
+  <button id="exit-testing-btn" style="display:none;">Exit Testing</button>
 </div>
 
 <!-- Room Arc Overlay -->
@@ -3691,6 +3694,10 @@
       <div id="avatar-inspiration-options">
         <button class="avatar-inspiration-btn selected" id="inspiration-vegeta">Vegeta</button>
         <button class="avatar-inspiration-btn" id="inspiration-goku">Goku</button>
+      </div>
+      <div class="avatar-section-label" style="margin-top:22px;">Rotation</div>
+      <div id="avatar-rotation-options">
+        <button class="avatar-inspiration-btn" id="rotation-toggle-btn">Auto-Rotate: On</button>
       </div>
     </div>
   </div>
@@ -3856,6 +3863,8 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { SHELL, SHELL_REFERENCE_HEIGHT, syncHuggingAuraUniforms, setModelGroundY, setTargetHeight } from './Aura/toon-outline-code.js';
+import { shellUniforms, shellMaterial, shellMeshes } from './Aura/toon-outline-apply.js';
 
 
 // ═══════════════════════════════════════════════════════════
@@ -4010,7 +4019,7 @@ save();
 // 3D
 // ═══════════════════════════════════════════════════════════
 
-const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true, stencil: true });
 renderer.setPixelRatio(devicePixelRatio);
 renderer.setSize(innerWidth, innerHeight);
 document.getElementById('canvas-container').appendChild(renderer.domElement);
@@ -4033,6 +4042,50 @@ controls.autoRotate = false;
 controls.rotateSpeed = 2.5;
 controls.minPolarAngle = Math.PI / 2;
 controls.maxPolarAngle = Math.PI / 2;
+
+let autoRotateEnabled = localStorage.getItem('trainhard_autorotate') !== 'off';
+
+// ── Core Aura (the toon-outline hugging shell) — on/off + level-driven presets ──
+// One preset JSON per character level (2-5), same trigger as the hair Super
+// Saiyan colors (getHairLevel()) — no preset at level 1 (mirrors the hair
+// system having no badge at level 1: the aura is simply off).  Files live in
+// assets/aura-presets/ and only their "SHELL" key is applied (Object.assign
+// onto the live SHELL config); the rest of each file (MODEL/MODEL_GLOW/
+// auraAnchor/CONFIG) is from the original standalone editor's preset export
+// and isn't used here.
+const CORE_AURA_LEVEL_FILES = {
+  2: 'Core Aura - Level 2.json',
+  3: 'Core Aura - Level 3.json',
+  4: 'Core Aura - Level 4.json',
+  5: 'Core Aura - Level 5.json',
+};
+const coreAuraPresetCache = {};
+let coreAuraLastLevel = null;
+
+async function loadCoreAuraPreset(level) {
+  if (coreAuraPresetCache[level]) return coreAuraPresetCache[level];
+  const file = CORE_AURA_LEVEL_FILES[level];
+  if (!file) return null;
+  try {
+    const data = await fetch('assets/aura-presets/' + file).then(r => r.json());
+    coreAuraPresetCache[level] = data;
+    return data;
+  } catch (e) {
+    console.error('Core Aura preset load failed:', file, e);
+    return null;
+  }
+}
+
+// Called from updateModel() whenever the character's overall level might have
+// changed — re-applies the matching preset only when the level actually changes.
+async function updateCoreAuraForLevel(level) {
+  SHELL.enabled = level >= 2;
+  if (level === coreAuraLastLevel) return;
+  coreAuraLastLevel = level;
+  if (level < 2) return;
+  const preset = await loadCoreAuraPreset(level);
+  if (preset && preset.SHELL) Object.assign(SHELL, preset.SHELL);
+}
 
 // ── Spin / fidget-spinner momentum ───────────────────────────
 // We rotate spinGroup.rotation.y directly — no conflict with OrbitControls.
@@ -4170,7 +4223,14 @@ function getLiveSessionSets(muscle) {
   return count;
 }
 
+// Profile tab "Testing" mode: when set (1-5), every muscle reports this level
+// instead of its real computed one, so the whole level-based visual system
+// (muscle glow, hair colors/badges, Core Aura) can be previewed without
+// touching real workout history. null = normal, real behavior.
+let testingLevelOverride = null;
+
 function getLevel(muscle) {
+  if (testingLevelOverride != null) return testingLevelOverride;
   const s = getDisplaySets(muscle) + getLiveSessionSets(muscle);
   const goal = getGoal(muscle);
   if (s >= goal) return 5;
@@ -4203,6 +4263,7 @@ function updateModel() {
 
   const hl = getHairLevel();
   const hairOpt = loadHairOption();
+  updateCoreAuraForLevel(hl);
 
   const hair = meshMap['Hair'];
   if (hair) {
@@ -4225,23 +4286,11 @@ function updateModel() {
   document.getElementById('hair-badge').textContent = badges[hl] || '';
 }
 
-function addShadow(model, radius, box) {
-  const shadowCanvas = document.createElement('canvas');
-  shadowCanvas.width = shadowCanvas.height = 256;
-  const ctx2d = shadowCanvas.getContext('2d');
-  const grad = ctx2d.createRadialGradient(128, 128, 0, 128, 128, 128);
-  grad.addColorStop(0,   'rgba(0,0,0,0.55)');
-  grad.addColorStop(0.5, 'rgba(0,0,0,0.25)');
-  grad.addColorStop(1,   'rgba(0,0,0,0)');
-  ctx2d.fillStyle = grad;
-  ctx2d.fillRect(0, 0, 256, 256);
-  const shadowTex = new THREE.CanvasTexture(shadowCanvas);
-  const shadowMat = new THREE.MeshBasicMaterial({ map: shadowTex, transparent: true, depthWrite: false });
-  const shadowMesh = new THREE.Mesh(new THREE.PlaneGeometry(radius * 0.75, radius * 0.75), shadowMat);
-  shadowMesh.rotation.x = -Math.PI / 2;
-  shadowMesh.position.y = box.min.y;
-  model.add(shadowMesh);
-}
+
+// TOON OUTLINE (mesh-hugging inverted-hull aura shell) — SHELL config, shaders,
+// and the buildHuggingAuraUniforms/syncHuggingAuraUniforms/shellMaterial/
+// shellMeshes objects now live in Aura/toon-outline-code.js and
+// Aura/toon-outline-apply.js (imported at the top of this script block).
 
 
 function loadModel(idx, onReady) {
@@ -4260,6 +4309,17 @@ function loadModel(idx, onReady) {
     ))
     .then(gltf => {
       const mdl = gltf.scene;
+      // Normalize to the same 6.6-scene-unit height every hugging-aura layer
+      // (Toon Outline shell, and any future Aura/ layers) was tuned against —
+      // see Aura/README-INTEGRATION.md's "Scale mismatch" section. This model's
+      // native GLB scale is much smaller (~0.98 units tall), and rescaling the
+      // model itself (rather than hand-rescaling each layer's amplitude/frequency
+      // fields) means every tuned constant works completely unchanged, on any
+      // model's native scale.
+      const rawBox = new THREE.Box3().setFromObject(mdl);
+      const rawHeight = rawBox.max.y - rawBox.min.y;
+      const autoScale = rawHeight > 0 ? SHELL_REFERENCE_HEIGHT / rawHeight : 1;
+      mdl.scale.setScalar(autoScale);
       const center = new THREE.Box3().setFromObject(mdl).getCenter(new THREE.Vector3());
       mdl.position.sub(center);
       mdl.visible = false;
@@ -4269,6 +4329,21 @@ function loadModel(idx, onReady) {
       mdl.traverse(o => { if (o.isMesh) meshes.push(o); });
       setupModelMeshes(meshes, entry.meshMap);
 
+      meshes.forEach(obj => {
+        if (!obj.geometry || !obj.geometry.attributes.position) return;
+        obj.material.stencilWrite = true;
+        obj.material.stencilRef = 1;
+        obj.material.stencilFunc = THREE.AlwaysStencilFunc;
+        obj.material.stencilZPass = THREE.ReplaceStencilOp;
+        obj.material.needsUpdate = true;
+        if (!obj.geometry.attributes.normal) obj.geometry.computeVertexNormals();
+
+        const shell = new THREE.Mesh(obj.geometry, shellMaterial);
+        shell.visible = SHELL.enabled;
+        obj.add(shell);
+        shellMeshes.push(shell);
+      });
+
       entry.scene = mdl;
       onReady(entry);
     })
@@ -4276,7 +4351,8 @@ function loadModel(idx, onReady) {
       console.error('Model load failed:', e);
       document.getElementById('loading').style.display = 'none';
       document.getElementById('app').style.display = 'flex';
-      document.getElementById('profile-name').textContent = state.userName;
+      const profileNameEl1 = document.getElementById('profile-name');
+      if (profileNameEl1) profileNameEl1.textContent = state.userName;
       renderFocusStats();
       checkAndRestoreSession();
     });
@@ -4286,6 +4362,12 @@ loadModel(0, (entry) => {
   const mdl = entry.scene;
   const box    = new THREE.Box3().setFromObject(mdl);
   const radius = box.getBoundingSphere(new THREE.Sphere()).radius;
+  setModelGroundY(box.min.y);
+  setTargetHeight(box.max.y - box.min.y);
+  // No per-field SHELL rescaling needed here: mdl was already normalized to
+  // SHELL_REFERENCE_HEIGHT in loadModel's gltf.then callback, so the height
+  // is ~6.6 and every tuned SHELL constant applies unchanged.
+
   const fovRad = THREE.MathUtils.degToRad(camera.fov);
   const dist   = (radius / Math.sin(fovRad / 2)) * 1.37;
 
@@ -4298,7 +4380,6 @@ loadModel(0, (entry) => {
   controls.maxDistance = dist * 2.5;
   controls.update();
 
-  addShadow(mdl, radius, box);
   activateMeshMap(entry.meshMap);
   mdl.visible = true;
   spinGroup.rotation.y = -Math.PI / 2;
@@ -4306,7 +4387,8 @@ loadModel(0, (entry) => {
 
   document.getElementById('loading').style.display = 'none';
   document.getElementById('app').style.display = 'flex';
-  document.getElementById('profile-name').textContent = state.userName;
+  const profileNameEl2 = document.getElementById('profile-name');
+  if (profileNameEl2) profileNameEl2.textContent = state.userName;
   renderFocusStats();
   checkAndRestoreSession();
 });
@@ -4322,10 +4404,12 @@ window.addEventListener('resize', () => {
   const now   = performance.now();
   const delta = Math.min((now - _spinFrameTime) / 1000, 0.1);
   _spinFrameTime = now;
-  if (!spinTouching) {
+  if (!spinTouching && autoRotateEnabled) {
     spinGroup.rotation.y += SPIN_BASE_VEL * delta;
   }
   controls.update();
+  syncHuggingAuraUniforms(SHELL, shellUniforms, now / 1000);
+  shellMeshes.forEach(s => { s.visible = SHELL.enabled; });
   renderer.render(scene, camera);
 })();
 
@@ -7428,6 +7512,34 @@ document.querySelectorAll('.avatar-hair-card').forEach(card => {
     updateModel();
   });
 });
+
+document.getElementById('testing-btn').addEventListener('click', () => {
+  testingLevelOverride = testingLevelOverride == null ? 1 : (testingLevelOverride % 5) + 1;
+  document.getElementById('testing-btn').textContent = 'Testing: Level ' + testingLevelOverride;
+  document.getElementById('exit-testing-btn').style.display = '';
+  updateModel();
+});
+
+document.getElementById('exit-testing-btn').addEventListener('click', () => {
+  testingLevelOverride = null;
+  document.getElementById('testing-btn').textContent = 'Testing';
+  document.getElementById('exit-testing-btn').style.display = 'none';
+  updateModel();
+});
+
+function syncRotationToggle() {
+  const btn = document.getElementById('rotation-toggle-btn');
+  btn.textContent = 'Auto-Rotate: ' + (autoRotateEnabled ? 'On' : 'Off');
+  btn.classList.toggle('selected', autoRotateEnabled);
+}
+syncRotationToggle();
+
+document.getElementById('rotation-toggle-btn').addEventListener('click', () => {
+  autoRotateEnabled = !autoRotateEnabled;
+  localStorage.setItem('trainhard_autorotate', autoRotateEnabled ? 'on' : 'off');
+  syncRotationToggle();
+});
+
 
 document.getElementById('goals-close-btn').addEventListener('click', () => {
   document.getElementById('goals-overlay').classList.remove('open');
