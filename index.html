@@ -6331,8 +6331,8 @@ function renderSets(exIdx, block) {
     const prevEl = document.createElement('div');
     prevEl.className = 'set-previous';
     const prevSet = lastSets && setIdx < lastSets.length ? lastSets[setIdx] : null;
-    prevEl.textContent = (prevSet && (prevSet.weight !== '' && prevSet.weight != null) && (prevSet.reps !== '' && prevSet.reps != null))
-      ? `${prevSet.weight}lbs x ${prevSet.reps}`
+    prevEl.textContent = (prevSet && prevSet.reps !== '' && prevSet.reps != null)
+      ? `${(prevSet.weight !== '' && prevSet.weight != null) ? prevSet.weight : 0}lbs x ${prevSet.reps}`
       : '—';
 
     const { wrap: wWrap, inp: wInp } = makeStepper(ex.sets[setIdx].weight, 5, 0, val => {
