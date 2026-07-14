@@ -24,6 +24,20 @@
       overflow: hidden;
     }
 
+    /* Force portrait: rotate the whole page back upright when the device is turned sideways */
+    @media screen and (orientation: landscape) {
+      html {
+        width: 100vh;
+        height: 100vw;
+        transform: rotate(-90deg);
+        transform-origin: left top;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        overflow-x: hidden;
+      }
+    }
+
     body {
       background: transparent;
       color: #fff;
@@ -973,9 +987,9 @@
     /* Set column headers */
     .set-cols {
       display: grid;
-      grid-template-columns: 26px 1fr 1fr 46px 28px;
-      gap: 8px;
-      font-size: 10px;
+      grid-template-columns: 12px 62px 1fr 1fr 48px 14px;
+      gap: 2px;
+      font-size: 9px;
       font-weight: 700;
       color: #3a5a8a;
       margin-bottom: 8px;
@@ -987,10 +1001,23 @@
     /* Set row */
     .set-row {
       display: grid;
-      grid-template-columns: 26px 1fr 1fr 46px 28px;
-      gap: 8px;
+      grid-template-columns: 12px 62px 1fr 1fr 48px 14px;
+      gap: 2px;
       align-items: center;
       margin-bottom: 8px;
+    }
+
+    .set-row .stepper-btn { width: 28px; }
+    .set-row .stepper-inp { font-size: 15px; }
+    .set-row .set-check { width: 48px; height: 50px; }
+    .set-row .set-delete { width: 14px; height: 14px; font-size: 11px; }
+
+    .set-previous {
+      font-size: 10.5px;
+      color: #4a6a9a;
+      text-align: center;
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
     }
 
     .set-delete {
@@ -6080,11 +6107,13 @@ function addExerciseBlock(name, muscle, initialSets) {
 
   const nameDiv = document.createElement('div');
   nameDiv.style.flex = '1';
+  nameDiv.style.cursor = 'pointer';
   nameDiv.innerHTML = `
     <div class="train-ex-name">${nameLabel}${pulleyBadge}</div>
     <div class="train-ex-muscle">${muscle}</div>
     <div class="train-ex-sets"></div>
   `;
+  nameDiv.addEventListener('click', () => openExDetail(name, muscle));
   top.appendChild(nameDiv);
 
   const removeBtn = document.createElement('button');
@@ -6106,7 +6135,7 @@ function addExerciseBlock(name, muscle, initialSets) {
 
   const cols = document.createElement('div');
   cols.className = 'set-cols';
-  cols.innerHTML = '<span>Set</span><span>lbs</span><span>Reps</span><span></span><span></span>';
+  cols.innerHTML = '<span>Set</span><span>Previous</span><span>lbs</span><span>Reps</span><span></span><span></span>';
 
   const setsContainer = document.createElement('div');
   setsContainer.className = 'sets-container';
@@ -6299,6 +6328,13 @@ function renderSets(exIdx, block) {
     numEl.className = 'set-num';
     numEl.textContent = setIdx + 1;
 
+    const prevEl = document.createElement('div');
+    prevEl.className = 'set-previous';
+    const prevSet = lastSets && setIdx < lastSets.length ? lastSets[setIdx] : null;
+    prevEl.textContent = (prevSet && (prevSet.weight !== '' && prevSet.weight != null) && (prevSet.reps !== '' && prevSet.reps != null))
+      ? `${prevSet.weight}lbs x ${prevSet.reps}`
+      : '—';
+
     const { wrap: wWrap, inp: wInp } = makeStepper(ex.sets[setIdx].weight, 5, 0, val => {
       touchActivity();
       ex.sets[setIdx].weight = val;
@@ -6374,6 +6410,7 @@ function renderSets(exIdx, block) {
     });
 
     row.appendChild(numEl);
+    row.appendChild(prevEl);
     row.appendChild(wWrap);
     row.appendChild(rWrap);
     row.appendChild(checkBtn);
@@ -6495,17 +6532,6 @@ function openPickerExPopup(muscle) {
         picker._histMode = false;
         histEditData.exercises.push({ name: ex, muscle, sets: [{ weight: '', reps: '', done: true }] });
         renderHistEditExercises();
-      } else if ((state.exerciseMeta[ex] || {}).category === 'Cable Machine') {
-        // Cable exercise: always ask for pulley count so each block can be a different variant
-        const isTpl = picker._tplMode;
-        picker._tplMode = false;
-        const { displayName: baseName, pulleyCount: currentPc } = parseCableExName(ex);
-        pendingCableExercise = { name: baseName, muscle, restSecs: null, fromPicker: true, isTpl };
-        // Pre-highlight the current pulley count
-        document.querySelectorAll('.pulley-btn').forEach(btn => {
-          btn.classList.toggle('pulley-btn-active', parseInt(btn.dataset.count) === currentPc);
-        });
-        document.getElementById('pulley-modal').classList.add('open');
       } else if (picker._tplMode) {
         picker._tplMode = false;
         addTplExerciseBlock(ex, muscle);
