@@ -24,8 +24,10 @@
       overflow: hidden;
     }
 
-    /* Force portrait: rotate the whole page back upright when the device is turned sideways */
-    @media screen and (orientation: landscape) {
+    /* Force portrait: rotate the whole page back upright when the device is turned sideways.
+       Scoped to touchscreen phones (coarse pointer, no hover) so desktop/laptop windows
+       that happen to be wider than tall aren't affected. */
+    @media screen and (orientation: landscape) and (hover: none) and (pointer: coarse) {
       html {
         width: 100vh;
         height: 100vw;
