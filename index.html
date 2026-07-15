@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#0a0a0a" />
-  <meta name="app-version" content="31" />
+  <meta name="app-version" content="58" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -14,6 +14,15 @@
   <title>Train Hard</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    :root {
+      /* Fallback before JS measures the real post-rotation viewport; JS overrides these
+         with px values so dvh-based sizing doesn't desync when the portrait-lock CSS
+         transform rotates the page (viewport units always resolve against the physical,
+         unrotated viewport, which is wrong once rotated). */
+      --rvh: 1dvh;
+      --rvw: 1vw;
+    }
 
     html {
       background-color: rgb(3,7,24);
@@ -182,7 +191,7 @@
     /* ── Exercises Section ── */
     #exercises-section { background: transparent; }
 
-    #exercises-list {
+    #exercises-list, #stats-list {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 6px;
@@ -343,7 +352,7 @@
       border-radius: 20px;
       width: 100%;
       max-width: 360px;
-      max-height: 82dvh;
+      max-height: calc(var(--rvh) * 82);
       display: flex;
       flex-direction: column;
       overflow: hidden;
@@ -467,7 +476,7 @@
       border-radius: 20px;
       width: 100%;
       max-width: 320px;
-      max-height: 60dvh;
+      max-height: calc(var(--rvh) * 60);
       display: flex;
       flex-direction: column;
       overflow: hidden;
@@ -614,7 +623,7 @@
       flex-direction: column;
       width: 100%;
       max-width: 500px;
-      max-height: 80dvh;
+      max-height: calc(var(--rvh) * 80);
       background: rgba(4,8,28,0.97);
       border: 1px solid rgba(50,100,210,0.3);
       border-radius: 20px;
@@ -780,7 +789,7 @@
       border-radius: 20px;
       width: 100%;
       max-width: 340px;
-      max-height: 80dvh;
+      max-height: calc(var(--rvh) * 80);
       display: flex;
       flex-direction: column;
       box-shadow: 0 8px 40px rgba(0,0,0,0.7);
@@ -1200,7 +1209,7 @@
       border-radius: 20px;
       width: 100%;
       max-width: 420px;
-      max-height: 80dvh;
+      max-height: calc(var(--rvh) * 80);
       display: flex;
       flex-direction: column;
       overflow: hidden;
@@ -1310,7 +1319,7 @@
       border-radius: 20px;
       width: 100%;
       max-width: 320px;
-      max-height: 65dvh;
+      max-height: calc(var(--rvh) * 65);
       display: flex;
       flex-direction: column;
       overflow: hidden;
@@ -1382,7 +1391,7 @@
       border-radius: 20px;
       width: 100%;
       max-width: 380px;
-      max-height: 86dvh;
+      max-height: calc(var(--rvh) * 86);
       display: flex;
       flex-direction: column;
       overflow: hidden;
@@ -1592,7 +1601,7 @@
       border-radius: 20px;
       width: 100%;
       max-width: 380px;
-      max-height: 78dvh;
+      max-height: calc(var(--rvh) * 78);
       display: flex;
       flex-direction: column;
       overflow: hidden;
@@ -2195,6 +2204,23 @@
       z-index: 454;
     }
 
+    /* ── Rest Complete Flash ── */
+    #rest-complete-flash {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      pointer-events: none;
+      background: rgba(60,181,88,0);
+      opacity: 0;
+    }
+    #rest-complete-flash.flash {
+      animation: rest-flash-anim 2s ease-out;
+    }
+    @keyframes rest-flash-anim {
+      0%   { background: rgba(60,181,88,0.65); opacity: 1; }
+      100% { background: rgba(60,181,88,0); opacity: 0; }
+    }
+
     /* ── Rest Timer Bar ── */
     #rest-timer-bar {
       background: #0d1f12;
@@ -2439,7 +2465,7 @@
       border-radius: 20px;
       width: 100%;
       max-width: 420px;
-      max-height: 82dvh;
+      max-height: calc(var(--rvh) * 82);
       display: flex;
       flex-direction: column;
       overflow: hidden;
@@ -2635,7 +2661,7 @@
       border-radius: 20px;
       width: 100%;
       max-width: 480px;
-      max-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 48px);
+      max-height: calc(var(--rvh) * 100 - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 48px);
       display: flex;
       flex-direction: column;
       overflow: hidden;
@@ -3098,7 +3124,7 @@
       background: rgba(5,12,40,0.98);
       border: 1px solid rgba(50,100,210,0.3);
       border-radius: 20px 20px 0 0;
-      width: 100%; max-width: 480px; max-height: 70vh;
+      width: 100%; max-width: 480px; max-height: calc(var(--rvh) * 70);
       display: flex; flex-direction: column; overflow: hidden;
     }
     #template-picker-top {
@@ -3206,6 +3232,267 @@
     }
 
     /* ── Data Management (Stats tab) ── */
+    #dm-open-btn {
+      width: 100%;
+      margin-top: 28px;
+      padding: 15px;
+      background: rgba(4,10,32,0.88);
+      border: 1px solid rgba(60,110,200,0.35);
+      border-radius: 14px;
+      color: #7aaacc;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      backdrop-filter: blur(10px);
+    }
+    #dm-popup {
+      position: fixed;
+      inset: 0;
+      z-index: 350;
+      background: rgba(0,0,8,0.65);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    #dm-popup.open { display: flex; }
+    #dm-box {
+      background: rgba(5,12,40,0.97);
+      border: 1px solid rgba(50,100,210,0.3);
+      border-radius: 20px;
+      width: 100%;
+      max-width: 340px;
+      max-height: calc(var(--rvh) * 80);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    #dm-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 18px 14px;
+      border-bottom: 1px solid rgba(40,80,180,0.2);
+      flex-shrink: 0;
+    }
+    #dm-title { font-size: 18px; font-weight: 800; color: #fff; }
+    #dm-close {
+      background: rgba(14,28,70,0.7);
+      border: 1px solid rgba(50,100,200,0.3);
+      border-radius: 50%;
+      color: #7a9acc;
+      font-size: 14px;
+      width: 32px; height: 32px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    #dm-body { flex: 1; overflow-y: auto; padding: 18px; }
+
+    /* ── Chest Chart Popup ── */
+    #chest-popup {
+      position: fixed;
+      inset: 0;
+      z-index: 350;
+      background: rgba(0,0,8,0.65);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    #chest-popup.open { display: flex; }
+    #chest-box {
+      background: rgba(5,12,40,0.97);
+      border: 1px solid rgba(50,100,210,0.3);
+      border-radius: 20px;
+      width: 100%;
+      max-width: 420px;
+      max-height: calc(var(--rvh) * 80);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    #chest-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 18px 14px;
+      border-bottom: 1px solid rgba(40,80,180,0.2);
+      flex-shrink: 0;
+    }
+    #chest-header-left { display: flex; align-items: center; gap: 10px; }
+    #chest-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+    #chest-title { font-size: 18px; font-weight: 800; color: #fff; }
+    #chest-close {
+      background: rgba(14,28,70,0.7);
+      border: 1px solid rgba(50,100,200,0.3);
+      border-radius: 50%;
+      color: #7a9acc;
+      font-size: 14px;
+      width: 32px; height: 32px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    #chest-body { flex: 1; overflow-y: auto; padding: 18px; }
+    #chest-chart-title { font-size: 12px; font-weight: 700; color: #7a9acc; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 14px; }
+    #chest-chart-empty { font-size: 13px; color: #4a6aaa; text-align: center; padding: 30px 0; }
+    .chest-bar-col { display: flex; flex-direction: column; align-items: center; }
+    .chest-bar-col.skipped { opacity: 0.55; }
+    .chest-bar-track { width: 100%; display: flex; align-items: flex-end; justify-content: center; }
+    .chest-bar-track.skipped-track { border-top: 1px dashed rgba(74,106,170,0.4); }
+    .chest-bar {
+      width: 60%;
+      min-width: 14px;
+      border-radius: 5px 5px 0 0;
+      background: linear-gradient(180deg, #4A90D9, #2f5f9a);
+      box-shadow: 0 0 10px rgba(74,144,217,0.4);
+    }
+    .chest-bar-val { font-size: 10px; font-weight: 700; color: #7aaacc; margin-bottom: 4px; }
+    .chest-bar-lv {
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      padding: 2px 6px;
+      border: 1px solid;
+      border-radius: 8px;
+      margin-bottom: 6px;
+      white-space: nowrap;
+      background: rgba(5,12,40,0.6);
+    }
+    .chest-bar-label { font-size: 9px; color: #4a6aaa; margin-top: 6px; text-align: center; white-space: nowrap; }
+    #chest-fav-btn {
+      width: 100%;
+      margin-top: 18px;
+      padding: 13px;
+      background: rgba(229,190,20,0.08);
+      border: 1px solid rgba(229,190,20,0.35);
+      border-radius: 12px;
+      color: #e5be14;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      cursor: pointer;
+    }
+
+    /* ── Per-Exercise Tracked Charts ── */
+    #chest-fav-charts { display: flex; flex-direction: column; gap: 18px; margin-top: 22px; }
+    .chest-ex-chart-block {
+      background: rgba(10,22,60,0.55);
+      border: 1px solid rgba(50,100,200,0.2);
+      border-radius: 16px;
+      padding: 16px 16px 12px;
+    }
+    .chest-ex-chart-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+    .chest-ex-chart-title { font-size: 12px; font-weight: 700; color: #e5be14; text-transform: uppercase; letter-spacing: 0.8px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; flex: 1 1 auto; }
+    .chest-ex-chart-legend { font-size: 8px; font-weight: 700; color: #4a6aaa; text-transform: uppercase; letter-spacing: 0.4px; white-space: nowrap; flex-shrink: 0; }
+    .chest-ex-bar-pr-star { color: #ffd54a; }
+    .chest-ex-chart { display: flex; align-items: flex-end; gap: 10px; height: 140px; overflow-x: auto; padding: 4px 2px 4px; }
+    .chest-ex-bar-col { display: flex; flex-direction: column; align-items: center; }
+    .chest-ex-bar-track { width: 100%; display: flex; align-items: flex-end; justify-content: center; }
+    .chest-ex-bar { width: 60%; min-width: 14px; border-radius: 5px 5px 0 0; }
+    .chest-ex-bar-val { font-size: 10px; font-weight: 700; color: #e5be14; margin-bottom: 5px; white-space: nowrap; line-height: 1.3; }
+    .chest-ex-bar-label { font-size: 9px; color: #4a6aaa; margin-top: 8px; text-align: center; white-space: nowrap; }
+    .chest-ex-chart-empty { font-size: 12px; color: #4a6aaa; text-align: center; padding: 16px 0; }
+    .chest-ex-legend { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; padding: 10px 12px; background: rgba(10,22,60,0.5); border: 1px solid rgba(50,100,200,0.18); border-radius: 12px; }
+    .chest-ex-legend-chip { display: flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 700; color: #7a9acc; }
+    .chest-ex-legend-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+    .chest-ex-bar-growth { font-size: 9px; font-weight: 800; margin-bottom: 3px; white-space: nowrap; }
+    .chest-ex-bar-growth.up { color: #3cb558; }
+    .chest-ex-bar-growth.down { color: #e05a4a; }
+    .chest-ex-bar-growth.flat { color: #4a6aaa; }
+    .chest-ex-bar-col.skipped { opacity: 0.55; }
+    .chest-ex-bar-track.skipped-track { border-top: 1px dashed rgba(74,106,170,0.4); }
+
+    /* ── Favorite Slots Popup ── */
+    #chest-fav-popup, #chest-fav-pick-popup {
+      position: fixed;
+      inset: 0;
+      z-index: 360;
+      background: rgba(0,0,8,0.65);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    #chest-fav-popup.open, #chest-fav-pick-popup.open { display: flex; }
+    #chest-fav-box, #chest-fav-pick-box {
+      background: rgba(5,12,40,0.97);
+      border: 1px solid rgba(50,100,210,0.3);
+      border-radius: 20px;
+      width: 100%;
+      max-width: 340px;
+      max-height: calc(var(--rvh) * 80);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    #chest-fav-header, #chest-fav-pick-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 18px 14px;
+      border-bottom: 1px solid rgba(40,80,180,0.2);
+      flex-shrink: 0;
+    }
+    #chest-fav-title, #chest-fav-pick-title { font-size: 18px; font-weight: 800; color: #fff; }
+    #chest-fav-close, #chest-fav-pick-close {
+      background: rgba(14,28,70,0.7);
+      border: 1px solid rgba(50,100,200,0.3);
+      border-radius: 50%;
+      color: #7a9acc;
+      font-size: 14px;
+      width: 32px; height: 32px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    #chest-fav-body { flex: 1; overflow-y: auto; padding: 18px; }
+    #chest-fav-sub { font-size: 12px; color: #4a6aaa; margin-bottom: 14px; line-height: 1.5; }
+    .chest-fav-slot {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(10,22,60,0.7);
+      border: 1px solid rgba(50,100,200,0.22);
+      border-radius: 14px;
+      padding: 14px 16px;
+      margin-bottom: 10px;
+      cursor: pointer;
+    }
+    .chest-fav-slot:active { background: rgba(74,144,217,0.1); }
+    .chest-fav-slot-label { font-size: 10px; font-weight: 800; color: #e5be14; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+    .chest-fav-slot-name { font-size: 14px; font-weight: 700; color: #fff; }
+    .chest-fav-slot-empty { font-size: 13px; color: #4a6aaa; font-style: italic; }
+    .chest-fav-slot-clear {
+      background: rgba(192,57,43,0.1);
+      border: 1px solid rgba(192,57,43,0.35);
+      border-radius: 8px;
+      color: #e05a4a;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 6px 10px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    #chest-fav-pick-list { flex: 1; overflow-y: auto; padding: 8px 18px 18px; }
+    .chest-fav-pick-item {
+      padding: 13px 4px;
+      border-bottom: 1px solid rgba(40,80,180,0.1);
+      font-size: 14px;
+      color: #fff;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .chest-fav-pick-item:last-child { border-bottom: none; }
+    .chest-fav-pick-item:active { color: #4A90D9; }
     .dm-btn {
       width: 100%;
       padding: 13px;
@@ -3333,34 +3620,89 @@
     <div id="stats-list"></div>
 
     <!-- Data Management -->
-    <div class="section-header" style="margin-top:28px;font-size:18px;">Data Management</div>
+    <button id="dm-open-btn">Data Management</button>
+  </div>
+</div>
 
-    <div class="card" style="margin-bottom:12px;">
-      <div class="card-title" style="margin-bottom:6px;">Save Backup</div>
-      <div class="card-sub" style="margin-bottom:14px;line-height:1.5;">Download your exercises and workout history as a file you can store anywhere.</div>
-      <button id="backup-save-btn" class="dm-btn dm-btn-blue">↓ Save Backup</button>
+<!-- Data Management Popup -->
+<div id="dm-popup">
+  <div id="dm-box">
+    <div id="dm-header">
+      <div id="dm-title">Data Management</div>
+      <button id="dm-close">✕</button>
     </div>
+    <div id="dm-body">
+      <div class="card" style="margin-bottom:12px;">
+        <div class="card-title" style="margin-bottom:6px;">Save Backup</div>
+        <div class="card-sub" style="margin-bottom:14px;line-height:1.5;">Download your exercises and workout history as a file you can store anywhere.</div>
+        <button id="backup-save-btn" class="dm-btn dm-btn-blue">↓ Save Backup</button>
+      </div>
 
-    <div class="card" style="margin-bottom:12px;">
-      <div class="card-title" style="margin-bottom:6px;">Load Backup</div>
-      <div class="card-sub" style="margin-bottom:14px;line-height:1.5;">Restore from a backup file. Choose to merge with or replace your current data.</div>
-      <button id="backup-load-btn" class="dm-btn dm-btn-green">↑ Choose Backup File</button>
-      <input type="file" id="backup-file-input" accept=".json" style="display:none" />
-      <div id="backup-import-confirm">
-        <div id="backup-import-filename"></div>
-        <div id="backup-import-summary"></div>
-        <div class="backup-import-actions">
-          <button id="backup-merge-btn">Merge</button>
-          <button id="backup-replace-btn">Replace All</button>
+      <div class="card" style="margin-bottom:12px;">
+        <div class="card-title" style="margin-bottom:6px;">Load Backup</div>
+        <div class="card-sub" style="margin-bottom:14px;line-height:1.5;">Restore from a backup file. Choose to merge with or replace your current data.</div>
+        <button id="backup-load-btn" class="dm-btn dm-btn-green">↑ Choose Backup File</button>
+        <input type="file" id="backup-file-input" accept=".json" style="display:none" />
+        <div id="backup-import-confirm">
+          <div id="backup-import-filename"></div>
+          <div id="backup-import-summary"></div>
+          <div class="backup-import-actions">
+            <button id="backup-merge-btn">Merge</button>
+            <button id="backup-replace-btn">Replace All</button>
+          </div>
         </div>
       </div>
-    </div>
 
-    <div class="card" style="margin-bottom:12px;">
-      <div class="card-title" style="margin-bottom:6px;color:#e05a4a;">Delete All Data</div>
-      <div class="card-sub" style="margin-bottom:14px;line-height:1.5;">Permanently erase all exercises and workout history. This cannot be undone.</div>
-      <button id="backup-delete-btn" class="dm-btn dm-btn-red">Delete All Data</button>
+      <div class="card" style="margin-bottom:12px;">
+        <div class="card-title" style="margin-bottom:6px;color:#e05a4a;">Delete All Data</div>
+        <div class="card-sub" style="margin-bottom:14px;line-height:1.5;">Permanently erase all exercises and workout history. This cannot be undone.</div>
+        <button id="backup-delete-btn" class="dm-btn dm-btn-red">Delete All Data</button>
+      </div>
     </div>
+  </div>
+</div>
+
+<!-- Muscle Stats Popup (shared by every muscle in the Stats tab) -->
+<div id="chest-popup">
+  <div id="chest-box">
+    <div id="chest-header">
+      <div id="chest-header-left">
+        <div id="chest-dot"></div>
+        <div id="chest-title">Chest</div>
+      </div>
+      <button id="chest-close">✕</button>
+    </div>
+    <div id="chest-body">
+      <div id="chest-chart-title">Weekly Sets</div>
+      <div id="chest-chart"></div>
+      <div id="chest-fav-charts"></div>
+      <button id="chest-fav-btn">★ Track Exercises</button>
+    </div>
+  </div>
+</div>
+
+<!-- Favorite Slots Popup -->
+<div id="chest-fav-popup">
+  <div id="chest-fav-box">
+    <div id="chest-fav-header">
+      <div id="chest-fav-title">Track Exercises</div>
+      <button id="chest-fav-close">✕</button>
+    </div>
+    <div id="chest-fav-body">
+      <div id="chest-fav-sub"></div>
+      <div id="chest-fav-slots"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Favorite Exercise Picker Popup -->
+<div id="chest-fav-pick-popup">
+  <div id="chest-fav-pick-box">
+    <div id="chest-fav-pick-header">
+      <div id="chest-fav-pick-title">Assign Exercise</div>
+      <button id="chest-fav-pick-close">✕</button>
+    </div>
+    <div id="chest-fav-pick-list"></div>
   </div>
 </div>
 
@@ -3396,6 +3738,7 @@
     <button id="finish-btn">Finish</button>
   </div>
   <div id="train-body">
+    <div id="rest-complete-flash"></div>
     <div id="rest-timer-bar">
       <div id="rest-timer-row">
         <button id="rest-minus-btn" class="rest-adjust-btn">−</button>
@@ -3894,7 +4237,233 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { SHELL, SHELL_REFERENCE_HEIGHT, syncHuggingAuraUniforms, setModelGroundY, setTargetHeight } from './Aura/toon-outline-code.js';
 import { shellUniforms, shellMaterial, shellMeshes } from './Aura/toon-outline-apply.js';
+import { EXTENDED_REST_STAGE_1_SEC, EXTENDED_REST_STAGE_2_SEC, EXTENDED_REST_STAGE_3_SEC, EXTENDED_REST_ASK_SEC } from './extended-rest-notifications.js';
 
+// ═══════════════════════════════════════════════════════════
+// SOUND EFFECTS
+// ═══════════════════════════════════════════════════════════
+
+const SOUNDS = {
+  sessionStart: 'assets/sounds/session-start.mp3',
+  setComplete: 'assets/sounds/set-complete.mp3',
+  restTimerStart: 'assets/sounds/rest-timer-start.mp3',
+  restTimerCountdown: 'assets/sounds/rest-timer-countdown.mp3',
+  restTimerEnd: 'assets/sounds/rest-timer-end.mp3',
+  workoutComplete: 'assets/sounds/workout-complete.mp3',
+  personalRecord: 'assets/sounds/personal-record.mp3',
+  levelUp: 'assets/sounds/level-up.mp3',
+  exerciseSelect: 'assets/sounds/exercise-select.mp3',
+  menuButton: 'assets/sounds/menu-button.mp3',
+  commonButton: 'assets/sounds/common-button.mp3',
+  delete: 'assets/sounds/delete.mp3',
+  roomSelect: 'assets/sounds/room-select.mp3',
+  roomHover: 'assets/sounds/room-hover.mp3',
+};
+
+// Web Audio API instead of <audio>/new Audio(): HTMLMediaElement playback
+// claims the OS "media" audio session and both interrupts background music
+// and re-decodes on every play (audible delay). Decoding once into an
+// AudioBuffer and firing BufferSource nodes plays instantly and mixes with
+// whatever else is already playing (e.g. the user's music).
+let audioCtx = null;
+const soundBuffers = {};
+const soundLoadPromises = {};
+
+function getAudioCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+
+function loadSound(key, src) {
+  const ctx = getAudioCtx();
+  soundLoadPromises[key] = fetch(src)
+    .then(res => res.arrayBuffer())
+    .then(arrBuf => ctx.decodeAudioData(arrBuf))
+    .then(buffer => { soundBuffers[key] = buffer; })
+    .catch(() => {}); // Placeholder/empty file or unsupported format — silently skip.
+}
+
+// Decoding doesn't require a user gesture — only starting/resuming playback
+// does — so kick off loading immediately rather than waiting for a tap.
+// Otherwise the very first tap after opening the app would find nothing
+// loaded yet and silently drop that tap's sound.
+for (const [key, src] of Object.entries(SOUNDS)) loadSound(key, src);
+
+// iOS/most browsers still require the AudioContext to be resumed from
+// inside a user gesture before any sound can actually be heard.
+window.addEventListener('pointerdown', () => {
+  const ctx = getAudioCtx();
+  if (ctx.state === 'suspended') ctx.resume();
+}, { once: true });
+
+function firePlayback(buffer) {
+  const ctx = getAudioCtx();
+  if (ctx.state === 'suspended') ctx.resume();
+  const source = ctx.createBufferSource();
+  source.buffer = buffer;
+  source.connect(ctx.destination);
+  source.start(0);
+}
+
+function playSound(key) {
+  const buffer = soundBuffers[key];
+  if (buffer) {
+    firePlayback(buffer);
+  } else if (soundLoadPromises[key]) {
+    // Still loading (e.g. this is the first tap right after page load) —
+    // play as soon as it's ready instead of dropping the sound.
+    soundLoadPromises[key].then(() => {
+      if (soundBuffers[key]) firePlayback(soundBuffers[key]);
+    });
+  }
+}
+
+// Random-pick sound folders: name files 1.mp3, 2.mp3, 3.mp3, ... (in order,
+// no gaps) and whichever numbers exist get discovered and picked at random.
+const RANDOM_FOLDER_MAX = 50;
+const RANDOM_FOLDERS = {
+  noTimeToRest: 'assets/sounds/no-time-to-rest/',
+  noTimeToRestStage2: 'assets/sounds/no-time-to-rest/stage-2/',
+  noTimeToRestStage3: 'assets/sounds/no-time-to-rest/stage-2/stage-3/',
+};
+const randomFolderBuffers = { noTimeToRest: [], noTimeToRestStage2: [], noTimeToRestStage3: [] };
+
+async function loadRandomFolder(key) {
+  if (randomFolderBuffers[key].length) return; // already loaded
+  const dir = RANDOM_FOLDERS[key];
+  const ctx = getAudioCtx();
+  const tasks = [];
+  for (let i = 1; i <= RANDOM_FOLDER_MAX; i++) {
+    tasks.push((async () => {
+      try {
+        const res = await fetch(`${dir}${i}.mp3`);
+        if (!res.ok) return;
+        const arrBuf = await res.arrayBuffer();
+        const buffer = await ctx.decodeAudioData(arrBuf);
+        randomFolderBuffers[key].push(buffer);
+      } catch (e) {
+        // Missing slot or empty/placeholder file — silently skip.
+      }
+    })());
+  }
+  await Promise.all(tasks);
+}
+// Decoding doesn't need a gesture — load all three escalation folders right away.
+loadRandomFolder('noTimeToRest');
+loadRandomFolder('noTimeToRestStage2');
+loadRandomFolder('noTimeToRestStage3');
+
+function playRandomFromFolder(key) {
+  const buffers = randomFolderBuffers[key];
+  if (!buffers || !buffers.length) return;
+  const buffer = buffers[Math.floor(Math.random() * buffers.length)];
+  const ctx = getAudioCtx();
+  if (ctx.state === 'suspended') ctx.resume();
+  const source = ctx.createBufferSource();
+  source.buffer = buffer;
+  source.connect(ctx.destination);
+  source.start(0);
+}
+
+// See extended-rest-notifications.js for the full explanation and the X
+// (seconds) value that drives every stage timing below.
+let noRestInterval = null;
+let lastSetCompletionTime = 0;
+let noRestStage = 0; // 0 = nothing fired yet; 1-3 = sound stages fired; 4 = ask-to-end fired
+
+function startNoRestWatch() {
+  lastSetCompletionTime = Date.now();
+  noRestStage = 0;
+  clearInterval(noRestInterval);
+  noRestInterval = setInterval(() => {
+    if (!trainActive) return;
+    const elapsedSec = (Date.now() - lastSetCompletionTime) / 1000;
+    if (noRestStage < 1 && elapsedSec >= EXTENDED_REST_STAGE_1_SEC) {
+      noRestStage = 1;
+      playRandomFromFolder('noTimeToRest');
+    } else if (noRestStage < 2 && elapsedSec >= EXTENDED_REST_STAGE_2_SEC) {
+      noRestStage = 2;
+      playRandomFromFolder('noTimeToRestStage2');
+    } else if (noRestStage < 3 && elapsedSec >= EXTENDED_REST_STAGE_3_SEC) {
+      noRestStage = 3;
+      playRandomFromFolder('noTimeToRestStage3');
+    } else if (noRestStage < 4 && elapsedSec >= EXTENDED_REST_ASK_SEC) {
+      noRestStage = 4;
+      askToEndSessionForInactivity();
+    }
+  }, 5000);
+}
+
+function stopNoRestWatch() {
+  clearInterval(noRestInterval);
+  noRestInterval = null;
+}
+
+function markSetCompleted() {
+  lastSetCompletionTime = Date.now();
+  noRestStage = 0;
+}
+
+async function askToEndSessionForInactivity() {
+  const finish = await customConfirm(
+    "You haven't logged a set in a while — continue resting or finish this workout?",
+    'Finish',
+    'Continue'
+  );
+  if (!trainActive) return; // session already ended while the prompt was open
+  if (finish) {
+    document.getElementById('finish-btn').click();
+  } else {
+    markSetCompleted(); // "Continue" — reset the idle clock so it doesn't ask again immediately
+  }
+}
+
+// Every <button> in the app plays commonButton on tap by default. Buttons
+// that already have their own specific sound wired directly in their click
+// handler are listed here so they don't also double up with commonButton.
+// Capture phase so this always fires even if a handler later calls
+// stopPropagation() during its own (bubble-phase) click handling.
+const SOUND_HANDLED_BUTTON_SELECTORS = [
+  '.nav-btn',            // menuButton
+  '#room-btn',           // commonButton (explicit)
+  '#goals-btn',          // commonButton (explicit)
+  '#weekly-overview-btn',// commonButton (explicit)
+  '#avatar-btn',         // commonButton (explicit)
+  '#testing-btn',        // commonButton (explicit)
+  '#exit-testing-btn',   // commonButton (explicit)
+  '#room-close-btn',     // roomSelect
+  '#add-ex-main',        // commonButton (explicit)
+  '#hist-add-ex-btn',    // commonButton (explicit)
+  '#tpl-add-ex',         // commonButton (explicit)
+  '#edit-save-btn',      // commonButton (explicit)
+  '#ex-delete-yes',      // delete
+  '#hist-delete-btn',    // delete
+  '#backup-delete-btn',  // delete
+  '.hdb-delete',         // delete
+  '.hsb-delete',         // delete
+  '.hedit-remove-ex',    // delete
+  '.hedit-remove-set',   // delete
+  '.remove-ex',          // delete
+  '.set-delete',         // delete
+  '.tpl-delete',         // delete
+  '.set-check',          // setComplete / levelUp
+  '.ex-edit-btn',        // commonButton (explicit)
+  '.picker-muscle-btn',  // commonButton (explicit)
+  // Close/exit/cancel buttons — all share the delete sound
+  '#dm-close', '#chest-close', '#chest-fav-close', '#chest-fav-pick-close',
+  '#picker-close', '#picker-ex-close', '#edit-cancel-btn', '#edit-close-btn',
+  '#new-ex-close', '#new-ex-cancel', '#rest-edit-cancel', '#pulley-close',
+  '#ex-popup-close', '#ex-detail-close', '#cancel-btn', '#template-picker-close',
+  '#tpl-cancel-btn', '#focus-picker-close', '#avatar-close-btn', '#goals-close-btn',
+  '#override-close-btn', '#weekly-overview-close-btn', '#custom-prompt-cancel',
+];
+
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('button');
+  if (!btn) return;
+  if (SOUND_HANDLED_BUTTON_SELECTORS.some(sel => btn.matches(sel))) return;
+  playSound('commonButton');
+}, true);
 
 // ═══════════════════════════════════════════════════════════
 // DATA
@@ -3930,6 +4499,27 @@ const INDEX_TO_PART = {
   19: 'Traps',
 };
 const LEVEL_COLORS = { 1: '#C8C8C8', 2: '#FAE89A', 3: '#F5A0B0', 4: '#A8D4F5', 5: '#E4A8E0' };
+
+// Per-bar coloring for the tracked-exercise growth charts: Level 1 is pure
+// black (a flat/negative week — no growth) instead of the model's gray, since
+// gray reads as "still highlighted" here. Levels 2-5 reuse LEVEL_COLORS.
+const EX_BAR_COLORS = { 1: '#000000', 2: LEVEL_COLORS[2], 3: LEVEL_COLORS[3], 4: LEVEL_COLORS[4], 5: LEVEL_COLORS[5] };
+const EX_BAR_COLORS_DIM = { 1: '#000000', 2: '#b8a25a', 3: '#b06070', 4: '#5f86ab', 5: '#9a5f96' };
+const EX_BAR_GLOW = {
+  1: 'rgba(255,255,255,0.08)',
+  2: 'rgba(250,232,154,0.35)',
+  3: 'rgba(245,160,176,0.35)',
+  4: 'rgba(168,212,245,0.35)',
+  5: 'rgba(228,168,224,0.35)',
+};
+// Level thresholds for a single bar's week-over-week growth %.
+function growthLevelForPct(pct) {
+  if (pct >= 6) return 5;
+  if (pct >= 4) return 4;
+  if (pct >= 2) return 3;
+  if (pct >= 1) return 2;
+  return 1;
+}
 const HAIR_COLORS  = { 1: '#1A1A1A', 2: '#F5C518', 3: '#E8305A', 4: '#3A8FD4', 5: '#C44BB0' };
 const STATIC_WHITE  = ['Boots','Shorts'];
 const HAIR_OPTIONS = {
@@ -4422,7 +5012,35 @@ loadModel(0, (entry) => {
   checkAndRestoreSession();
 });
 
+// ─── Viewport stabilizer ───
+// The portrait-lock CSS rotates <html> with a transform when a phone is turned
+// sideways, but vh/dvh units always resolve against the physical (unrotated)
+// viewport, not the rotated visual box — so anything sized with dvh goes
+// stale/jumbled right after a rotation. Measure the real visual viewport in JS
+// and drive sizing off --rvh/--rvw instead. Mobile browsers also report
+// window.innerWidth/innerHeight a beat late after rotation/keyboard/UI-chrome
+// changes, so re-measure a few times after the event fires, not just once.
+const landscapeLockQuery = window.matchMedia('(orientation: landscape) and (hover: none) and (pointer: coarse)');
+function updateViewportVars() {
+  const rotated = landscapeLockQuery.matches;
+  const visualW = rotated ? window.innerHeight : window.innerWidth;
+  const visualH = rotated ? window.innerWidth : window.innerHeight;
+  document.documentElement.style.setProperty('--rvh', (visualH * 0.01) + 'px');
+  document.documentElement.style.setProperty('--rvw', (visualW * 0.01) + 'px');
+}
+function stabilizeViewport() {
+  updateViewportVars();
+  [50, 150, 350, 600].forEach(ms => setTimeout(updateViewportVars, ms));
+}
+stabilizeViewport();
+window.addEventListener('orientationchange', stabilizeViewport);
+window.addEventListener('pageshow', stabilizeViewport);
+if (window.visualViewport) {
+  window.visualViewport.addEventListener('resize', stabilizeViewport);
+}
+
 window.addEventListener('resize', () => {
+  updateViewportVars();
   camera.aspect = innerWidth / innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(innerWidth, innerHeight);
@@ -4487,7 +5105,7 @@ function goToTab(tab) {
 }
 
 document.querySelectorAll('.nav-btn').forEach(btn => {
-  btn.addEventListener('click', () => goToTab(btn.dataset.tab));
+  btn.addEventListener('click', () => { playSound('menuButton'); goToTab(btn.dataset.tab); });
 });
 
 
@@ -4560,6 +5178,7 @@ function renderHistory() {
       openHistEdit(realIdx);
     });
     card.querySelector('.hdb-delete').addEventListener('click', () => {
+      playSound('delete');
       wrapper.style.transition = 'opacity 0.2s ease, transform 0.2s ease';
       wrapper.style.opacity = '0';
       wrapper.style.transform = 'translateX(-100%)';
@@ -4575,6 +5194,7 @@ function renderHistory() {
       openHistEdit(realIdx);
     });
     actions.querySelector('.hsb-delete').addEventListener('click', () => {
+      playSound('delete');
       wrapper.style.transition = 'opacity 0.2s ease, transform 0.2s ease';
       wrapper.style.opacity = '0';
       wrapper.style.transform = 'translateX(-100%)';
@@ -4718,6 +5338,7 @@ function renderHistEditExercises() {
     });
 
     block.querySelector('.hedit-remove-ex').addEventListener('click', () => {
+      playSound('delete');
       histEditData.exercises.splice(exIdx, 1);
       renderHistEditExercises();
     });
@@ -4751,6 +5372,7 @@ function makeHistSetRow(exIdx, sIdx, s) {
   removeBtn.type = 'button';
   removeBtn.textContent = '×';
   removeBtn.addEventListener('click', () => {
+    playSound('delete');
     histEditData.exercises[exIdx].sets.splice(sIdx, 1);
     renderHistEditExercises();
   });
@@ -4782,6 +5404,7 @@ document.getElementById('hist-done-btn').addEventListener('click', () => {
 document.getElementById('hist-delete-btn').addEventListener('click', async () => {
   const ok = await customConfirm('Delete this workout permanently?', 'Delete', 'Cancel');
   if (!ok) return;
+  playSound('delete');
   state.history.splice(histEditIdx, 1);
   recalcStats();
   document.getElementById('hist-edit-modal').classList.remove('open');
@@ -4789,6 +5412,7 @@ document.getElementById('hist-delete-btn').addEventListener('click', async () =>
 });
 
 document.getElementById('hist-add-ex-btn').addEventListener('click', () => {
+  playSound('commonButton');
   const picker = document.getElementById('picker');
   picker._histMode = true;
   renderPickerMuscleGrid();
@@ -4847,7 +5471,7 @@ function renderExercises() {
         </div>
       `;
 
-      group.querySelector('.muscle-header').addEventListener('click', () => openExPopup(muscle));
+      group.querySelector('.muscle-header').addEventListener('click', () => { playSound('commonButton'); openExPopup(muscle); });
       el.appendChild(group);
     }
   }
@@ -4891,9 +5515,10 @@ function renderExPopup() {
       <button class="ex-edit-btn">Edit</button>
     `;
     item.addEventListener('click', (e) => {
-      if (!e.target.closest('.ex-edit-btn')) openExDetail(ex, muscle);
+      if (!e.target.closest('.ex-edit-btn')) { playSound('commonButton'); openExDetail(ex, muscle); }
     });
     item.querySelector('.ex-edit-btn').addEventListener('click', () => {
+      playSound('commonButton');
       openEdit(muscle, i);
     });
     list.appendChild(item);
@@ -5003,6 +5628,7 @@ function openExDetail(exName, muscle) {
 }
 
 document.getElementById('ex-detail-close').addEventListener('click', () => {
+  playSound('delete');
   document.getElementById('ex-detail-modal').classList.remove('open');
 });
 
@@ -5018,18 +5644,472 @@ document.getElementById('ex-detail-modal').addEventListener('click', (e) => {
 
 function renderStats() {
   const el = document.getElementById('stats-list');
-  const keys = Object.keys(state.prs);
-  if (!keys.length) {
-    el.innerHTML = '<div class="empty-state">No personal records yet</div>';
+  el.innerHTML = '';
+
+  for (const muscleGroup of MUSCLE_GROUPS) {
+    const header = document.createElement('div');
+    header.className = 'picker-group-header';
+    header.textContent = muscleGroup.label;
+    el.appendChild(header);
+
+    for (const muscle of muscleGroup.muscles) {
+      const group = document.createElement('div');
+      group.className = 'muscle-group';
+      group.innerHTML = `
+        <div class="muscle-header">
+          <div class="muscle-left">
+            <div class="muscle-name">${muscle}</div>
+          </div>
+          <span class="chevron">›</span>
+        </div>
+      `;
+
+      group.querySelector('.muscle-header').addEventListener('click', () => { playSound('commonButton'); openChestPopup(muscle); });
+
+      el.appendChild(group);
+    }
+  }
+}
+
+// Which muscle's popup is currently open — every muscle shares the same
+// popup markup/functions, just re-themed and re-rendered per muscle.
+let statMuscle = null;
+
+function openChestPopup(muscle) {
+  statMuscle = muscle;
+  const lv = getLevel(muscle);
+  const dotColor = LEVEL_COLORS[lv];
+  document.getElementById('chest-dot').style.cssText = `background:${dotColor};box-shadow:0 0 8px ${dotColor};`;
+  document.getElementById('chest-title').textContent = muscle;
+  document.getElementById('chest-fav-sub').textContent = `Pick up to 3 ${muscle} exercises to track`;
+
+  // Popup must be visible (display:flex) before rendering, or the charts'
+  // scrollWidth reads as 0 while hidden and the scroll-to-latest-week below
+  // silently no-ops.
+  document.getElementById('chest-popup').classList.add('open');
+  renderChestChart(muscle);
+  renderChestFavCharts(muscle);
+}
+
+function renderChestChart(muscle) {
+  const el = document.getElementById('chest-chart');
+
+  // Group total sets for this muscle by week (Monday-start week)
+  const weekTotals = new Map(); // weekStart ms -> sets
+  for (const w of state.history) {
+    if (!w.exercises || !w.date) continue;
+    const d = _parseDateStr(w.date);
+    if (!d) continue;
+    const muscleSets = w.exercises
+      .filter(ex => ex.muscle === muscle && ex.sets)
+      .reduce((sum, ex) => sum + ex.sets.length, 0);
+    if (muscleSets === 0) continue;
+
+    const weekStart = new Date(d);
+    const day = weekStart.getDay(); // 0=Sun..6=Sat
+    const diffToMonday = (day === 0) ? 6 : day - 1;
+    weekStart.setDate(weekStart.getDate() - diffToMonday);
+    weekStart.setHours(0, 0, 0, 0);
+    const key = weekStart.getTime();
+    weekTotals.set(key, (weekTotals.get(key) || 0) + muscleSets);
+  }
+
+  // The current week (Monday-start) is always shown, even with 0 sets so far —
+  // labeled "current" instead of just being missing, since it isn't over yet.
+  const now = new Date();
+  const curWeekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const curDay = curWeekStart.getDay();
+  curWeekStart.setDate(curWeekStart.getDate() - ((curDay === 0) ? 6 : curDay - 1));
+  curWeekStart.setHours(0, 0, 0, 0);
+  const curWeekMs = curWeekStart.getTime();
+  if (!weekTotals.has(curWeekMs)) weekTotals.set(curWeekMs, null);
+
+  if (!weekTotals.size) {
+    el.innerHTML = `<div id="chest-chart-empty">No ${muscle} workouts logged yet</div>`;
     return;
   }
-  el.innerHTML = `<div class="card">${keys.map(ex => `
-    <div class="stat-row">
-      <span>${ex}</span>
-      <span class="stat-val">${state.prs[ex].weight} lbs × ${state.prs[ex].reps}</span>
-    </div>
-  `).join('')}</div>`;
+
+  const weeks = [...weekTotals.entries()].sort((a, b) => a[0] - b[0]);
+  const maxVal = Math.max(...weeks.map(w => w[1] || 0));
+  const goal = getGoal(muscle);
+
+  el.style.cssText = 'display:flex;align-items:flex-end;gap:8px;height:180px;overflow-x:auto;padding-bottom:4px;';
+  el.innerHTML = weeks.map(([ms, total]) => {
+    const label = fmtWeekRange(ms);
+    if (total === null) {
+      return `
+        <div class="chest-bar-col skipped" style="flex:0 0 76px;height:100%;">
+          <div class="chest-bar-val">&nbsp;</div>
+          <div class="chest-bar-lv" style="color:#4a6aaa;border-color:rgba(74,106,170,0.4);">current</div>
+          <div class="chest-bar-track skipped-track" style="flex:1;"></div>
+          <div class="chest-bar-label">${label}</div>
+        </div>
+      `;
+    }
+    const heightPct = Math.max(6, Math.round((total / maxVal) * 100));
+    const lv = levelForSets(total, goal);
+    const color = LEVEL_COLORS[lv];
+    // The current week gets an explicit "current" tag even once it has real
+    // data — not just while it's still sitting empty — so it's always clear
+    // at a glance which bar is this week's, regardless of muscle.
+    const lvText = ms === curWeekMs ? `LV ${lv} · current` : `LV ${lv}`;
+    return `
+      <div class="chest-bar-col" style="flex:0 0 76px;height:100%;">
+        <div class="chest-bar-val">${total} set${total !== 1 ? 's' : ''}</div>
+        <div class="chest-bar-lv" style="color:${color};box-shadow:0 0 6px ${color}88;border-color:${color}88;">${lvText}</div>
+        <div class="chest-bar-track" style="flex:1;">
+          <div class="chest-bar" style="height:${heightPct}%;background:linear-gradient(180deg, ${color}, ${color}99);box-shadow:0 0 10px ${color}66;"></div>
+        </div>
+        <div class="chest-bar-label">${label}</div>
+      </div>
+    `;
+  }).join('');
+
+  // Default the scroll position to the most recent week so the user sees
+  // "now" first and has to swipe left to look back through history.
+  // rAF ensures the popup has finished laying out (scrollWidth is 0 while hidden).
+  requestAnimationFrame(() => { el.scrollLeft = el.scrollWidth; });
 }
+
+// Mirrors getLevel()'s threshold logic, but for an arbitrary (historical) set total/goal
+// instead of the current live weeklySets, so each week's bar reflects its own level.
+function levelForSets(sets, goal) {
+  if (sets >= goal) return 5;
+  const step = goal / 4;
+  if (sets >= Math.floor(step * 3)) return 4;
+  if (sets >= Math.floor(step * 2)) return 3;
+  if (sets >= Math.floor(step * 1)) return 2;
+  return 1;
+}
+
+function fmtWeekRange(weekStartMs) {
+  const start = new Date(weekStartMs);
+  const end = new Date(weekStartMs);
+  end.setDate(end.getDate() + 6);
+  const startMonth = start.toLocaleDateString('en-US', { month: 'short' });
+  const endMonth = end.toLocaleDateString('en-US', { month: 'short' });
+  if (startMonth === endMonth) {
+    return `${startMonth} ${start.getDate()} - ${end.getDate()}`;
+  }
+  return `${startMonth} ${start.getDate()} - ${endMonth} ${end.getDate()}`;
+}
+
+// ═══════════════════════════════════════════════════════════
+// TRACKED (FAVORITE) EXERCISES — up to 3 slots per muscle
+// ═══════════════════════════════════════════════════════════
+
+function loadFavorites() {
+  try { return JSON.parse(localStorage.getItem('trainhard_favorites') || '{}'); } catch { return {}; }
+}
+function saveFavorites(favs) {
+  localStorage.setItem('trainhard_favorites', JSON.stringify(favs));
+}
+function getFavoriteSlots(muscle) {
+  const favs = loadFavorites();
+  const slots = favs[muscle] || [];
+  return [slots[0] || null, slots[1] || null, slots[2] || null];
+}
+function setFavoriteSlot(muscle, slotIdx, exName) {
+  const favs = loadFavorites();
+  const slots = favs[muscle] || [null, null, null];
+  slots[slotIdx] = exName;
+  favs[muscle] = slots;
+  saveFavorites(favs);
+}
+
+let chestFavSlotIdx = null;
+
+function openChestFavPopup() {
+  renderChestFavSlots();
+  document.getElementById('chest-fav-popup').classList.add('open');
+}
+
+function renderChestFavSlots() {
+  const slots = getFavoriteSlots(statMuscle);
+  const el = document.getElementById('chest-fav-slots');
+  el.innerHTML = slots.map((exName, i) => `
+    <div class="chest-fav-slot" data-slot="${i}">
+      <div>
+        <div class="chest-fav-slot-label">Slot ${i + 1}</div>
+        ${exName
+          ? `<div class="chest-fav-slot-name">${exName}</div>`
+          : `<div class="chest-fav-slot-empty">Tap to assign an exercise</div>`}
+      </div>
+      ${exName ? `<button class="chest-fav-slot-clear" data-clear="${i}">Clear</button>` : ''}
+    </div>
+  `).join('');
+
+  el.querySelectorAll('.chest-fav-slot-clear').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      setFavoriteSlot(statMuscle, parseInt(btn.dataset.clear), null);
+      renderChestFavSlots();
+      renderChestFavCharts(statMuscle);
+    });
+  });
+
+  el.querySelectorAll('.chest-fav-slot').forEach(slot => {
+    slot.addEventListener('click', () => {
+      playSound('commonButton');
+      openChestFavPick(parseInt(slot.dataset.slot));
+    });
+  });
+}
+
+function openChestFavPick(slotIdx) {
+  chestFavSlotIdx = slotIdx;
+  renderChestFavPick();
+  document.getElementById('chest-fav-pick-popup').classList.add('open');
+}
+
+function renderChestFavPick() {
+  const exList = state.exercises[statMuscle] || [];
+  const list = document.getElementById('chest-fav-pick-list');
+  if (!exList.length) {
+    list.innerHTML = `<div class="empty-state">No ${statMuscle} exercises yet</div>`;
+    return;
+  }
+  list.innerHTML = '';
+  exList.forEach(ex => {
+    const item = document.createElement('div');
+    item.className = 'chest-fav-pick-item';
+    item.textContent = ex;
+    item.addEventListener('click', () => {
+      playSound('commonButton');
+      setFavoriteSlot(statMuscle, chestFavSlotIdx, ex);
+      document.getElementById('chest-fav-pick-popup').classList.remove('open');
+      renderChestFavSlots();
+      renderChestFavCharts(statMuscle);
+    });
+    list.appendChild(item);
+  });
+}
+
+function renderChestFavCharts(muscle) {
+  const el = document.getElementById('chest-fav-charts');
+  const slots = getFavoriteSlots(muscle).filter(Boolean);
+  if (!slots.length) {
+    el.innerHTML = '';
+    return;
+  }
+  el.innerHTML = buildGrowthLevelLegend() + slots.map(exName => renderExerciseChartBlock(exName)).join('');
+
+  // Default each exercise's chart to the most recent week, same as the overall chart.
+  requestAnimationFrame(() => {
+    el.querySelectorAll('.chest-ex-chart').forEach(chartEl => {
+      chartEl.scrollLeft = chartEl.scrollWidth;
+    });
+  });
+}
+
+// Epley formula: estimates the weight you could lift for 1 rep, given a weight×reps set.
+// Lets a 185x6 set and a 155x12 set be compared on one scale instead of separate rep-range PRs.
+function estimate1RM(weight, reps) {
+  if (weight <= 0) return 0;
+  return weight * (1 + reps / 30);
+}
+
+// UTC-based day index (see renderExerciseChartBlock) of the Monday that starts
+// the current Monday-Sunday week, so charts can extend through today even if
+// the most recent logged session was weeks ago.
+function currentWeekDayIndex() {
+  const now = new Date();
+  const weekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const day = weekStart.getDay();
+  const diffToMonday = (day === 0) ? 6 : day - 1;
+  weekStart.setDate(weekStart.getDate() - diffToMonday);
+  return Math.round(Date.UTC(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate()) / 86400000);
+}
+
+function buildGrowthLevelLegend() {
+  const rows = [
+    [1, '0%'], [2, '1%'], [3, '2-3%'], [4, '4-5%'], [5, '6%+'],
+  ];
+  const chips = rows.map(([lv, range]) => `
+    <div class="chest-ex-legend-chip">
+      <span class="chest-ex-legend-dot" style="background:${EX_BAR_COLORS[lv]};box-shadow:0 0 5px ${EX_BAR_GLOW[lv]};"></span>
+      <span>${range}</span>
+    </div>
+  `).join('');
+  return `<div class="chest-ex-legend">${chips}</div>`;
+}
+
+function renderExerciseChartBlock(exName) {
+  // Best estimated-1RM set logged for this exercise, per Monday-start week
+  // (falls back to reps for bodyweight/no-weight exercises where e1RM can't be computed)
+  // Keyed by a UTC-based day index (not local getTime()) so week-to-week gaps stay
+  // an exact multiple of 7 across DST transitions instead of drifting by an hour.
+  const weekBest = new Map(); // dayIndex -> {ms, weight, reps, e1rm}
+  let anyWeight = false;
+  for (const w of state.history) {
+    if (!w.exercises || !w.date) continue;
+    const ex = w.exercises.find(e => e.name === exName);
+    if (!ex || !ex.sets || !ex.sets.length) continue;
+    const d = _parseDateStr(w.date);
+    if (!d) continue;
+
+    let best = null;
+    for (const s of ex.sets) {
+      const weight = parseFloat(s.weight) || 0;
+      const reps = parseInt(s.reps) || 0;
+      if (weight > 0) anyWeight = true;
+      const e1rm = estimate1RM(weight, reps);
+      if (!best || e1rm > best.e1rm || (e1rm === best.e1rm && reps > best.reps)) {
+        best = { weight, reps, e1rm };
+      }
+    }
+    if (!best) continue;
+
+    const weekStart = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    const day = weekStart.getDay();
+    const diffToMonday = (day === 0) ? 6 : day - 1;
+    weekStart.setDate(weekStart.getDate() - diffToMonday);
+    const key = Math.round(Date.UTC(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate()) / 86400000);
+    const existing = weekBest.get(key);
+    if (!existing || best.e1rm > existing.e1rm || (best.e1rm === existing.e1rm && best.reps > existing.reps)) {
+      weekBest.set(key, { ms: weekStart.getTime(), ...best });
+    }
+  }
+
+  if (!weekBest.size) {
+    return `
+      <div class="chest-ex-chart-block">
+        <div class="chest-ex-chart-head">
+          <div class="chest-ex-chart-title">${exName}</div>
+          <div class="chest-ex-chart-legend">Estimated Growth %</div>
+        </div>
+        <div class="chest-ex-chart-empty">No sets logged yet</div>
+      </div>
+    `;
+  }
+
+  const performedKeys = [...weekBest.keys()].sort((a, b) => a - b);
+  const usingE1rm = anyWeight;
+  const maxVal = usingE1rm
+    ? Math.max(...[...weekBest.values()].map(v => v.e1rm))
+    : Math.max(...[...weekBest.values()].map(v => v.reps));
+
+  // All-time PR week: whichever performed week has the single highest
+  // e1RM/reps value, so it can be flagged on the chart regardless of that
+  // week's own up/down/flat trend relative to its neighbors.
+  let prKey = performedKeys[0];
+  for (const key of performedKeys) {
+    const a = weekBest.get(key), b = weekBest.get(prKey);
+    const aVal = usingE1rm ? a.e1rm : a.reps, bVal = usingE1rm ? b.e1rm : b.reps;
+    if (aVal > bVal) prKey = key;
+  }
+
+  // Walk every week from the first performed one through the current week
+  // (step 7 days), inserting an explicit "SKIPPED" column for any week with
+  // no logged data — including a trailing gap between the last session and
+  // today, not just gaps between two performed weeks.
+  const firstIdx = performedKeys[0];
+  const thisWeekIdx = currentWeekDayIndex();
+  const lastIdx = Math.max(performedKeys[performedKeys.length - 1], thisWeekIdx);
+  let lastPerformed = null;
+
+  const bars = [];
+  for (let dayIndex = firstIdx; dayIndex <= lastIdx; dayIndex += 7) {
+    const v = weekBest.get(dayIndex);
+    const ms = Date.UTC(1970, 0, 1) + dayIndex * 86400000;
+    const label = fmtWeekRange(ms);
+
+    if (!v) {
+      // The current week isn't over yet, so no data doesn't mean it was
+      // skipped — it just hasn't happened yet.
+      const isThisWeek = dayIndex === thisWeekIdx;
+      const tag = isThisWeek ? 'current' : 'skipped';
+      bars.push(`
+        <div class="chest-ex-bar-col skipped" style="flex:0 0 72px;height:100%;">
+          <div class="chest-ex-bar-val">&nbsp;</div>
+          <div class="chest-ex-bar-growth flat">${tag}</div>
+          <div class="chest-ex-bar-track skipped-track" style="flex:1;"></div>
+          <div class="chest-ex-bar-label">${label}</div>
+        </div>
+      `);
+      continue;
+    }
+
+    const val = usingE1rm ? v.e1rm : v.reps;
+    const heightPct = maxVal > 0 ? Math.max(6, Math.round((val / maxVal) * 100)) : 6;
+    const valLabel = usingE1rm ? `~${Math.round(v.e1rm)} lbs e1RM` : `${v.reps} reps`;
+    const prPrefix = dayIndex === prKey ? `<span class="chest-ex-bar-pr-star">★</span> ` : '';
+
+    let growthHtml, barLevel;
+    if (!lastPerformed) {
+      // Earliest performed week — nothing before it to compare against.
+      // Treated as Level 1 (black), same as the model's Level 1 color.
+      growthHtml = `<div class="chest-ex-bar-growth flat">start</div>`;
+      barLevel = 1;
+    } else {
+      const prevVal = usingE1rm ? lastPerformed.e1rm : lastPerformed.reps;
+      // Percentage is always vs. the last week the exercise was actually
+      // performed, skipping right over any "skipped" weeks in between.
+      // A zero baseline (previous performed week had no weight logged)
+      // can't be divided into, so treat any gain from zero as +100%.
+      const pct = prevVal > 0
+        ? Math.round(((val - prevVal) / prevVal) * 100)
+        : (val > 0 ? 100 : 0);
+      const cls = pct > 0 ? 'up' : (pct < 0 ? 'down' : 'flat');
+      const sign = pct > 0 ? '+' : '';
+      growthHtml = `<div class="chest-ex-bar-growth ${cls}">${sign}${pct}%</div>`;
+      // A drop (or flat 0%) is also Level 1/black — only real gains climb the scale.
+      barLevel = pct <= 0 ? 1 : growthLevelForPct(pct);
+    }
+    lastPerformed = v;
+
+    const barColor = EX_BAR_COLORS[barLevel];
+    const barColorDim = EX_BAR_COLORS_DIM[barLevel];
+    const barGlow = EX_BAR_GLOW[barLevel];
+
+    bars.push(`
+      <div class="chest-ex-bar-col" style="flex:0 0 72px;height:100%;">
+        <div class="chest-ex-bar-val">${prPrefix}${valLabel}</div>
+        ${growthHtml}
+        <div class="chest-ex-bar-track" style="flex:1;">
+          <div class="chest-ex-bar" style="height:${heightPct}%;background:linear-gradient(180deg, ${barColor}, ${barColorDim});box-shadow:0 0 10px ${barGlow};"></div>
+        </div>
+        <div class="chest-ex-bar-label">${label}</div>
+      </div>
+    `);
+  }
+
+  return `
+    <div class="chest-ex-chart-block">
+      <div class="chest-ex-chart-head">
+        <div class="chest-ex-chart-title">${exName}</div>
+        <div class="chest-ex-chart-legend">Estimated Growth %</div>
+      </div>
+      <div class="chest-ex-chart">${bars.join('')}</div>
+    </div>
+  `;
+}
+
+document.getElementById('chest-fav-btn').addEventListener('click', () => {
+  openChestFavPopup();
+});
+
+document.getElementById('chest-fav-close').addEventListener('click', () => {
+  playSound('delete');
+  document.getElementById('chest-fav-popup').classList.remove('open');
+});
+
+document.getElementById('chest-fav-popup').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('chest-fav-popup')) {
+    document.getElementById('chest-fav-popup').classList.remove('open');
+  }
+});
+
+document.getElementById('chest-fav-pick-close').addEventListener('click', () => {
+  playSound('delete');
+  document.getElementById('chest-fav-pick-popup').classList.remove('open');
+});
+
+document.getElementById('chest-fav-pick-popup').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('chest-fav-pick-popup')) {
+    document.getElementById('chest-fav-pick-popup').classList.remove('open');
+  }
+});
 
 // ═══════════════════════════════════════════════════════════
 // EDIT EXERCISE MODAL
@@ -5166,8 +6246,8 @@ function closeEditModal() {
   document.getElementById('edit-modal').classList.remove('open');
 }
 
-document.getElementById('edit-cancel-btn').addEventListener('click', closeEditModal);
-document.getElementById('edit-close-btn').addEventListener('click', closeEditModal);
+document.getElementById('edit-cancel-btn').addEventListener('click', () => { playSound('delete'); closeEditModal(); });
+document.getElementById('edit-close-btn').addEventListener('click', () => { playSound('delete'); closeEditModal(); });
 document.getElementById('edit-modal').addEventListener('click', e => {
   if (e.target === document.getElementById('edit-modal')) closeEditModal();
 });
@@ -5185,6 +6265,7 @@ document.getElementById('edit-rest-display').addEventListener('click', () => {
 });
 
 document.getElementById('edit-save-btn').addEventListener('click', () => {
+  playSound('commonButton');
   const newName = document.getElementById('edit-input').value.trim();
   if (!newName) { alert('Please enter a name.'); return; }
   if (!editMuscle) { alert('Please select a muscle group.'); return; }
@@ -5269,6 +6350,7 @@ document.getElementById('ex-delete-no').addEventListener('click', () => {
 });
 
 document.getElementById('ex-delete-yes').addEventListener('click', () => {
+  playSound('delete');
   const { muscle, idx } = editCtx;
   const exName = state.exercises[muscle][idx];
 
@@ -5486,6 +6568,7 @@ let restSecs = 0;
 let restEndTime = 0; // absolute ms timestamp when rest expires
 let restCurrentExercise = null;
 let restCurrentDuration = 90;
+let restCountdownPlayedFor = null;
 
 function fmtRestSecs(secs) {
   const m = Math.floor(secs / 60);
@@ -5511,8 +6594,10 @@ function startRestTimer(duration) {
   restCurrentDuration = secs;
   restEndTime = Date.now() + secs * 1000;
   restSecs = secs;
+  restCountdownPlayedFor = null;
   updateRestDisplay();
   document.getElementById('rest-timer-bar').classList.add('active');
+  playSound('restTimerStart');
   restInterval = setInterval(tickRestTimer, 500);
 }
 
@@ -5520,9 +6605,15 @@ function tickRestTimer() {
   const remaining = Math.ceil((restEndTime - Date.now()) / 1000);
   if (remaining <= 0) {
     stopRestTimer();
+    flashRestComplete();
+    playSound('restTimerEnd');
   } else {
     restSecs = remaining;
     updateRestDisplay();
+    if (remaining <= 3 && restCountdownPlayedFor !== remaining) {
+      restCountdownPlayedFor = remaining;
+      playSound('restTimerCountdown');
+    }
   }
 }
 
@@ -5531,6 +6622,14 @@ function stopRestTimer() {
   restInterval = null;
   restEndTime = 0;
   document.getElementById('rest-timer-bar').classList.remove('active');
+  document.getElementById('rest-complete-flash').classList.remove('flash');
+}
+
+function flashRestComplete() {
+  const el = document.getElementById('rest-complete-flash');
+  el.classList.remove('flash');
+  void el.offsetWidth; // restart animation
+  el.classList.add('flash');
 }
 
 function updateRestDisplay() {
@@ -5621,7 +6720,7 @@ document.getElementById('rest-edit-apply').addEventListener('click', () => {
   closeRestEdit();
 });
 
-document.getElementById('rest-edit-cancel').addEventListener('click', closeRestEdit);
+document.getElementById('rest-edit-cancel').addEventListener('click', () => { playSound('delete'); closeRestEdit(); });
 document.getElementById('rest-edit-modal').addEventListener('click', e => {
   if (e.target === document.getElementById('rest-edit-modal')) closeRestEdit();
 });
@@ -5649,6 +6748,7 @@ function closeTrain() {
   clearInterval(inactivityInterval);
   inactivityInterval = null;
   stopRestTimer();
+  stopNoRestWatch();
   clearActiveSession();
   const modal = document.getElementById('train-modal');
   modal.classList.remove('open');
@@ -5670,6 +6770,8 @@ function restoreTrain() {
 }
 
 function openTrain() {
+  playSound('sessionStart');
+  startNoRestWatch();
   trainActive = true;
   livePreviewActive = true;
   document.querySelector('.nav-btn[data-tab="train"]').classList.add('train-live');
@@ -5705,6 +6807,7 @@ document.getElementById('cancel-btn').addEventListener('click', async () => {
     const ok = await customConfirm('Cancel workout? Progress will be lost.', 'Cancel Workout', 'Keep Going');
     if (!ok) return;
   }
+  playSound('delete');
   closeTrain();
 });
 
@@ -5811,6 +6914,7 @@ function showWorkoutSummary(exercises, durationSecs, prsBefore) {
 
   document.getElementById('summary-prs').textContent = prCount;
   document.getElementById('workout-summary').classList.add('open');
+  playSound(prCount > 0 ? 'personalRecord' : 'workoutComplete');
 }
 
 document.getElementById('summary-done-btn').addEventListener('click', () => {
@@ -5847,7 +6951,7 @@ function customPrompt(message, placeholder) {
       resolve(val);
     }
     function onOk() { cleanup(inp.value.trim() || null); }
-    function onCancel() { cleanup(null); }
+    function onCancel() { playSound('delete'); cleanup(null); }
     function onKey(e) { if (e.key === 'Enter') onOk(); }
     document.getElementById('custom-prompt-ok').addEventListener('click', onOk);
     document.getElementById('custom-prompt-cancel').addEventListener('click', onCancel);
@@ -5912,6 +7016,7 @@ function renderTemplatePicker() {
       e.stopPropagation();
       const ok = await customConfirm(`Delete "${tpl.name}"?`, 'Delete', 'Cancel');
       if (!ok) return;
+      playSound('delete');
       const updated = loadTemplates();
       updated.splice(updated.findIndex(t => t.id === tpl.id), 1);
       saveTemplates(updated);
@@ -5929,6 +7034,7 @@ function openTrainWithTemplate(tpl) {
 }
 
 document.getElementById('template-picker-close').addEventListener('click', () => {
+  playSound('delete');
   closeTemplatePicker();
 });
 
@@ -5977,7 +7083,7 @@ function addTplExerciseBlock(name, muscle) {
   removeBtn.className = 'remove-ex';
   removeBtn.type = 'button';
   removeBtn.textContent = '×';
-  removeBtn.addEventListener('click', () => { tplSession[idx] = null; block.remove(); });
+  removeBtn.addEventListener('click', () => { playSound('delete'); tplSession[idx] = null; block.remove(); });
   top.appendChild(removeBtn);
 
   const cols = document.createElement('div');
@@ -6036,6 +7142,7 @@ function renderTplSets(exIdx, block) {
     delBtn.textContent = '×';
     delBtn.style.display = ex.sets.length > 1 ? '' : 'none';
     delBtn.addEventListener('click', () => {
+      playSound('delete');
       ex.sets.splice(setIdx, 1);
       renderTplSets(exIdx, block);
     });
@@ -6054,6 +7161,7 @@ document.getElementById('tpl-cancel-btn').addEventListener('click', async () => 
     const ok = await customConfirm('Discard this template?', 'Discard', 'Keep Editing');
     if (!ok) return;
   }
+  playSound('delete');
   closeTplBuilder();
   openTemplatePicker();
 });
@@ -6075,6 +7183,7 @@ document.getElementById('tpl-save-btn').addEventListener('click', async () => {
 });
 
 document.getElementById('tpl-add-ex').addEventListener('click', () => {
+  playSound('commonButton');
   const picker = document.getElementById('picker');
   picker._tplMode = true;
   picker._histMode = false;
@@ -6084,6 +7193,7 @@ document.getElementById('tpl-add-ex').addEventListener('click', () => {
 
 function addExerciseBlock(name, muscle, initialSets) {
   touchActivity();
+  playSound('exerciseSelect');
   const idx = session.length;
   const preSets = initialSets && initialSets.length
     ? initialSets.map(s => ({ weight: s.weight || '', reps: s.reps || '', done: s.done || false }))
@@ -6124,6 +7234,7 @@ function addExerciseBlock(name, muscle, initialSets) {
   removeBtn.textContent = '×';
   removeBtn.addEventListener('click', () => {
     touchActivity();
+    playSound('delete');
     session[parseInt(block.dataset.sessionIdx)] = null;
     block.remove();
     saveActiveSession();
@@ -6379,12 +7490,16 @@ function renderSets(exIdx, block) {
       touchActivity();
       const reps = parseInt(ex.sets[setIdx].reps) || 0;
       if (!ex.sets[setIdx].done && reps === 0) return;
+      const levelBefore = getLevel(ex.muscle);
       ex.sets[setIdx].done = !ex.sets[setIdx].done;
       checkBtn.classList.toggle('done', ex.sets[setIdx].done);
       if (ex.sets[setIdx].done) {
+        playSound('setComplete');
+        markSetCompleted();
         restCurrentExercise = ex.name;
         const exRest = (state.exerciseMeta[ex.name] || {}).restTime;
         startRestTimer(exRest || restDuration);
+        if (getLevel(ex.muscle) > levelBefore) playSound('levelUp');
       }
       saveActiveSession();
       updateModel();
@@ -6403,6 +7518,7 @@ function renderSets(exIdx, block) {
     delBtn.style.display = ex.sets.length > 1 ? '' : 'none';
     delBtn.addEventListener('click', () => {
       touchActivity();
+      playSound('delete');
       ex.sets.splice(setIdx, 1);
       renderSets(parseInt(block.dataset.sessionIdx), block);
       saveActiveSession();
@@ -6429,7 +7545,7 @@ function addSet(exIdx, block) {
   saveActiveSession();
 }
 
-document.getElementById('add-ex-main').addEventListener('click', openPicker);
+document.getElementById('add-ex-main').addEventListener('click', () => { playSound('commonButton'); openPicker(); });
 
 // ═══════════════════════════════════════════════════════════
 // EXERCISE PICKER
@@ -6497,7 +7613,7 @@ function renderPickerMuscleGrid() {
           <div class="picker-muscle-count" style="font-size:10px;"><span style="color:${dotColor}">Lv ${lv}</span> · ${setsLine}</div>
         </div>
       `;
-      btn.addEventListener('click', () => openPickerExPopup(muscle));
+      btn.addEventListener('click', () => { playSound('commonButton'); openPickerExPopup(muscle); });
       grid.appendChild(btn);
     }
   }
@@ -6564,6 +7680,7 @@ function openPickerExPopup(muscle) {
 }
 
 document.getElementById('ex-popup-close').addEventListener('click', () => {
+  playSound('delete');
   document.getElementById('ex-popup').classList.remove('open');
   exPopupMuscle = null;
 });
@@ -6575,7 +7692,34 @@ document.getElementById('ex-popup').addEventListener('click', (e) => {
   }
 });
 
+document.getElementById('dm-open-btn').addEventListener('click', () => {
+  document.getElementById('dm-popup').classList.add('open');
+});
+
+document.getElementById('dm-close').addEventListener('click', () => {
+  playSound('delete');
+  document.getElementById('dm-popup').classList.remove('open');
+});
+
+document.getElementById('dm-popup').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('dm-popup')) {
+    document.getElementById('dm-popup').classList.remove('open');
+  }
+});
+
+document.getElementById('chest-close').addEventListener('click', () => {
+  playSound('delete');
+  document.getElementById('chest-popup').classList.remove('open');
+});
+
+document.getElementById('chest-popup').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('chest-popup')) {
+    document.getElementById('chest-popup').classList.remove('open');
+  }
+});
+
 document.getElementById('picker-close').addEventListener('click', () => {
+  playSound('delete');
   const picker = document.getElementById('picker');
   picker._histMode = false;
   picker._tplMode = false;
@@ -6604,6 +7748,7 @@ document.getElementById('picker').addEventListener('click', (e) => {
 });
 
 document.getElementById('picker-ex-close').addEventListener('click', () => {
+  playSound('delete');
   document.getElementById('picker-ex-popup').classList.remove('open');
 });
 
@@ -6744,6 +7889,7 @@ document.querySelectorAll('.custom-room-slot').forEach((slot, i) => {
   slot.addEventListener('click', () => {
     const customs = loadCustomRooms();
     if (customs[i]) {
+      playSound('roomSelect');
       setRoom(`c${i + 1}`);
       renderCustomSlots();
       updateArcPreview._customSrc = customs[i];
@@ -6849,7 +7995,7 @@ function renderArc() {
 
   if (confirmed) {
     const selRoomNum = selIdx + 1;
-    if (!activeRoom.startsWith('c') && String(selRoomNum) !== activeRoom) setRoom(selRoomNum);
+    if (!activeRoom.startsWith('c') && String(selRoomNum) !== activeRoom) { playSound('roomHover'); setRoom(selRoomNum); }
     if (!activeRoom.startsWith('c')) updateArcPreview(selRoomNum);
   }
 
@@ -6954,9 +8100,10 @@ window.addEventListener('touchstart', e => {
 window.addEventListener('touchmove', e => { if (arcDragging) arcDragMove(e.touches[0].clientY); }, { passive: true });
 window.addEventListener('touchend', () => { arcDragEnd(); });
 
-document.getElementById('room-btn').addEventListener('click', openRoomOverlay);
+document.getElementById('room-btn').addEventListener('click', () => { playSound('commonButton'); openRoomOverlay(); });
 
 document.getElementById('room-close-btn').addEventListener('click', () => {
+  playSound('roomSelect');
   document.getElementById('room-overlay').classList.remove('open');
   document.getElementById('room-arc-layer').classList.remove('open');
   stopArcAnim();
@@ -7203,6 +8350,7 @@ function renderFocusPickerList(query, muscleFilter) {
 }
 
 document.getElementById('focus-picker-close').addEventListener('click', () => {
+  playSound('delete');
   document.getElementById('focus-picker').classList.remove('open');
 });
 
@@ -7285,8 +8433,8 @@ function closeNewExModal() {
 
 document.getElementById('new-ex-btn').addEventListener('click', () => openNewExModal());
 
-document.getElementById('new-ex-close').addEventListener('click', closeNewExModal);
-document.getElementById('new-ex-cancel').addEventListener('click', closeNewExModal);
+document.getElementById('new-ex-close').addEventListener('click', () => { playSound('delete'); closeNewExModal(); });
+document.getElementById('new-ex-cancel').addEventListener('click', () => { playSound('delete'); closeNewExModal(); });
 
 (function() {
   const nexName = document.getElementById('nex-name');
@@ -7393,6 +8541,7 @@ document.querySelectorAll('.pulley-btn').forEach(btn => {
 });
 
 document.getElementById('pulley-close').addEventListener('click', () => {
+  playSound('delete');
   document.querySelectorAll('.pulley-btn').forEach(b => b.classList.remove('pulley-btn-active'));
   savePendingCableExercise(null);
   document.getElementById('pulley-modal').classList.remove('open');
@@ -7510,6 +8659,7 @@ function buildOverrideList() {
 }
 
 document.getElementById('goals-btn').addEventListener('click', () => {
+  playSound('commonButton');
   buildGoalsList();
   renderFocusSlots();
   document.getElementById('goals-overlay').classList.add('open');
@@ -7524,11 +8674,13 @@ function syncAvatarSelection() {
 }
 
 document.getElementById('avatar-btn').addEventListener('click', () => {
+  playSound('commonButton');
   syncAvatarSelection();
   document.getElementById('avatar-overlay').classList.add('open');
 });
 
 document.getElementById('avatar-close-btn').addEventListener('click', () => {
+  playSound('delete');
   document.getElementById('avatar-overlay').classList.remove('open');
 });
 
@@ -7542,6 +8694,7 @@ document.querySelectorAll('.avatar-hair-card').forEach(card => {
 });
 
 document.getElementById('testing-btn').addEventListener('click', () => {
+  playSound('commonButton');
   testingLevelOverride = testingLevelOverride == null ? 1 : (testingLevelOverride % 5) + 1;
   document.getElementById('testing-btn').textContent = 'Testing: Level ' + testingLevelOverride;
   document.getElementById('exit-testing-btn').style.display = '';
@@ -7549,6 +8702,7 @@ document.getElementById('testing-btn').addEventListener('click', () => {
 });
 
 document.getElementById('exit-testing-btn').addEventListener('click', () => {
+  playSound('commonButton');
   testingLevelOverride = null;
   document.getElementById('testing-btn').textContent = 'Testing';
   document.getElementById('exit-testing-btn').style.display = 'none';
@@ -7570,10 +8724,12 @@ document.getElementById('rotation-toggle-btn').addEventListener('click', () => {
 
 
 document.getElementById('goals-close-btn').addEventListener('click', () => {
+  playSound('delete');
   document.getElementById('goals-overlay').classList.remove('open');
 });
 
 document.getElementById('override-close-btn').addEventListener('click', () => {
+  playSound('delete');
   document.getElementById('override-overlay').classList.remove('open');
   buildGoalsList();
 });
@@ -7669,12 +8825,14 @@ function buildWeeklyOverview() {
 }
 
 document.getElementById('weekly-overview-btn').addEventListener('click', () => {
+  playSound('commonButton');
   buildWeeklyOverview();
   document.getElementById('catchup-btn').classList.remove('active');
   document.getElementById('weekly-overview-overlay').classList.add('open');
 });
 
 document.getElementById('weekly-overview-close-btn').addEventListener('click', () => {
+  playSound('delete');
   document.getElementById('weekly-overview-overlay').classList.remove('open');
 });
 
@@ -7918,6 +9076,7 @@ function attachTrainNumpad(inp, pairInp, checkBtn, field) {
     if (!ok1) return;
     const ok2 = await customConfirm('Are you absolutely sure? Everything will be permanently erased and cannot be recovered.', 'Delete Everything', 'Cancel');
     if (!ok2) return;
+    playSound('delete');
     const ds = defaultState();
     state.exercises = ds.exercises;
     state.exerciseMeta = {};
