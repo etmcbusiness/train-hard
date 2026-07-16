@@ -27,7 +27,7 @@
 // each folder — no other registration needed, see index.html's
 // RANDOM_FOLDERS/loadRandomFolder for how they're picked up.
 
-export const EXTENDED_REST_X_SECONDS = 30;
+export const EXTENDED_REST_X_SECONDS = 5 * 60;
 
 export const EXTENDED_REST_STAGE_1_SEC = EXTENDED_REST_X_SECONDS;
 export const EXTENDED_REST_STAGE_2_SEC = EXTENDED_REST_X_SECONDS * 1.5;
