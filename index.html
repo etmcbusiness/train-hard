@@ -2063,7 +2063,8 @@
     }
     #avatar-hair-options,
     #avatar-ui-options,
-    #avatar-rotation-options {
+    #avatar-rotation-options,
+    #avatar-sound-options {
       display: flex;
       gap: 10px;
     }
@@ -4267,6 +4268,11 @@
       <div id="avatar-rotation-options">
         <button class="avatar-inspiration-btn" id="rotation-toggle-btn">Auto-Rotate: On</button>
       </div>
+      <div class="avatar-section-label" style="margin-top:22px;">Sound</div>
+      <div id="avatar-sound-options">
+        <button class="avatar-inspiration-btn" id="sounds-toggle-btn">Sounds: On</button>
+        <button class="avatar-inspiration-btn" id="other-sounds-toggle-btn">Other Sounds: On</button>
+      </div>
     </div>
   </div>
   <button id="avatar-close-btn">Done</button>
@@ -4456,6 +4462,16 @@ const SOUNDS = {
   roomHover: 'assets/sounds/room-hover.mp3',
 };
 
+// "Sounds" = direct tap/button feedback. "Other Sounds" = everything not
+// caused by a direct tap — timers, milestones, and idle nags — toggled
+// separately from the profile Avatar screen.
+const OTHER_SOUND_KEYS = new Set([
+  'sessionStart', 'restTimerStart', 'restTimerCountdown', 'restTimerEnd',
+  'workoutComplete', 'personalRecord', 'levelUp',
+]);
+let soundsEnabled = localStorage.getItem('trainhard_sounds') !== 'off';
+let otherSoundsEnabled = localStorage.getItem('trainhard_other_sounds') !== 'off';
+
 // Web Audio API instead of <audio>/new Audio(): HTMLMediaElement playback
 // claims the OS "media" audio session and both interrupts background music
 // and re-decodes on every play (audible delay). Decoding once into an
@@ -4502,6 +4518,8 @@ function firePlayback(buffer) {
 }
 
 function playSound(key) {
+  const enabled = OTHER_SOUND_KEYS.has(key) ? otherSoundsEnabled : soundsEnabled;
+  if (!enabled) return;
   const buffer = soundBuffers[key];
   if (buffer) {
     firePlayback(buffer);
@@ -4550,6 +4568,7 @@ loadRandomFolder('noTimeToRestStage2');
 loadRandomFolder('noTimeToRestStage3');
 
 function playRandomFromFolder(key) {
+  if (!otherSoundsEnabled) return;
   const buffers = randomFolderBuffers[key];
   if (!buffers || !buffers.length) return;
   const buffer = buffers[Math.floor(Math.random() * buffers.length)];
@@ -8917,6 +8936,32 @@ document.getElementById('rotation-toggle-btn').addEventListener('click', () => {
   autoRotateEnabled = !autoRotateEnabled;
   localStorage.setItem('trainhard_autorotate', autoRotateEnabled ? 'on' : 'off');
   syncRotationToggle();
+});
+
+function syncSoundsToggle() {
+  const btn = document.getElementById('sounds-toggle-btn');
+  btn.textContent = 'Sounds: ' + (soundsEnabled ? 'On' : 'Off');
+  btn.classList.toggle('selected', soundsEnabled);
+}
+syncSoundsToggle();
+
+document.getElementById('sounds-toggle-btn').addEventListener('click', () => {
+  soundsEnabled = !soundsEnabled;
+  localStorage.setItem('trainhard_sounds', soundsEnabled ? 'on' : 'off');
+  syncSoundsToggle();
+});
+
+function syncOtherSoundsToggle() {
+  const btn = document.getElementById('other-sounds-toggle-btn');
+  btn.textContent = 'Other Sounds: ' + (otherSoundsEnabled ? 'On' : 'Off');
+  btn.classList.toggle('selected', otherSoundsEnabled);
+}
+syncOtherSoundsToggle();
+
+document.getElementById('other-sounds-toggle-btn').addEventListener('click', () => {
+  otherSoundsEnabled = !otherSoundsEnabled;
+  localStorage.setItem('trainhard_other_sounds', otherSoundsEnabled ? 'on' : 'off');
+  syncOtherSoundsToggle();
 });
 
 function syncUiThemeButtons() {
