@@ -269,7 +269,10 @@
       flex-direction: column;
       z-index: 10;
       pointer-events: none;
+      opacity: 0;
+      transition: opacity 1.2s ease-out;
     }
+    #app.visible { opacity: 1; }
 
     .section {
       flex: 1;
@@ -1443,7 +1446,7 @@
     }
     .picker-group-header:first-child { padding-top: 2px; }
 
-    .picker-muscle-btn {
+    .picker-muscle-btn, .picker-wellness-btn {
       background: rgba(var(--c-panel2),0.88);
       border: 1px solid rgba(var(--c-accent2),0.22);
       border-radius: 14px;
@@ -1455,7 +1458,7 @@
       -webkit-tap-highlight-color: transparent;
       touch-action: manipulation;
     }
-    .picker-muscle-btn:active { background: rgba(var(--c-accent),0.12); border-color: rgba(var(--c-accent),0.4); }
+    .picker-muscle-btn:active, .picker-wellness-btn:active { background: rgba(var(--c-accent),0.12); border-color: rgba(var(--c-accent),0.4); }
     .picker-muscle-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
     .picker-muscle-name { font-size: 14px; font-weight: 700; color: rgb(var(--c-text)); line-height: 1.2; }
     .picker-muscle-count { font-size: 11px; color: rgb(var(--c-text3)); margin-top: 2px; }
@@ -1480,6 +1483,11 @@
       background: rgba(200,200,200,0.07);
       outline: 1px solid rgba(200,200,200,0.35);
       box-shadow: 0 0 10px rgba(200,200,200,0.12);
+    }
+    .picker-muscle-btn.catchup-highlight-oldest {
+      background: rgba(255,176,64,0.08);
+      outline: 1px solid rgba(255,176,64,0.4);
+      box-shadow: 0 0 10px rgba(255,176,64,0.15);
     }
 
     /* ── Picker Exercise Popup ── */
@@ -1698,36 +1706,36 @@
       align-items: center;
       justify-content: center;
       gap: 2px;
+      transition: opacity 1s ease;
     }
-    #load-word-train {
+    #loading.fade-out {
+      opacity: 0;
+      pointer-events: none;
+    }
+    #load-word-train, #load-word-hard {
+      display: flex;
+      gap: 5px;
       font-size: 56px;
       font-weight: 900;
-      letter-spacing: 6px;
+      text-transform: uppercase;
+    }
+    .load-letter {
+      display: inline-block;
+      opacity: 0.12;
+      transform: translateY(22px);
+      transition: transform 0.5s cubic-bezier(0.19, 1, 0.22, 1), opacity 0.4s ease-out;
+    }
+    .load-letter.risen {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    #load-word-train .load-letter {
       color: rgb(var(--c-text));
-      opacity: 0;
-      animation: wordReveal 0.55s cubic-bezier(0.22, 1, 0.36, 1) 0.1s forwards,
-                 wordGlow 2.8s ease-in-out 0.65s infinite alternate;
+      text-shadow: 0 2px 30px rgba(var(--c-accent-light),0.35);
     }
-    #load-word-hard {
-      font-size: 56px;
-      font-weight: 900;
-      letter-spacing: 6px;
+    #load-word-hard .load-letter {
       color: rgb(var(--c-accent));
-      opacity: 0;
-      animation: wordReveal 0.55s cubic-bezier(0.22, 1, 0.36, 1) 0.38s forwards,
-                 wordGlowBlue 2.8s ease-in-out 0.93s infinite alternate;
-    }
-    @keyframes wordReveal {
-      from { opacity: 0; transform: translateY(32px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes wordGlow {
-      from { text-shadow: 0 2px 18px rgba(var(--c-accent-light),0.2); }
-      to   { text-shadow: 0 2px 50px rgba(var(--c-accent-light),0.7), 0 0 80px rgba(var(--c-accent),0.35); }
-    }
-    @keyframes wordGlowBlue {
-      from { text-shadow: 0 2px 18px rgba(var(--c-accent),0.3); }
-      to   { text-shadow: 0 2px 60px rgba(var(--c-accent),1), 0 0 100px rgba(var(--c-accent),0.6); }
+      text-shadow: 0 2px 30px rgba(var(--c-accent),0.45);
     }
 
     /* ── Profile Buttons (top-left) ── */
@@ -2892,6 +2900,12 @@
       outline: 1px solid rgba(200,200,200,0.35);
       box-shadow: 0 0 10px rgba(200,200,200,0.12);
     }
+    .wo-row.catchup-highlight-oldest {
+      background: rgba(255,176,64,0.08);
+      border-radius: 10px;
+      outline: 1px solid rgba(255,176,64,0.4);
+      box-shadow: 0 0 10px rgba(255,176,64,0.15);
+    }
     #weekly-overview-title {
       font-size: 12px;
       font-weight: 800;
@@ -2924,6 +2938,27 @@
       padding: 6px 2px 3px;
     }
     .wo-group-header:first-child { padding-top: 2px; }
+    .wo-placeholder {
+      font-size: 11px;
+      color: rgb(var(--c-text3));
+      opacity: 0.6;
+      font-style: italic;
+      padding: 0 2px;
+    }
+    .wo-extra-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+    .wo-extra-label {
+      font-size: 9px;
+      font-weight: 800;
+      color: rgb(var(--c-text4));
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      padding: 10px 2px 5px;
+    }
     .wo-grid {
       display: grid;
       grid-template-columns: 1fr 1fr 1fr;
@@ -3767,8 +3802,19 @@
 
 <!-- Loading -->
 <div id="loading">
-  <div id="load-word-train">Train</div>
-  <div id="load-word-hard">Hard</div>
+  <div id="load-word-train">
+    <span class="load-letter">T</span>
+    <span class="load-letter">r</span>
+    <span class="load-letter">a</span>
+    <span class="load-letter">i</span>
+    <span class="load-letter">n</span>
+  </div>
+  <div id="load-word-hard">
+    <span class="load-letter">H</span>
+    <span class="load-letter">a</span>
+    <span class="load-letter">r</span>
+    <span class="load-letter">d</span>
+  </div>
 </div>
 
 <!-- 3D Canvas -->
@@ -4271,7 +4317,7 @@
       <div class="avatar-section-label" style="margin-top:22px;">Sound</div>
       <div id="avatar-sound-options">
         <button class="avatar-inspiration-btn" id="sounds-toggle-btn">Sounds: On</button>
-        <button class="avatar-inspiration-btn" id="other-sounds-toggle-btn">Other Sounds: On</button>
+        <button class="avatar-inspiration-btn" id="other-sounds-toggle-btn">Coach Sounds: On</button>
       </div>
     </div>
   </div>
@@ -4691,6 +4737,12 @@ const MUSCLE_GROUPS = [
   { label: 'Lower Body', muscles: ['Quads','Hamstrings','Calves'] },
 ];
 
+// Untracked wellness categories shown as paired header-only sections in the Weekly Overview.
+const WO_EXTRA_PAIRS = [['Cardio', 'Stretching'], ['Heat Exposure', 'Cold Exposure']];
+// Same categories, usable from the Add Exercise picker for logging only — they have
+// no level/goal and never count toward weeklySets or the avatar's overall level.
+const WELLNESS_CATEGORIES = WO_EXTRA_PAIRS.flat();
+
 const INDEX_TO_PART = {
   0:  'Shorts',
   1:  'Chest',
@@ -4783,7 +4835,7 @@ function defaultState() {
     userName: 'Athlete',
     lastReset: getMondayStr(),
     weeklySets: Object.fromEntries(MUSCLES.map(m => [m, 0])),
-    exercises: Object.fromEntries(MUSCLES.map(m => [m, []])),
+    exercises: Object.fromEntries([...MUSCLES, ...WELLNESS_CATEGORIES].map(m => [m, []])),
     history: [],
     prs: {},
     repPRs: {},
@@ -4808,6 +4860,11 @@ function loadState() {
     if (s.exercises && !('Traps' in s.exercises)) s.exercises['Traps'] = [];
     if (!('Obliques' in s.weeklySets)) s.weeklySets['Obliques'] = 0;
     if (s.exercises && !('Obliques' in s.exercises)) s.exercises['Obliques'] = [];
+    if (s.exercises) {
+      for (const cat of WELLNESS_CATEGORIES) {
+        if (!(cat in s.exercises)) s.exercises[cat] = [];
+      }
+    }
     if (!s.cablePulleys) s.cablePulleys = {};
     if (!s.exerciseMeta) s.exerciseMeta = {};
     // Remove auto-generated placeholder exercises (e.g. "Chest Exercise")
@@ -5127,6 +5184,64 @@ function updateModel() {
 // Aura/toon-outline-apply.js (imported at the top of this script block).
 
 
+// Letters rise one at a time on a fixed, even clock (T at t=0, then one more
+// every LETTER_STEP_MS) — never batched, never tied to download progress, so
+// the spacing always reads as smooth and consistent. The very last letter is
+// held back until the model is actually ready: if the model finishes before
+// its turn, it still rises on schedule (same even spacing); if the model is
+// slower, the sequence just holds on the second-to-last letter and waits.
+const LETTER_STEP_MS = 90;
+const loadLetters = document.querySelectorAll('#loading .load-letter');
+const lastLetterIndex = loadLetters.length - 1;
+let nextLetterIndex = 0;
+let modelReady = false;
+let onModelReadyRevealed = null;
+
+function tickLetterSequence() {
+  if (nextLetterIndex < lastLetterIndex) {
+    loadLetters[nextLetterIndex].classList.add('risen');
+    nextLetterIndex++;
+    setTimeout(tickLetterSequence, LETTER_STEP_MS);
+  } else if (nextLetterIndex === lastLetterIndex) {
+    if (modelReady) {
+      loadLetters[nextLetterIndex].classList.add('risen');
+      nextLetterIndex++;
+      if (onModelReadyRevealed) onModelReadyRevealed();
+    } else {
+      setTimeout(tickLetterSequence, LETTER_STEP_MS);
+    }
+  }
+}
+tickLetterSequence();
+
+function dismissLoadingScreen(cb) {
+  modelReady = true;
+  const finish = () => {
+    const loadingEl = document.getElementById('loading');
+    const appEl = document.getElementById('app');
+    appEl.style.display = 'flex';
+    // Double rAF: let the browser paint display:flex at opacity 0 first,
+    // so the opacity transition to 1 actually animates instead of jumping.
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      appEl.classList.add('visible');
+      loadingEl.classList.add('fade-out');
+    }));
+    // Wait for the loading screen's own fade-out before detaching it, so
+    // the 3D scene underneath crossfades in instead of popping in instantly
+    // the moment #loading's display flips to none.
+    setTimeout(() => { loadingEl.style.display = 'none'; }, 1000);
+    cb();
+  };
+  // If the letter sequence already reached (or passed) the last letter, the
+  // scheduler either just revealed it or is waiting on modelReady — in the
+  // latter case flip it now instead of waiting for the next tick.
+  if (nextLetterIndex > lastLetterIndex) {
+    finish();
+  } else {
+    onModelReadyRevealed = finish;
+  }
+}
+
 function loadModel(idx, onReady) {
   const entry = modelCache[idx];
   if (entry.scene) { onReady(entry); return; }
@@ -5183,12 +5298,12 @@ function loadModel(idx, onReady) {
     })
     .catch(e => {
       console.error('Model load failed:', e);
-      document.getElementById('loading').style.display = 'none';
-      document.getElementById('app').style.display = 'flex';
-      const profileNameEl1 = document.getElementById('profile-name');
-      if (profileNameEl1) profileNameEl1.textContent = state.userName;
-      renderFocusStats();
-      checkAndRestoreSession();
+      dismissLoadingScreen(() => {
+        const profileNameEl1 = document.getElementById('profile-name');
+        if (profileNameEl1) profileNameEl1.textContent = state.userName;
+        renderFocusStats();
+        checkAndRestoreSession();
+      });
     });
 }
 
@@ -5219,12 +5334,12 @@ loadModel(0, (entry) => {
   spinGroup.rotation.y = -Math.PI / 2;
   recalcStats();
 
-  document.getElementById('loading').style.display = 'none';
-  document.getElementById('app').style.display = 'flex';
-  const profileNameEl2 = document.getElementById('profile-name');
-  if (profileNameEl2) profileNameEl2.textContent = state.userName;
-  renderFocusStats();
-  checkAndRestoreSession();
+  dismissLoadingScreen(() => {
+    const profileNameEl2 = document.getElementById('profile-name');
+    if (profileNameEl2) profileNameEl2.textContent = state.userName;
+    renderFocusStats();
+    checkAndRestoreSession();
+  });
 });
 
 // ─── Viewport stabilizer ───
@@ -5690,6 +5805,32 @@ function renderExercises() {
       el.appendChild(group);
     }
   }
+
+  const wellnessHeader = document.createElement('div');
+  wellnessHeader.className = 'picker-group-header';
+  wellnessHeader.textContent = 'Wellness';
+  el.appendChild(wellnessHeader);
+  for (const category of WELLNESS_CATEGORIES) {
+    const exList = state.exercises[category] || [];
+
+    const group = document.createElement('div');
+    group.className = 'muscle-group';
+    group.innerHTML = `
+      <div class="muscle-header">
+        <div class="muscle-left">
+          <div class="muscle-dot" style="background:rgba(var(--c-text3),0.6);"></div>
+          <div>
+            <div class="muscle-name">${category}</div>
+            <div class="muscle-meta">${exList.length} exercise${exList.length !== 1 ? 's' : ''}</div>
+          </div>
+        </div>
+        <span class="chevron">›</span>
+      </div>
+    `;
+
+    group.querySelector('.muscle-header').addEventListener('click', () => { playSound('commonButton'); openExPopup(category); });
+    el.appendChild(group);
+  }
 }
 
 
@@ -5703,16 +5844,19 @@ function openExPopup(muscle) {
 
 function renderExPopup() {
   const muscle = exPopupMuscle;
+  const isWellness = WELLNESS_CATEGORIES.includes(muscle);
   const lv = getLevel(muscle);
   const dotColor = LEVEL_COLORS[lv];
   const sets = state.weeklySets[muscle] || 0;
   const exList = state.exercises[muscle] || [];
 
-  document.getElementById('ex-popup-dot').style.cssText =
-    `background:${dotColor};box-shadow:0 0 8px ${dotColor};`;
+  document.getElementById('ex-popup-dot').style.cssText = isWellness
+    ? 'display:none;'
+    : `background:${dotColor};box-shadow:0 0 8px ${dotColor};`;
   document.getElementById('ex-popup-title').textContent = muscle;
-  document.getElementById('ex-popup-meta').textContent =
-    `${sets} sets this week · Level ${lv}`;
+  document.getElementById('ex-popup-meta').textContent = isWellness
+    ? `${exList.length} exercise${exList.length !== 1 ? '' : 's'}`
+    : `${sets} sets this week · Level ${lv}`;
 
   const list = document.getElementById('ex-popup-list');
   list.innerHTML = '';
@@ -5746,13 +5890,15 @@ function renderExPopup() {
 }
 
 function openExDetail(exName, muscle) {
+  const isWellness = WELLNESS_CATEGORIES.includes(muscle);
   const lv = getLevel(muscle);
   const dotColor = LEVEL_COLORS[lv];
   const { displayName: _edn, pulleyCount: pc } = parseCableExName(exName);
   const exIdx = (state.exercises[muscle] || []).indexOf(exName);
 
-  document.getElementById('ex-detail-dot').style.cssText =
-    `background:${dotColor};box-shadow:0 0 8px ${dotColor};`;
+  document.getElementById('ex-detail-dot').style.cssText = isWellness
+    ? 'display:none;'
+    : `background:${dotColor};box-shadow:0 0 8px ${dotColor};`;
   document.getElementById('ex-detail-name').textContent = _edn;
   const _lw = fmtLastWorked(getLastWorked(exName));
   document.getElementById('ex-detail-sub').textContent =
@@ -7792,22 +7938,43 @@ function updateAllTrainExSets() {
   });
 }
 
+// Cycles a Catch Up button through: off -> highlight by lowest level -> highlight by oldest last-worked -> off.
+function applyCatchupMode(mode, rowSelector, btn) {
+  const rows = document.querySelectorAll(rowSelector);
+  rows.forEach(r => r.classList.remove('catchup-highlight', 'catchup-highlight-oldest'));
+  btn.classList.remove('active');
+  btn.textContent = 'Catch Up';
+  if (mode === 1) {
+    btn.classList.add('active');
+    btn.textContent = 'Catch Up: Level';
+    const lowestLevel = Math.min(...[...rows].map(r => parseInt(r.dataset.level)));
+    rows.forEach(r => r.classList.toggle('catchup-highlight', parseInt(r.dataset.level) === lowestLevel));
+  } else if (mode === 2) {
+    btn.classList.add('active');
+    btn.textContent = 'Catch Up: Oldest';
+    const oldest = Math.max(...[...rows].map(r => parseFloat(r.dataset.hoursAgo)));
+    rows.forEach(r => r.classList.toggle('catchup-highlight-oldest', parseFloat(r.dataset.hoursAgo) === oldest));
+  }
+}
+
 function refreshPickerIfOpen() {
   if (!document.getElementById('picker').classList.contains('open')) return;
-  const catchupWasActive = document.getElementById('picker-catchup-btn').classList.contains('active');
+  const btn = document.getElementById('picker-catchup-btn');
+  const modeWas = parseInt(btn.dataset.mode || '0');
   renderPickerMuscleGrid();
-  if (catchupWasActive) {
-    document.getElementById('picker-catchup-btn').classList.add('active');
-    const btns = document.querySelectorAll('.picker-muscle-btn');
-    const lowestLevel = Math.min(...[...btns].map(b => parseInt(b.dataset.level)));
-    btns.forEach(b => b.classList.toggle('catchup-highlight', parseInt(b.dataset.level) === lowestLevel));
+  if (modeWas) {
+    btn.dataset.mode = modeWas;
+    applyCatchupMode(modeWas, '.picker-muscle-btn', btn);
   }
 }
 
 function renderPickerMuscleGrid() {
   const grid = document.getElementById('picker-muscle-grid');
   grid.innerHTML = '';
-  document.getElementById('picker-catchup-btn').classList.remove('active');
+  const catchupBtn = document.getElementById('picker-catchup-btn');
+  catchupBtn.dataset.mode = '0';
+  catchupBtn.classList.remove('active');
+  catchupBtn.textContent = 'Catch Up';
   for (const group of MUSCLE_GROUPS) {
     const header = document.createElement('div');
     header.className = 'picker-group-header';
@@ -7817,10 +7984,12 @@ function renderPickerMuscleGrid() {
       const lv = getLevel(muscle);
       const dotColor = LEVEL_COLORS[lv];
       const setsLine = buildSetsLine(muscle);
-      const lastLabel = fmtMuscleLastTrained(getMuscleLastTrainedInfo(muscle));
+      const lastInfo = getMuscleLastTrainedInfo(muscle);
+      const lastLabel = fmtMuscleLastTrained(lastInfo);
       const btn = document.createElement('button');
       btn.className = 'picker-muscle-btn';
       btn.dataset.level = lv;
+      btn.dataset.hoursAgo = lastInfo ? lastInfo.hoursAgo : 'Infinity';
       btn.innerHTML = `
         <div class="picker-muscle-dot" style="background:${dotColor};box-shadow:0 0 6px ${dotColor};"></div>
         <div>
@@ -7832,18 +8001,44 @@ function renderPickerMuscleGrid() {
       grid.appendChild(btn);
     }
   }
+
+  const wellnessHeader = document.createElement('div');
+  wellnessHeader.className = 'picker-group-header';
+  wellnessHeader.textContent = 'Wellness';
+  grid.appendChild(wellnessHeader);
+  for (const category of WELLNESS_CATEGORIES) {
+    const lastInfo = getMuscleLastTrainedInfo(category);
+    const lastLabel = fmtMuscleLastTrained(lastInfo);
+    const count = (state.exercises[category] || []).length;
+    const countLabel = count ? `${count} exercise${count === 1 ? '' : 's'}` : 'Tap to add';
+    const btn = document.createElement('button');
+    btn.className = 'picker-wellness-btn';
+    btn.innerHTML = `
+      <div class="picker-muscle-dot" style="background:rgba(var(--c-text3),0.6);"></div>
+      <div>
+        <div class="picker-muscle-name">${category}${lastLabel ? `<span style="font-size:9px;color:rgb(var(--c-text3));opacity:0.7;font-weight:400;margin-left:5px;">${lastLabel}</span>` : ''}</div>
+        <div class="picker-muscle-count" style="font-size:10px;">${countLabel}</div>
+      </div>
+    `;
+    btn.addEventListener('click', () => { playSound('commonButton'); openPickerExPopup(category); });
+    grid.appendChild(btn);
+  }
 }
 
 function openPickerExPopup(muscle) {
+  const isWellness = WELLNESS_CATEGORIES.includes(muscle);
   const lv = getLevel(muscle);
   const dotColor = LEVEL_COLORS[lv];
   const exList = state.exercises[muscle] || [];
 
-  document.getElementById('picker-ex-dot').style.cssText =
-    `background:${dotColor};box-shadow:0 0 8px ${dotColor};width:12px;height:12px;border-radius:50%;flex-shrink:0;`;
+  document.getElementById('picker-ex-dot').style.cssText = isWellness
+    ? 'display:none;'
+    : `background:${dotColor};box-shadow:0 0 8px ${dotColor};width:12px;height:12px;border-radius:50%;flex-shrink:0;`;
   document.getElementById('picker-ex-name').textContent = muscle;
 
-  document.getElementById('picker-ex-sets').innerHTML = buildSetsLine(muscle);
+  const exSetsEl = document.getElementById('picker-ex-sets');
+  exSetsEl.style.display = isWellness ? 'none' : '';
+  exSetsEl.innerHTML = isWellness ? '' : buildSetsLine(muscle);
 
   const list = document.getElementById('picker-ex-list');
   list.innerHTML = '';
@@ -7943,14 +8138,9 @@ document.getElementById('picker-close').addEventListener('click', () => {
 
 document.getElementById('picker-catchup-btn').addEventListener('click', () => {
   const btn = document.getElementById('picker-catchup-btn');
-  const isActive = btn.classList.toggle('active');
-  const btns = document.querySelectorAll('.picker-muscle-btn');
-  if (isActive) {
-    const lowestLevel = Math.min(...[...btns].map(b => parseInt(b.dataset.level)));
-    btns.forEach(b => b.classList.toggle('catchup-highlight', parseInt(b.dataset.level) === lowestLevel));
-  } else {
-    btns.forEach(b => b.classList.remove('catchup-highlight'));
-  }
+  const mode = (parseInt(btn.dataset.mode || '0') + 1) % 3;
+  btn.dataset.mode = mode;
+  applyCatchupMode(mode, '.picker-muscle-btn', btn);
 });
 
 document.getElementById('picker').addEventListener('click', (e) => {
@@ -8611,7 +8801,7 @@ function openNewExModal(preselectedMuscle) {
 
   const bpWrap = document.getElementById('nex-bodypart');
   bpWrap.innerHTML = '';
-  [...MUSCLES, 'Other'].forEach(m => {
+  [...MUSCLES, ...WELLNESS_CATEGORIES, 'Other'].forEach(m => {
     const chip = document.createElement('div');
     chip.className = 'nex-chip';
     chip.textContent = m;
@@ -8683,7 +8873,7 @@ document.getElementById('new-ex-save').addEventListener('click', () => {
   if (!name) { alert('Please enter a name.'); return; }
   if (!nexBodyPart) { alert('Please select a body part.'); return; }
 
-  const muscle = MUSCLES.includes(nexBodyPart) ? nexBodyPart : (MUSCLES[0]);
+  const muscle = (MUSCLES.includes(nexBodyPart) || WELLNESS_CATEGORIES.includes(nexBodyPart)) ? nexBodyPart : (MUSCLES[0]);
 
   const fromPicker = nexFromPicker;
   const isTpl = nexTplMode;
@@ -8953,7 +9143,7 @@ document.getElementById('sounds-toggle-btn').addEventListener('click', () => {
 
 function syncOtherSoundsToggle() {
   const btn = document.getElementById('other-sounds-toggle-btn');
-  btn.textContent = 'Other Sounds: ' + (otherSoundsEnabled ? 'On' : 'Off');
+  btn.textContent = 'Coach Sounds: ' + (otherSoundsEnabled ? 'On' : 'Off');
   btn.classList.toggle('selected', otherSoundsEnabled);
 }
 syncOtherSoundsToggle();
@@ -9062,6 +9252,7 @@ function buildWeeklyOverview() {
       const color = LEVEL_COLORS[lv];
       const daysAgo = getLastWorkedDaysAgo(muscle);
       const lastLabel = daysAgo === null ? 'never' : daysAgo === 0 ? 'today' : daysAgo === 1 ? 'yesterday' : `${daysAgo}d ago`;
+      const lastInfo = getMuscleLastTrainedInfo(muscle);
       const step = goal / 4;
       const thresholds = [Math.floor(step), Math.floor(step * 2), Math.floor(step * 3), goal];
       const setsLine = `<span class="wo-sets-cur" style="color:${color}">${sets}</span>`
@@ -9070,6 +9261,7 @@ function buildWeeklyOverview() {
       const row = document.createElement('div');
       row.className = 'wo-row';
       row.dataset.level = lv;
+      row.dataset.hoursAgo = lastInfo ? lastInfo.hoursAgo : 'Infinity';
       row.innerHTML =
         `<div class="wo-row-top">` +
           `<span class="wo-dot" style="background:${color};box-shadow:0 0 6px ${color}"></span>` +
@@ -9082,12 +9274,29 @@ function buildWeeklyOverview() {
     }
     list.appendChild(grid);
   }
+
+  for (const pair of WO_EXTRA_PAIRS) {
+    const row = document.createElement('div');
+    row.className = 'wo-extra-row';
+    for (const label of pair) {
+      const cell = document.createElement('div');
+      cell.className = 'wo-extra-cell';
+      cell.innerHTML =
+        `<div class="wo-extra-label">${label}</div>` +
+        `<div class="wo-placeholder">Not tracked yet</div>`;
+      row.appendChild(cell);
+    }
+    list.appendChild(row);
+  }
 }
 
 document.getElementById('weekly-overview-btn').addEventListener('click', () => {
   playSound('commonButton');
   buildWeeklyOverview();
-  document.getElementById('catchup-btn').classList.remove('active');
+  const catchupBtn = document.getElementById('catchup-btn');
+  catchupBtn.dataset.mode = '0';
+  catchupBtn.classList.remove('active');
+  catchupBtn.textContent = 'Catch Up';
   document.getElementById('weekly-overview-overlay').classList.add('open');
 });
 
@@ -9098,14 +9307,9 @@ document.getElementById('weekly-overview-close-btn').addEventListener('click', (
 
 document.getElementById('catchup-btn').addEventListener('click', () => {
   const btn = document.getElementById('catchup-btn');
-  const isActive = btn.classList.toggle('active');
-  const rows = document.querySelectorAll('.wo-row');
-  if (isActive) {
-    const lowestLevel = Math.min(...[...rows].map(r => parseInt(r.dataset.level)));
-    rows.forEach(r => r.classList.toggle('catchup-highlight', parseInt(r.dataset.level) === lowestLevel));
-  } else {
-    rows.forEach(r => r.classList.remove('catchup-highlight'));
-  }
+  const mode = (parseInt(btn.dataset.mode || '0') + 1) % 3;
+  btn.dataset.mode = mode;
+  applyCatchupMode(mode, '.wo-row', btn);
 });
 
 if ('serviceWorker' in navigator) {
