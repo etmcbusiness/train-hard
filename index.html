@@ -10353,7 +10353,7 @@ document.getElementById('notifications-toggle-btn').addEventListener('click', as
 function notifyRestComplete() {
   if (!notificationsEnabled || Notification.permission !== 'granted' || !document.hidden) return;
   const opts = {
-    body: 'Time to get back to it.',
+    body: 'Time to Train Hard',
     icon: './assets/icons/icon.svg',
     tag: 'rest-timer',
     renotify: true,
@@ -10361,10 +10361,10 @@ function notifyRestComplete() {
   };
   if (navigator.serviceWorker) {
     navigator.serviceWorker.ready
-      .then(reg => reg.showNotification('Rest complete', opts))
-      .catch(() => new Notification('Rest complete', opts));
+      .then(reg => reg.showNotification('Rest Complete', opts))
+      .catch(() => new Notification('Rest Complete', opts));
   } else {
-    new Notification('Rest complete', opts);
+    new Notification('Rest Complete', opts);
   }
 }
 
