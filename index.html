@@ -1209,6 +1209,49 @@
     .set-row .set-check { width: 48px; height: 50px; }
     .set-row .set-delete { width: 14px; height: 14px; font-size: 11px; }
 
+    .exposure-set-cols, .exposure-set-row {
+      grid-template-columns: 12px 1fr 48px 14px;
+    }
+    .exposure-timer-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1px;
+      width: 100%;
+      height: 50px;
+      background: rgba(var(--c-panel1),0.95);
+      border: 1px solid rgba(var(--c-accent2),0.3);
+      border-radius: 12px;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+    .exposure-timer-btn:active { background: rgba(var(--c-accent),0.18); }
+    .exposure-timer-btn-time {
+      font-size: 15px;
+      font-weight: 700;
+      color: rgb(var(--c-text));
+      font-variant-numeric: tabular-nums;
+    }
+    .exposure-timer-btn-label {
+      font-size: 8px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: rgb(var(--c-accent-light));
+    }
+    .exposure-timer-btn.running-bg {
+      background: rgba(224,96,48,0.14);
+      border-color: rgba(224,96,48,0.55);
+      animation: exposure-running-pulse 1.6s ease-in-out infinite;
+    }
+    .exposure-timer-btn.running-bg .exposure-timer-btn-time { color: #e06030; }
+    .exposure-timer-btn.running-bg .exposure-timer-btn-label { color: #e06030; }
+    @keyframes exposure-running-pulse {
+      0%, 100% { box-shadow: 0 0 0 rgba(224,96,48,0); }
+      50% { box-shadow: 0 0 10px rgba(224,96,48,0.35); }
+    }
+
     .set-previous {
       font-size: 10.5px;
       color: rgb(var(--c-text3));
@@ -1450,7 +1493,7 @@
       background: rgba(var(--c-panel2),0.88);
       border: 1px solid rgba(var(--c-accent2),0.22);
       border-radius: 14px;
-      padding: 14px 12px;
+      padding: 11px 12px;
       display: flex;
       align-items: center;
       gap: 10px;
@@ -1460,7 +1503,8 @@
     }
     .picker-muscle-btn:active, .picker-wellness-btn:active { background: rgba(var(--c-accent),0.12); border-color: rgba(var(--c-accent),0.4); }
     .picker-muscle-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-    .picker-muscle-name { font-size: 14px; font-weight: 700; color: rgb(var(--c-text)); line-height: 1.2; }
+    .picker-muscle-name { font-size: 13px; font-weight: 700; color: rgb(var(--c-text)); line-height: 1.2; }
+    .picker-muscle-last { font-size: 9px; color: rgb(var(--c-text3)); opacity: 0.75; margin-top: 2px; }
     .picker-muscle-count { font-size: 11px; color: rgb(var(--c-text3)); margin-top: 2px; }
     #picker-catchup-btn {
       background: rgba(var(--c-panel3),0.88);
@@ -1675,6 +1719,7 @@
       transition: background 0.1s;
     }
     .edit-rest-btn:active { background: rgba(var(--c-accent),0.18); }
+    .edit-rest-btn:disabled { opacity: 0.35; cursor: default; }
     #edit-rest-display, #nex-rest-display {
       flex: 1;
       text-align: center;
@@ -1905,6 +1950,7 @@
       display: flex;
       flex-direction: column;
       overflow: hidden;
+      flex-shrink: 0;
     }
     #goals-header {
       display: flex;
@@ -2043,6 +2089,7 @@
       display: flex;
       flex-direction: column;
       overflow: hidden;
+      flex-shrink: 0;
     }
     #avatar-header {
       display: flex;
@@ -2166,6 +2213,7 @@
       display: flex;
       flex-direction: column;
       overflow: hidden;
+      flex-shrink: 0;
     }
     #override-header {
       display: flex;
@@ -2740,6 +2788,9 @@
     .exd-pr-date { color: rgb(var(--c-text4)); font-size: 10px; text-align: right; font-variant-numeric: tabular-nums; }
     .exd-pr-row.exd-pr-max .exd-pr-label,
     .exd-pr-row.exd-pr-max .exd-pr-val { color: rgb(var(--c-accent)); }
+    .exd-exposure-pr-head, .exd-exposure-pr-row {
+      grid-template-columns: 1fr auto;
+    }
     .exd-history-entry {
       background: rgba(var(--c-panel1),0.85);
       border: 1px solid rgba(var(--c-accent2),0.18);
@@ -2839,6 +2890,214 @@
     .pulley-btn-active {
       background: rgba(var(--c-accent),0.25);
       border-color: rgb(var(--c-accent));
+    }
+
+    /* ── Exposure Duration Timer ── */
+    #exposure-timer-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 600;
+      background: rgba(var(--c-shadow),0.8);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    #exposure-timer-modal.open { display: flex; }
+    #exposure-timer-box {
+      background: rgba(var(--c-panel2),0.98);
+      border: 1px solid rgba(var(--c-accent2),0.3);
+      border-radius: 20px;
+      width: 100%;
+      max-width: 320px;
+      max-height: calc(var(--rvh) * 100 - 40px);
+      padding: 4px 0 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      overflow-y: auto;
+      box-sizing: border-box;
+    }
+    #exposure-timer-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      padding: 10px 18px 4px;
+    }
+    #exposure-timer-title { font-size: 17px; font-weight: 800; color: rgb(var(--c-text)); }
+    #exposure-timer-close {
+      background: rgba(var(--c-panel4),0.7);
+      border: 1px solid rgba(var(--c-accent2),0.3);
+      border-radius: 50%;
+      color: rgb(var(--c-text2));
+      font-size: 14px;
+      width: 32px; height: 32px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .exposure-timer-row-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: rgb(var(--c-text3));
+    }
+    #exposure-timer-temp-label-row, #exposure-timer-target-label-row {
+      width: 100%;
+      padding: 6px 18px 0;
+    }
+    #exposure-wheel-wrap, #exposure-temp-wheel-wrap {
+      position: relative;
+      width: 100%;
+      height: 150px;
+      margin: 4px 0 6px;
+      padding: 0 8px;
+      box-sizing: border-box;
+    }
+    #exposure-temp-wheel-fade {
+      justify-content: center;
+    }
+    #exposure-temp-wheel-fade .ewheel-col-wrap {
+      flex: 0 0 96px;
+    }
+    #exposure-wheel-fade, #exposure-temp-wheel-fade {
+      position: relative;
+      display: flex;
+      width: 100%;
+      height: 100%;
+      -webkit-mask-image: linear-gradient(to bottom, transparent 0, black 38%, black 62%, transparent 100%);
+      mask-image: linear-gradient(to bottom, transparent 0, black 38%, black 62%, transparent 100%);
+    }
+    .ewheel-highlight {
+      position: absolute;
+      left: 2px;
+      right: 2px;
+      top: 60px;
+      height: 30px;
+      background: rgba(var(--c-accent),0.16);
+      border: 1.5px solid rgba(var(--c-accent),0.6);
+      border-radius: 9px;
+      box-shadow: 0 0 14px rgba(var(--c-accent),0.3), inset 0 0 10px rgba(var(--c-accent),0.12);
+      pointer-events: none;
+      z-index: 0;
+    }
+    .ewheel-col-wrap {
+      position: relative;
+      flex: 1;
+      height: 150px;
+    }
+    .ewheel-col {
+      width: 100%;
+      height: 150px;
+      overflow-y: scroll;
+      scrollbar-width: none;
+      position: relative;
+      z-index: 1;
+      touch-action: none;
+      cursor: grab;
+      user-select: none;
+    }
+    .ewheel-col::-webkit-scrollbar { display: none; }
+    .ewheel-col.grabbing { cursor: grabbing; }
+    .ewheel-col.grabbing .ewheel-item { transition: none; }
+    .ewheel-item {
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      scroll-snap-align: center;
+      font-size: 17px;
+      font-weight: 700;
+      color: rgb(var(--c-text));
+      font-variant-numeric: tabular-nums;
+      opacity: 0.45;
+      transition: opacity 0.1s linear;
+    }
+    .ewheel-item.centered {
+      font-size: 19px;
+      opacity: 1;
+      color: rgb(var(--c-accent-light));
+    }
+    .ewheel-spacer { height: 60px; flex-shrink: 0; }
+    .ewheel-suffix {
+      position: absolute;
+      right: 4px;
+      top: 60px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      font-size: 12px;
+      font-weight: 700;
+      color: rgb(var(--c-accent-light));
+      pointer-events: none;
+      z-index: 2;
+    }
+    .ewheel-col-wrap.disabled .ewheel-col { pointer-events: none; opacity: 0.5; }
+    #exposure-timer-toggle:disabled {
+      opacity: 0.4;
+      cursor: default;
+    }
+    #exposure-timer-ring-wrap {
+      position: relative;
+      width: 160px;
+      height: 160px;
+      margin: 8px auto 6px;
+    }
+    #exposure-timer-ring {
+      width: 100%;
+      height: 100%;
+      transform: rotate(-90deg);
+    }
+    #exposure-timer-ring-bg {
+      fill: none;
+      stroke: rgba(var(--c-accent2),0.18);
+      stroke-width: 12;
+    }
+    #exposure-timer-ring-progress {
+      fill: none;
+      stroke: rgb(var(--c-accent));
+      stroke-width: 12;
+      stroke-linecap: round;
+      stroke-dasharray: 552.9;
+      stroke-dashoffset: 552.9;
+      transition: stroke-dashoffset 0.2s linear, stroke 0.3s ease;
+    }
+    #exposure-timer-ring-progress.complete {
+      stroke: #3cb558;
+    }
+    #exposure-timer-display {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 30px;
+      font-weight: 800;
+      color: rgb(var(--c-text));
+      letter-spacing: 0.5px;
+      font-variant-numeric: tabular-nums;
+    }
+    #exposure-timer-toggle {
+      margin-top: 4px;
+      background: rgba(60,181,88,0.15);
+      border: 1px solid rgba(60,181,88,0.5);
+      border-radius: 14px;
+      color: #3cb558;
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      padding: 10px 40px;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+    #exposure-timer-toggle.running {
+      background: rgba(224,96,48,0.15);
+      border-color: rgba(224,96,48,0.5);
+      color: #e06030;
     }
 
     /* ── Weekly Overview Overlay ── */
@@ -4110,14 +4369,14 @@
       <div class="nex-label">Name</div>
       <input id="nex-name" class="nex-input" type="text" placeholder="Enter Name" autocomplete="off" autocapitalize="words" />
 
-      <div class="nex-label">Body Part</div>
+      <div class="nex-label" id="nex-bodypart-label">Body Part</div>
       <div class="nex-chips" id="nex-bodypart"></div>
 
-      <div class="nex-label">Category</div>
+      <div class="nex-label" id="nex-category-label">Category</div>
       <div class="nex-chips" id="nex-category"></div>
 
-      <div class="nex-label">Rest Time</div>
-      <div class="edit-rest-ctrl">
+      <div class="nex-label" id="nex-resttime-label">Rest Time</div>
+      <div class="edit-rest-ctrl" id="nex-resttime-row">
         <button class="edit-rest-btn" id="nex-rest-minus">−</button>
         <input id="nex-rest-display" type="text" value="1:30" readonly autocomplete="off" />
         <button class="edit-rest-btn" id="nex-rest-plus">+</button>
@@ -4146,6 +4405,56 @@
       <button class="pulley-btn" data-count="5">5</button>
       <button class="pulley-btn" data-count="6">6</button>
     </div>
+  </div>
+</div>
+
+<!-- Exposure Duration Timer -->
+<div id="exposure-timer-modal">
+  <div id="exposure-timer-box">
+    <div id="exposure-timer-header">
+      <div id="exposure-timer-title">Timer</div>
+      <button id="exposure-timer-close">✕</button>
+    </div>
+    <div id="exposure-timer-temp-label-row">
+      <span class="exposure-timer-row-label">Temp °F</span>
+    </div>
+    <div id="exposure-temp-wheel-wrap">
+      <div class="ewheel-highlight"></div>
+      <div id="exposure-temp-wheel-fade">
+        <div class="ewheel-col-wrap">
+          <div class="ewheel-col" id="exposure-wheel-temp"></div>
+          <span class="ewheel-suffix">°F</span>
+        </div>
+      </div>
+    </div>
+    <div id="exposure-timer-target-label-row">
+      <span class="exposure-timer-row-label">Target</span>
+    </div>
+    <div id="exposure-wheel-wrap">
+      <div class="ewheel-highlight"></div>
+      <div id="exposure-wheel-fade">
+        <div class="ewheel-col-wrap">
+          <div class="ewheel-col" id="exposure-wheel-h"></div>
+          <span class="ewheel-suffix">hr</span>
+        </div>
+        <div class="ewheel-col-wrap">
+          <div class="ewheel-col" id="exposure-wheel-m"></div>
+          <span class="ewheel-suffix">min</span>
+        </div>
+        <div class="ewheel-col-wrap">
+          <div class="ewheel-col" id="exposure-wheel-s"></div>
+          <span class="ewheel-suffix">sec</span>
+        </div>
+      </div>
+    </div>
+    <div id="exposure-timer-ring-wrap">
+      <svg id="exposure-timer-ring" viewBox="0 0 200 200">
+        <circle id="exposure-timer-ring-bg" cx="100" cy="100" r="88"></circle>
+        <circle id="exposure-timer-ring-progress" cx="100" cy="100" r="88"></circle>
+      </svg>
+      <div id="exposure-timer-display">0:00</div>
+    </div>
+    <button id="exposure-timer-toggle">Start</button>
   </div>
 </div>
 
@@ -4233,13 +4542,6 @@
         </div>
       </div>
       <div id="goals-list"></div>
-      <div class="goal-card" style="margin-top:10px;">
-        <div class="goal-card-title">Focus Exercises</div>
-        <div style="font-size:12px;color:rgb(var(--c-text2));line-height:1.5;margin-top:6px;margin-bottom:10px;">
-          Choose up to 3 exercises to track on your profile page.
-        </div>
-        <div id="focus-slots"></div>
-      </div>
     </div>
   </div>
   <button id="goals-close-btn">Done</button>
@@ -4319,6 +4621,11 @@
         <button class="avatar-inspiration-btn" id="sounds-toggle-btn">Sounds: On</button>
         <button class="avatar-inspiration-btn" id="other-sounds-toggle-btn">Coach Sounds: On</button>
       </div>
+      <div class="avatar-section-label" style="margin-top:22px;">Alerts</div>
+      <div id="avatar-notification-options">
+        <button class="avatar-inspiration-btn" id="notifications-toggle-btn">Rest Alerts: Off</button>
+      </div>
+      <div id="notifications-debug" style="margin-top:8px; font-size:10px; color:rgb(var(--c-text4)); text-align:center; letter-spacing:0.3px;"></div>
     </div>
   </div>
   <button id="avatar-close-btn">Done</button>
@@ -4494,11 +4801,8 @@ import { EXTENDED_REST_STAGE_1_SEC, EXTENDED_REST_STAGE_2_SEC, EXTENDED_REST_STA
 const SOUNDS = {
   sessionStart: 'assets/sounds/session-start.mp3',
   setComplete: 'assets/sounds/set-complete.mp3',
-  restTimerStart: 'assets/sounds/rest-timer-start.mp3',
-  restTimerCountdown: 'assets/sounds/rest-timer-countdown.mp3',
   restTimerEnd: 'assets/sounds/rest-timer-end.mp3',
   workoutComplete: 'assets/sounds/workout-complete.mp3',
-  personalRecord: 'assets/sounds/personal-record.mp3',
   levelUp: 'assets/sounds/level-up.mp3',
   exerciseSelect: 'assets/sounds/exercise-select.mp3',
   menuButton: 'assets/sounds/menu-button.mp3',
@@ -4506,14 +4810,15 @@ const SOUNDS = {
   delete: 'assets/sounds/delete.mp3',
   roomSelect: 'assets/sounds/room-select.mp3',
   roomHover: 'assets/sounds/room-hover.mp3',
+  timerWheel: 'assets/sounds/timer-wheel.mp3',
 };
 
 // "Sounds" = direct tap/button feedback. "Other Sounds" = everything not
 // caused by a direct tap — timers, milestones, and idle nags — toggled
 // separately from the profile Avatar screen.
 const OTHER_SOUND_KEYS = new Set([
-  'sessionStart', 'restTimerStart', 'restTimerCountdown', 'restTimerEnd',
-  'workoutComplete', 'personalRecord', 'levelUp',
+  'sessionStart', 'restTimerEnd',
+  'workoutComplete',
 ]);
 let soundsEnabled = localStorage.getItem('trainhard_sounds') !== 'off';
 let otherSoundsEnabled = localStorage.getItem('trainhard_other_sounds') !== 'off';
@@ -4690,7 +4995,7 @@ const SOUND_HANDLED_BUTTON_SELECTORS = [
   '#goals-btn',          // commonButton (explicit)
   '#weekly-overview-btn',// commonButton (explicit)
   '#avatar-btn',         // commonButton (explicit)
-  '#testing-btn',        // commonButton (explicit)
+  '#testing-btn',        // levelUp (explicit, no commonButton)
   '#exit-testing-btn',   // commonButton (explicit)
   '#room-close-btn',     // roomSelect
   '#add-ex-main',        // commonButton (explicit)
@@ -4742,6 +5047,12 @@ const WO_EXTRA_PAIRS = [['Cardio', 'Stretching'], ['Heat Exposure', 'Cold Exposu
 // Same categories, usable from the Add Exercise picker for logging only — they have
 // no level/goal and never count toward weeklySets or the avatar's overall level.
 const WELLNESS_CATEGORIES = WO_EXTRA_PAIRS.flat();
+// Heat/Cold Exposure use a name-only exercise-creation flow (no body part/category
+// chips) plus Temp+Duration logging instead of weight/reps.
+const EXPOSURE_SUBTYPES = {
+  'Heat Exposure': true,
+  'Cold Exposure': true,
+};
 
 const INDEX_TO_PART = {
   0:  'Shorts',
@@ -4839,6 +5150,7 @@ function defaultState() {
     history: [],
     prs: {},
     repPRs: {},
+    exposurePRs: {},
     cablePulleys: {},
     exerciseMeta: {}
   };
@@ -4867,6 +5179,7 @@ function loadState() {
     }
     if (!s.cablePulleys) s.cablePulleys = {};
     if (!s.exerciseMeta) s.exerciseMeta = {};
+    if (!s.exposurePRs) s.exposurePRs = {};
     // Remove auto-generated placeholder exercises (e.g. "Chest Exercise")
     if (s.exercises) {
       for (const m of MUSCLES) {
@@ -4904,6 +5217,7 @@ function save() {
 let state = loadState();
 recalcAllPRs();
 recalcAllRepPRs();
+recalcAllExposurePRs();
 save();
 
 // ═══════════════════════════════════════════════════════════
@@ -5625,6 +5939,7 @@ function recalcStats() {
   }
   recalcAllPRs();
   recalcAllRepPRs();
+  recalcAllExposurePRs();
   save();
   updateModel();
   renderFocusStats();
@@ -5647,6 +5962,7 @@ function renderHistEditExercises() {
   const container = document.getElementById('hist-edit-exercises');
   container.innerHTML = '';
   histEditData.exercises.forEach((ex, exIdx) => {
+    const isExp = (state.exerciseMeta[ex.name] || {}).expType === 'exposure';
     const block = document.createElement('div');
     block.className = 'hedit-ex';
     block.innerHTML = `
@@ -5657,14 +5973,16 @@ function renderHistEditExercises() {
         </div>
         <button class="hedit-remove-ex" data-ex="${exIdx}">×</button>
       </div>
-      <div class="hedit-col-heads"><span>Set</span><span>lbs</span><span>Reps</span><span></span></div>
+      <div class="hedit-col-heads">${isExp
+        ? '<span>Set</span><span>°F</span><span>Sec</span><span></span>'
+        : '<span>Set</span><span>lbs</span><span>Reps</span><span></span>'}</div>
       <div class="hedit-sets"></div>
       <button class="hedit-add-set" data-ex="${exIdx}">+ Add Set</button>
     `;
 
     const setsEl = block.querySelector('.hedit-sets');
     ex.sets.forEach((s, sIdx) => {
-      setsEl.appendChild(makeHistSetRow(exIdx, sIdx, s));
+      setsEl.appendChild(makeHistSetRow(exIdx, sIdx, s, isExp));
     });
 
     block.querySelector('.hedit-remove-ex').addEventListener('click', () => {
@@ -5674,7 +5992,10 @@ function renderHistEditExercises() {
     });
 
     block.querySelector('.hedit-add-set').addEventListener('click', () => {
-      histEditData.exercises[exIdx].sets.push({ weight: '', reps: '', done: true });
+      const sets = histEditData.exercises[exIdx].sets;
+      const prevSet = sets[sets.length - 1];
+      const prevTemp = (prevSet && prevSet.temp !== '' && prevSet.temp != null) ? prevSet.temp : 100;
+      sets.push(isExp ? { temp: prevTemp, duration: 0, done: true } : { weight: '', reps: '', done: true });
       renderHistEditExercises();
     });
 
@@ -5682,7 +6003,7 @@ function renderHistEditExercises() {
   });
 }
 
-function makeHistSetRow(exIdx, sIdx, s) {
+function makeHistSetRow(exIdx, sIdx, s, isExp) {
   const row = document.createElement('div');
   row.className = 'hedit-set-row';
 
@@ -5690,12 +6011,22 @@ function makeHistSetRow(exIdx, sIdx, s) {
   numEl.className = 'hedit-set-num';
   numEl.textContent = sIdx + 1;
 
-  const { wrap: wWrap } = makeStepper(s.weight, 5, 0, val => {
-    histEditData.exercises[exIdx].sets[sIdx].weight = val;
-  });
-  const { wrap: rWrap } = makeStepper(s.reps, 1, 0, val => {
-    histEditData.exercises[exIdx].sets[sIdx].reps = val;
-  });
+  let aWrap, bWrap;
+  if (isExp) {
+    ({ wrap: aWrap } = makeStepper(s.temp, 5, -300, val => {
+      histEditData.exercises[exIdx].sets[sIdx].temp = val;
+    }, 300));
+    ({ wrap: bWrap } = makeStepper(s.duration, 15, 0, val => {
+      histEditData.exercises[exIdx].sets[sIdx].duration = val;
+    }));
+  } else {
+    ({ wrap: aWrap } = makeStepper(s.weight, 5, 0, val => {
+      histEditData.exercises[exIdx].sets[sIdx].weight = val;
+    }));
+    ({ wrap: bWrap } = makeStepper(s.reps, 1, 0, val => {
+      histEditData.exercises[exIdx].sets[sIdx].reps = val;
+    }));
+  }
 
   const removeBtn = document.createElement('button');
   removeBtn.className = 'hedit-remove-set';
@@ -5708,8 +6039,8 @@ function makeHistSetRow(exIdx, sIdx, s) {
   });
 
   row.appendChild(numEl);
-  row.appendChild(wWrap);
-  row.appendChild(rWrap);
+  row.appendChild(aWrap);
+  row.appendChild(bWrap);
   row.appendChild(removeBtn);
 
   return row;
@@ -5717,7 +6048,13 @@ function makeHistSetRow(exIdx, sIdx, s) {
 
 document.getElementById('hist-done-btn').addEventListener('click', () => {
   histEditData.exercises = histEditData.exercises
-    .map(ex => ({ ...ex, sets: ex.sets.filter(s => s.weight !== '' || s.reps !== '') }))
+    .map(ex => {
+      const isExp = (state.exerciseMeta[ex.name] || {}).expType === 'exposure';
+      return {
+        ...ex,
+        sets: ex.sets.filter(s => isExp ? ((s.temp !== '' && s.temp != null) || s.duration) : (s.weight !== '' || s.reps !== ''))
+      };
+    })
     .filter(ex => ex.sets.length > 0);
 
   if (histEditData.exercises.length === 0) {
@@ -5891,6 +6228,7 @@ function renderExPopup() {
 
 function openExDetail(exName, muscle) {
   const isWellness = WELLNESS_CATEGORIES.includes(muscle);
+  const isExposure = (state.exerciseMeta[exName] || {}).expType === 'exposure';
   const lv = getLevel(muscle);
   const dotColor = LEVEL_COLORS[lv];
   const { displayName: _edn, pulleyCount: pc } = parseCableExName(exName);
@@ -5912,50 +6250,86 @@ function openExDetail(exName, muscle) {
   const body = document.getElementById('ex-detail-body');
   body.innerHTML = '';
 
-  // ── Rep PRs ──
-  const repPRs = (state.repPRs || {})[exName] || {};
-  const hasRepPRs = Object.keys(repPRs).length > 0;
-  if (hasRepPRs) {
-    const sec = document.createElement('div');
-    sec.className = 'exd-section';
-    sec.textContent = 'Personal Records';
-    body.appendChild(sec);
+  // ── PRs ──
+  if (isExposure) {
+    const epr = (state.exposurePRs || {})[exName];
+    if (epr) {
+      const sec = document.createElement('div');
+      sec.className = 'exd-section';
+      sec.textContent = 'Personal Records';
+      body.appendChild(sec);
 
-    const grid = document.createElement('div');
-    grid.className = 'exd-pr-grid';
+      const grid = document.createElement('div');
+      grid.className = 'exd-pr-grid';
 
-    const head = document.createElement('div');
-    head.className = 'exd-pr-head';
-    head.innerHTML = '<span>Reps</span><span>Weight</span><span>Date</span>';
-    grid.appendChild(head);
+      const head = document.createElement('div');
+      head.className = 'exd-pr-head exd-exposure-pr-head';
+      head.innerHTML = '<span>Record</span><span>Value</span>';
+      grid.appendChild(head);
 
-    for (let r = 1; r <= 12; r++) {
-      const entry = repPRs[r];
-      if (!entry) continue;
-      const w = typeof entry === 'object' ? entry.weight : entry;
-      const d = typeof entry === 'object' ? fmtPRDate(entry.date) : '—';
-      const row = document.createElement('div');
-      row.className = 'exd-pr-row';
-      row.innerHTML = `<span class="exd-pr-label">${r}RM</span><span class="exd-pr-val">${w} lbs</span><span class="exd-pr-date">${d}</span>`;
-      grid.appendChild(row);
+      const rows = [
+        ['Highest Temp', `${epr.maxTemp}°F`],
+        ['Highest Duration', fmtRestSecs(epr.maxDuration)],
+      ];
+      rows.forEach(([label, val]) => {
+        const row = document.createElement('div');
+        row.className = 'exd-pr-row exd-exposure-pr-row';
+        row.innerHTML = `<span class="exd-pr-label">${label}</span><span class="exd-pr-val">${val}</span>`;
+        grid.appendChild(row);
+      });
+
+      const comboRow = document.createElement('div');
+      comboRow.className = 'exd-pr-row exd-exposure-pr-row exd-pr-max';
+      comboRow.innerHTML = `<span class="exd-pr-label">Temp @ Duration</span><span class="exd-pr-val">${epr.comboTemp}°F × ${fmtRestSecs(epr.comboDuration)}</span>`;
+      grid.appendChild(comboRow);
+
+      body.appendChild(grid);
     }
+  } else {
+    const repPRs = (state.repPRs || {})[exName] || {};
+    const hasRepPRs = Object.keys(repPRs).length > 0;
+    if (hasRepPRs) {
+      const sec = document.createElement('div');
+      sec.className = 'exd-section';
+      sec.textContent = 'Personal Records';
+      body.appendChild(sec);
 
-    const mx = repPRs.max;
-    if (mx) {
-      const maxRow = document.createElement('div');
-      maxRow.className = 'exd-pr-row exd-pr-max';
-      maxRow.innerHTML = `<span class="exd-pr-label">Max</span><span class="exd-pr-val">${mx.reps}r @ ${mx.weight} lbs</span><span class="exd-pr-date">${fmtPRDate(mx.date)}</span>`;
-      grid.appendChild(maxRow);
+      const grid = document.createElement('div');
+      grid.className = 'exd-pr-grid';
+
+      const head = document.createElement('div');
+      head.className = 'exd-pr-head';
+      head.innerHTML = '<span>Reps</span><span>Weight</span><span>Date</span>';
+      grid.appendChild(head);
+
+      for (let r = 1; r <= 12; r++) {
+        const entry = repPRs[r];
+        if (!entry) continue;
+        const w = typeof entry === 'object' ? entry.weight : entry;
+        const d = typeof entry === 'object' ? fmtPRDate(entry.date) : '—';
+        const row = document.createElement('div');
+        row.className = 'exd-pr-row';
+        row.innerHTML = `<span class="exd-pr-label">${r}RM</span><span class="exd-pr-val">${w} lbs</span><span class="exd-pr-date">${d}</span>`;
+        grid.appendChild(row);
+      }
+
+      const mx = repPRs.max;
+      if (mx) {
+        const maxRow = document.createElement('div');
+        maxRow.className = 'exd-pr-row exd-pr-max';
+        maxRow.innerHTML = `<span class="exd-pr-label">Max</span><span class="exd-pr-val">${mx.reps}r @ ${mx.weight} lbs</span><span class="exd-pr-date">${fmtPRDate(mx.date)}</span>`;
+        grid.appendChild(maxRow);
+      }
+
+      body.appendChild(grid);
     }
-
-    body.appendChild(grid);
   }
 
   // ── History ──
   const entries = [];
   for (const w of state.history) {
     const ex = w.exercises.find(e => e.name === exName);
-    if (ex) entries.push({ date: w.date, sets: ex.sets.filter(s => s.weight || s.reps) });
+    if (ex) entries.push({ date: w.date, sets: ex.sets.filter(s => isExposure ? (s.temp || s.duration) : (s.weight || s.reps)) });
   }
   entries.reverse();
 
@@ -5976,9 +6350,9 @@ function openExDetail(exName, muscle) {
     entry.sets.forEach((s, i) => {
       const row = document.createElement('div');
       row.className = 'exd-set-row';
-      const wVal = s.weight ? `${s.weight} lbs` : '—';
-      const rVal = s.reps ? `${s.reps} reps` : '—';
-      row.innerHTML = `<span class="exd-set-num">${i + 1}</span><span class="exd-set-val">${wVal}</span><span class="exd-set-val">${rVal}</span>`;
+      const val1 = isExposure ? (s.temp ? `${s.temp}°F` : '—') : (s.weight ? `${s.weight} lbs` : '—');
+      const val2 = isExposure ? (s.duration ? fmtRestSecs(s.duration) : '—') : (s.reps ? `${s.reps} reps` : '—');
+      row.innerHTML = `<span class="exd-set-num">${i + 1}</span><span class="exd-set-val">${val1}</span><span class="exd-set-val">${val2}</span>`;
       card.appendChild(row);
     });
 
@@ -6755,7 +7129,7 @@ document.getElementById('ex-delete-yes').addEventListener('click', () => {
 // STEPPER HELPER
 // ═══════════════════════════════════════════════════════════
 
-function makeStepper(initVal, step, min, onChange) {
+function makeStepper(initVal, step, min, onChange, max = Infinity) {
   const wrap = document.createElement('div');
   wrap.className = 'stepper';
 
@@ -6784,7 +7158,7 @@ function makeStepper(initVal, step, min, onChange) {
 
   function apply(delta) {
     const curr = parseFloat(inp.value) || 0;
-    const next = Math.max(min, +(curr + delta).toFixed(2));
+    const next = Math.max(min, Math.min(max, +(curr + delta).toFixed(2)));
     inp.value = Number.isInteger(next) ? String(next) : String(next);
     onChange(inp.value);
   }
@@ -6822,6 +7196,7 @@ let workoutStartEpoch = 0; // ms epoch so timer stays accurate when phone is loc
 let lastSessionSave = 0;
 let trainActive = false;
 let livePreviewActive = false; // true only while workout is in progress (not after finish)
+let hairLevelAtWorkoutStart = null; // overall avatar level captured at session start, for the post-finish level-up check
 const session = [];
 
 const ACTIVE_SESSION_KEY = 'trainhard_active_session';
@@ -6867,6 +7242,7 @@ function checkAndRestoreSession() {
   }
   timerSecs = Math.floor((Date.now() - workoutStartEpoch) / 1000);
 
+  hairLevelAtWorkoutStart = getHairLevel();
   trainActive = true;
   livePreviewActive = true;
   document.querySelector('.nav-btn[data-tab="train"]').classList.add('train-live');
@@ -6929,7 +7305,6 @@ let restSecs = 0;
 let restEndTime = 0; // absolute ms timestamp when rest expires
 let restCurrentExercise = null;
 let restCurrentDuration = 90;
-let restCountdownPlayedFor = null;
 
 function fmtRestSecs(secs) {
   const m = Math.floor(secs / 60);
@@ -6955,10 +7330,8 @@ function startRestTimer(duration) {
   restCurrentDuration = secs;
   restEndTime = Date.now() + secs * 1000;
   restSecs = secs;
-  restCountdownPlayedFor = null;
   updateRestDisplay();
   document.getElementById('rest-timer-bar').classList.add('active');
-  playSound('restTimerStart');
   restInterval = setInterval(tickRestTimer, 500);
 }
 
@@ -6968,13 +7341,10 @@ function tickRestTimer() {
     stopRestTimer();
     flashRestComplete();
     playSound('restTimerEnd');
+    notifyRestComplete();
   } else {
     restSecs = remaining;
     updateRestDisplay();
-    if (remaining <= 3 && restCountdownPlayedFor !== remaining) {
-      restCountdownPlayedFor = remaining;
-      playSound('restTimerCountdown');
-    }
   }
 }
 
@@ -7111,6 +7481,7 @@ function closeTrain() {
   stopRestTimer();
   stopNoRestWatch();
   clearActiveSession();
+  forceStopExposureTimer();
   const modal = document.getElementById('train-modal');
   modal.classList.remove('open');
   modal.style.display = 'none';
@@ -7133,6 +7504,7 @@ function restoreTrain() {
 function openTrain() {
   playSound('sessionStart');
   startNoRestWatch();
+  hairLevelAtWorkoutStart = getHairLevel();
   trainActive = true;
   livePreviewActive = true;
   document.querySelector('.nav-btn[data-tab="train"]').classList.add('train-live');
@@ -7173,11 +7545,13 @@ document.getElementById('cancel-btn').addEventListener('click', async () => {
 });
 
 document.getElementById('finish-btn').addEventListener('click', () => {
+  if (exposureTimerState && exposureTimerState.running) stopExposureTimer(true);
+
   const validExercises = session
     .filter(Boolean)
     .map(ex => ({
       ...ex,
-      sets: ex.sets.filter(s => s.done && (s.weight || s.reps))
+      sets: ex.sets.filter(s => s.done && (s.weight || s.reps || s.duration))
     }))
     .filter(ex => ex.sets.length > 0);
 
@@ -7210,6 +7584,8 @@ document.getElementById('finish-btn').addEventListener('click', () => {
   livePreviewActive = false; // stop live preview before recalc so history-based model is authoritative
   state.history.push(entry);
   recalcStats();
+  if (hairLevelAtWorkoutStart != null && getHairLevel() > hairLevelAtWorkoutStart) playSound('levelUp');
+  hairLevelAtWorkoutStart = null;
   updateAllTrainExSets();
   refreshPickerIfOpen();
   clearActiveSession();
@@ -7275,7 +7651,7 @@ function showWorkoutSummary(exercises, durationSecs, prsBefore) {
 
   document.getElementById('summary-prs').textContent = prCount;
   document.getElementById('workout-summary').classList.add('open');
-  playSound(prCount > 0 ? 'personalRecord' : 'workoutComplete');
+  playSound('workoutComplete');
 }
 
 document.getElementById('summary-done-btn').addEventListener('click', () => {
@@ -7556,10 +7932,13 @@ function addExerciseBlock(name, muscle, initialSets) {
   touchActivity();
   playSound('exerciseSelect');
   const idx = session.length;
+  const isExposure = (state.exerciseMeta[name] || {}).expType === 'exposure';
   const preSets = initialSets && initialSets.length
-    ? initialSets.map(s => ({ weight: s.weight || '', reps: s.reps || '', done: s.done || false }))
+    ? (isExposure
+        ? initialSets.map(s => ({ temp: s.temp || '', duration: s.duration || 0, done: s.done || false }))
+        : initialSets.map(s => ({ weight: s.weight || '', reps: s.reps || '', done: s.done || false })))
     : [];
-  session.push({ name, muscle, sets: preSets });
+  session.push({ name, muscle, sets: preSets, expType: isExposure ? 'exposure' : null });
 
   const block = document.createElement('div');
   block.className = 'train-ex';
@@ -7596,20 +7975,28 @@ function addExerciseBlock(name, muscle, initialSets) {
   removeBtn.addEventListener('click', () => {
     touchActivity();
     playSound('delete');
-    session[parseInt(block.dataset.sessionIdx)] = null;
+    const removedIdx = parseInt(block.dataset.sessionIdx);
+    session[removedIdx] = null;
     block.remove();
     saveActiveSession();
   });
   top.appendChild(removeBtn);
 
-  const pr = state.prs[name];
   const prEl = document.createElement('div');
   prEl.className = 'train-ex-pr';
-  prEl.innerHTML = pr ? `PR: <span>${pr.weight} lbs × ${pr.reps}</span>` : '';
+  if (isExposure) {
+    const epr = (state.exposurePRs || {})[name];
+    prEl.innerHTML = epr ? `PR: <span>${epr.comboTemp}°F × ${fmtRestSecs(epr.comboDuration)}</span>` : '';
+  } else {
+    const pr = state.prs[name];
+    prEl.innerHTML = pr ? `PR: <span>${pr.weight} lbs × ${pr.reps}</span>` : '';
+  }
 
   const cols = document.createElement('div');
-  cols.className = 'set-cols';
-  cols.innerHTML = '<span>Set</span><span>Previous</span><span>lbs</span><span>Reps</span><span></span><span></span>';
+  cols.className = isExposure ? 'set-cols exposure-set-cols' : 'set-cols';
+  cols.innerHTML = isExposure
+    ? '<span>Set</span><span>Temp and Duration</span><span></span><span></span>'
+    : '<span>Set</span><span>Previous</span><span>lbs</span><span>Reps</span><span></span><span></span>';
 
   const setsContainer = document.createElement('div');
   setsContainer.className = 'sets-container';
@@ -7628,7 +8015,7 @@ function addExerciseBlock(name, muscle, initialSets) {
 
   document.getElementById('train-exercises').appendChild(block);
   const setsEl = block.querySelector('.train-ex-sets');
-  if (setsEl) setsEl.innerHTML = buildSetsLine(muscle);
+  if (setsEl) setsEl.innerHTML = isExposure ? '' : buildSetsLine(muscle);
   if (preSets.length > 0) {
     renderSets(idx, block);
   } else {
@@ -7780,6 +8167,7 @@ function getLastSetsForExercise(name) {
 function renderSets(exIdx, block) {
   const ex = session[exIdx];
   if (!ex) return;
+  if (ex.expType === 'exposure') { renderExposureSets(exIdx, block); return; }
   const container = block.querySelector('.sets-container');
   container.innerHTML = '';
   const weightInps = [];
@@ -7851,7 +8239,6 @@ function renderSets(exIdx, block) {
       touchActivity();
       const reps = parseInt(ex.sets[setIdx].reps) || 0;
       if (!ex.sets[setIdx].done && reps === 0) return;
-      const levelBefore = getLevel(ex.muscle);
       ex.sets[setIdx].done = !ex.sets[setIdx].done;
       checkBtn.classList.toggle('done', ex.sets[setIdx].done);
       if (ex.sets[setIdx].done) {
@@ -7860,7 +8247,6 @@ function renderSets(exIdx, block) {
         restCurrentExercise = ex.name;
         const exRest = (state.exerciseMeta[ex.name] || {}).restTime;
         startRestTimer(exRest || restDuration);
-        if (getLevel(ex.muscle) > levelBefore) playSound('levelUp');
       }
       saveActiveSession();
       updateModel();
@@ -7898,15 +8284,605 @@ function renderSets(exIdx, block) {
   }
 }
 
+function fmtExposureBtnValue(temp, duration) {
+  const t = (temp !== '' && temp != null) ? `${temp}°F` : '—';
+  return `${t} · ${fmtRestSecs(duration || 0)}`;
+}
+
+// Looks up a set's row fresh by (exIdx, setIdx) rather than holding onto DOM
+// references from render time — the row can get rebuilt (e.g. adding/deleting
+// another set on the same exercise) while a background timer is still running.
+function getExposureRowEls(exIdx, setIdx) {
+  const block = document.querySelector('.train-ex[data-session-idx="' + exIdx + '"]');
+  if (!block) return null;
+  const row = block.querySelector('.exposure-set-row[data-set-idx="' + setIdx + '"]');
+  if (!row) return null;
+  return {
+    row,
+    timerBtn: row.querySelector('.exposure-timer-btn'),
+    timeEl: row.querySelector('.exposure-timer-btn-time'),
+    checkBtn: row.querySelector('.set-check'),
+  };
+}
+
+function renderExposureSets(exIdx, block) {
+  const ex = session[exIdx];
+  if (!ex) return;
+  const container = block.querySelector('.sets-container');
+  container.innerHTML = '';
+  for (let i = 0; i < ex.sets.length; i++) {
+    if (i > 0) {
+      const marker = document.createElement('div');
+      marker.className = 'rest-marker';
+      marker.dataset.exercise = ex.name;
+      const exRestSecs = (state.exerciseMeta[ex.name] || {}).restTime || restDuration;
+      marker.textContent = fmtRestSecs(exRestSecs);
+      container.appendChild(marker);
+    }
+    const setIdx = i;
+    const row = document.createElement('div');
+    row.className = 'set-row exposure-set-row';
+    row.dataset.setIdx = String(setIdx);
+
+    const numEl = document.createElement('div');
+    numEl.className = 'set-num';
+    numEl.textContent = setIdx + 1;
+
+    const isRunningThis = exposureTimerState && exposureTimerState.running &&
+      exposureTimerState.exIdx === exIdx && exposureTimerState.setIdx === setIdx;
+    const displayDuration = isRunningThis ? exposureTimerState.lastWholeSecs : ex.sets[setIdx].duration;
+
+    const timerBtn = document.createElement('button');
+    timerBtn.type = 'button';
+    timerBtn.className = 'exposure-timer-btn' + (isRunningThis ? ' running-bg' : '');
+    timerBtn.innerHTML =
+      `<span class="exposure-timer-btn-time">${fmtExposureBtnValue(ex.sets[setIdx].temp, displayDuration)}</span>` +
+      `<span class="exposure-timer-btn-label">Temp and Duration</span>`;
+
+    const checkBtn = document.createElement('button');
+    checkBtn.className = 'set-check';
+    checkBtn.type = 'button';
+    checkBtn.textContent = '✓';
+    if (ex.sets[setIdx].done) checkBtn.classList.add('done');
+    checkBtn.addEventListener('click', () => {
+      touchActivity();
+      // Checkmark doubles as a "stop" for this set's live timer, if it's the one running.
+      if (exposureTimerState && exposureTimerState.running &&
+          exposureTimerState.exIdx === exIdx && exposureTimerState.setIdx === setIdx) {
+        playSound('commonButton');
+        stopExposureTimer(true);
+        return;
+      }
+      if (!ex.sets[setIdx].done && (ex.sets[setIdx].duration || 0) === 0) return;
+      ex.sets[setIdx].done = !ex.sets[setIdx].done;
+      checkBtn.classList.toggle('done', ex.sets[setIdx].done);
+      if (ex.sets[setIdx].done) {
+        playSound('setComplete');
+        markSetCompleted();
+        restCurrentExercise = ex.name;
+        const exRest = (state.exerciseMeta[ex.name] || {}).restTime;
+        startRestTimer(exRest || restDuration);
+      }
+      saveActiveSession();
+      refreshPickerIfOpen();
+    });
+
+    timerBtn.addEventListener('click', () => {
+      touchActivity();
+      playSound('commonButton');
+      openExposureTimerModal({
+        exIdx, setIdx,
+        temp: ex.sets[setIdx].temp,
+        duration: ex.sets[setIdx].duration,
+      });
+    });
+
+    const delBtn = document.createElement('button');
+    delBtn.className = 'set-delete';
+    delBtn.type = 'button';
+    delBtn.textContent = '×';
+    delBtn.style.display = ex.sets.length > 1 ? '' : 'none';
+    delBtn.addEventListener('click', () => {
+      touchActivity();
+      playSound('delete');
+      if (exposureTimerState && exposureTimerState.exIdx === exIdx) {
+        if (exposureTimerState.setIdx === setIdx) {
+          forceStopExposureTimer();
+        } else if (exposureTimerState.setIdx > setIdx) {
+          exposureTimerState.setIdx -= 1;
+        }
+      }
+      ex.sets.splice(setIdx, 1);
+      renderExposureSets(exIdx, block);
+      saveActiveSession();
+      refreshPickerIfOpen();
+    });
+
+    row.appendChild(numEl);
+    row.appendChild(timerBtn);
+    row.appendChild(checkBtn);
+    row.appendChild(delBtn);
+    container.appendChild(row);
+  }
+}
+
 function addSet(exIdx, block) {
   const ex = session[exIdx];
   if (!ex) return;
-  ex.sets.push({ weight: '', reps: '', done: false });
+  if (ex.expType === 'exposure') {
+    let prevTemp = 100, prevDuration = 0;
+    const prevSet = ex.sets[ex.sets.length - 1];
+    if (prevSet) {
+      // Another set already exists this session — carry its values forward.
+      prevTemp = (prevSet.temp !== '' && prevSet.temp != null) ? prevSet.temp : 100;
+      prevDuration = prevSet.duration || 0;
+    } else {
+      // First set of this exercise this session — pull from the last time it was done.
+      const lastSets = getLastSetsForExercise(ex.name);
+      const last = lastSets && lastSets[0];
+      if (last) {
+        prevTemp = (last.temp !== '' && last.temp != null) ? last.temp : 100;
+        prevDuration = last.duration || 0;
+      }
+    }
+    ex.sets.push({ temp: prevTemp, duration: prevDuration, done: false });
+  } else {
+    ex.sets.push({ weight: '', reps: '', done: false });
+  }
   renderSets(exIdx, block);
   saveActiveSession();
 }
 
 document.getElementById('add-ex-main').addEventListener('click', () => { playSound('commonButton'); openPicker(); });
+
+// ═══════════════════════════════════════════════════════════
+// EXPOSURE DURATION TIMER — count-up stopwatch in a circular popup.
+// Hitting the target flashes the screen green 5x, then keeps counting;
+// whatever it reads when stopped becomes that set's Duration.
+// ═══════════════════════════════════════════════════════════
+
+const EXPOSURE_RING_CIRC = 2 * Math.PI * 88;
+let exposureTimerState = null;
+let exposureTimerInterval = null;
+let exposureTimerLastTarget = 300;
+
+// Opening the popup on the exact set that's already running just re-shows its
+// live state (Stop button, ticking display) instead of resetting anything.
+// Opening on a different set while one is running stops & commits that one
+// first — only one exposure timer can run at a time.
+function openExposureTimerModal({ exIdx, setIdx, temp, duration }) {
+  const resuming = exposureTimerState && exposureTimerState.running &&
+    exposureTimerState.exIdx === exIdx && exposureTimerState.setIdx === setIdx;
+
+  if (exposureTimerState && exposureTimerState.running && !resuming) {
+    stopExposureTimer(true);
+  }
+
+  const toggleBtn = document.getElementById('exposure-timer-toggle');
+
+  if (resuming) {
+    document.getElementById('exposure-timer-modal').classList.add('open');
+    document.getElementById('exposure-timer-display').textContent = fmtRestSecs(exposureTimerState.lastWholeSecs);
+    toggleBtn.textContent = 'Stop';
+    toggleBtn.classList.add('running');
+    toggleBtn.disabled = false;
+    setExposureWheelFieldsDisabled(['temp'], true);
+    setExposureWheelFieldsDisabled(['h', 'm', 's'], true);
+    setExposureWheelValue('temp', session[exIdx].sets[setIdx].temp);
+    const fraction = exposureTimerState.targetSecs > 0 ? exposureTimerState.lastWholeSecs / exposureTimerState.targetSecs : 0;
+    updateExposureRing(Math.min(1, fraction), fraction >= 1);
+    return;
+  }
+
+  exposureTimerState = {
+    running: false,
+    exIdx, setIdx,
+    startEpoch: 0,
+    lastWholeSecs: 0,
+    targetSecs: (duration != null && duration > 0) ? duration : exposureTimerLastTarget,
+    hasFlashed: false,
+  };
+  document.getElementById('exposure-timer-display').textContent = '0:00';
+  toggleBtn.textContent = 'Start';
+  toggleBtn.classList.remove('running');
+  toggleBtn.disabled = false;
+  setExposureWheelFieldsDisabled(['temp'], false);
+  setExposureWheelFieldsDisabled(['h', 'm', 's'], false);
+  updateExposureRing(0, false);
+  // Modal must be visible (display != none) before setting scrollTop on the
+  // wheels — browsers silently ignore scrollTop writes on hidden elements,
+  // so this has to happen after .open is applied, not before.
+  document.getElementById('exposure-timer-modal').classList.add('open');
+  setExposureWheelValue('temp', (temp !== '' && temp != null) ? temp : 100);
+  updateExposureTargetFieldsFromSecs();
+}
+
+// Hides the popup. If a timer is actively running it keeps running in the
+// background — this does NOT stop it. Use forceStopExposureTimer() to fully
+// tear down (e.g. ending the whole workout).
+function closeExposureTimerModal() {
+  document.getElementById('exposure-timer-modal').classList.remove('open');
+  if (exposureTimerState && exposureTimerState.running) return;
+  if (exposureTimerInterval) { clearInterval(exposureTimerInterval); exposureTimerInterval = null; }
+  EWHEEL_FIELDS.forEach(cancelExposureMomentum);
+  exposureTimerState = null;
+}
+
+function forceStopExposureTimer() {
+  if (exposureTimerInterval) { clearInterval(exposureTimerInterval); exposureTimerInterval = null; }
+  EWHEEL_FIELDS.forEach(cancelExposureMomentum);
+  document.getElementById('exposure-timer-modal').classList.remove('open');
+  exposureTimerState = null;
+}
+
+function commitExposureDuration(exIdx, setIdx, elapsed) {
+  const ex = session[exIdx];
+  if (!ex || !ex.sets[setIdx]) return;
+  ex.sets[setIdx].duration = elapsed;
+  const els = getExposureRowEls(exIdx, setIdx);
+  if (els) {
+    els.timerBtn.classList.remove('running-bg');
+    els.timeEl.textContent = fmtExposureBtnValue(ex.sets[setIdx].temp, elapsed);
+  }
+  if (!ex.sets[setIdx].done) {
+    ex.sets[setIdx].done = true;
+    if (els) els.checkBtn.classList.add('done');
+    playSound('setComplete');
+    markSetCompleted();
+    restCurrentExercise = ex.name;
+    const exRest = (state.exerciseMeta[ex.name] || {}).restTime;
+    startRestTimer(exRest || restDuration);
+  }
+  saveActiveSession();
+  refreshPickerIfOpen();
+}
+
+function stopExposureTimer(commit) {
+  const st = exposureTimerState;
+  if (!st) return;
+  const wasRunning = st.running;
+  st.running = false;
+  if (exposureTimerInterval) { clearInterval(exposureTimerInterval); exposureTimerInterval = null; }
+  if (commit && wasRunning) {
+    commitExposureDuration(st.exIdx, st.setIdx, st.lastWholeSecs);
+  }
+  closeExposureTimerModal();
+}
+
+// ── iOS-style scroll-snap wheels: hour/min/sec target, plus a standalone temp wheel ──
+const EWHEEL_ITEM_H = 30;
+const EWHEEL_CONFIG = {
+  h: { min: 0, max: 23, step: 1 },
+  m: { min: 0, max: 59, step: 1 },
+  s: { min: 0, max: 59, step: 1 },
+  temp: { min: -300, max: 300, step: 5 },
+};
+const EWHEEL_FIELDS = Object.keys(EWHEEL_CONFIG);
+
+// Commits a wheel's current value back into the active timer state — h/m/s
+// recompute the target duration together; temp writes straight through.
+function commitExposureWheelField(field) {
+  if (field === 'temp') {
+    if (!exposureTimerState) return;
+    const { exIdx, setIdx } = exposureTimerState;
+    const ex = session[exIdx];
+    if (!ex || !ex.sets[setIdx]) return;
+    const val = getExposureWheelValue('temp');
+    ex.sets[setIdx].temp = val;
+    const els = getExposureRowEls(exIdx, setIdx);
+    if (els) els.timeEl.textContent = fmtExposureBtnValue(val, ex.sets[setIdx].duration);
+    saveActiveSession();
+  } else {
+    readExposureTargetFieldsToSecs();
+  }
+}
+
+// Momentum animation frame ids, keyed by field, so a new drag or modal close can cancel one in flight.
+const exposureMomentumFrames = {};
+
+function cancelExposureMomentum(field) {
+  if (exposureMomentumFrames[field]) {
+    cancelAnimationFrame(exposureMomentumFrames[field]);
+    exposureMomentumFrames[field] = null;
+  }
+}
+
+// Eases scrollTop to an exact target over `duration`ms with its own rAF loop
+// (rather than the browser's native scrollTo(smooth), which many browsers snap
+// through almost instantly for short distances) — this is the "gradually auto
+// adjust when it stops between two numbers" behavior.
+function animateExposureScrollTo(col, field, targetTop, duration) {
+  cancelExposureMomentum(field);
+  const startTop = col.scrollTop;
+  const delta = targetTop - startTop;
+  if (Math.abs(delta) < 0.5) {
+    col.scrollTop = targetTop;
+    updateExposureWheelCentered(field);
+    commitExposureWheelField(field);
+    return;
+  }
+  const startTime = performance.now();
+  const easeOutCubic = t => 1 - Math.pow(1 - t, 3);
+  function step(now) {
+    const t = Math.min(1, (now - startTime) / duration);
+    col.scrollTop = startTop + delta * easeOutCubic(t);
+    updateExposureWheelCentered(field);
+    if (t < 1) {
+      exposureMomentumFrames[field] = requestAnimationFrame(step);
+    } else {
+      exposureMomentumFrames[field] = null;
+      commitExposureWheelField(field);
+    }
+  }
+  exposureMomentumFrames[field] = requestAnimationFrame(step);
+}
+
+// Snaps to the nearest item, syncs the centered highlight, and commits the value.
+function snapExposureWheel(col, field) {
+  const idx = Math.round(col.scrollTop / EWHEEL_ITEM_H);
+  const targetTop = idx * EWHEEL_ITEM_H;
+  const dist = Math.abs(targetTop - col.scrollTop);
+  const duration = Math.min(260, Math.max(140, dist * 4));
+  animateExposureScrollTo(col, field, targetTop, duration);
+}
+
+// Real wheel physics: after release, keep spinning at the flick's velocity and
+// decay it by friction each frame until it's slow enough to settle and snap.
+function startExposureMomentum(col, field, velocityPxPerMs) {
+  cancelExposureMomentum(field);
+  const FRICTION = 0.955;
+  const STOP_THRESHOLD = 0.2;
+  const MAX_VELOCITY = 45;
+  let velocity = Math.max(-MAX_VELOCITY, Math.min(MAX_VELOCITY, velocityPxPerMs * 16)); // px/ms -> approx px/frame at 60fps
+
+  if (Math.abs(velocity) < STOP_THRESHOLD) {
+    snapExposureWheel(col, field);
+    return;
+  }
+
+  function step() {
+    velocity *= FRICTION;
+    col.scrollTop += velocity;
+    updateExposureWheelCentered(field);
+
+    const maxScroll = col.scrollHeight - col.clientHeight;
+    const hitEnd = col.scrollTop <= 0 || col.scrollTop >= maxScroll;
+    if (hitEnd) col.scrollTop = Math.max(0, Math.min(maxScroll, col.scrollTop));
+
+    if (hitEnd || Math.abs(velocity) < STOP_THRESHOLD) {
+      exposureMomentumFrames[field] = null;
+      snapExposureWheel(col, field);
+      return;
+    }
+    exposureMomentumFrames[field] = requestAnimationFrame(step);
+  }
+  exposureMomentumFrames[field] = requestAnimationFrame(step);
+}
+
+function buildExposureWheel(field) {
+  const col = document.getElementById('exposure-wheel-' + field);
+  const { min, max, step } = EWHEEL_CONFIG[field];
+  col.innerHTML = '';
+  col.appendChild(Object.assign(document.createElement('div'), { className: 'ewheel-spacer' }));
+  for (let v = min; v <= max; v += step) {
+    const item = document.createElement('div');
+    item.className = 'ewheel-item';
+    item.textContent = v;
+    col.appendChild(item);
+  }
+  col.appendChild(Object.assign(document.createElement('div'), { className: 'ewheel-spacer' }));
+
+  let settleTimer = null;
+  let rafPending = false;
+  let dragging = false;
+
+  col.addEventListener('scroll', () => {
+    if (!rafPending) {
+      rafPending = true;
+      requestAnimationFrame(() => { updateExposureWheelCentered(field); rafPending = false; });
+    }
+    // Dragging and momentum already own snapping via their own logic — this
+    // fallback only matters for native scroll sources (mouse wheel, scrollbar).
+    if (dragging || exposureMomentumFrames[field]) return;
+    clearTimeout(settleTimer);
+    settleTimer = setTimeout(() => snapExposureWheel(col, field), 100);
+  }, { passive: true });
+
+  // ── Pointer drag with release momentum (mouse + touch, unified) ──
+  let lastY = 0;
+  const samples = [];
+
+  col.addEventListener('pointerdown', (e) => {
+    if (col.closest('.ewheel-col-wrap').classList.contains('disabled')) return;
+    e.preventDefault();
+    dragging = true;
+    col.classList.add('grabbing');
+    cancelExposureMomentum(field);
+    clearTimeout(settleTimer);
+    col.setPointerCapture(e.pointerId);
+    lastY = e.clientY;
+    samples.length = 0;
+    samples.push({ y: e.clientY, t: performance.now() });
+  });
+
+  col.addEventListener('pointermove', (e) => {
+    if (!dragging) return;
+    e.preventDefault();
+    const y = e.clientY;
+    col.scrollTop += lastY - y;
+    lastY = y;
+    samples.push({ y, t: performance.now() });
+    if (samples.length > 6) samples.shift();
+    updateExposureWheelCentered(field);
+  });
+
+  function endDrag() {
+    if (!dragging) return;
+    dragging = false;
+    col.classList.remove('grabbing');
+    const now = performance.now();
+    const recent = samples.filter(s => now - s.t < 120);
+    let v = 0;
+    if (recent.length >= 2) {
+      const first = recent[0], last = recent[recent.length - 1];
+      const dt = last.t - first.t;
+      if (dt > 0) v = (first.y - last.y) / dt;
+    }
+    startExposureMomentum(col, field, v);
+  }
+  col.addEventListener('pointerup', endDrag);
+  col.addEventListener('pointercancel', endDrag);
+}
+EWHEEL_FIELDS.forEach(buildExposureWheel);
+
+// Ticks the "Timer Wheel" sound each time a new number lands in the
+// highlighted/selection band — not on every scroll frame, and not when a
+// value is set programmatically (e.g. opening the modal). Also drives which
+// item gets the .centered style. This runs on every pointermove/scroll frame,
+// so it does a targeted add/remove on just the two affected items (not a full
+// querySelectorAll + loop over every item, and not at all once the index
+// stops changing) — that per-frame full-list scan was the source of the
+// stutter/glitch while dragging, especially on the 121-item temp wheel.
+const exposureWheelLastIdx = {};
+
+function updateExposureWheelCentered(field, playTick = true) {
+  const col = document.getElementById('exposure-wheel-' + field);
+  const idx = Math.round(col.scrollTop / EWHEEL_ITEM_H);
+  const prevIdx = exposureWheelLastIdx[field];
+  if (prevIdx === idx) return;
+
+  if (prevIdx !== undefined) {
+    const prevEl = col.children[prevIdx + 1]; // +1 skips the leading spacer
+    if (prevEl) prevEl.classList.remove('centered');
+  }
+  const curEl = col.children[idx + 1];
+  if (curEl) curEl.classList.add('centered');
+
+  if (playTick && prevIdx !== undefined) {
+    playSound('timerWheel');
+  }
+  exposureWheelLastIdx[field] = idx;
+}
+
+function setExposureWheelValue(field, val) {
+  const col = document.getElementById('exposure-wheel-' + field);
+  const { min, max, step } = EWHEEL_CONFIG[field];
+  const clamped = Math.max(min, Math.min(max, Math.round(val / step) * step));
+  cancelExposureMomentum(field);
+  col.scrollTop = ((clamped - min) / step) * EWHEEL_ITEM_H;
+  updateExposureWheelCentered(field, false);
+}
+
+function getExposureWheelValue(field) {
+  const col = document.getElementById('exposure-wheel-' + field);
+  const { min, step } = EWHEEL_CONFIG[field];
+  return Math.round(col.scrollTop / EWHEEL_ITEM_H) * step + min;
+}
+
+function setExposureWheelFieldsDisabled(fields, disabled) {
+  fields.forEach(f => {
+    document.getElementById('exposure-wheel-' + f).closest('.ewheel-col-wrap').classList.toggle('disabled', disabled);
+  });
+}
+
+function updateExposureTargetFieldsFromSecs() {
+  if (!exposureTimerState) return;
+  const total = exposureTimerState.targetSecs;
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const s = total % 60;
+  setExposureWheelValue('h', h);
+  setExposureWheelValue('m', m);
+  setExposureWheelValue('s', s);
+}
+
+function readExposureTargetFieldsToSecs() {
+  if (!exposureTimerState) return;
+  const h = getExposureWheelValue('h');
+  const m = getExposureWheelValue('m');
+  const s = getExposureWheelValue('s');
+  exposureTimerState.targetSecs = h * 3600 + m * 60 + s;
+  exposureTimerLastTarget = exposureTimerState.targetSecs;
+}
+
+function updateExposureRing(fraction, complete) {
+  const el = document.getElementById('exposure-timer-ring-progress');
+  el.style.strokeDashoffset = String(EXPOSURE_RING_CIRC * (1 - Math.min(1, fraction)));
+  el.classList.toggle('complete', complete);
+}
+
+function flashExposureTargetHit() {
+  const el = document.getElementById('rest-complete-flash');
+  let count = 0;
+  const doFlash = () => {
+    el.classList.remove('flash');
+    void el.offsetWidth; // restart animation
+    el.classList.add('flash');
+    count++;
+    if (count < 5) setTimeout(doFlash, 450);
+  };
+  doFlash();
+}
+
+function tickExposureTimer() {
+  const st = exposureTimerState;
+  if (!st || !st.running) return;
+  const elapsedMs = Date.now() - st.startEpoch;
+  const elapsedSecs = Math.floor(elapsedMs / 1000);
+  if (elapsedSecs !== st.lastWholeSecs) {
+    st.lastWholeSecs = elapsedSecs;
+    document.getElementById('exposure-timer-display').textContent = fmtRestSecs(elapsedSecs);
+
+    const ex = session[st.exIdx];
+    if (ex && ex.sets[st.setIdx]) {
+      ex.sets[st.setIdx].duration = elapsedSecs;
+      const els = getExposureRowEls(st.exIdx, st.setIdx);
+      if (els) els.timeEl.textContent = fmtExposureBtnValue(ex.sets[st.setIdx].temp, elapsedSecs);
+    }
+  }
+  const fraction = st.targetSecs > 0 ? elapsedMs / (st.targetSecs * 1000) : 0;
+  updateExposureRing(fraction, fraction >= 1);
+  if (st.targetSecs > 0 && fraction >= 1 && !st.hasFlashed) {
+    st.hasFlashed = true;
+    flashExposureTargetHit();
+    playSound('restTimerEnd');
+  }
+}
+
+document.getElementById('exposure-timer-toggle').addEventListener('click', () => {
+  if (!exposureTimerState) return;
+  const toggleBtn = document.getElementById('exposure-timer-toggle');
+  if (exposureTimerState.running) {
+    playSound('commonButton');
+    stopExposureTimer(true);
+  } else {
+    playSound('commonButton');
+    exposureTimerState.running = true;
+    exposureTimerState.startEpoch = Date.now();
+    exposureTimerState.lastWholeSecs = 0;
+    exposureTimerState.hasFlashed = false;
+    document.getElementById('exposure-timer-display').textContent = '0:00';
+    updateExposureRing(0, false);
+    toggleBtn.textContent = 'Stop';
+    toggleBtn.classList.add('running');
+    setExposureWheelFieldsDisabled(['h', 'm', 's'], true);
+    setExposureWheelFieldsDisabled(['temp'], true);
+    const els = getExposureRowEls(exposureTimerState.exIdx, exposureTimerState.setIdx);
+    if (els) els.timerBtn.classList.add('running-bg');
+    exposureTimerInterval = setInterval(tickExposureTimer, 200);
+  }
+});
+
+// Closing (✕ or tapping outside) just hides the popup — a running timer keeps
+// going in the background, tracked live on the set's button in the row.
+document.getElementById('exposure-timer-close').addEventListener('click', () => {
+  playSound(exposureTimerState && exposureTimerState.running ? 'commonButton' : 'delete');
+  closeExposureTimerModal();
+});
+document.getElementById('exposure-timer-modal').addEventListener('click', (e) => {
+  if (e.target !== document.getElementById('exposure-timer-modal')) return;
+  closeExposureTimerModal();
+});
 
 // ═══════════════════════════════════════════════════════════
 // EXERCISE PICKER
@@ -7934,27 +8910,47 @@ function updateAllTrainExSets() {
     const ex = session[idx];
     if (!ex) return;
     const el = block.querySelector('.train-ex-sets');
-    if (el) el.innerHTML = buildSetsLine(ex.muscle);
+    if (el) el.innerHTML = ex.expType === 'exposure' ? '' : buildSetsLine(ex.muscle);
   });
 }
 
 // Cycles a Catch Up button through: off -> highlight by lowest level -> highlight by oldest last-worked -> off.
+// While in a highlight mode, steps through each rank (lowest/oldest first) one at a time,
+// holding each for 1s, then pausing 2s before looping back to the start.
 function applyCatchupMode(mode, rowSelector, btn) {
   const rows = document.querySelectorAll(rowSelector);
   rows.forEach(r => r.classList.remove('catchup-highlight', 'catchup-highlight-oldest'));
+  if (btn._catchupTimer) {
+    clearTimeout(btn._catchupTimer);
+    btn._catchupTimer = null;
+  }
   btn.classList.remove('active');
   btn.textContent = 'Catch Up';
-  if (mode === 1) {
-    btn.classList.add('active');
-    btn.textContent = 'Catch Up: Level';
-    const lowestLevel = Math.min(...[...rows].map(r => parseInt(r.dataset.level)));
-    rows.forEach(r => r.classList.toggle('catchup-highlight', parseInt(r.dataset.level) === lowestLevel));
-  } else if (mode === 2) {
-    btn.classList.add('active');
-    btn.textContent = 'Catch Up: Oldest';
-    const oldest = Math.max(...[...rows].map(r => parseFloat(r.dataset.hoursAgo)));
-    rows.forEach(r => r.classList.toggle('catchup-highlight-oldest', parseFloat(r.dataset.hoursAgo) === oldest));
-  }
+  if (mode !== 1 && mode !== 2) return;
+
+  const highlightClass = mode === 1 ? 'catchup-highlight' : 'catchup-highlight-oldest';
+  btn.classList.add('active');
+  btn.textContent = mode === 1 ? 'Catch Up: Level' : 'Catch Up: Oldest';
+
+  const getVal = r => mode === 1 ? parseInt(r.dataset.level) : parseFloat(r.dataset.hoursAgo);
+  const rowsArr = [...rows];
+  const ranks = [...new Set(rowsArr.map(getVal))].sort((a, b) => mode === 1 ? a - b : b - a);
+  if (!ranks.length) return;
+
+  let i = 0;
+  const step = () => {
+    if (i >= ranks.length) {
+      rowsArr.forEach(r => r.classList.remove(highlightClass));
+      i = 0;
+      btn._catchupTimer = setTimeout(step, 4000);
+      return;
+    }
+    const val = ranks[i];
+    rowsArr.forEach(r => r.classList.toggle(highlightClass, getVal(r) === val));
+    i++;
+    btn._catchupTimer = setTimeout(step, 2000);
+  };
+  step();
 }
 
 function refreshPickerIfOpen() {
@@ -7993,7 +8989,8 @@ function renderPickerMuscleGrid() {
       btn.innerHTML = `
         <div class="picker-muscle-dot" style="background:${dotColor};box-shadow:0 0 6px ${dotColor};"></div>
         <div>
-          <div class="picker-muscle-name">${muscle}${lastLabel ? `<span style="font-size:9px;color:rgb(var(--c-text3));opacity:0.7;font-weight:400;margin-left:5px;">${lastLabel}</span>` : ''}</div>
+          <div class="picker-muscle-name">${muscle}</div>
+          <div class="picker-muscle-last">${lastLabel || 'never'}</div>
           <div class="picker-muscle-count" style="font-size:10px;"><span style="color:${dotColor}">Lv ${lv}</span> · ${setsLine}</div>
         </div>
       `;
@@ -8016,7 +9013,8 @@ function renderPickerMuscleGrid() {
     btn.innerHTML = `
       <div class="picker-muscle-dot" style="background:rgba(var(--c-text3),0.6);"></div>
       <div>
-        <div class="picker-muscle-name">${category}${lastLabel ? `<span style="font-size:9px;color:rgb(var(--c-text3));opacity:0.7;font-weight:400;margin-left:5px;">${lastLabel}</span>` : ''}</div>
+        <div class="picker-muscle-name">${category}</div>
+        <div class="picker-muscle-last">${lastLabel || 'never'}</div>
         <div class="picker-muscle-count" style="font-size:10px;">${countLabel}</div>
       </div>
     `;
@@ -8058,7 +9056,9 @@ function openPickerExPopup(muscle) {
       picker.classList.remove('open');
       if (picker._histMode) {
         picker._histMode = false;
-        histEditData.exercises.push({ name: ex, muscle, sets: [{ weight: '', reps: '', done: true }] });
+        const isExp = (state.exerciseMeta[ex] || {}).expType === 'exposure';
+        const initSet = isExp ? { temp: 100, duration: 0, done: true } : { weight: '', reps: '', done: true };
+        histEditData.exercises.push({ name: ex, muscle, sets: [initSet] });
         renderHistEditExercises();
       } else if (picker._tplMode) {
         picker._tplMode = false;
@@ -8569,6 +9569,32 @@ function recalcAllPRs() {
   }
 }
 
+// Three exposure PRs per exercise: independent highest temp, independent highest
+// duration, and a combo "highest temp at highest duration" (temp primary, duration
+// tie-break — same pattern as the weight/reps combo PR above). The combo is the
+// one shown as the headline PR; all three show when you tap into the exercise.
+function recalcAllExposurePRs() {
+  state.exposurePRs = {};
+  for (const w of state.history) {
+    for (const ex of w.exercises) {
+      for (const s of ex.sets) {
+        const temp = parseFloat(s.temp) || 0;
+        const dur = parseInt(s.duration) || 0;
+        if (temp > 0 || dur > 0) {
+          const curr = state.exposurePRs[ex.name] || { maxTemp: 0, maxDuration: 0, comboTemp: 0, comboDuration: 0 };
+          if (temp > curr.comboTemp || (temp === curr.comboTemp && dur > curr.comboDuration)) {
+            curr.comboTemp = temp;
+            curr.comboDuration = dur;
+          }
+          if (temp > curr.maxTemp) curr.maxTemp = temp;
+          if (dur > curr.maxDuration) curr.maxDuration = dur;
+          state.exposurePRs[ex.name] = curr;
+        }
+      }
+    }
+  }
+}
+
 // ═══════════════════════════════════════════════════════════
 // FOCUS EXERCISES
 // ═══════════════════════════════════════════════════════════
@@ -8799,35 +9825,50 @@ function openNewExModal(preselectedMuscle) {
   updateNexRestDisplay();
   renderNexSuggestions();
 
+  const isExposure = !!EXPOSURE_SUBTYPES[preselectedMuscle];
+  const bpLabel = document.getElementById('nex-bodypart-label');
   const bpWrap = document.getElementById('nex-bodypart');
+  bpLabel.style.display = isExposure ? 'none' : '';
+  bpWrap.style.display = isExposure ? 'none' : '';
   bpWrap.innerHTML = '';
-  [...MUSCLES, ...WELLNESS_CATEGORIES, 'Other'].forEach(m => {
-    const chip = document.createElement('div');
-    chip.className = 'nex-chip';
-    chip.textContent = m;
-    if (m === nexBodyPart) chip.classList.add('selected');
-    chip.addEventListener('click', () => {
-      bpWrap.querySelectorAll('.nex-chip').forEach(c => c.classList.remove('selected'));
-      chip.classList.add('selected');
-      nexBodyPart = m;
-      renderNexSuggestions();
+  if (!isExposure) {
+    [...MUSCLES, ...WELLNESS_CATEGORIES, 'Other'].forEach(m => {
+      const chip = document.createElement('div');
+      chip.className = 'nex-chip';
+      chip.textContent = m;
+      if (m === nexBodyPart) chip.classList.add('selected');
+      chip.addEventListener('click', () => {
+        bpWrap.querySelectorAll('.nex-chip').forEach(c => c.classList.remove('selected'));
+        chip.classList.add('selected');
+        nexBodyPart = m;
+        renderNexSuggestions();
+      });
+      bpWrap.appendChild(chip);
     });
-    bpWrap.appendChild(chip);
-  });
+  }
 
+  const catLabel = document.getElementById('nex-category-label');
   const catWrap = document.getElementById('nex-category');
+  const restLabel = document.getElementById('nex-resttime-label');
+  const restRow = document.getElementById('nex-resttime-row');
+  catLabel.style.display = isExposure ? 'none' : '';
+  catWrap.style.display = isExposure ? 'none' : '';
+  restLabel.style.display = isExposure ? 'none' : '';
+  restRow.style.display = isExposure ? 'none' : '';
   catWrap.innerHTML = '';
-  NEX_CATEGORIES.forEach(cat => {
-    const chip = document.createElement('div');
-    chip.className = 'nex-chip';
-    chip.textContent = cat;
-    chip.addEventListener('click', () => {
-      catWrap.querySelectorAll('.nex-chip').forEach(c => c.classList.remove('selected'));
-      chip.classList.add('selected');
-      nexCategory = cat;
+  if (!isExposure) {
+    NEX_CATEGORIES.forEach(cat => {
+      const chip = document.createElement('div');
+      chip.className = 'nex-chip';
+      chip.textContent = cat;
+      chip.addEventListener('click', () => {
+        catWrap.querySelectorAll('.nex-chip').forEach(c => c.classList.remove('selected'));
+        chip.classList.add('selected');
+        nexCategory = cat;
+      });
+      catWrap.appendChild(chip);
     });
-    catWrap.appendChild(chip);
-  });
+  }
 
   document.getElementById('new-ex-modal').classList.add('open');
 }
@@ -8871,7 +9912,9 @@ let pendingCableExercise = null;
 document.getElementById('new-ex-save').addEventListener('click', () => {
   const name = document.getElementById('nex-name').value.trim();
   if (!name) { alert('Please enter a name.'); return; }
-  if (!nexBodyPart) { alert('Please select a body part.'); return; }
+
+  const isExposure = !!EXPOSURE_SUBTYPES[nexBodyPart];
+  if (!isExposure && !nexBodyPart) { alert('Please select a body part.'); return; }
 
   const muscle = (MUSCLES.includes(nexBodyPart) || WELLNESS_CATEGORIES.includes(nexBodyPart)) ? nexBodyPart : (MUSCLES[0]);
 
@@ -8891,6 +9934,7 @@ document.getElementById('new-ex-save').addEventListener('click', () => {
   state.exercises[muscle].push(storedName);
   if (!state.exerciseMeta[storedName]) state.exerciseMeta[storedName] = {};
   state.exerciseMeta[storedName].restTime = nexRestSecs;
+  if (isExposure) state.exerciseMeta[storedName].expType = 'exposure';
   save();
   renderExercises();
   closeNewExModal();
@@ -9020,6 +10064,111 @@ function buildGoalsList() {
       list.appendChild(row);
     }
   }
+
+  // Wellness categories get a goal too, but intentionally stay disconnected
+  // from getLevel()/updateModel() — no avatar or leveling effect.
+  const wellnessHeader = document.createElement('div');
+  wellnessHeader.className = 'picker-group-header';
+  wellnessHeader.textContent = 'Wellness';
+  list.appendChild(wellnessHeader);
+
+  const DURATION_GOAL_CATEGORIES = new Set(['Heat Exposure', 'Cold Exposure']);
+
+  for (const muscle of WELLNESS_CATEGORIES) {
+    const key = muscle.replace(/\s/g, '_');
+    const row = document.createElement('div');
+    row.className = 'goal-row';
+    const stepperWrap = document.createElement('div');
+    stepperWrap.className = 'goal-stepper-wrap';
+
+    if (DURATION_GOAL_CATEGORIES.has(muscle)) {
+      // Heat/Cold Exposure are tracked as a time goal (h:mm:ss), not a set count.
+      const currentSecs = getWellnessWeeklyDuration(muscle);
+      const goalSecs = goals[muscle] !== undefined ? goals[muscle] : 3600;
+
+      row.innerHTML = `
+        <div class="goal-row-labels">
+          <div class="goal-muscle-name">
+            <span class="goal-muscle-dot" style="background:rgba(var(--c-text3),0.6);"></span>${muscle}
+          </div>
+          <div class="goal-muscle-sub">${fmtHMS(currentSecs)} this week &middot; goal: <span id="goal-label-${key}">${fmtHMS(goalSecs)}</span></div>
+        </div>
+      `;
+
+      const { wrap, inp } = makeStepper(Math.round(goalSecs / 60), 5, 5, val => {
+        const g = loadGoals();
+        const mins = Math.max(5, parseInt(val) || 5);
+        g[muscle] = mins * 60;
+        saveGoals(g);
+        inp.value = mins;
+        const lbl = document.getElementById(`goal-label-${key}`);
+        if (lbl) lbl.textContent = fmtHMS(g[muscle]);
+        // No updateModel() — wellness goals don't touch the avatar or leveling.
+      });
+      stepperWrap.appendChild(wrap);
+    } else {
+      const currentSets = getWellnessWeeklySets(muscle);
+      const goalVal = goals[muscle] !== undefined ? goals[muscle] : 15;
+
+      row.innerHTML = `
+        <div class="goal-row-labels">
+          <div class="goal-muscle-name">
+            <span class="goal-muscle-dot" style="background:rgba(var(--c-text3),0.6);"></span>${muscle}
+          </div>
+          <div class="goal-muscle-sub">${currentSets} sets this week &middot; goal: <span id="goal-label-${key}">${goalVal}</span></div>
+        </div>
+      `;
+
+      const { wrap, inp } = makeStepper(goalVal, 1, 5, val => {
+        const g = loadGoals();
+        g[muscle] = Math.max(5, parseInt(val) || 5);
+        saveGoals(g);
+        inp.value = g[muscle];
+        const lbl = document.getElementById(`goal-label-${key}`);
+        if (lbl) lbl.textContent = g[muscle];
+        // No updateModel() — wellness goals don't touch the avatar or leveling.
+      });
+      stepperWrap.appendChild(wrap);
+    }
+
+    row.appendChild(stepperWrap);
+    list.appendChild(row);
+  }
+}
+
+function getWellnessWeeklySets(muscle) {
+  const monday = getMondayStr();
+  let count = 0;
+  for (const w of state.history) {
+    if (w.date && isThisWeek(w.date, monday)) {
+      for (const ex of w.exercises) {
+        if (ex.muscle === muscle) count += ex.sets.length;
+      }
+    }
+  }
+  return count;
+}
+
+function getWellnessWeeklyDuration(muscle) {
+  const monday = getMondayStr();
+  let secs = 0;
+  for (const w of state.history) {
+    if (w.date && isThisWeek(w.date, monday)) {
+      for (const ex of w.exercises) {
+        if (ex.muscle === muscle) {
+          for (const s of ex.sets) secs += (s.duration || 0);
+        }
+      }
+    }
+  }
+  return secs;
+}
+
+function fmtHMS(totalSecs) {
+  const h = Math.floor(totalSecs / 3600);
+  const m = Math.floor((totalSecs % 3600) / 60);
+  const s = totalSecs % 60;
+  return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
 
 function buildOverrideList() {
@@ -9067,7 +10216,6 @@ function buildOverrideList() {
 document.getElementById('goals-btn').addEventListener('click', () => {
   playSound('commonButton');
   buildGoalsList();
-  renderFocusSlots();
   document.getElementById('goals-overlay').classList.add('open');
 });
 
@@ -9100,8 +10248,8 @@ document.querySelectorAll('.avatar-hair-card').forEach(card => {
 });
 
 document.getElementById('testing-btn').addEventListener('click', () => {
-  playSound('commonButton');
   testingLevelOverride = testingLevelOverride == null ? 1 : (testingLevelOverride % 5) + 1;
+  playSound('levelUp');
   document.getElementById('testing-btn').textContent = 'Testing: Level ' + testingLevelOverride;
   document.getElementById('exit-testing-btn').style.display = '';
   updateModel();
@@ -9153,6 +10301,72 @@ document.getElementById('other-sounds-toggle-btn').addEventListener('click', () 
   localStorage.setItem('trainhard_other_sounds', otherSoundsEnabled ? 'on' : 'off');
   syncOtherSoundsToggle();
 });
+
+// Rest-timer completion alert via the Notification API. Only fires while
+// the tab/PWA is backgrounded — when it's in view, the on-screen flash and
+// sound already cover it — so this needs both the toggle on and OS-level
+// permission granted (requested from the toggle's click, a user gesture).
+let notificationsEnabled = typeof Notification !== 'undefined' &&
+  Notification.permission === 'granted' &&
+  localStorage.getItem('trainhard_notifications') === 'on';
+
+function syncNotificationsToggle() {
+  const btn = document.getElementById('notifications-toggle-btn');
+  const dbg = document.getElementById('notifications-debug');
+  if (typeof Notification === 'undefined') {
+    btn.textContent = 'Rest Alerts: Unsupported';
+    btn.disabled = true;
+    if (dbg) dbg.textContent = 'Notification API not present in this context';
+    return;
+  }
+  btn.textContent = 'Rest Alerts: ' + (notificationsEnabled ? 'On' : 'Off');
+  btn.classList.toggle('selected', notificationsEnabled);
+  if (dbg) {
+    dbg.textContent = 'permission: ' + Notification.permission +
+      ' | standalone: ' + (window.navigator.standalone === true) +
+      ' | SW: ' + (navigator.serviceWorker && navigator.serviceWorker.controller ? 'active' : 'none');
+  }
+}
+syncNotificationsToggle();
+
+document.getElementById('notifications-toggle-btn').addEventListener('click', async () => {
+  if (typeof Notification === 'undefined') return;
+  if (notificationsEnabled) {
+    notificationsEnabled = false;
+    localStorage.setItem('trainhard_notifications', 'off');
+    syncNotificationsToggle();
+    return;
+  }
+  if (Notification.permission === 'denied') {
+    // iOS/browsers never re-show the system prompt once denied — requestPermission()
+    // would just silently resolve to 'denied' again with no visible change, which
+    // looks like the button is broken. Tell the user where to actually fix it.
+    alert('Notifications are blocked for this app. Enable them in Settings > Notifications (or Settings > Train Hard on iOS), then try again.');
+    return;
+  }
+  const perm = await Notification.requestPermission();
+  notificationsEnabled = perm === 'granted';
+  localStorage.setItem('trainhard_notifications', notificationsEnabled ? 'on' : 'off');
+  syncNotificationsToggle();
+});
+
+function notifyRestComplete() {
+  if (!notificationsEnabled || Notification.permission !== 'granted' || !document.hidden) return;
+  const opts = {
+    body: 'Time to get back to it.',
+    icon: './assets/icons/icon.svg',
+    tag: 'rest-timer',
+    renotify: true,
+    vibrate: [200, 100, 200],
+  };
+  if (navigator.serviceWorker) {
+    navigator.serviceWorker.ready
+      .then(reg => reg.showNotification('Rest complete', opts))
+      .catch(() => new Notification('Rest complete', opts));
+  } else {
+    new Notification('Rest complete', opts);
+  }
+}
 
 function syncUiThemeButtons() {
   const active = document.documentElement.getAttribute('data-theme') || 'vegeta';
