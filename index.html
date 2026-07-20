@@ -10354,7 +10354,6 @@ document.getElementById('notifications-toggle-btn').addEventListener('click', as
 function notifyRestComplete() {
   if (!notificationsEnabled || Notification.permission !== 'granted' || !document.hidden) return;
   const opts = {
-    body: 'Time to Train Hard',
     icon: './assets/icons/icon.svg',
     tag: 'rest-timer',
     renotify: true,
@@ -10362,10 +10361,10 @@ function notifyRestComplete() {
   };
   if (navigator.serviceWorker) {
     navigator.serviceWorker.ready
-      .then(reg => reg.showNotification('Rest Complete', opts))
-      .catch(() => new Notification('Rest Complete', opts));
+      .then(reg => reg.showNotification('Rest Complete: Time to Train Hard', opts))
+      .catch(() => new Notification('Rest Complete: Time to Train Hard', opts));
   } else {
-    new Notification('Rest Complete', opts);
+    new Notification('Rest Complete: Time to Train Hard', opts);
   }
 }
 
