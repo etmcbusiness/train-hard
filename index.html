@@ -377,7 +377,7 @@
     /* ── Exercises Section ── */
     #exercises-section { background: transparent; }
 
-    #exercises-list, #stats-list {
+    #exercises-list, #stats-list, #stats-ex-list {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 6px;
@@ -1285,6 +1285,7 @@
       font-variant-numeric: tabular-nums;
     }
     .train-ex-pr span { color: rgb(var(--c-text2)); font-weight: 600; }
+    .train-ex-pr-ago { margin-left: 6px; color: rgb(var(--c-text4)); font-weight: 400; opacity: 0.55; }
     .set-num {
       font-size: 13px;
       font-weight: 800;
@@ -1796,7 +1797,7 @@
       pointer-events: all;
     }
     #profile-btns.visible { display: flex; }
-    #room-btn, #goals-btn, #weekly-overview-btn, #testing-btn, #exit-testing-btn {
+    #room-btn, #weekly-overview-btn, #testing-btn, #exit-testing-btn {
       background: rgba(var(--c-panel3),0.88);
       border: 1px solid rgba(var(--c-accent2),0.35);
       border-radius: 12px;
@@ -3722,20 +3723,86 @@
       touch-action: manipulation;
     }
 
-    /* ── Data Management (Stats tab) ── */
-    #dm-open-btn {
-      width: 100%;
-      margin-top: 28px;
-      padding: 15px;
+    /* ── Stats Tab Menu ── */
+    .stats-subview { display: none; }
+    .stats-subview.open { display: block; }
+    #stats-menu-center {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      min-height: calc(var(--rvh) * 100 - 230px);
+      text-align: center;
+    }
+    #stats-menu-box { width: 100%; max-width: 360px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+    .stats-menu-btn {
+      width: 100%; padding: 18px; border-radius: 16px;
+      border: 1px solid rgba(var(--c-accent),0.4);
+      background: rgba(var(--c-panel1),0.7);
+      color: rgb(var(--c-accent-light)); font-size: 17px; font-weight: 700; letter-spacing: 0.4px;
+      text-align: center;
+      cursor: pointer; touch-action: manipulation;
+    }
+    .stats-menu-btn:active { background: rgba(var(--c-accent),0.12); }
+    .stats-menu-btn-primary {
+      border: none;
+      background: linear-gradient(135deg, rgb(var(--c-accent)), rgb(var(--c-accent-dark)));
+      color: rgb(var(--c-text)); font-weight: 800;
+    }
+    .stats-menu-btn-primary:active { opacity: 0.85; background: linear-gradient(135deg, rgb(var(--c-accent)), rgb(var(--c-accent-dark))); }
+    .stats-back-btn {
       background: rgba(var(--c-panel3),0.88);
       border: 1px solid rgba(var(--c-accent2),0.35);
-      border-radius: 14px;
+      border-radius: 12px;
       color: rgb(var(--c-text2));
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 700;
-      letter-spacing: 0.5px;
+      padding: 9px 14px;
       cursor: pointer;
+      letter-spacing: 0.5px;
       backdrop-filter: blur(10px);
+      margin-bottom: 18px;
+    }
+    .exd-pr-edit-btn {
+      width: 100%; margin-top: 6px; padding: 13px; border-radius: 12px;
+      border: 1px solid rgba(var(--c-accent),0.4);
+      background: rgba(var(--c-panel1),0.7);
+      color: rgb(var(--c-accent-light)); font-size: 13px; font-weight: 700; letter-spacing: 0.3px;
+      cursor: pointer; touch-action: manipulation;
+    }
+    .exd-pr-edit-btn:active { background: rgba(var(--c-accent),0.12); }
+
+    /* ── Manual PR Edit Modal ── */
+    #pr-edit-modal {
+      position: fixed; inset: 0; z-index: 650;
+      background: rgba(var(--c-shadow),0.72);
+      backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+      display: none; align-items: center; justify-content: center; padding: 20px;
+    }
+    #pr-edit-modal.open { display: flex; }
+    #pr-edit-box {
+      background: rgba(var(--c-panel2),0.98); border: 1px solid rgba(var(--c-accent2),0.3);
+      border-radius: 20px; width: 100%; max-width: 340px; padding: 22px; max-height: calc(var(--rvh) * 80); overflow-y: auto;
+    }
+    #pr-edit-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    #pr-edit-title { font-size: 16px; font-weight: 800; color: rgb(var(--c-text)); }
+    #pr-edit-close {
+      background: rgba(var(--c-panel4),0.7); border: 1px solid rgba(var(--c-accent2),0.3);
+      border-radius: 50%; width: 30px; height: 30px; color: rgb(var(--c-text2));
+      font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .pr-edit-field { margin-bottom: 14px; }
+    .pr-edit-field label {
+      display: block; font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.5px; color: rgb(var(--c-text3)); margin-bottom: 6px;
+    }
+    .pr-edit-field input {
+      width: 100%; background: rgba(var(--c-panel1),0.95); border: 1px solid rgba(var(--c-accent2),0.3);
+      border-radius: 10px; color: rgb(var(--c-text)); font-size: 15px; padding: 12px 14px;
+      -webkit-appearance: none; outline: none; box-sizing: border-box;
+    }
+    .pr-edit-field input:focus { border-color: rgb(var(--c-accent)); }
+    #pr-edit-save {
+      width: 100%; padding: 14px; border-radius: 12px; border: none; margin-top: 4px;
+      background: linear-gradient(135deg, rgb(var(--c-accent)), rgb(var(--c-accent-dark)));
+      color: rgb(var(--c-text)); font-size: 14px; font-weight: 700; cursor: pointer; touch-action: manipulation;
     }
     #dm-popup {
       position: fixed;
@@ -4116,13 +4183,31 @@
 
   <!-- Stats -->
   <div id="stats-section" class="section">
-    <!-- Focus Stats Panel -->
-    <div id="focus-stats-panel"></div>
-    <div class="section-header">Stats</div>
-    <div id="stats-list"></div>
+    <div id="stats-menu-view" class="stats-subview open">
+      <div class="section-header">Stats</div>
+      <div id="stats-menu-center">
+        <div id="stats-menu-box">
+          <button id="stats-menu-goals" class="stats-menu-btn stats-menu-btn-primary">Personalized Goals</button>
+          <button id="stats-menu-exercises" class="stats-menu-btn">Exercise Stats</button>
+          <button id="stats-menu-weekly-goals" class="stats-menu-btn">Weekly Goals</button>
+          <button id="stats-menu-data" class="stats-menu-btn">Data Management</button>
+        </div>
+      </div>
+    </div>
 
-    <!-- Data Management -->
-    <button id="dm-open-btn">Data Management</button>
+    <div id="stats-goals-view" class="stats-subview">
+      <button class="stats-back-btn">‹ Back</button>
+      <!-- Focus Stats Panel -->
+      <div id="focus-stats-panel"></div>
+      <div class="section-header">Personalized Goals</div>
+      <div id="stats-list"></div>
+    </div>
+
+    <div id="stats-exercises-view" class="stats-subview">
+      <button class="stats-back-btn">‹ Back</button>
+      <div class="section-header">Exercise Stats</div>
+      <div id="stats-ex-list"></div>
+    </div>
   </div>
 </div>
 
@@ -4481,7 +4566,6 @@
 
 <div id="profile-btns">
   <button id="room-btn">Training Room</button>
-  <button id="goals-btn">Personalized Goals</button>
   <button id="weekly-overview-btn">Weekly Overview</button>
   <button id="avatar-btn">Avatar</button>
   <button id="testing-btn">Testing</button>
@@ -4680,6 +4764,39 @@
       </div>
     </div>
     <div id="ex-detail-body"></div>
+  </div>
+</div>
+
+<!-- Manual PR Edit Modal (Stats > Exercise Stats) -->
+<div id="pr-edit-modal">
+  <div id="pr-edit-box">
+    <div id="pr-edit-header">
+      <span id="pr-edit-title">Log PR</span>
+      <button id="pr-edit-close">✕</button>
+    </div>
+    <div id="pr-edit-body">
+      <div class="pr-edit-field" id="pr-edit-field-weight">
+        <label>Weight (lbs)</label>
+        <input id="pr-edit-weight" type="number" inputmode="decimal" step="any" />
+      </div>
+      <div class="pr-edit-field" id="pr-edit-field-reps">
+        <label>Reps</label>
+        <input id="pr-edit-reps" type="number" inputmode="numeric" />
+      </div>
+      <div class="pr-edit-field" id="pr-edit-field-temp">
+        <label>Temp (°F)</label>
+        <input id="pr-edit-temp" type="number" inputmode="decimal" step="any" />
+      </div>
+      <div class="pr-edit-field" id="pr-edit-field-duration">
+        <label>Duration (mm:ss)</label>
+        <input id="pr-edit-duration" type="text" placeholder="e.g. 5:00" />
+      </div>
+      <div class="pr-edit-field">
+        <label>Date Performed</label>
+        <input id="pr-edit-date" type="date" />
+      </div>
+    </div>
+    <button id="pr-edit-save">Save PR</button>
   </div>
 </div>
 
@@ -4993,7 +5110,6 @@ async function askToEndSessionForInactivity() {
 const SOUND_HANDLED_BUTTON_SELECTORS = [
   '.nav-btn',            // menuButton
   '#room-btn',           // commonButton (explicit)
-  '#goals-btn',          // commonButton (explicit)
   '#weekly-overview-btn',// commonButton (explicit)
   '#avatar-btn',         // commonButton (explicit)
   '#testing-btn',        // levelUp (explicit, no commonButton)
@@ -5023,6 +5139,7 @@ const SOUND_HANDLED_BUTTON_SELECTORS = [
   '#ex-popup-close', '#ex-detail-close', '#cancel-btn', '#template-picker-close',
   '#tpl-cancel-btn', '#focus-picker-close', '#avatar-close-btn', '#goals-close-btn',
   '#override-close-btn', '#weekly-overview-close-btn', '#custom-prompt-cancel',
+  '#pr-edit-close',
 ];
 
 document.addEventListener('click', (e) => {
@@ -5219,15 +5336,31 @@ let state = loadState();
 recalcAllPRs();
 recalcAllRepPRs();
 recalcAllExposurePRs();
+applyPROverrides();
 save();
 
 // ═══════════════════════════════════════════════════════════
 // 3D
 // ═══════════════════════════════════════════════════════════
 
+// The portrait-lock CSS rotates <html> with a transform when a phone is turned
+// sideways, but innerWidth/innerHeight always report the physical (unrotated)
+// viewport. Measure the visually-rotated size so the 3D canvas/camera stay
+// sized to what's actually shown, not the raw physical dimensions.
+const landscapeLockQueryForSize = window.matchMedia('(orientation: landscape) and (hover: none) and (pointer: coarse)');
+function getVisualViewportSize() {
+  const rotated = landscapeLockQueryForSize.matches;
+  return rotated
+    ? { w: innerHeight, h: innerWidth }
+    : { w: innerWidth, h: innerHeight };
+}
+
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true, stencil: true });
 renderer.setPixelRatio(devicePixelRatio);
-renderer.setSize(innerWidth, innerHeight);
+{
+  const sz = getVisualViewportSize();
+  renderer.setSize(sz.w, sz.h);
+}
 document.getElementById('canvas-container').appendChild(renderer.domElement);
 
 const scene = new THREE.Scene();
@@ -5238,7 +5371,8 @@ renderer.setClearColor(0x000000, 0);
 const spinGroup = new THREE.Group();
 scene.add(spinGroup);
 
-const camera = new THREE.PerspectiveCamera(40, innerWidth / innerHeight, 0.01, 10000);
+const initialSz = getVisualViewportSize();
+const camera = new THREE.PerspectiveCamera(40, initialSz.w / initialSz.h, 0.01, 10000);
 
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = false;
@@ -5665,11 +5799,9 @@ loadModel(0, (entry) => {
 // and drive sizing off --rvh/--rvw instead. Mobile browsers also report
 // window.innerWidth/innerHeight a beat late after rotation/keyboard/UI-chrome
 // changes, so re-measure a few times after the event fires, not just once.
-const landscapeLockQuery = window.matchMedia('(orientation: landscape) and (hover: none) and (pointer: coarse)');
+const landscapeLockQuery = landscapeLockQueryForSize;
 function updateViewportVars() {
-  const rotated = landscapeLockQuery.matches;
-  const visualW = rotated ? window.innerHeight : window.innerWidth;
-  const visualH = rotated ? window.innerWidth : window.innerHeight;
+  const { w: visualW, h: visualH } = getVisualViewportSize();
   document.documentElement.style.setProperty('--rvh', (visualH * 0.01) + 'px');
   document.documentElement.style.setProperty('--rvw', (visualW * 0.01) + 'px');
 }
@@ -5686,9 +5818,10 @@ if (window.visualViewport) {
 
 window.addEventListener('resize', () => {
   updateViewportVars();
-  camera.aspect = innerWidth / innerHeight;
+  const sz = getVisualViewportSize();
+  camera.aspect = sz.w / sz.h;
   camera.updateProjectionMatrix();
-  renderer.setSize(innerWidth, innerHeight);
+  renderer.setSize(sz.w, sz.h);
 });
 
 (function animate() {
@@ -5746,8 +5879,38 @@ function goToTab(tab) {
   document.getElementById('profile-btns').classList.toggle('visible', tab === 'profile');
   if (tab === 'history')   renderHistory();
   if (tab === 'exercises') renderExercises();
-  if (tab === 'stats')     { renderFocusStats(); renderStats(); }
+  if (tab === 'stats')     showStatsMenu();
 }
+
+// ── Stats Tab Menu ──
+// The Stats tab opens to a 3-button menu (same visual pattern as the Train
+// tab's prestart Start/Template stack) instead of jumping straight into a view.
+function showStatsMenu() {
+  document.getElementById('stats-menu-view').classList.add('open');
+  document.getElementById('stats-goals-view').classList.remove('open');
+  document.getElementById('stats-exercises-view').classList.remove('open');
+}
+function showStatsGoals() {
+  document.getElementById('stats-menu-view').classList.remove('open');
+  document.getElementById('stats-exercises-view').classList.remove('open');
+  document.getElementById('stats-goals-view').classList.add('open');
+  renderFocusStats();
+  renderStats();
+}
+function showStatsExercises() {
+  document.getElementById('stats-menu-view').classList.remove('open');
+  document.getElementById('stats-goals-view').classList.remove('open');
+  document.getElementById('stats-exercises-view').classList.add('open');
+  renderExercises('stats-ex-list', true);
+}
+
+document.getElementById('stats-menu-goals').addEventListener('click', showStatsGoals);
+document.getElementById('stats-menu-exercises').addEventListener('click', showStatsExercises);
+document.getElementById('stats-menu-data').addEventListener('click', () => {
+  document.getElementById('dm-popup').classList.add('open');
+});
+document.querySelectorAll('#stats-goals-view .stats-back-btn, #stats-exercises-view .stats-back-btn')
+  .forEach(btn => btn.addEventListener('click', showStatsMenu));
 
 document.querySelectorAll('.nav-btn').forEach(btn => {
   btn.addEventListener('click', () => { playSound('menuButton'); goToTab(btn.dataset.tab); });
@@ -5941,6 +6104,7 @@ function recalcStats() {
   recalcAllPRs();
   recalcAllRepPRs();
   recalcAllExposurePRs();
+  applyPROverrides();
   save();
   updateModel();
   renderFocusStats();
@@ -6109,8 +6273,8 @@ function isThisWeek(dateStr, monday) {
 // EXERCISES
 // ═══════════════════════════════════════════════════════════
 
-function renderExercises() {
-  const el = document.getElementById('exercises-list');
+function renderExercises(containerId = 'exercises-list', readOnly = false) {
+  const el = document.getElementById(containerId);
   el.innerHTML = '';
 
   for (const muscleGroup of MUSCLE_GROUPS) {
@@ -6139,7 +6303,7 @@ function renderExercises() {
         </div>
       `;
 
-      group.querySelector('.muscle-header').addEventListener('click', () => { playSound('commonButton'); openExPopup(muscle); });
+      group.querySelector('.muscle-header').addEventListener('click', () => { playSound('commonButton'); openExPopup(muscle, readOnly); });
       el.appendChild(group);
     }
   }
@@ -6166,22 +6330,25 @@ function renderExercises() {
       </div>
     `;
 
-    group.querySelector('.muscle-header').addEventListener('click', () => { playSound('commonButton'); openExPopup(category); });
+    group.querySelector('.muscle-header').addEventListener('click', () => { playSound('commonButton'); openExPopup(category, readOnly); });
     el.appendChild(group);
   }
 }
 
 
 let exPopupMuscle = null;
+let exPopupReadOnly = false;
 
-function openExPopup(muscle) {
+function openExPopup(muscle, readOnly = false) {
   exPopupMuscle = muscle;
+  exPopupReadOnly = readOnly;
   renderExPopup();
   document.getElementById('ex-popup').classList.add('open');
 }
 
 function renderExPopup() {
   const muscle = exPopupMuscle;
+  const readOnly = exPopupReadOnly;
   const isWellness = WELLNESS_CATEGORIES.includes(muscle);
   const lv = getLevel(muscle);
   const dotColor = LEVEL_COLORS[lv];
@@ -6209,25 +6376,28 @@ function renderExPopup() {
     const lastLine = lw ? `<div class="ex-item-last">${lw}</div>` : '';
     item.innerHTML = `
       <div><span class="ex-item-name">${_pdn}${badge}</span>${catLine}${lastLine}</div>
-      <button class="ex-edit-btn">Edit</button>
+      ${readOnly ? '' : '<button class="ex-edit-btn">Edit</button>'}
     `;
     item.addEventListener('click', (e) => {
-      if (!e.target.closest('.ex-edit-btn')) { playSound('commonButton'); openExDetail(ex, muscle); }
+      if (!e.target.closest('.ex-edit-btn')) { playSound('commonButton'); openExDetail(ex, muscle, readOnly); }
     });
-    item.querySelector('.ex-edit-btn').addEventListener('click', () => {
-      playSound('commonButton');
-      openEdit(muscle, i);
-    });
+    if (!readOnly) {
+      item.querySelector('.ex-edit-btn').addEventListener('click', () => {
+        playSound('commonButton');
+        openEdit(muscle, i);
+      });
+    }
     list.appendChild(item);
   });
 
+  document.getElementById('ex-popup-add').style.display = readOnly ? 'none' : '';
   document.getElementById('ex-popup-add').onclick = () => {
     document.getElementById('ex-popup').classList.remove('open');
     openNewExModal(muscle);
   };
 }
 
-function openExDetail(exName, muscle) {
+function openExDetail(exName, muscle, readOnly = false) {
   const isWellness = WELLNESS_CATEGORIES.includes(muscle);
   const isExposure = (state.exerciseMeta[exName] || {}).expType === 'exposure';
   const lv = getLevel(muscle);
@@ -6243,7 +6413,11 @@ function openExDetail(exName, muscle) {
   document.getElementById('ex-detail-sub').textContent =
     muscle + (pc ? ` · ${pc} pulley${pc > 1 ? 's' : ''}` : '') + (_lw ? ` · ${_lw}` : '');
 
-  document.getElementById('ex-detail-edit-btn').onclick = () => {
+  // From Stats > Exercise Stats: no renaming/category/pulley editing, only
+  // manual correction of the PR values shown below (see the grid rows further down).
+  const editBtn = document.getElementById('ex-detail-edit-btn');
+  editBtn.style.display = readOnly ? 'none' : '';
+  editBtn.onclick = () => {
     document.getElementById('ex-detail-modal').classList.remove('open');
     openEdit(muscle, exIdx);
   };
@@ -6268,11 +6442,10 @@ function openExDetail(exName, muscle) {
       head.innerHTML = '<span>Record</span><span>Value</span>';
       grid.appendChild(head);
 
-      const rows = [
+      [
         ['Highest Temp', `${epr.maxTemp}°F`],
         ['Highest Duration', fmtRestSecs(epr.maxDuration)],
-      ];
-      rows.forEach(([label, val]) => {
+      ].forEach(([label, val]) => {
         const row = document.createElement('div');
         row.className = 'exd-pr-row exd-exposure-pr-row';
         row.innerHTML = `<span class="exd-pr-label">${label}</span><span class="exd-pr-val">${val}</span>`;
@@ -6307,7 +6480,8 @@ function openExDetail(exName, muscle) {
         const entry = repPRs[r];
         if (!entry) continue;
         const w = typeof entry === 'object' ? entry.weight : entry;
-        const d = typeof entry === 'object' ? fmtPRDate(entry.date) : '—';
+        const entryDate = typeof entry === 'object' ? entry.date : null;
+        const d = entryDate ? fmtPRDate(entryDate) : '—';
         const row = document.createElement('div');
         row.className = 'exd-pr-row';
         row.innerHTML = `<span class="exd-pr-label">${r}RM</span><span class="exd-pr-val">${w} lbs</span><span class="exd-pr-date">${d}</span>`;
@@ -6324,6 +6498,17 @@ function openExDetail(exName, muscle) {
 
       body.appendChild(grid);
     }
+  }
+
+  // Stats > Exercise Stats: a single "Log PR Manually" button, instead of
+  // per-row edits — enter a weight/reps (or temp/duration) + the date it was
+  // performed, and let it run through the same PR math a real logged set would.
+  if (readOnly) {
+    const editBtn = document.createElement('button');
+    editBtn.className = 'exd-pr-edit-btn';
+    editBtn.textContent = '✎ Log PR Manually';
+    editBtn.addEventListener('click', () => openPREditModal(exName, muscle, isExposure));
+    body.appendChild(editBtn);
   }
 
   // ── History ──
@@ -6374,6 +6559,81 @@ document.getElementById('ex-detail-modal').addEventListener('click', (e) => {
   }
 });
 
+// ── Manual PR Edit Modal ──
+let prEditCtx = null;
+
+function parseDurationInput(str) {
+  if (!str) return null;
+  str = str.trim();
+  if (str.includes(':')) {
+    const [m, s] = str.split(':').map(Number);
+    if (isNaN(m) || isNaN(s)) return null;
+    return m * 60 + s;
+  }
+  const n = parseInt(str);
+  return isNaN(n) ? null : n;
+}
+
+function openPREditModal(exName, muscle, isExposure) {
+  prEditCtx = { exName, muscle, isExposure };
+  const { displayName } = parseCableExName(exName);
+  document.getElementById('pr-edit-title').textContent = `Log PR — ${displayName}`;
+  document.getElementById('pr-edit-field-weight').style.display = isExposure ? 'none' : '';
+  document.getElementById('pr-edit-field-reps').style.display = isExposure ? 'none' : '';
+  document.getElementById('pr-edit-field-temp').style.display = isExposure ? '' : 'none';
+  document.getElementById('pr-edit-field-duration').style.display = isExposure ? '' : 'none';
+  document.getElementById('pr-edit-weight').value = '';
+  document.getElementById('pr-edit-reps').value = '';
+  document.getElementById('pr-edit-temp').value = '';
+  document.getElementById('pr-edit-duration').value = '';
+  document.getElementById('pr-edit-date').value = new Date().toISOString().slice(0, 10);
+  document.getElementById('pr-edit-modal').classList.add('open');
+}
+
+document.getElementById('pr-edit-close').addEventListener('click', () => {
+  playSound('delete');
+  document.getElementById('pr-edit-modal').classList.remove('open');
+});
+
+document.getElementById('pr-edit-modal').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('pr-edit-modal')) {
+    document.getElementById('pr-edit-modal').classList.remove('open');
+  }
+});
+
+document.getElementById('pr-edit-save').addEventListener('click', () => {
+  if (!prEditCtx) return;
+  const { exName, muscle, isExposure } = prEditCtx;
+
+  const dateInput = document.getElementById('pr-edit-date').value;
+  if (!dateInput) { alert('Pick a date.'); return; }
+  const [yy, mm, dd] = dateInput.split('-').map(Number);
+  const dateStr = new Date(yy, mm - 1, dd).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+
+  const ov = loadPROverrides();
+  ov[exName] = ov[exName] || {};
+
+  if (isExposure) {
+    const temp = parseFloat(document.getElementById('pr-edit-temp').value);
+    const duration = parseDurationInput(document.getElementById('pr-edit-duration').value);
+    if (isNaN(temp) || duration == null) { alert('Enter a valid temp and duration.'); return; }
+    ov[exName].exposureEntries = ov[exName].exposureEntries || [];
+    ov[exName].exposureEntries.push({ temp, duration, date: dateStr });
+  } else {
+    const weight = parseFloat(document.getElementById('pr-edit-weight').value);
+    const reps = parseInt(document.getElementById('pr-edit-reps').value);
+    if (isNaN(weight) || isNaN(reps)) { alert('Enter a valid weight and reps.'); return; }
+    ov[exName].entries = ov[exName].entries || [];
+    ov[exName].entries.push({ weight, reps, date: dateStr });
+  }
+
+  savePROverrides(ov);
+  applyPROverrides();
+  save();
+  document.getElementById('pr-edit-modal').classList.remove('open');
+  openExDetail(exName, muscle, true);
+});
+
 // ═══════════════════════════════════════════════════════════
 // STATS
 // ═══════════════════════════════════════════════════════════
@@ -6405,6 +6665,28 @@ function renderStats() {
       el.appendChild(group);
     }
   }
+
+  const wellnessHeader = document.createElement('div');
+  wellnessHeader.className = 'picker-group-header';
+  wellnessHeader.textContent = 'Wellness';
+  el.appendChild(wellnessHeader);
+
+  for (const muscle of WELLNESS_CATEGORIES) {
+    const group = document.createElement('div');
+    group.className = 'muscle-group';
+    group.innerHTML = `
+      <div class="muscle-header">
+        <div class="muscle-left">
+          <div class="muscle-name">${muscle}</div>
+        </div>
+        <span class="chevron">›</span>
+      </div>
+    `;
+
+    group.querySelector('.muscle-header').addEventListener('click', () => { playSound('commonButton'); openChestPopup(muscle); });
+
+    el.appendChild(group);
+  }
 }
 
 // Which muscle's popup is currently open — every muscle shares the same
@@ -6413,10 +6695,14 @@ let statMuscle = null;
 
 function openChestPopup(muscle) {
   statMuscle = muscle;
+  const isWellness = WELLNESS_CATEGORIES.includes(muscle);
   const lv = getLevel(muscle);
   const dotColor = LEVEL_COLORS[lv];
-  document.getElementById('chest-dot').style.cssText = `background:${dotColor};box-shadow:0 0 8px ${dotColor};`;
+  document.getElementById('chest-dot').style.cssText = isWellness
+    ? 'display:none;'
+    : `background:${dotColor};box-shadow:0 0 8px ${dotColor};`;
   document.getElementById('chest-title').textContent = muscle;
+  document.getElementById('chest-chart-title').textContent = EXPOSURE_SUBTYPES[muscle] ? 'Weekly Duration' : 'Weekly Sets';
   document.getElementById('chest-fav-sub').textContent = `Pick up to 3 ${muscle} exercises to track`;
 
   // Popup must be visible (display:flex) before rendering, or the charts'
@@ -6429,17 +6715,21 @@ function openChestPopup(muscle) {
 
 function renderChestChart(muscle) {
   const el = document.getElementById('chest-chart');
+  const isWellness = WELLNESS_CATEGORIES.includes(muscle);
+  const isDuration = !!EXPOSURE_SUBTYPES[muscle];
 
-  // Group total sets for this muscle by week (Monday-start week)
-  const weekTotals = new Map(); // weekStart ms -> sets
+  // Group total sets (or, for Heat/Cold Exposure, total duration in seconds)
+  // for this muscle by week (Monday-start week)
+  const weekTotals = new Map(); // weekStart ms -> sets/seconds
   for (const w of state.history) {
     if (!w.exercises || !w.date) continue;
     const d = _parseDateStr(w.date);
     if (!d) continue;
-    const muscleSets = w.exercises
-      .filter(ex => ex.muscle === muscle && ex.sets)
-      .reduce((sum, ex) => sum + ex.sets.length, 0);
-    if (muscleSets === 0) continue;
+    const muscleExs = w.exercises.filter(ex => ex.muscle === muscle && ex.sets);
+    const muscleTotal = isDuration
+      ? muscleExs.reduce((sum, ex) => sum + ex.sets.reduce((s, set) => s + (set.duration || 0), 0), 0)
+      : muscleExs.reduce((sum, ex) => sum + ex.sets.length, 0);
+    if (muscleTotal === 0) continue;
 
     const weekStart = new Date(d);
     const day = weekStart.getDay(); // 0=Sun..6=Sat
@@ -6447,7 +6737,7 @@ function renderChestChart(muscle) {
     weekStart.setDate(weekStart.getDate() - diffToMonday);
     weekStart.setHours(0, 0, 0, 0);
     const key = weekStart.getTime();
-    weekTotals.set(key, (weekTotals.get(key) || 0) + muscleSets);
+    weekTotals.set(key, (weekTotals.get(key) || 0) + muscleTotal);
   }
 
   // The current week (Monday-start) is always shown, even with 0 sets so far —
@@ -6483,6 +6773,23 @@ function renderChestChart(muscle) {
       `;
     }
     const heightPct = Math.max(6, Math.round((total / maxVal) * 100));
+
+    // Wellness categories don't have a level/goal (see WELLNESS_CATEGORIES comment) —
+    // their bars use a flat accent color instead of a level-derived one.
+    if (isWellness) {
+      const valLabel = isDuration ? fmtHMS(total) : `${total} set${total !== 1 ? 's' : ''}`;
+      return `
+        <div class="chest-bar-col" style="flex:0 0 76px;height:100%;">
+          <div class="chest-bar-val">${valLabel}</div>
+          <div class="chest-bar-lv" style="color:rgb(var(--c-accent));box-shadow:0 0 6px rgba(var(--c-accent),0.5);border-color:rgba(var(--c-accent),0.5);">${ms === curWeekMs ? 'current' : '&nbsp;'}</div>
+          <div class="chest-bar-track" style="flex:1;">
+            <div class="chest-bar" style="height:${heightPct}%;background:linear-gradient(180deg, rgb(var(--c-accent)), rgba(var(--c-accent),0.6));box-shadow:0 0 10px rgba(var(--c-accent),0.4);"></div>
+          </div>
+          <div class="chest-bar-label">${label}</div>
+        </div>
+      `;
+    }
+
     const lv = levelForSets(total, goal);
     const color = LEVEL_COLORS[lv];
     // The current week gets an explicit "current" tag even once it has real
@@ -7575,7 +7882,7 @@ document.getElementById('finish-btn').addEventListener('click', () => {
       if (w > 0 || r > 0) {
         const curr = state.prs[ex.name];
         if (!curr || w > curr.weight || (w === curr.weight && r > curr.reps)) {
-          state.prs[ex.name] = { weight: w, reps: r };
+          state.prs[ex.name] = { weight: w, reps: r, date };
         }
         updateRepPR(ex.name, w, r, date);
       }
@@ -7652,11 +7959,11 @@ function showWorkoutSummary(exercises, durationSecs, prsBefore) {
 
   document.getElementById('summary-prs').textContent = prCount;
   document.getElementById('workout-summary').classList.add('open');
-  playSound('workoutComplete');
 }
 
 document.getElementById('summary-done-btn').addEventListener('click', () => {
   document.getElementById('workout-summary').classList.remove('open');
+  playSound('workoutComplete');
   closeTrain();
 });
 
@@ -7990,8 +8297,12 @@ function addExerciseBlock(name, muscle, initialSets) {
     prEl.innerHTML = epr ? `PR: <span>${epr.comboTemp}°F × ${fmtRestSecs(epr.comboDuration)}</span>` : '';
   } else {
     const pr = state.prs[name];
-    prEl.innerHTML = pr ? `PR: <span>${pr.weight} lbs × ${pr.reps}</span>` : '';
+    const agoLabel = pr && pr.date ? `<span class="train-ex-pr-ago">(${fmtPRDaysAgo(pr.date)})</span>` : '';
+    prEl.innerHTML = pr ? `PR Max Lbs x Max Reps: <span>${pr.weight} lbs × ${pr.reps}</span>${agoLabel}` : '';
   }
+
+  const curPrEl = document.createElement('div');
+  curPrEl.className = 'train-ex-pr train-ex-cur-pr';
 
   const cols = document.createElement('div');
   cols.className = isExposure ? 'set-cols exposure-set-cols' : 'set-cols';
@@ -8010,6 +8321,7 @@ function addExerciseBlock(name, muscle, initialSets) {
 
   block.appendChild(top);
   block.appendChild(prEl);
+  if (!isExposure) block.appendChild(curPrEl);
   block.appendChild(cols);
   block.appendChild(setsContainer);
   block.appendChild(addSetBtn);
@@ -8023,6 +8335,58 @@ function addExerciseBlock(name, muscle, initialSets) {
     addSet(idx, block);
   }
   saveActiveSession();
+}
+
+// Finds the best historical rep count at the exact weight of the exercise's
+// active set (first not-done set, or the last set once everything is done),
+// so the training screen can show a live "PR for Current Lbs" readout that
+// tracks whatever weight is currently dialed in. If that weight has never
+// been lifted before, reports the fewest reps at this weight that would
+// beat the existing per-rep-count record instead.
+function updateCurrentLbsPR(exIdx, block) {
+  const ex = session[exIdx];
+  if (!ex || ex.expType === 'exposure') return;
+  const curPrEl = block.querySelector('.train-ex-cur-pr');
+  if (!curPrEl) return;
+  const activeSet = ex.sets.find(s => !s.done) || ex.sets[ex.sets.length - 1];
+  const w = parseFloat(activeSet && activeSet.weight) || 0;
+  if (!w) { curPrEl.innerHTML = ''; return; }
+
+  let bestReps = 0;
+  for (const wk of state.history) {
+    const hEx = wk.exercises.find(e => e.name === ex.name);
+    if (!hEx) continue;
+    for (const s of hEx.sets) {
+      if ((parseFloat(s.weight) || 0) === w) {
+        const r = parseInt(s.reps) || 0;
+        if (r > bestReps) bestReps = r;
+      }
+    }
+  }
+
+  if (bestReps > 0) {
+    curPrEl.innerHTML = `PR for Current Lbs: <span>${w} lbs × ${bestReps}</span>`;
+    return;
+  }
+
+  const repPRs = (state.repPRs || {})[ex.name] || {};
+  // A record at r reps is also a valid strength floor for any rep count <= r
+  // (if you can lift X for 4 reps, doing 1 rep of X+1 isn't meaningfully new).
+  // Build that floor per rep count via a suffix-max over the rep-PR table.
+  const floors = new Array(13).fill(0);
+  let runningMax = 0;
+  for (let r = 12; r >= 1; r--) {
+    const rec = repPRs[r];
+    if (rec && rec.weight > runningMax) runningMax = rec.weight;
+    floors[r] = runningMax;
+  }
+  let neededReps = null;
+  for (let r = 1; r <= 12; r++) {
+    if (w > floors[r]) { neededReps = r; break; }
+  }
+  curPrEl.innerHTML = neededReps != null
+    ? `PR for Current Lbs: <span>${w} lbs needs ${neededReps} rep${neededReps === 1 ? '' : 's'} for PR</span>`
+    : `PR for Current Lbs: <span>${w} lbs needs 13+ reps for PR</span>`;
 }
 
 // ─── Drag-to-reorder exercises (long-press on handle) ───────
@@ -8205,6 +8569,7 @@ function renderSets(exIdx, block) {
         ex.sets[j].weight = val;
         if (weightInps[j]) weightInps[j].value = val;
       }
+      updateCurrentLbsPR(exIdx, block);
       saveActiveSession();
     });
     const { wrap: rWrap, inp: rInp } = makeStepper(ex.sets[setIdx].reps, 1, 0, val => {
@@ -8249,6 +8614,7 @@ function renderSets(exIdx, block) {
         const exRest = (state.exerciseMeta[ex.name] || {}).restTime;
         startRestTimer(exRest || restDuration);
       }
+      updateCurrentLbsPR(exIdx, block);
       saveActiveSession();
       updateModel();
       updateAllTrainExSets();
@@ -8283,6 +8649,7 @@ function renderSets(exIdx, block) {
     row.appendChild(delBtn);
     container.appendChild(row);
   }
+  updateCurrentLbsPR(exIdx, block);
 }
 
 function fmtExposureBtnValue(temp, duration) {
@@ -9103,10 +9470,6 @@ document.getElementById('ex-popup').addEventListener('click', (e) => {
   }
 });
 
-document.getElementById('dm-open-btn').addEventListener('click', () => {
-  document.getElementById('dm-popup').classList.add('open');
-});
-
 document.getElementById('dm-close').addEventListener('click', () => {
   playSound('delete');
   document.getElementById('dm-popup').classList.remove('open');
@@ -9562,7 +9925,7 @@ function recalcAllPRs() {
         if (weight > 0 || reps > 0) {
           const curr = state.prs[ex.name];
           if (!curr || weight > curr.weight || (weight === curr.weight && reps > curr.reps)) {
-            state.prs[ex.name] = { weight, reps };
+            state.prs[ex.name] = { weight, reps, date: w.date };
           }
         }
       }
@@ -9592,6 +9955,42 @@ function recalcAllExposurePRs() {
           state.exposurePRs[ex.name] = curr;
         }
       }
+    }
+  }
+}
+
+// Manual PR entries — let the Stats > Exercise Stats view log a PR by hand
+// (weight/reps or temp/duration, plus the date it happened) without it counting
+// as a real logged workout. Stored separately from state.history and replayed
+// through the exact same PR math a real set would trigger (updateRepPR / the
+// weight-primary combo comparison / the exposure combo comparison), so the
+// manual entry survives the next recalcAllPRs()/recalcAllRepPRs()/
+// recalcAllExposurePRs() wipe-and-recompute and "auto adjusts" the right bracket.
+function loadPROverrides() {
+  try { return JSON.parse(localStorage.getItem('trainhard_pr_overrides') || '{}'); } catch { return {}; }
+}
+function savePROverrides(ov) {
+  localStorage.setItem('trainhard_pr_overrides', JSON.stringify(ov));
+}
+function applyPROverrides() {
+  const overrides = loadPROverrides();
+  for (const [exName, ov] of Object.entries(overrides)) {
+    for (const e of (ov.entries || [])) {
+      updateRepPR(exName, e.weight, e.reps, e.date);
+      const curr = state.prs[exName];
+      if (!curr || e.weight > curr.weight || (e.weight === curr.weight && e.reps > curr.reps)) {
+        state.prs[exName] = { weight: e.weight, reps: e.reps, date: e.date };
+      }
+    }
+    for (const e of (ov.exposureEntries || [])) {
+      const curr = state.exposurePRs[exName] || { maxTemp: 0, maxDuration: 0, comboTemp: 0, comboDuration: 0 };
+      if (e.temp > curr.comboTemp || (e.temp === curr.comboTemp && e.duration > curr.comboDuration)) {
+        curr.comboTemp = e.temp;
+        curr.comboDuration = e.duration;
+      }
+      if (e.temp > curr.maxTemp) curr.maxTemp = e.temp;
+      if (e.duration > curr.maxDuration) curr.maxDuration = e.duration;
+      state.exposurePRs[exName] = curr;
     }
   }
 }
@@ -9652,6 +10051,18 @@ function fmtLastWorked(dateStr) {
   if (days === 1) return 'Last worked: yesterday';
   if (days < 14) return `Last worked: ${days} days ago`;
   return `Last worked: ${d.getMonth()+1}/${d.getDate()}/${String(d.getFullYear()).slice(2)}`;
+}
+
+function fmtPRDaysAgo(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  if (isNaN(d)) return '';
+  const today = new Date(); today.setHours(0,0,0,0);
+  d.setHours(0,0,0,0);
+  const days = Math.round((today - d) / 86400000);
+  if (days === 0) return 'Today';
+  if (days === 1) return '1 Day Ago';
+  return `${days} Days Ago`;
 }
 
 function fmtPRDate(dateStr) {
@@ -10214,8 +10625,7 @@ function buildOverrideList() {
   }
 }
 
-document.getElementById('goals-btn').addEventListener('click', () => {
-  playSound('commonButton');
+document.getElementById('stats-menu-weekly-goals').addEventListener('click', () => {
   buildGoalsList();
   document.getElementById('goals-overlay').classList.add('open');
 });
@@ -10575,11 +10985,52 @@ if ('serviceWorker' in navigator) {
     updateDisplay();
     renderActions();
     overlay.classList.add('open');
+    scrollActiveRowAboveNumpad();
+  }
+
+  // Keeps the set row being typed into visible above the numpad panel (which
+  // covers the bottom of the screen) so the user can watch the value update
+  // live instead of it being hidden behind the keys. Rows near the end of the
+  // list have no extra content below them to scroll into, so we pad the list
+  // with the numpad's own height while it's open to make room.
+  const trainBodyEl = document.getElementById('train-body');
+  let scrollRoomAdded = false;
+
+  function addScrollRoom() {
+    const panel = overlay.querySelector('.tnp-panel');
+    if (!trainBodyEl || !panel) return;
+    trainBodyEl.style.paddingBottom = (panel.offsetHeight + 24) + 'px';
+    scrollRoomAdded = true;
+  }
+
+  function removeScrollRoom() {
+    if (scrollRoomAdded && trainBodyEl) {
+      trainBodyEl.style.paddingBottom = '';
+      scrollRoomAdded = false;
+    }
+  }
+
+  function scrollActiveRowAboveNumpad() {
+    if (!activeInp) return;
+    const row = activeInp.closest('.set-row');
+    if (!row) return;
+    const panel = overlay.querySelector('.tnp-panel');
+    if (!trainBodyEl || !panel) return;
+    addScrollRoom();
+    const gap = 12;
+    const overlayRect = overlay.getBoundingClientRect();
+    const panelTop = overlayRect.bottom - panel.offsetHeight;
+    const rowRect = row.getBoundingClientRect();
+    const overlap = rowRect.bottom - (panelTop - gap);
+    if (overlap > 0) {
+      trainBodyEl.scrollBy({ top: overlap, behavior: 'smooth' });
+    }
   }
 
   function closeNumpad() {
     overlay.classList.remove('open');
     activeInp = null;
+    removeScrollRoom();
   }
 
   function switchToField(inp, pair, checkBtn, field) {
