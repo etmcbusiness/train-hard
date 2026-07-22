@@ -19,7 +19,20 @@
     })();
   </script>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    * {
+      margin: 0; padding: 0; box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      /* App-wide: holding a finger down anywhere should never trigger the
+         OS text-selection/copy-paste UI (blue highlight + magnifier). */
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+    }
+    input, textarea, [contenteditable] {
+      -webkit-user-select: text;
+      user-select: text;
+      -webkit-touch-callout: default;
+    }
     *, *::before, *::after {
       transition: background-color .35s ease, color .35s ease, border-color .35s ease, box-shadow .35s ease, fill .35s ease;
     }
@@ -1126,13 +1139,27 @@
       transition: opacity 0.15s, border-color 0.15s;
     }
     .train-ex.dragging { opacity: 0.25; }
-    .train-ex.drop-above { border-top: 2px solid rgb(var(--c-accent-light)); }
-    .train-ex.drop-below { border-bottom: 2px solid rgb(var(--c-accent-light)); }
     .drag-ghost {
       border-radius: 18px !important;
       box-shadow: 0 10px 40px rgba(0,0,0,0.7), 0 0 0 1px rgba(var(--c-accent-light),0.35) !important;
       transform: scale(1.015);
       transition: none !important;
+    }
+    /* While reordering, collapse every exercise block down to just its name
+       row so the drag handle has to travel through short rows instead of
+       full-height set/PR blocks — makes reordering far easier to aim. */
+    body.reordering-exercises .train-ex {
+      padding: 10px 16px;
+      margin-bottom: 8px;
+    }
+    body.reordering-exercises .train-ex-top { margin-bottom: 0; }
+    body.reordering-exercises .train-ex-pr,
+    body.reordering-exercises .train-ex-muscle,
+    body.reordering-exercises .train-ex-sets,
+    body.reordering-exercises .set-cols,
+    body.reordering-exercises .sets-container,
+    body.reordering-exercises .add-set-btn {
+      display: none;
     }
     .drag-handle {
       display: flex;
@@ -3768,6 +3795,30 @@
       cursor: pointer; touch-action: manipulation;
     }
     .exd-pr-edit-btn:active { background: rgba(var(--c-accent),0.12); }
+    .exd-manual-pr-row {
+      display: grid;
+      grid-template-columns: 1fr auto 30px 30px;
+      align-items: center;
+      gap: 8px;
+      background: rgba(var(--c-panel1),0.85);
+      border: 1px solid rgba(var(--c-accent2),0.18);
+      border-radius: 12px;
+      padding: 10px 12px;
+      margin-bottom: 8px;
+    }
+    .exd-manual-pr-label { color: rgb(var(--c-text)); font-weight: 700; font-size: 13px; font-variant-numeric: tabular-nums; }
+    .exd-manual-pr-date { color: rgb(var(--c-text4)); font-size: 11px; font-variant-numeric: tabular-nums; }
+    .exd-manual-pr-edit, .exd-manual-pr-del {
+      width: 30px; height: 30px; border-radius: 8px;
+      border: 1px solid rgba(var(--c-accent2),0.25);
+      background: rgba(var(--c-panel4),0.6);
+      color: rgb(var(--c-text2));
+      font-size: 13px;
+      cursor: pointer; touch-action: manipulation;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .exd-manual-pr-edit:active { background: rgba(var(--c-accent),0.18); }
+    .exd-manual-pr-del:active { background: rgba(220,60,60,0.25); }
 
     /* ── Manual PR Edit Modal ── */
     #pr-edit-modal {
@@ -4985,6 +5036,21 @@ function firePlayback(buffer) {
   source.connect(ctx.destination);
   source.start(0);
 }
+
+// WebKit/iOS bug: backgrounding the app (switching to another app or tab
+// mid-workout, then coming back) can leave the AudioContext's audio
+// rendering thread dead while ctx.state still misleadingly reports
+// "running" — so the ctx.state === 'suspended' resume() checks above never
+// trigger, and every playSound() call silently does nothing until the page
+// is reloaded. Tearing down and recreating the context on return fixes it;
+// already-decoded AudioBuffers aren't tied to the context that decoded
+// them, so the cached soundBuffers carry over without re-fetching/decoding.
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden || !audioCtx) return;
+  const stale = audioCtx;
+  audioCtx = null;
+  stale.close().catch(() => {});
+});
 
 function playSound(key) {
   const enabled = OTHER_SOUND_KEYS.has(key) ? otherSoundsEnabled : soundsEnabled;
@@ -6511,6 +6577,42 @@ function openExDetail(exName, muscle, readOnly = false) {
     body.appendChild(editBtn);
   }
 
+  // ── Manually Inputted PRs ──
+  if (readOnly) {
+    const ov = loadPROverrides()[exName] || {};
+    const manualEntries = isExposure ? (ov.exposureEntries || []) : (ov.entries || []);
+    if (manualEntries.length) {
+      const manSec = document.createElement('div');
+      manSec.className = 'exd-section';
+      manSec.textContent = 'Manually Inputted PRs';
+      body.appendChild(manSec);
+
+      manualEntries.forEach((entry, idx) => {
+        const row = document.createElement('div');
+        row.className = 'exd-manual-pr-row';
+        const valLabel = isExposure
+          ? `${entry.temp}°F × ${fmtRestSecs(entry.duration)}`
+          : `${entry.weight} lbs × ${entry.reps}`;
+        row.innerHTML = `
+          <span class="exd-manual-pr-label">${valLabel}</span>
+          <span class="exd-manual-pr-date">${fmtPRDate(entry.date)}</span>
+          <button class="exd-manual-pr-edit" title="Edit">✎</button>
+          <button class="exd-manual-pr-del" title="Delete">🗑</button>
+        `;
+        row.querySelector('.exd-manual-pr-edit').addEventListener('click', () => {
+          openPREditModal(exName, muscle, isExposure, idx);
+        });
+        row.querySelector('.exd-manual-pr-del').addEventListener('click', async () => {
+          const ok = await customConfirm('Delete this manually inputted PR?', 'Delete', 'Cancel');
+          if (!ok) return;
+          deleteManualPREntry(exName, isExposure, idx);
+          openExDetail(exName, muscle, true);
+        });
+        body.appendChild(row);
+      });
+    }
+  }
+
   // ── History ──
   const entries = [];
   for (const w of state.history) {
@@ -6574,19 +6676,34 @@ function parseDurationInput(str) {
   return isNaN(n) ? null : n;
 }
 
-function openPREditModal(exName, muscle, isExposure) {
-  prEditCtx = { exName, muscle, isExposure };
+function isoDateFromPRDate(dateStr) {
+  const d = new Date(dateStr);
+  if (isNaN(d)) return new Date().toISOString().slice(0, 10);
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${d.getFullYear()}-${mm}-${dd}`;
+}
+
+function openPREditModal(exName, muscle, isExposure, editIndex = null) {
+  prEditCtx = { exName, muscle, isExposure, editIndex };
   const { displayName } = parseCableExName(exName);
-  document.getElementById('pr-edit-title').textContent = `Log PR — ${displayName}`;
+  document.getElementById('pr-edit-title').textContent = editIndex == null ? `Log PR — ${displayName}` : `Edit PR — ${displayName}`;
   document.getElementById('pr-edit-field-weight').style.display = isExposure ? 'none' : '';
   document.getElementById('pr-edit-field-reps').style.display = isExposure ? 'none' : '';
   document.getElementById('pr-edit-field-temp').style.display = isExposure ? '' : 'none';
   document.getElementById('pr-edit-field-duration').style.display = isExposure ? '' : 'none';
-  document.getElementById('pr-edit-weight').value = '';
-  document.getElementById('pr-edit-reps').value = '';
-  document.getElementById('pr-edit-temp').value = '';
-  document.getElementById('pr-edit-duration').value = '';
-  document.getElementById('pr-edit-date').value = new Date().toISOString().slice(0, 10);
+
+  let entry = null;
+  if (editIndex != null) {
+    const ov = loadPROverrides()[exName] || {};
+    entry = (isExposure ? (ov.exposureEntries || []) : (ov.entries || []))[editIndex] || null;
+  }
+
+  document.getElementById('pr-edit-weight').value = entry && !isExposure ? entry.weight : '';
+  document.getElementById('pr-edit-reps').value = entry && !isExposure ? entry.reps : '';
+  document.getElementById('pr-edit-temp').value = entry && isExposure ? entry.temp : '';
+  document.getElementById('pr-edit-duration').value = entry && isExposure ? fmtRestSecs(entry.duration) : '';
+  document.getElementById('pr-edit-date').value = entry ? isoDateFromPRDate(entry.date) : new Date().toISOString().slice(0, 10);
   document.getElementById('pr-edit-modal').classList.add('open');
 }
 
@@ -6603,7 +6720,7 @@ document.getElementById('pr-edit-modal').addEventListener('click', (e) => {
 
 document.getElementById('pr-edit-save').addEventListener('click', () => {
   if (!prEditCtx) return;
-  const { exName, muscle, isExposure } = prEditCtx;
+  const { exName, muscle, isExposure, editIndex } = prEditCtx;
 
   const dateInput = document.getElementById('pr-edit-date').value;
   if (!dateInput) { alert('Pick a date.'); return; }
@@ -6618,21 +6735,42 @@ document.getElementById('pr-edit-save').addEventListener('click', () => {
     const duration = parseDurationInput(document.getElementById('pr-edit-duration').value);
     if (isNaN(temp) || duration == null) { alert('Enter a valid temp and duration.'); return; }
     ov[exName].exposureEntries = ov[exName].exposureEntries || [];
-    ov[exName].exposureEntries.push({ temp, duration, date: dateStr });
+    if (editIndex != null) ov[exName].exposureEntries[editIndex] = { temp, duration, date: dateStr };
+    else ov[exName].exposureEntries.push({ temp, duration, date: dateStr });
   } else {
     const weight = parseFloat(document.getElementById('pr-edit-weight').value);
     const reps = parseInt(document.getElementById('pr-edit-reps').value);
     if (isNaN(weight) || isNaN(reps)) { alert('Enter a valid weight and reps.'); return; }
     ov[exName].entries = ov[exName].entries || [];
-    ov[exName].entries.push({ weight, reps, date: dateStr });
+    if (editIndex != null) ov[exName].entries[editIndex] = { weight, reps, date: dateStr };
+    else ov[exName].entries.push({ weight, reps, date: dateStr });
   }
 
   savePROverrides(ov);
+  recalcAllPRs();
+  recalcAllRepPRs();
+  recalcAllExposurePRs();
   applyPROverrides();
   save();
   document.getElementById('pr-edit-modal').classList.remove('open');
   openExDetail(exName, muscle, true);
 });
+
+// Removes one manually-logged entry, then rebuilds every PR from scratch (real
+// history + remaining overrides) since PR values only ratchet upward and won't
+// shrink back down on their own when the entry that set them is deleted.
+function deleteManualPREntry(exName, isExposure, index) {
+  const ov = loadPROverrides();
+  const entries = ov[exName] && (isExposure ? ov[exName].exposureEntries : ov[exName].entries);
+  if (!entries) return;
+  entries.splice(index, 1);
+  savePROverrides(ov);
+  recalcAllPRs();
+  recalcAllRepPRs();
+  recalcAllExposurePRs();
+  applyPROverrides();
+  save();
+}
 
 // ═══════════════════════════════════════════════════════════
 // STATS
@@ -8425,7 +8563,7 @@ function updateCurrentLbsPR(exIdx, block) {
     e.preventDefault();
     const touch = e.touches[0];
     if (ghostEl) ghostEl.style.top = (touch.clientY - dragOffsetY) + 'px';
-    updateDropIndicator(touch.clientY);
+    reorderLive(touch.clientY);
   }, { passive: false });
 
   document.addEventListener('touchend', () => {
@@ -8441,8 +8579,14 @@ function updateCurrentLbsPR(exIdx, block) {
   function startDrag(block, clientY) {
     active = true;
     dragEl = block;
+    // Measure the finger's offset into the block *before* collapsing it —
+    // collapsing shrinks every block above this one too, which shifts this
+    // block's position on screen. Measuring first means the ghost still
+    // starts exactly under the finger instead of jumping to wherever the
+    // block ends up after the reflow.
     const rect = block.getBoundingClientRect();
     dragOffsetY = clientY - rect.top;
+    document.body.classList.add('reordering-exercises');
 
     // Lock train-body scroll so rubber-band/inertia doesn't fight the drag
     const trainBody = document.getElementById('train-body');
@@ -8467,31 +8611,49 @@ function updateCurrentLbsPR(exIdx, block) {
     if (navigator.vibrate) navigator.vibrate(25);
   }
 
-  function updateDropIndicator(clientY) {
-    const blocks = [...trainExContainer.querySelectorAll('.train-ex:not(.dragging)')];
-    blocks.forEach(b => b.classList.remove('drop-above', 'drop-below'));
-    for (const b of blocks) {
+  // Live-reorders the DOM as the drag passes over other blocks — the block
+  // being dragged around is moved into place immediately (rather than just
+  // marking a drop target with a border), and every block that shifts as a
+  // result is FLIP-animated from its old spot to its new one so the whole
+  // list visibly reflows around the drag, like a native list reorder.
+  function reorderLive(clientY) {
+    const others = [...trainExContainer.querySelectorAll('.train-ex:not(.dragging)')];
+    let target = null;
+    for (const b of others) {
       const r = b.getBoundingClientRect();
-      if (clientY < r.top + r.height / 2) {
-        b.classList.add('drop-above');
-        return;
-      }
+      if (clientY < r.top + r.height / 2) { target = b; break; }
     }
-    if (blocks.length) blocks[blocks.length - 1].classList.add('drop-below');
+    const alreadyInPlace = target ? dragEl.nextElementSibling === target : dragEl === trainExContainer.lastElementChild;
+    if (alreadyInPlace) return;
+
+    const firstRects = new Map();
+    others.forEach(b => firstRects.set(b, b.getBoundingClientRect()));
+
+    if (target) trainExContainer.insertBefore(dragEl, target);
+    else trainExContainer.appendChild(dragEl);
+
+    others.forEach(b => {
+      const first = firstRects.get(b);
+      const last = b.getBoundingClientRect();
+      const dy = first.top - last.top;
+      if (!dy) return;
+      b.style.transition = 'none';
+      b.style.transform = `translateY(${dy}px)`;
+      requestAnimationFrame(() => {
+        b.style.transition = 'transform 0.2s ease';
+        b.style.transform = '';
+      });
+    });
   }
 
   function unlockScroll() {
     document.getElementById('train-body').style.overflow = '';
+    document.body.classList.remove('reordering-exercises');
   }
 
   function finishDrag() {
-    const blocks = [...trainExContainer.querySelectorAll('.train-ex:not(.dragging)')];
-    const dropAbove = blocks.find(b => b.classList.contains('drop-above'));
-    blocks.forEach(b => b.classList.remove('drop-above', 'drop-below'));
+    // DOM order is already live-updated by reorderLive() as the drag moved.
     dragEl.classList.remove('dragging');
-
-    if (dropAbove) trainExContainer.insertBefore(dragEl, dropAbove);
-    else trainExContainer.appendChild(dragEl);
 
     ghostEl.remove();
     ghostEl = null;
@@ -8509,14 +8671,10 @@ function updateCurrentLbsPR(exIdx, block) {
   }
 
   function cancelDrag() {
-    [...trainExContainer.querySelectorAll('.train-ex')].forEach(b =>
-      b.classList.remove('drop-above', 'drop-below', 'dragging')
-    );
-    ghostEl?.remove();
-    ghostEl = null;
-    dragEl = null;
-    active = false;
-    unlockScroll();
+    // The DOM was already live-reordered by reorderLive() up to this point
+    // (touchcancel interrupts the gesture, it doesn't undo the move), so
+    // finish the same way finishDrag() would: settle it and sync session.
+    if (dragEl) finishDrag();
   }
 })();
 
