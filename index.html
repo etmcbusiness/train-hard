@@ -3096,6 +3096,15 @@
     .ewheel-col::-webkit-scrollbar { display: none; }
     .ewheel-col.grabbing { cursor: grabbing; }
     .ewheel-col.grabbing .ewheel-item { transition: none; }
+    /* Challenge type wheel: native touch scroll + CSS snap instead of the
+       manual pointer-capture drag the h/m/s/temp wheels use (see
+       createTextWheel) — pan-y lets the browser's own touch scrolling run
+       instead of JS owning the gesture. */
+    #challenge-type-wheel {
+      touch-action: pan-y;
+      cursor: default;
+      scroll-snap-type: y mandatory;
+    }
     .ewheel-item {
       height: 30px;
       display: flex;
@@ -11164,9 +11173,14 @@ function setExposureWheelFieldsDisabled(fields, disabled) {
   });
 }
 
-// ── Generic scroll-snap text wheel (same drag/momentum/snap feel as the
-// exposure h/m/s/temp wheels above, but for an arbitrary list of labels
-// instead of a numeric range) — used for the New Challenge type picker.
+// ── Text wheel for the New Challenge type picker ──
+// Unlike the exposure h/m/s/temp wheels (which drive scrolling entirely via
+// manual pointer-capture + momentum math), this relies on the browser's own
+// native touch scrolling plus CSS scroll-snap (see #challenge-type-wheel in
+// the stylesheet) — no pointerdown/pointermove/setPointerCapture at all.
+// Simpler, and avoids any custom gesture code that could conflict with a
+// scrollable ancestor (this wheel lives inside the New Challenge modal,
+// which itself scrolls when the form is taller than the screen).
 function createTextWheel(col, items, onChange) {
   const ITEM_H = 30;
   col.innerHTML = '';
@@ -11180,15 +11194,6 @@ function createTextWheel(col, items, onChange) {
   col.appendChild(Object.assign(document.createElement('div'), { className: 'ewheel-spacer' }));
 
   let lastIdx = null;
-  let momentumFrame = null;
-  let settleTimer = null;
-  let rafPending = false;
-  let dragging = false;
-
-  function cancelMomentum() {
-    if (momentumFrame) { cancelAnimationFrame(momentumFrame); momentumFrame = null; }
-  }
-
   function updateCentered(playTick = true) {
     const idx = Math.max(0, Math.min(items.length - 1, Math.round(col.scrollTop / ITEM_H)));
     if (lastIdx === idx) return;
@@ -11203,127 +11208,13 @@ function createTextWheel(col, items, onChange) {
     onChange(items[idx], idx);
   }
 
-  function animateScrollTo(targetTop, duration) {
-    cancelMomentum();
-    const startTop = col.scrollTop;
-    const delta = targetTop - startTop;
-    if (Math.abs(delta) < 0.5) { col.scrollTop = targetTop; updateCentered(); return; }
-    const startTime = performance.now();
-    const easeOutCubic = t => 1 - Math.pow(1 - t, 3);
-    function step(now) {
-      const t = Math.min(1, (now - startTime) / duration);
-      col.scrollTop = startTop + delta * easeOutCubic(t);
-      updateCentered();
-      if (t < 1) momentumFrame = requestAnimationFrame(step);
-      else momentumFrame = null;
-    }
-    momentumFrame = requestAnimationFrame(step);
-  }
-
-  function snap() {
-    const idx = Math.round(col.scrollTop / ITEM_H);
-    const targetTop = idx * ITEM_H;
-    const dist = Math.abs(targetTop - col.scrollTop);
-    const duration = Math.min(260, Math.max(140, dist * 4));
-    animateScrollTo(targetTop, duration);
-  }
-
-  function startMomentum(velocityPxPerMs) {
-    cancelMomentum();
-    const FRICTION = 0.955;
-    const STOP_THRESHOLD = 0.2;
-    const MAX_VELOCITY = 45;
-    let velocity = Math.max(-MAX_VELOCITY, Math.min(MAX_VELOCITY, velocityPxPerMs * 16));
-    if (Math.abs(velocity) < STOP_THRESHOLD) { snap(); return; }
-    function step() {
-      velocity *= FRICTION;
-      col.scrollTop += velocity;
-      updateCentered();
-      const maxScroll = col.scrollHeight - col.clientHeight;
-      const hitEnd = col.scrollTop <= 0 || col.scrollTop >= maxScroll;
-      if (hitEnd) col.scrollTop = Math.max(0, Math.min(maxScroll, col.scrollTop));
-      if (hitEnd || Math.abs(velocity) < STOP_THRESHOLD) { momentumFrame = null; snap(); return; }
-      momentumFrame = requestAnimationFrame(step);
-    }
-    momentumFrame = requestAnimationFrame(step);
-  }
-
+  let rafPending = false;
   col.addEventListener('scroll', () => {
     if (!rafPending) { rafPending = true; requestAnimationFrame(() => { updateCentered(); rafPending = false; }); }
-    if (dragging || momentumFrame) return;
-    clearTimeout(settleTimer);
-    settleTimer = setTimeout(snap, 100);
   }, { passive: true });
-
-  // Finds the nearest scrollable ancestor (e.g. a modal card taller than the
-  // screen) so it can be locked for the duration of a drag — on real touch
-  // devices, a gesture that runs past this wheel's own scroll limit can
-  // otherwise hand off to that ancestor's native scrolling, making the whole
-  // card appear to shift/float instead of just the wheel's items.
-  function findScrollableAncestor(el) {
-    let node = el.parentElement;
-    while (node && node !== document.body) {
-      const cs = getComputedStyle(node);
-      if (cs.overflowY === 'auto' || cs.overflowY === 'scroll') return node;
-      node = node.parentElement;
-    }
-    return null;
-  }
-  let lockedAncestor = null;
-  let lockedAncestorPrevOverflow = '';
-
-  let lastY = 0;
-  const samples = [];
-  col.addEventListener('pointerdown', (e) => {
-    e.preventDefault();
-    dragging = true;
-    col.classList.add('grabbing');
-    cancelMomentum();
-    clearTimeout(settleTimer);
-    col.setPointerCapture(e.pointerId);
-    lastY = e.clientY;
-    samples.length = 0;
-    samples.push({ y: e.clientY, t: performance.now() });
-    lockedAncestor = findScrollableAncestor(col);
-    if (lockedAncestor) {
-      lockedAncestorPrevOverflow = lockedAncestor.style.overflowY;
-      lockedAncestor.style.overflowY = 'hidden';
-    }
-  });
-  col.addEventListener('pointermove', (e) => {
-    if (!dragging) return;
-    e.preventDefault();
-    const y = e.clientY;
-    col.scrollTop += lastY - y;
-    lastY = y;
-    samples.push({ y, t: performance.now() });
-    if (samples.length > 6) samples.shift();
-    updateCentered();
-  });
-  function endDrag() {
-    if (!dragging) return;
-    dragging = false;
-    col.classList.remove('grabbing');
-    if (lockedAncestor) {
-      lockedAncestor.style.overflowY = lockedAncestorPrevOverflow;
-      lockedAncestor = null;
-    }
-    const now = performance.now();
-    const recent = samples.filter(s => now - s.t < 120);
-    let v = 0;
-    if (recent.length >= 2) {
-      const first = recent[0], last = recent[recent.length - 1];
-      const dt = last.t - first.t;
-      if (dt > 0) v = (first.y - last.y) / dt;
-    }
-    startMomentum(v);
-  }
-  col.addEventListener('pointerup', endDrag);
-  col.addEventListener('pointercancel', endDrag);
 
   return {
     setIndex(idx, playTick = false) {
-      cancelMomentum();
       col.scrollTop = idx * ITEM_H;
       updateCentered(playTick);
     },
