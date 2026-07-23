@@ -3949,6 +3949,18 @@
     }
     .friend-row-name { font-size: 14px; font-weight: 700; color: rgb(var(--c-text)); }
     .friend-row-name.clickable { cursor: pointer; touch-action: manipulation; }
+    .friend-row-selectable { cursor: pointer; touch-action: manipulation; }
+    .friend-row-selectable.selected { border-color: rgb(var(--c-accent)); background: rgba(var(--c-accent),0.14); }
+    .friend-row-check {
+      width: 20px; height: 20px; border-radius: 6px; flex-shrink: 0;
+      border: 1.5px solid rgba(var(--c-accent2),0.5);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 800; color: rgb(var(--c-text));
+    }
+    .friend-row-selectable.selected .friend-row-check {
+      background: rgb(var(--c-accent)); border-color: rgb(var(--c-accent));
+    }
+    .friend-row-selectable.selected .friend-row-check::after { content: '✓'; }
     .friend-row-sub { font-size: 11px; color: rgb(var(--c-text4)); margin-top: 2px; }
     .friend-row-actions { display: flex; gap: 6px; flex-shrink: 0; }
     .friend-row-btn {
@@ -4805,9 +4817,9 @@
     </div>
     <div id="challenge-new-fields" class="challenge-new-fields-collapsed">
       <div class="acct-field">
-        <label>Friend</label>
+        <label>Friends</label>
         <button type="button" id="challenge-new-friend-btn" class="select-row">
-          <span id="challenge-new-friend-label" class="select-row-placeholder">Select a friend</span>
+          <span id="challenge-new-friend-label" class="select-row-placeholder">Select friends</span>
           <span class="select-row-chevron">›</span>
         </button>
       </div>
@@ -4823,27 +4835,21 @@
         <label>Duration (weeks)</label>
         <input id="challenge-new-weeks" class="acct-input" type="number" inputmode="numeric" min="1" max="52" value="6" />
       </div>
-      <div class="acct-field">
-        <label>Your Exercise</label>
-        <button type="button" id="challenge-new-exercise-btn" class="select-row">
-          <span id="challenge-new-exercise-label" class="select-row-placeholder">Select an exercise</span>
-          <span class="select-row-chevron">›</span>
-        </button>
-      </div>
       <button id="challenge-new-create-btn" class="acct-btn">Create Challenge</button>
     </div>
   </div>
 </div>
 
-<!-- Friend Picker (used to pick who a challenge invite goes to) -->
+<!-- Friend Picker (multi-select — used to pick who a challenge invite goes to) -->
 <div id="challenge-friend-picker">
   <div id="challenge-friend-picker-box">
     <div class="challenge-modal-header">
-      <div class="challenge-modal-title">Select a Friend</div>
+      <div class="challenge-modal-title">Select Friends</div>
       <button class="challenge-modal-close" id="challenge-friend-picker-close">✕</button>
     </div>
     <input id="challenge-friend-picker-search" class="acct-input" type="text" placeholder="Search friends…" autocomplete="off" style="margin-bottom:12px;" />
     <div id="challenge-friend-picker-list"></div>
+    <button id="challenge-friend-picker-done-btn" class="acct-btn">Add Friends to Challenge</button>
   </div>
 </div>
 
@@ -4856,7 +4862,7 @@
     <div id="challenge-detail-description" style="display:none;"></div>
     <div id="challenge-detail-join-box" style="display:none;">
       <div class="acct-field">
-        <label>Pick your exercise to join</label>
+        <label id="challenge-detail-join-label">Pick your exercise to join</label>
         <button type="button" id="challenge-join-exercise-btn" class="select-row">
           <span id="challenge-join-exercise-label" class="select-row-placeholder">Select an exercise</span>
           <span class="select-row-chevron">›</span>
@@ -5716,8 +5722,7 @@ let friendshipsChannel = null; // Realtime subscription for live friend request/
 let challengesChannel = null;  // Realtime subscription for live challenge invite/join updates
 let challengeMessagesChannel = null; // Realtime subscription for the currently-open challenge's chat
 let currentChallengeId = null; // challenge shown in #challenge-detail-modal, or null
-let challengeNewFriend = null;    // { id, username } chosen in the New Challenge modal
-let challengeNewExercise = null;  // { name, muscle } chosen in the New Challenge modal
+let challengeNewFriends = [];     // [{ id, username }, ...] chosen in the New Challenge modal
 let challengeJoinExercise = null; // { name, muscle } chosen when joining an invited challenge
 let challengeCreatorExerciseInfo = null; // { name, muscle, meta } — the creator's exercise, for "+ Add New Exercise" to copy settings from
 let challengeExercisePickerReturnModal = null; // id of the challenge modal to reopen when the shared exercise picker closes
@@ -6745,6 +6750,11 @@ async function getAcceptedFriends() {
 
 let challengeFriendPickerFriends = [];
 let challengeFriendPickerCallback = null;
+// Working set of selections while the picker is open — only committed to
+// the caller (via challengeFriendPickerCallback) when "Add Friends to
+// Challenge" is pressed. Closing any other way (✕ or tapping outside)
+// discards whatever was toggled in this session, per design.
+let challengeFriendPickerSelected = new Map(); // id -> friend object
 
 function renderChallengeFriendPickerList(filter) {
   const q = (filter || '').trim().toLowerCase();
@@ -6757,18 +6767,22 @@ function renderChallengeFriendPickerList(filter) {
   }
   for (const f of friends) {
     const row = document.createElement('div');
-    row.className = 'friend-row';
-    row.innerHTML = `<div class="friend-row-name clickable">${escapeHtml(f.username)}</div>`;
+    row.className = 'friend-row friend-row-selectable' + (challengeFriendPickerSelected.has(f.id) ? ' selected' : '');
+    row.innerHTML = `
+      <div class="friend-row-check"></div>
+      <div class="friend-row-name clickable">${escapeHtml(f.username)}</div>`;
     row.addEventListener('click', () => {
-      document.getElementById('challenge-friend-picker').classList.remove('open');
-      if (challengeFriendPickerCallback) challengeFriendPickerCallback(f);
+      if (challengeFriendPickerSelected.has(f.id)) challengeFriendPickerSelected.delete(f.id);
+      else challengeFriendPickerSelected.set(f.id, f);
+      row.classList.toggle('selected', challengeFriendPickerSelected.has(f.id));
     });
     list.appendChild(row);
   }
 }
 
-async function openFriendPickerForChallenge(callback) {
+async function openFriendPickerForChallenge(initialSelection, callback) {
   challengeFriendPickerCallback = callback;
+  challengeFriendPickerSelected = new Map((initialSelection || []).map(f => [f.id, f]));
   const search = document.getElementById('challenge-friend-picker-search');
   search.value = '';
   const list = document.getElementById('challenge-friend-picker-list');
@@ -6788,6 +6802,10 @@ function cancelChallengeFriendPicker() {
 document.getElementById('challenge-friend-picker-close').addEventListener('click', cancelChallengeFriendPicker);
 document.getElementById('challenge-friend-picker').addEventListener('click', (e) => {
   if (e.target === document.getElementById('challenge-friend-picker')) cancelChallengeFriendPicker();
+});
+document.getElementById('challenge-friend-picker-done-btn').addEventListener('click', () => {
+  document.getElementById('challenge-friend-picker').classList.remove('open');
+  if (challengeFriendPickerCallback) challengeFriendPickerCallback([...challengeFriendPickerSelected.values()]);
 });
 
 async function refreshChallenges() {
@@ -6837,36 +6855,25 @@ document.getElementById('challenge-new-btn').addEventListener('click', () => {
   document.getElementById('challenge-new-title').value = '';
   document.getElementById('challenge-new-description').value = '';
   document.getElementById('challenge-new-weeks').value = 6;
-  challengeNewFriend = null;
-  challengeNewExercise = null;
+  challengeNewFriends = [];
   const friendLabel = document.getElementById('challenge-new-friend-label');
-  friendLabel.textContent = 'Select a friend';
+  friendLabel.textContent = 'Select friends';
   friendLabel.classList.add('select-row-placeholder');
-  const exLabel = document.getElementById('challenge-new-exercise-label');
-  exLabel.textContent = 'Select an exercise';
-  exLabel.classList.add('select-row-placeholder');
   document.getElementById('challenge-new-modal').classList.add('open');
 });
 
 document.getElementById('challenge-new-friend-btn').addEventListener('click', () => {
   document.getElementById('challenge-new-modal').classList.remove('open');
-  openFriendPickerForChallenge(f => {
-    challengeNewFriend = f;
+  openFriendPickerForChallenge(challengeNewFriends, (friends) => {
+    challengeNewFriends = friends;
     const label = document.getElementById('challenge-new-friend-label');
-    label.textContent = f.username;
-    label.classList.remove('select-row-placeholder');
-    document.getElementById('challenge-new-modal').classList.add('open');
-  });
-});
-
-document.getElementById('challenge-new-exercise-btn').addEventListener('click', () => {
-  document.getElementById('challenge-new-modal').classList.remove('open');
-  challengeExercisePickerReturnModal = 'challenge-new-modal';
-  openExercisePickerForChallenge((ex, muscle) => {
-    challengeNewExercise = { name: ex, muscle };
-    const label = document.getElementById('challenge-new-exercise-label');
-    label.textContent = exerciseLabelWithCategory(ex, state.exerciseMeta);
-    label.classList.remove('select-row-placeholder');
+    if (friends.length) {
+      label.textContent = friends.map(f => f.username).join(', ');
+      label.classList.remove('select-row-placeholder');
+    } else {
+      label.textContent = 'Select friends';
+      label.classList.add('select-row-placeholder');
+    }
     document.getElementById('challenge-new-modal').classList.add('open');
   });
 });
@@ -6877,12 +6884,15 @@ document.getElementById('challenge-new-close').addEventListener('click', () => {
 
 document.getElementById('challenge-new-create-btn').addEventListener('click', async () => {
   showAcctError('challenge-new-error', '');
+  if (challengeNewType !== 'E1RM Battle') {
+    showAcctError('challenge-new-error', 'This challenge is not available yet, try another one.');
+    return;
+  }
   const weeks = Math.min(52, Math.max(1, parseInt(document.getElementById('challenge-new-weeks').value) || 6));
   const description = document.getElementById('challenge-new-description').value.trim();
   let title = document.getElementById('challenge-new-title').value.trim();
-  if (!challengeNewFriend) { showAcctError('challenge-new-error', 'Pick a friend.'); return; }
-  if (!challengeNewExercise) { showAcctError('challenge-new-error', 'Pick the exercise you want to track.'); return; }
-  if (!title) title = `${challengeNewExercise.name} — ${weeks} Week Challenge`;
+  if (!challengeNewFriends.length) { showAcctError('challenge-new-error', 'Pick at least one friend.'); return; }
+  if (!title) title = `${challengeNewType} — ${weeks} Week Challenge`;
 
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) { showAcctError('challenge-new-error', 'Your session expired — sign in again.'); return; }
@@ -6901,17 +6911,15 @@ document.getElementById('challenge-new-create-btn').addEventListener('click', as
     return;
   }
 
-  await supabase.from('challenge_participants')
-    .update({ exercise_name: challengeNewExercise.name })
-    .eq('challenge_id', challenge.id)
-    .eq('user_id', cloudSession.user.id);
-
   const { error: pErr } = await supabase.from('challenge_participants')
-    .insert({ challenge_id: challenge.id, user_id: challengeNewFriend.id, status: 'invited' });
+    .insert(challengeNewFriends.map(f => ({ challenge_id: challenge.id, user_id: f.id, status: 'invited' })));
   if (pErr) { showAcctError('challenge-new-error', pErr.message); return; }
 
   document.getElementById('challenge-new-modal').classList.remove('open');
   refreshChallenges();
+  // Straight into the challenge's own screen next — the creator still needs
+  // to pick their own exercise there (moved out of this creation form).
+  openChallengeDetail(challenge.id);
 });
 
 // Mirrors getLevel()'s Epley-based E1RM logic but reads an explicit
@@ -6997,13 +7005,21 @@ async function renderChallengeDetail() {
   }
 
   const me = c.challenge_participants.find(p => p.user_id === uid);
+  const isCreator = c.creator_id === uid;
+  // Exercise selection got moved out of the New Challenge creation form —
+  // the creator lands here needing to pick one too, same as an invitee,
+  // just without a Join/Decline choice (they already created the thing).
+  const needsExercise = me && (me.status === 'invited' || (isCreator && !me.exercise_name));
 
-  if (me && me.status === 'invited') {
+  if (needsExercise) {
     joinBox.style.display = 'block';
     partList.style.display = 'none';
     chatLog.style.display = 'none';
     chatRow.style.display = 'none';
     document.getElementById('challenge-leader-card').style.display = 'none';
+    document.getElementById('challenge-detail-join-label').textContent = isCreator ? 'Pick your exercise' : 'Pick your exercise to join';
+    document.getElementById('challenge-join-btn').textContent = isCreator ? 'Save Exercise' : 'Join Challenge';
+    document.getElementById('challenge-decline-btn').style.display = isCreator ? 'none' : 'block';
     challengeJoinExercise = null;
     const label = document.getElementById('challenge-join-exercise-label');
     label.textContent = 'Select an exercise';
