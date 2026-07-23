@@ -3105,21 +3105,6 @@
       cursor: default;
       scroll-snap-type: y mandatory;
     }
-    /* Smooth reveal for the New Challenge form fields (Friend/Title/etc),
-       shown only once "E1RM Battle" is selected on the wheel above — a raw
-       display:none/block swap made this whole block snap in and out
-       instantly, which read as a popup appearing. */
-    #challenge-new-fields {
-      overflow: hidden;
-      max-height: 2000px;
-      opacity: 1;
-      transition: max-height 0.35s ease, opacity 0.25s ease;
-    }
-    #challenge-new-fields.challenge-new-fields-collapsed {
-      max-height: 0;
-      opacity: 0;
-      transition: max-height 0.35s ease, opacity 0.15s ease;
-    }
     .ewheel-item {
       height: 30px;
       display: flex;
@@ -4815,7 +4800,7 @@
         </div>
       </div>
     </div>
-    <div id="challenge-new-fields" class="challenge-new-fields-collapsed">
+    <div id="challenge-new-fields">
       <div class="acct-field">
         <label>Friends</label>
         <button type="button" id="challenge-new-friend-btn" class="select-row">
@@ -6851,7 +6836,6 @@ document.getElementById('challenge-new-btn').addEventListener('click', () => {
   showAcctError('challenge-new-error', '');
   challengeTypeWheel.setIndex(0, false);
   challengeNewType = CHALLENGE_TYPES[0];
-  document.getElementById('challenge-new-fields').classList.remove('challenge-new-fields-collapsed');
   document.getElementById('challenge-new-title').value = '';
   document.getElementById('challenge-new-description').value = '';
   document.getElementById('challenge-new-weeks').value = 6;
@@ -11267,7 +11251,6 @@ const challengeTypeWheel = createTextWheel(
   CHALLENGE_TYPES,
   (label) => {
     challengeNewType = label;
-    document.getElementById('challenge-new-fields').classList.toggle('challenge-new-fields-collapsed', label !== 'E1RM Battle');
   }
 );
 
