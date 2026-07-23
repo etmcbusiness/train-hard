@@ -535,7 +535,10 @@
     #new-ex-modal {
       position: fixed;
       inset: 0;
-      z-index: 400;
+      /* Same reasoning as #picker above — this can be opened from within
+         the challenge exercise picker's "+ New Exercise" link, with
+         .profile-overlay (460) still open underneath. */
+      z-index: 770;
       background: rgba(var(--c-shadow),0.72);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
@@ -1446,7 +1449,11 @@
       position: fixed;
       inset: 0;
       bottom: 70px;
-      z-index: 300;
+      /* Must render above .profile-overlay (460) since the Friends/Challenges
+         screens stay open underneath while this picker is invoked from
+         inside them (e.g. New Challenge's "Your Exercise" picker) — at a
+         lower z-index it used to open invisibly/unclickably behind them. */
+      z-index: 750;
       background: transparent;
       display: none;
       align-items: center;
@@ -1566,7 +1573,7 @@
     #picker-ex-popup {
       position: fixed;
       inset: 0;
-      z-index: 350;
+      z-index: 760;
       background: rgba(var(--c-shadow),0.65);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
@@ -1823,8 +1830,21 @@
       align-items: flex-start;
       pointer-events: all;
     }
+    /* ── Profile Buttons (top-right) ── */
+    #profile-btns-right {
+      position: fixed;
+      top: calc(16px + env(safe-area-inset-top));
+      right: 16px;
+      z-index: 25;
+      display: none;
+      flex-direction: column;
+      gap: 8px;
+      align-items: flex-end;
+      pointer-events: all;
+    }
+    #profile-btns-right.visible { display: flex; }
     #profile-btns.visible { display: flex; }
-    #room-btn, #weekly-overview-btn, #testing-btn, #exit-testing-btn {
+    #profile-menu-btn, #weekly-overview-btn, #testing-btn, #exit-testing-btn, #friends-btn, #challenges-btn {
       background: rgba(var(--c-panel3),0.88);
       border: 1px solid rgba(var(--c-accent2),0.35);
       border-radius: 12px;
@@ -2144,9 +2164,46 @@
       letter-spacing: 1px;
       margin-bottom: 14px;
     }
+    #profile-identity-row { margin-top: 10px; margin-bottom: 6px; }
+    #profile-identity-labels { display: flex; gap: 16px; margin-bottom: 6px; }
+    #profile-identity-labels label {
+      display: block; font-size: 12px; font-weight: 700; letter-spacing: 0.4px; color: rgb(var(--c-text3));
+    }
+    #profile-photo-label { width: 92px; flex-shrink: 0; text-align: center; }
+    #profile-username-label { flex: 1; }
+    #profile-identity-content { display: flex; align-items: center; gap: 16px; }
+    #avatar-pfp-preview-wrap { position: relative; flex-shrink: 0; cursor: pointer; touch-action: manipulation; }
+    #avatar-pfp-preview {
+      width: 92px; height: 92px; border-radius: 50%;
+      background-color: rgba(var(--c-panel3),0.8);
+      background-position: center; background-size: cover; background-repeat: no-repeat;
+      border: 2px solid rgba(var(--c-accent),0.5);
+      display: flex; align-items: center; justify-content: center;
+      color: rgb(var(--c-text3)); font-size: 34px; font-weight: 800;
+    }
+    #avatar-pfp-edit-badge {
+      position: absolute; bottom: -2px; right: -2px; width: 28px; height: 28px; border-radius: 50%;
+      background: linear-gradient(135deg, rgb(var(--c-accent)), rgb(var(--c-accent-dark)));
+      border: 2px solid rgb(var(--c-panel2)); color: #fff; font-size: 13px; padding: 0;
+      display: flex; align-items: center; justify-content: center; cursor: pointer; touch-action: manipulation;
+      z-index: 1;
+    }
+    #profile-identity-info { flex: 1; min-width: 0; }
+    #avatar-username-row {
+      display: flex; align-items: center; gap: 10px;
+      background: rgba(var(--c-panel3),0.7); border: 1px solid rgba(var(--c-accent2),0.35);
+      border-radius: 12px; padding: 10px 12px;
+    }
+    #avatar-username-value { flex: 1; font-size: 15px; font-weight: 700; color: rgb(var(--c-text)); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    #avatar-username-edit-btn {
+      background: rgba(var(--c-panel4),0.8); border: 1px solid rgba(var(--c-accent2),0.35);
+      border-radius: 50%; width: 26px; height: 26px; color: rgb(var(--c-text2)); font-size: 11px;
+      cursor: pointer; touch-action: manipulation; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+    }
+    #avatar-pfp-remove-btn { color: #e05a4a; }
     #avatar-hair-options,
     #avatar-ui-options,
-    #avatar-rotation-options,
     #avatar-sound-options,
     #avatar-notification-options {
       display: flex;
@@ -2851,7 +2908,7 @@
     #pulley-modal {
       position: fixed;
       inset: 0;
-      z-index: 500;
+      z-index: 780;
       background: rgba(var(--c-shadow),0.72);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
@@ -2979,7 +3036,7 @@
       width: 100%;
       padding: 6px 18px 0;
     }
-    #exposure-wheel-wrap, #exposure-temp-wheel-wrap {
+    #exposure-wheel-wrap, #exposure-temp-wheel-wrap, #challenge-type-wheel-wrap {
       position: relative;
       width: 100%;
       height: 150px;
@@ -2993,7 +3050,7 @@
     #exposure-temp-wheel-fade .ewheel-col-wrap {
       flex: 0 0 96px;
     }
-    #exposure-wheel-fade, #exposure-temp-wheel-fade {
+    #exposure-wheel-fade, #exposure-temp-wheel-fade, #challenge-type-wheel-fade {
       position: relative;
       display: flex;
       width: 100%;
@@ -3023,6 +3080,12 @@
       width: 100%;
       height: 150px;
       overflow-y: scroll;
+      /* Stop scroll chaining: dragging past this wheel's own top/bottom limit
+         must not hand the gesture off to a scrollable ancestor (e.g. the New
+         Challenge modal card, which scrolls when its form is taller than the
+         screen) — without this, the whole card can visually shift/scroll
+         instead of just the wheel's items. */
+      overscroll-behavior-y: contain;
       scrollbar-width: none;
       position: relative;
       z-index: 1;
@@ -3130,6 +3193,40 @@
     }
 
     /* ── Weekly Overview Overlay ── */
+    /* ── Reusable full-screen profile overlay (Friends, Challenges) ── */
+    .profile-overlay {
+      position: fixed; inset: 0; z-index: 460;
+      background: rgba(var(--c-shadow),0.88);
+      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      display: none; flex-direction: column; align-items: center; justify-content: flex-start;
+      padding: calc(env(safe-area-inset-top) + 24px) 16px calc(env(safe-area-inset-bottom) + 24px);
+      box-sizing: border-box; overflow-y: auto; pointer-events: all;
+    }
+    .profile-overlay.open { display: flex; }
+    .profile-overlay-inner {
+      background: rgba(var(--c-panel1),0.97); border: 1px solid rgba(var(--c-accent2),0.25);
+      border-radius: 20px; width: 100%; max-width: 480px;
+      max-height: calc(var(--rvh) * 100 - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 48px);
+      display: flex; flex-direction: column; overflow: hidden;
+    }
+    .profile-overlay-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 16px 0; flex-shrink: 0;
+    }
+    .profile-overlay-title {
+      font-size: 12px; font-weight: 800; color: rgb(var(--c-text));
+      letter-spacing: 2px; text-transform: uppercase;
+    }
+    .profile-overlay-body { overflow-y: auto; padding: 12px 16px 16px; }
+    .profile-overlay-close-btn {
+      background: rgba(var(--c-panel3),0.7); border: 1px solid rgba(var(--c-accent2),0.35);
+      border-radius: 12px; color: rgb(var(--c-text2)); font-size: 12px; font-weight: 600;
+      padding: 8px 32px; cursor: pointer; margin-top: 8px; flex-shrink: 0;
+    }
+    .profile-overlay-signedout {
+      text-align: center; color: rgb(var(--c-text4)); font-size: 14px; padding: 30px 10px; line-height: 1.6;
+    }
+
     #weekly-overview-overlay {
       position: fixed;
       inset: 0;
@@ -3709,7 +3806,7 @@
     #custom-confirm {
       position: fixed;
       inset: 0;
-      z-index: 600;
+      z-index: 700;
       background: rgba(var(--c-shadow),0.72);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
@@ -3774,6 +3871,315 @@
       color: rgb(var(--c-text)); font-weight: 800;
     }
     .stats-menu-btn-primary:active { opacity: 0.85; background: linear-gradient(135deg, rgb(var(--c-accent)), rgb(var(--c-accent-dark))); }
+
+    /* ── Account / Friends ── */
+    .acct-field { margin-bottom: 14px; }
+    .acct-field label { display:block; font-size:12px; font-weight:700; letter-spacing:0.4px; color: rgb(var(--c-text3)); margin-bottom:6px; }
+    .acct-input {
+      width: 100%; background: rgba(var(--c-panel1),0.95); border: 1px solid rgba(var(--c-accent2),0.3);
+      border-radius: 10px; color: rgb(var(--c-text)); font-size: 15px; padding: 12px 14px;
+      -webkit-appearance: none; outline: none; box-sizing: border-box; font-size: 16px;
+    }
+    .acct-input:focus { border-color: rgb(var(--c-accent)); }
+    .acct-textarea { resize: vertical; min-height: 64px; font-family: inherit; line-height: 1.4; }
+    .acct-field-optional { color: rgb(var(--c-text4)); font-weight: 500; text-transform: none; letter-spacing: 0; }
+    .select-row {
+      width: 100%; display: flex; align-items: center; justify-content: space-between;
+      background: rgba(var(--c-panel1),0.95); border: 1px solid rgba(var(--c-accent2),0.3);
+      border-radius: 10px; color: rgb(var(--c-text)); font-size: 15px; font-weight: 600; padding: 12px 14px;
+      cursor: pointer; touch-action: manipulation; box-sizing: border-box; text-align: left;
+    }
+    .select-row:active { border-color: rgb(var(--c-accent)); }
+    .select-row-placeholder { color: rgb(var(--c-text4)); font-weight: 500; }
+    .select-row-chevron { color: rgb(var(--c-text4)); font-size: 18px; flex-shrink: 0; margin-left: 8px; }
+    .acct-btn {
+      width: 100%; padding: 13px; border-radius: 12px; border: none;
+      background: linear-gradient(135deg, rgb(var(--c-accent)), rgb(var(--c-accent-dark)));
+      color: rgb(var(--c-text)); font-size: 14px; font-weight: 700; cursor: pointer; touch-action: manipulation;
+      margin-top: 4px;
+    }
+    .acct-btn:active { opacity: 0.85; }
+    .acct-link-btn {
+      width: 100%; background: none; border: none; color: rgb(var(--c-accent-light));
+      font-size: 13px; font-weight: 600; cursor: pointer; padding: 12px; text-align: center;
+    }
+    .acct-error {
+      color: #e05a4a; font-size: 13px; font-weight: 600; margin-bottom: 10px; line-height: 1.4; display: none;
+    }
+    .acct-error.show { display: block; }
+    .acct-signout-btn {
+      width: 100%; padding: 13px; border-radius: 12px;
+      border: 1px solid rgba(var(--c-accent2),0.3); background: rgba(var(--c-panel1),0.6);
+      color: rgb(var(--c-text2)); font-size: 14px; font-weight: 600; cursor: pointer; touch-action: manipulation;
+    }
+    .acct-sync-status { font-size: 11px; color: rgb(var(--c-text4)); text-align: center; margin-top: 10px; letter-spacing: 0.3px; }
+
+    .acct-section-label {
+      font-size: 12px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase;
+      color: rgb(var(--c-text4)); margin: 24px 0 10px;
+    }
+    .friend-row {
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+      background: rgba(var(--c-panel1),0.7); border: 1px solid rgba(var(--c-accent2),0.25);
+      border-radius: 12px; padding: 12px 14px; margin-bottom: 8px;
+    }
+    .friend-row-name { font-size: 14px; font-weight: 700; color: rgb(var(--c-text)); }
+    .friend-row-name.clickable { cursor: pointer; touch-action: manipulation; }
+    .friend-row-sub { font-size: 11px; color: rgb(var(--c-text4)); margin-top: 2px; }
+    .friend-row-actions { display: flex; gap: 6px; flex-shrink: 0; }
+    .friend-row-btn {
+      padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(var(--c-accent2),0.3);
+      background: rgba(var(--c-panel3),0.85); color: rgb(var(--c-text2)); font-size: 12px; font-weight: 700;
+      cursor: pointer; touch-action: manipulation; white-space: nowrap;
+    }
+    .friend-row-btn-accept { border-color: rgba(var(--c-accent),0.5); color: rgb(var(--c-accent-light)); }
+    .friend-row-btn-decline { border-color: rgba(192,57,43,0.4); color: #e05a4a; }
+    .friend-empty { text-align: center; color: rgb(var(--c-text4)); font-size: 13px; padding: 10px 0 4px; }
+
+    #friend-detail-modal {
+      position: fixed; inset: 0; z-index: 660;
+      background: rgba(var(--c-shadow),0.72);
+      backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+      display: none; align-items: center; justify-content: center; padding: 20px;
+    }
+    #friend-detail-modal.open { display: flex; }
+    #friend-detail-box {
+      background: rgba(var(--c-panel2),0.98); border: 1px solid rgba(var(--c-accent2),0.3);
+      border-radius: 20px; width: 100%; max-width: 360px; max-height: 80vh;
+      padding: 22px; display: flex; flex-direction: column;
+    }
+    #friend-detail-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; flex-shrink: 0; }
+    #friend-detail-name { font-size: 18px; font-weight: 800; color: rgb(var(--c-accent-light)); }
+    #friend-detail-close {
+      background: rgba(var(--c-panel4),0.7); border: 1px solid rgba(var(--c-accent2),0.3);
+      border-radius: 50%; color: rgb(var(--c-text2)); font-size: 14px; width: 32px; height: 32px;
+      cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    #friend-detail-body { overflow-y: auto; }
+    .friend-level-display { display: flex; flex-direction: column; align-items: center; padding: 18px 0 22px; }
+    .friend-level-dot { width: 54px; height: 54px; border-radius: 50%; margin-bottom: 14px; }
+    .friend-level-num { font-size: 22px; font-weight: 800; }
+    .friend-level-badge { font-size: 13px; color: rgb(var(--c-text3)); margin-top: 4px; letter-spacing: 0.3px; }
+    .friend-row-level { display: flex; align-items: center; gap: 6px; margin-top: 3px; }
+    .friend-row-level-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+    .friend-row-level-text { font-size: 11px; font-weight: 700; }
+    .friend-row-edit-btn {
+      background: rgba(var(--c-panel3),0.85); border: 1px solid rgba(var(--c-accent2),0.3);
+      border-radius: 8px; color: rgb(var(--c-text2)); font-size: 14px; width: 32px; height: 32px;
+      cursor: pointer; touch-action: manipulation; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    #friend-edit-menu {
+      position: fixed; inset: 0; z-index: 700;
+      background: rgba(var(--c-shadow),0.72);
+      backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+      display: none; align-items: center; justify-content: center; padding: 20px;
+    }
+    #friend-edit-menu.open { display: flex; }
+    #friend-edit-menu-box {
+      background: rgba(var(--c-panel2),0.98); border: 1px solid rgba(var(--c-accent2),0.3);
+      border-radius: 20px; width: 100%; max-width: 300px; padding: 22px;
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    #friend-edit-menu-name {
+      font-size: 15px; font-weight: 800; color: rgb(var(--c-text)); text-align: center; margin-bottom: 4px;
+    }
+    #friend-edit-menu-box .acct-btn, #friend-edit-menu-box .acct-signout-btn { margin-top: 0; }
+
+    #avatar-pfp-menu {
+      position: fixed; inset: 0; z-index: 700;
+      background: rgba(var(--c-shadow),0.72);
+      backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+      display: none; align-items: center; justify-content: center; padding: 20px;
+    }
+    #avatar-pfp-menu.open { display: flex; }
+    #avatar-pfp-menu-box {
+      background: rgba(var(--c-panel2),0.98); border: 1px solid rgba(var(--c-accent2),0.3);
+      border-radius: 20px; width: 100%; max-width: 300px; padding: 22px;
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    #avatar-pfp-menu-box .acct-btn { margin-top: 0; }
+
+    #signout-menu {
+      position: fixed; inset: 0; z-index: 700;
+      background: rgba(var(--c-shadow),0.72);
+      backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+      display: none; align-items: center; justify-content: center; padding: 20px;
+    }
+    #signout-menu.open { display: flex; }
+    #signout-menu-box {
+      background: rgba(var(--c-panel2),0.98); border: 1px solid rgba(var(--c-accent2),0.3);
+      border-radius: 20px; width: 100%; max-width: 300px; padding: 22px;
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    #signout-menu-box .acct-btn, #signout-menu-box .acct-signout-btn { margin-top: 0; }
+
+    #avatar-pfp-view-modal {
+      position: fixed; inset: 0; z-index: 720;
+      background: rgba(var(--c-shadow),0.88);
+      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      display: none; align-items: center; justify-content: center; padding: 40px;
+    }
+    #avatar-pfp-view-modal.open { display: flex; }
+    #avatar-pfp-view-circle {
+      width: min(70vw, 340px); height: min(70vw, 340px); border-radius: 50%;
+      background-color: rgba(var(--c-panel3),0.8);
+      background-position: center; background-size: cover; background-repeat: no-repeat;
+      border: 3px solid rgba(var(--c-accent),0.5); box-shadow: 0 0 40px rgba(var(--c-accent),0.35);
+    }
+
+    /* ── Challenges ── */
+    .challenge-row {
+      background: rgba(var(--c-panel1),0.7); border: 1px solid rgba(var(--c-accent2),0.25);
+      border-radius: 12px; padding: 12px 14px; margin-bottom: 8px; cursor: pointer; touch-action: manipulation;
+    }
+    .challenge-row-title { font-size: 14px; font-weight: 700; color: rgb(var(--c-text)); }
+    .challenge-row-sub { font-size: 11px; color: rgb(var(--c-text4)); margin-top: 3px; }
+    .challenge-row-badge {
+      display: inline-block; font-size: 10px; font-weight: 800; letter-spacing: 0.4px; text-transform: uppercase;
+      color: rgb(var(--c-accent-light)); background: rgba(var(--c-accent),0.15); border-radius: 6px; padding: 2px 7px; margin-left: 8px;
+    }
+
+    #challenge-new-modal, #challenge-detail-modal, #challenge-friend-picker {
+      position: fixed; inset: 0; z-index: 660;
+      background: rgba(var(--c-shadow),0.72);
+      backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+      display: none; align-items: center; justify-content: center; padding: 20px;
+    }
+    #challenge-new-modal.open, #challenge-detail-modal.open, #challenge-friend-picker.open { display: flex; }
+    #challenge-friend-picker-box {
+      background: rgba(var(--c-panel2),0.98); border: 1px solid rgba(var(--c-accent2),0.3);
+      border-radius: 20px; width: 100%; max-width: 360px; max-height: 75vh; overflow-y: auto;
+      padding: 22px;
+    }
+    #challenge-new-box {
+      background: rgba(var(--c-panel2),0.98); border: 1px solid rgba(var(--c-accent2),0.3);
+      border-radius: 20px; width: 100%; max-width: 360px; max-height: 85vh; overflow-y: auto;
+      padding: 22px;
+    }
+    #challenge-detail-box {
+      background: rgba(var(--c-panel2),0.98); border: 1px solid rgba(var(--c-accent2),0.3);
+      border-radius: 20px; width: 100%; max-width: 400px; max-height: 88vh;
+      padding: 22px; display: flex; flex-direction: column; position: relative;
+    }
+    .challenge-modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; flex-shrink: 0; }
+    .challenge-modal-title { font-size: 18px; font-weight: 800; color: rgb(var(--c-accent-light)); }
+    #challenge-detail-description {
+      font-size: 13px; color: rgb(var(--c-text3)); line-height: 1.5;
+      background: rgba(var(--c-panel1),0.5); border: 1px solid rgba(var(--c-accent2),0.15);
+      border-radius: 10px; padding: 10px 12px; margin-bottom: 14px;
+    }
+    .challenge-modal-close {
+      background: rgba(var(--c-panel4),0.7); border: 1px solid rgba(var(--c-accent2),0.3);
+      border-radius: 50%; color: rgb(var(--c-text2)); font-size: 14px; width: 32px; height: 32px;
+      cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+
+    /* ── Challenge leaderboard ── */
+    #challenge-detail-close { position: absolute; top: 18px; right: 18px; z-index: 1; }
+    .challenge-lb-title {
+      font-size: 19px; font-weight: 800; color: rgb(var(--c-text));
+      text-align: center; padding: 2px 40px 2px; flex-shrink: 0;
+    }
+    .challenge-lb-sub {
+      font-size: 11px; color: rgb(var(--c-text4)); text-align: center;
+      margin: 4px 0 14px; letter-spacing: 0.3px; flex-shrink: 0;
+    }
+    #challenge-leader-card {
+      display: flex; flex-direction: column; align-items: center; text-align: center;
+      padding: 4px 0 18px; flex-shrink: 0;
+    }
+    .challenge-leader-badge {
+      font-size: 10px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase;
+      color: rgb(var(--c-accent-light)); margin-bottom: 10px;
+    }
+    #challenge-leader-name { font-size: 16px; font-weight: 800; color: rgb(var(--c-text)); margin-top: 2px; }
+    #challenge-leader-ex { font-size: 12px; color: rgb(var(--c-text4)); margin-top: 2px; }
+    #challenge-leader-stat { font-size: 14px; font-weight: 700; margin-top: 8px; }
+    .challenge-lb-avatar-lg {
+      width: 84px; height: 84px; border-radius: 50%;
+      background-color: rgba(var(--c-panel3),0.85); background-position: center; background-size: cover;
+      border: 3px solid rgb(var(--c-accent)); box-shadow: 0 0 18px rgba(var(--c-accent),0.45);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 30px; font-weight: 800; color: rgb(var(--c-text2));
+    }
+    .challenge-lb-row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 2px; border-bottom: 1px solid rgba(var(--c-accent2),0.15);
+    }
+    .challenge-lb-row:last-child { border-bottom: none; }
+    .challenge-lb-rank { width: 18px; text-align: center; font-size: 13px; font-weight: 800; color: rgb(var(--c-text4)); flex-shrink: 0; }
+    .challenge-lb-avatar {
+      width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
+      background-color: rgba(var(--c-panel3),0.85); background-position: center; background-size: cover;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 800; color: rgb(var(--c-text3));
+      border: 1px solid rgba(var(--c-accent2),0.3);
+    }
+    .challenge-lb-info { flex: 1; min-width: 0; }
+    .challenge-lb-name { font-size: 14px; font-weight: 700; color: rgb(var(--c-text)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .challenge-lb-ex-sub { font-size: 11px; color: rgb(var(--c-text4)); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .challenge-lb-stat { text-align: right; flex-shrink: 0; }
+    .challenge-lb-stat-pct { font-size: 14px; font-weight: 800; }
+    .challenge-lb-stat-sub { font-size: 10px; color: rgb(var(--c-text4)); margin-top: 2px; }
+
+    /* ── Avatar Crop Modal ── */
+    #avatar-crop-modal {
+      position: fixed; inset: 0; z-index: 720;
+      background: rgba(var(--c-shadow),0.85);
+      backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+      display: none; align-items: center; justify-content: center; padding: 20px;
+    }
+    #avatar-crop-modal.open { display: flex; }
+    #avatar-crop-box {
+      background: rgba(var(--c-panel2),0.98); border: 1px solid rgba(var(--c-accent2),0.3);
+      border-radius: 20px; padding: 22px; width: 100%; max-width: 340px;
+    }
+    #avatar-crop-viewport {
+      width: 240px; height: 240px; border-radius: 50%; overflow: hidden;
+      margin: 0 auto 16px; position: relative; background: #000;
+      border: 2px solid rgba(var(--c-accent),0.5); touch-action: none; cursor: grab;
+    }
+    #avatar-crop-viewport.dragging { cursor: grabbing; }
+    #avatar-crop-img { position: absolute; top: 0; left: 0; user-select: none; -webkit-user-drag: none; pointer-events: none; }
+    #avatar-crop-hint {
+      text-align: center; font-size: 12px; color: rgb(var(--c-text4)); letter-spacing: 0.3px;
+    }
+
+    /* ── Avatar Preset Picker ── */
+    #avatar-preset-modal {
+      position: fixed; inset: 0; z-index: 720;
+      background: rgba(var(--c-shadow),0.85);
+      backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+      display: none; align-items: center; justify-content: center; padding: 20px;
+    }
+    #avatar-preset-modal.open { display: flex; }
+    #avatar-preset-box {
+      background: rgba(var(--c-panel2),0.98); border: 1px solid rgba(var(--c-accent2),0.3);
+      border-radius: 20px; padding: 22px; width: 100%; max-width: 340px;
+    }
+    #avatar-preset-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+    .avatar-preset-tile {
+      aspect-ratio: 1; border-radius: 50%; border: 2px solid rgba(255,255,255,0.15);
+      display: flex; align-items: center; justify-content: center; font-size: 26px;
+      cursor: pointer; touch-action: manipulation; padding: 0;
+    }
+    .avatar-preset-tile:active { border-color: rgba(255,255,255,0.5); }
+    #challenge-chat-log { overflow-y: auto; flex: 1; margin: 14px 0; min-height: 80px; max-height: 220px; }
+    .challenge-chat-msg { margin-bottom: 10px; }
+    .challenge-chat-msg-name { font-size: 11px; font-weight: 700; color: rgb(var(--c-text4)); margin-bottom: 2px; }
+    .challenge-chat-msg-body {
+      display: inline-block; background: rgba(var(--c-panel1),0.85); border: 1px solid rgba(var(--c-accent2),0.25);
+      border-radius: 10px; padding: 8px 11px; font-size: 13px; color: rgb(var(--c-text)); max-width: 85%;
+    }
+    #challenge-chat-input-row { display: flex; gap: 8px; flex-shrink: 0; }
+    #challenge-chat-input { flex: 1; }
+    #challenge-chat-send {
+      padding: 0 16px; border-radius: 10px; border: none;
+      background: linear-gradient(135deg, rgb(var(--c-accent)), rgb(var(--c-accent-dark)));
+      color: rgb(var(--c-text)); font-size: 13px; font-weight: 700; cursor: pointer; touch-action: manipulation;
+    }
     .stats-back-btn {
       background: rgba(var(--c-panel3),0.88);
       border: 1px solid rgba(var(--c-accent2),0.35);
@@ -4262,6 +4668,201 @@
   </div>
 </div>
 
+<!-- Friends Overlay (Profile tab) -->
+<div id="friends-overlay" class="profile-overlay">
+  <div class="profile-overlay-inner">
+    <div class="profile-overlay-header">
+      <span class="profile-overlay-title">Friends</span>
+    </div>
+    <div class="profile-overlay-body">
+      <div id="friends-overlay-signedout" class="profile-overlay-signedout" style="display:none;">Sign in from Stats &gt; Account to add and manage friends.</div>
+      <div id="friends-overlay-content">
+        <div class="acct-section-label" style="margin-top:0;">Add a Friend</div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input id="friend-search-input" name="friend-search-q" class="acct-input" type="text" placeholder="Username" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" style="flex:1;" />
+          <button id="friend-add-btn" class="friend-row-btn friend-row-btn-accept" style="padding:12px 16px;">Add</button>
+        </div>
+        <div class="acct-error" id="friend-add-error"></div>
+
+        <div class="acct-section-label" id="friend-requests-label" style="display:none;">Friend Requests</div>
+        <div id="friend-requests-list"></div>
+
+        <div class="acct-section-label">Friends</div>
+        <div id="friends-list"></div>
+      </div>
+    </div>
+  </div>
+  <button id="friends-overlay-close-btn" class="profile-overlay-close-btn">Done</button>
+</div>
+
+<!-- Challenges Overlay (Profile tab) -->
+<div id="challenges-overlay" class="profile-overlay">
+  <div class="profile-overlay-inner">
+    <div class="profile-overlay-header">
+      <span class="profile-overlay-title">Challenges</span>
+    </div>
+    <div class="profile-overlay-body">
+      <div id="challenges-overlay-signedout" class="profile-overlay-signedout" style="display:none;">Sign in from Stats &gt; Account to create and join challenges.</div>
+      <div id="challenges-overlay-content">
+        <button id="challenge-new-btn" class="friend-row-btn friend-row-btn-accept" style="width:100%;padding:12px;margin-bottom:10px;">+ New Challenge</button>
+        <div id="challenges-list"></div>
+      </div>
+    </div>
+  </div>
+  <button id="challenges-overlay-close-btn" class="profile-overlay-close-btn">Done</button>
+</div>
+
+<!-- Friend Detail Modal (read-only overall level) -->
+<div id="friend-detail-modal">
+  <div id="friend-detail-box">
+    <div id="friend-detail-header">
+      <div style="display:flex;align-items:center;gap:10px;min-width:0;">
+        <div id="friend-detail-avatar" class="challenge-lb-avatar"></div>
+        <div id="friend-detail-name"></div>
+      </div>
+      <button id="friend-detail-close">✕</button>
+    </div>
+    <div id="friend-detail-body"></div>
+  </div>
+</div>
+
+<!-- Friend Edit Menu (Nickname / Remove) -->
+<div id="friend-edit-menu">
+  <div id="friend-edit-menu-box">
+    <div id="friend-edit-menu-name"></div>
+    <button id="friend-edit-nickname-btn" class="acct-btn">Nickname Friend</button>
+    <button id="friend-edit-remove-btn" class="acct-signout-btn" style="color:#e05a4a;">Remove Friend</button>
+    <button id="friend-edit-cancel-btn" class="acct-link-btn">Cancel</button>
+  </div>
+</div>
+
+<!-- Profile Picture Edit Menu (Change / Preset / Remove) -->
+<div id="avatar-pfp-menu">
+  <div id="avatar-pfp-menu-box">
+    <button type="button" id="avatar-pfp-change-btn" class="acct-btn">Change Photo</button>
+    <button type="button" id="avatar-pfp-presets-btn" class="acct-signout-btn">Choose a Preset</button>
+    <button type="button" id="avatar-pfp-remove-btn" class="acct-signout-btn" style="display:none;color:#e05a4a;">Remove Photo</button>
+    <button type="button" id="avatar-pfp-menu-cancel-btn" class="acct-link-btn">Cancel</button>
+  </div>
+</div>
+
+<!-- Sign Out Menu (Backup / Sign Out / Cancel) -->
+<div id="signout-menu">
+  <div id="signout-menu-box">
+    <button type="button" id="signout-download-btn" class="acct-btn">Download Backup</button>
+    <button type="button" id="signout-confirm-btn" class="acct-signout-btn" style="color:#e05a4a;">Sign Out</button>
+    <button type="button" id="signout-menu-cancel-btn" class="acct-link-btn">Cancel</button>
+  </div>
+</div>
+
+<!-- Big Profile Photo Viewer -->
+<div id="avatar-pfp-view-modal">
+  <div id="avatar-pfp-view-circle"></div>
+</div>
+
+<!-- New Challenge Modal -->
+<div id="challenge-new-modal">
+  <div id="challenge-new-box">
+    <div class="challenge-modal-header">
+      <div class="challenge-modal-title">New Challenge</div>
+      <button class="challenge-modal-close" id="challenge-new-close">✕</button>
+    </div>
+    <div class="acct-error" id="challenge-new-error"></div>
+    <div class="acct-field">
+      <label>Challenge Type</label>
+      <div id="challenge-type-wheel-wrap">
+        <div class="ewheel-highlight"></div>
+        <div id="challenge-type-wheel-fade">
+          <div class="ewheel-col-wrap">
+            <div class="ewheel-col" id="challenge-type-wheel"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="challenge-new-fields" style="display:none;">
+      <div class="acct-field">
+        <label>Friend</label>
+        <button type="button" id="challenge-new-friend-btn" class="select-row">
+          <span id="challenge-new-friend-label" class="select-row-placeholder">Select a friend</span>
+          <span class="select-row-chevron">›</span>
+        </button>
+      </div>
+      <div class="acct-field">
+        <label>Title</label>
+        <input id="challenge-new-title" class="acct-input" type="text" placeholder="e.g. Bench E1RM Battle" maxlength="60" />
+      </div>
+      <div class="acct-field">
+        <label>Description <span class="acct-field-optional">(optional)</span></label>
+        <textarea id="challenge-new-description" class="acct-input acct-textarea" placeholder="What are the rules? Any details worth noting." maxlength="500"></textarea>
+      </div>
+      <div class="acct-field">
+        <label>Duration (weeks)</label>
+        <input id="challenge-new-weeks" class="acct-input" type="number" inputmode="numeric" min="1" max="52" value="6" />
+      </div>
+      <div class="acct-field">
+        <label>Your Exercise</label>
+        <button type="button" id="challenge-new-exercise-btn" class="select-row">
+          <span id="challenge-new-exercise-label" class="select-row-placeholder">Select an exercise</span>
+          <span class="select-row-chevron">›</span>
+        </button>
+      </div>
+      <button id="challenge-new-create-btn" class="acct-btn">Create Challenge</button>
+    </div>
+  </div>
+</div>
+
+<!-- Friend Picker (used to pick who a challenge invite goes to) -->
+<div id="challenge-friend-picker">
+  <div id="challenge-friend-picker-box">
+    <div class="challenge-modal-header">
+      <div class="challenge-modal-title">Select a Friend</div>
+      <button class="challenge-modal-close" id="challenge-friend-picker-close">✕</button>
+    </div>
+    <input id="challenge-friend-picker-search" class="acct-input" type="text" placeholder="Search friends…" autocomplete="off" style="margin-bottom:12px;" />
+    <div id="challenge-friend-picker-list"></div>
+  </div>
+</div>
+
+<!-- Challenge Detail Modal -->
+<div id="challenge-detail-modal">
+  <div id="challenge-detail-box">
+    <button class="challenge-modal-close" id="challenge-detail-close">✕</button>
+    <div id="challenge-detail-title" class="challenge-lb-title"></div>
+    <div id="challenge-detail-sub" class="challenge-lb-sub"></div>
+    <div id="challenge-detail-description" style="display:none;"></div>
+    <div id="challenge-detail-join-box" style="display:none;">
+      <div class="acct-field">
+        <label>Pick your exercise to join</label>
+        <button type="button" id="challenge-join-exercise-btn" class="select-row">
+          <span id="challenge-join-exercise-label" class="select-row-placeholder">Select an exercise</span>
+          <span class="select-row-chevron">›</span>
+        </button>
+        <button type="button" id="challenge-join-new-ex-btn" class="acct-link-btn" style="padding:8px;">+ Add New Exercise</button>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button id="challenge-join-btn" class="acct-btn" style="flex:1;">Join Challenge</button>
+        <button id="challenge-decline-btn" class="acct-signout-btn" style="flex:1;margin-top:4px;">Decline</button>
+      </div>
+    </div>
+
+    <div id="challenge-leader-card" style="display:none;">
+      <div class="challenge-leader-badge">🏆 Current Leader</div>
+      <div id="challenge-leader-avatar" class="challenge-lb-avatar-lg"></div>
+      <div id="challenge-leader-name"></div>
+      <div id="challenge-leader-ex"></div>
+      <div id="challenge-leader-stat"></div>
+    </div>
+    <div id="challenge-participants-list"></div>
+
+    <button id="challenge-cancel-btn" class="acct-signout-btn" style="display:none;margin-bottom:14px;">Cancel Challenge</button>
+    <div id="challenge-chat-log"></div>
+    <div id="challenge-chat-input-row">
+      <input id="challenge-chat-input" class="acct-input" type="text" placeholder="Message…" autocomplete="off" />
+      <button id="challenge-chat-send">Send</button>
+    </div>
+  </div>
+</div>
+
 <!-- Data Management Popup -->
 <div id="dm-popup">
   <div id="dm-box">
@@ -4616,11 +5217,16 @@
 
 
 <div id="profile-btns">
-  <button id="room-btn">Training Room</button>
-  <button id="weekly-overview-btn">Weekly Overview</button>
+  <button id="profile-menu-btn">Profile</button>
   <button id="avatar-btn">Avatar</button>
-  <button id="testing-btn">Testing</button>
+  <button id="weekly-overview-btn">Weekly Overview</button>
+  <button id="testing-btn" style="margin-top:20px;">Testing</button>
   <button id="exit-testing-btn" style="display:none;">Exit Testing</button>
+</div>
+
+<div id="profile-btns-right">
+  <button id="friends-btn">Friends</button>
+  <button id="challenges-btn">Challenges</button>
 </div>
 
 <!-- Room Arc Overlay -->
@@ -4712,7 +5318,7 @@
       <span id="avatar-title">Avatar</span>
     </div>
     <div id="avatar-body">
-      <div class="avatar-section-label">Hair Color</div>
+      <div class="avatar-section-label" style="margin-top:0;">Hair Color</div>
       <div id="avatar-hair-options">
         <div class="avatar-hair-card" data-option="1">
           <div class="avatar-hair-swatches">
@@ -4748,23 +5354,127 @@
         <button class="avatar-inspiration-btn" id="ui-theme-broly" data-theme-value="broly">Broly</button>
         <button class="avatar-inspiration-btn" id="ui-theme-frieza" data-theme-value="frieza">Frieza</button>
       </div>
-      <div class="avatar-section-label" style="margin-top:22px;">Rotation</div>
-      <div id="avatar-rotation-options">
-        <button class="avatar-inspiration-btn" id="rotation-toggle-btn">Auto-Rotate: On</button>
-      </div>
+      <div class="avatar-section-label" style="margin-top:22px;">Training Room</div>
+      <button id="avatar-room-btn" class="acct-btn" style="margin-top:0;">Training Room</button>
+
       <div class="avatar-section-label" style="margin-top:22px;">Sound</div>
       <div id="avatar-sound-options">
         <button class="avatar-inspiration-btn" id="sounds-toggle-btn">Sounds: On</button>
         <button class="avatar-inspiration-btn" id="other-sounds-toggle-btn">Coach Sounds: On</button>
       </div>
-      <div class="avatar-section-label" style="margin-top:22px;">Alerts</div>
-      <div id="avatar-notification-options">
-        <button class="avatar-inspiration-btn" id="notifications-toggle-btn">Rest Alerts: Off</button>
-      </div>
-      <div id="notifications-debug" style="margin-top:8px; font-size:10px; color:rgb(var(--c-text4)); text-align:center; letter-spacing:0.3px;"></div>
     </div>
   </div>
   <button id="avatar-close-btn">Done</button>
+</div>
+
+<!-- Profile Menu Overlay (Photo, Username, Alerts — moved out of Avatar) -->
+<div id="profile-menu-overlay" class="profile-overlay">
+  <div class="profile-overlay-inner">
+    <div class="profile-overlay-header">
+      <span class="profile-overlay-title">Profile</span>
+    </div>
+    <div class="profile-overlay-body">
+      <!-- Signed out: login/signup forms (moved here from Stats > Account) -->
+      <div id="acct-signedout">
+        <div id="acct-login-form">
+          <div class="acct-error" id="acct-login-error"></div>
+          <div class="acct-field">
+            <label>Email</label>
+            <input id="acct-login-email" class="acct-input" type="email" autocomplete="email" autocapitalize="off" />
+          </div>
+          <div class="acct-field">
+            <label>Password</label>
+            <input id="acct-login-password" class="acct-input" type="password" autocomplete="current-password" />
+          </div>
+          <button id="acct-login-btn" class="acct-btn">Log In</button>
+          <button id="acct-show-signup-btn" class="acct-link-btn">Need an account? Sign up</button>
+        </div>
+
+        <div id="acct-signup-form" style="display:none;">
+          <div class="acct-error" id="acct-signup-error"></div>
+          <div class="acct-field">
+            <label>Username</label>
+            <input id="acct-signup-username" class="acct-input" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" maxlength="24" />
+          </div>
+          <div class="acct-field">
+            <label>Email</label>
+            <input id="acct-signup-email" class="acct-input" type="email" autocomplete="email" autocapitalize="off" />
+          </div>
+          <div class="acct-field">
+            <label>Password</label>
+            <input id="acct-signup-password" class="acct-input" type="password" autocomplete="new-password" />
+          </div>
+          <button id="acct-signup-btn" class="acct-btn">Sign Up</button>
+          <button id="acct-show-login-btn" class="acct-link-btn">Already have an account? Log in</button>
+        </div>
+      </div>
+
+      <!-- Signed in -->
+      <div id="acct-signedin" style="display:none;">
+        <div id="acct-username-display" style="display:none;"></div>
+
+        <div id="profile-identity-row">
+          <div id="profile-identity-labels">
+            <label id="profile-photo-label">Profile Photo</label>
+            <label id="profile-username-label">Username</label>
+          </div>
+          <div id="profile-identity-content">
+            <div id="avatar-pfp-preview-wrap">
+              <div id="avatar-pfp-preview"></div>
+              <button type="button" id="avatar-pfp-edit-badge" title="Change photo">✎</button>
+            </div>
+            <div id="profile-identity-info">
+              <div id="avatar-username-row">
+                <div id="avatar-username-value"></div>
+                <button type="button" id="avatar-username-edit-btn" title="Change username">✎</button>
+              </div>
+            </div>
+          </div>
+          <input id="avatar-pfp-file" type="file" accept="image/*" style="display:none;" />
+        </div>
+        <div class="acct-error" id="avatar-pfp-error"></div>
+        <div class="acct-error" id="avatar-username-error"></div>
+
+        <div class="avatar-section-label" style="margin-top:22px;">Alerts</div>
+        <div id="avatar-notification-options">
+          <button class="avatar-inspiration-btn" id="notifications-toggle-btn">Notifications: Off</button>
+        </div>
+        <div id="notifications-debug" style="margin-top:8px; font-size:10px; color:rgb(var(--c-text4)); text-align:center; letter-spacing:0.3px;"></div>
+
+        <button id="acct-signout-btn" class="acct-signout-btn" style="margin-top:22px;">Sign Out</button>
+        <div class="acct-sync-status" id="acct-email-display"></div>
+        <div class="acct-sync-status" id="acct-sync-status"></div>
+        <div class="acct-sync-status" id="acct-last-synced"></div>
+      </div>
+    </div>
+  </div>
+  <button id="profile-menu-close-btn" class="profile-overlay-close-btn">Done</button>
+</div>
+
+<!-- Avatar Crop Modal — reposition/zoom a selected photo before upload -->
+<div id="avatar-crop-modal">
+  <div id="avatar-crop-box">
+    <div class="challenge-modal-title" style="text-align:center;margin-bottom:16px;">Reposition Photo</div>
+    <div id="avatar-crop-viewport">
+      <img id="avatar-crop-img" draggable="false" alt="" />
+    </div>
+    <div id="avatar-crop-hint">Drag to reposition &middot; Pinch to zoom in/out</div>
+    <div style="display:flex;gap:8px;margin-top:16px;">
+      <button id="avatar-crop-cancel" class="acct-signout-btn" style="flex:1;">Cancel</button>
+      <button id="avatar-crop-save" class="acct-btn" style="flex:1;margin-top:0;">Use Photo</button>
+    </div>
+  </div>
+</div>
+
+<!-- Avatar Preset Picker -->
+<div id="avatar-preset-modal">
+  <div id="avatar-preset-box">
+    <div class="challenge-modal-header">
+      <div class="challenge-modal-title">Choose a Preset</div>
+      <button class="challenge-modal-close" id="avatar-preset-close">✕</button>
+    </div>
+    <div id="avatar-preset-grid"></div>
+  </div>
 </div>
 
 <!-- Weekly Overview Overlay -->
@@ -4911,7 +5621,7 @@
 <div id="custom-prompt">
   <div id="custom-prompt-box">
     <div id="custom-prompt-msg"></div>
-    <input id="custom-prompt-input" type="text" autocomplete="off" />
+    <input id="custom-prompt-input" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" />
     <div id="custom-prompt-actions">
       <button id="custom-prompt-cancel">Cancel</button>
       <button id="custom-prompt-ok">Save</button>
@@ -4941,6 +5651,13 @@
       var style = window.getComputedStyle(el);
       var overflow = style.overflow + style.overflowY;
       if (overflow.includes('auto') || overflow.includes('scroll')) return;
+      // The avatar crop viewport handles its own drag-to-pan gesture via
+      // Pointer Events (touch-action: none) — this global handler must not
+      // preventDefault there or dragging never registers.
+      if (el.id === 'avatar-crop-viewport') return;
+      // Native range sliders drag their thumb via the same touch pipeline —
+      // preventDefault here swallows that gesture too, on any slider in the app.
+      if (el.tagName === 'INPUT' && el.type === 'range') return;
       el = el.parentElement;
     }
     e.preventDefault();
@@ -4962,6 +5679,27 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { SHELL, SHELL_REFERENCE_HEIGHT, syncHuggingAuraUniforms, setModelGroundY, setTargetHeight } from './Aura/toon-outline-code.js';
 import { shellUniforms, shellMaterial, shellMeshes } from './Aura/toon-outline-apply.js';
 import { EXTENDED_REST_STAGE_1_SEC, EXTENDED_REST_STAGE_2_SEC, EXTENDED_REST_STAGE_3_SEC, EXTENDED_REST_ASK_SEC } from './extended-rest-notifications.js';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.110.8';
+
+// ═══════════════════════════════════════════════════════════
+// CLOUD (Supabase) — auth + profile sync
+// ═══════════════════════════════════════════════════════════
+const SUPABASE_URL = 'https://wuboizuqyucvioexgkwh.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_r5VhU8EDB5N8F0rV8SpGMQ_Gms-6tkT';
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+let cloudSession = null;      // current Supabase auth session, or null when signed out
+let friendshipsChannel = null; // Realtime subscription for live friend request/accept updates
+let challengesChannel = null;  // Realtime subscription for live challenge invite/join updates
+let challengeMessagesChannel = null; // Realtime subscription for the currently-open challenge's chat
+let currentChallengeId = null; // challenge shown in #challenge-detail-modal, or null
+let challengeNewFriend = null;    // { id, username } chosen in the New Challenge modal
+let challengeNewExercise = null;  // { name, muscle } chosen in the New Challenge modal
+let challengeJoinExercise = null; // { name, muscle } chosen when joining an invited challenge
+let challengeCreatorExerciseInfo = null; // { name, muscle, meta } — the creator's exercise, for "+ Add New Exercise" to copy settings from
+let challengeExercisePickerReturnModal = null; // id of the challenge modal to reopen when the shared exercise picker closes
+let myAvatarUrl = null; // current user's profile picture URL, or null
+let cloudSyncTimer = null;    // debounce handle for pushing state to the cloud
+let suppressNextCloudPush = false; // set while pulling cloud state into local state
 
 // ═══════════════════════════════════════════════════════════
 // SOUND EFFECTS
@@ -5205,7 +5943,18 @@ const SOUND_HANDLED_BUTTON_SELECTORS = [
   '#ex-popup-close', '#ex-detail-close', '#cancel-btn', '#template-picker-close',
   '#tpl-cancel-btn', '#focus-picker-close', '#avatar-close-btn', '#goals-close-btn',
   '#override-close-btn', '#weekly-overview-close-btn', '#custom-prompt-cancel',
-  '#pr-edit-close',
+  '#pr-edit-close', '#profile-menu-close-btn',
+  '#friends-overlay-close-btn',  // delete
+  '#challenges-overlay-close-btn', // delete
+  '#summary-done-btn',           // workoutComplete
+  '#exposure-timer-toggle',      // commonButton (explicit)
+  '#exposure-timer-close',       // commonButton / delete (explicit)
+  '#avatar-room-btn',            // commonButton (explicit)
+  '#profile-menu-btn',           // commonButton (explicit)
+  '#friends-btn',                // commonButton (explicit)
+  '#challenges-btn',             // commonButton (explicit)
+  '#prestart-start',             // sessionStart (via openTrain())
+  '.exposure-timer-btn',         // commonButton (explicit)
 ];
 
 document.addEventListener('click', (e) => {
@@ -5336,7 +6085,8 @@ function defaultState() {
     repPRs: {},
     exposurePRs: {},
     cablePulleys: {},
-    exerciseMeta: {}
+    exerciseMeta: {},
+    goals: {}
   };
 }
 
@@ -5364,6 +6114,12 @@ function loadState() {
     if (!s.cablePulleys) s.cablePulleys = {};
     if (!s.exerciseMeta) s.exerciseMeta = {};
     if (!s.exposurePRs) s.exposurePRs = {};
+    if (!s.goals) {
+      // Migrate goals from their old standalone localStorage key (pre-cloud-sync)
+      // into state.goals so they travel with the rest of the synced data.
+      try { s.goals = JSON.parse(localStorage.getItem('trainhard_goals') || '{}'); }
+      catch { s.goals = {}; }
+    }
     // Remove auto-generated placeholder exercises (e.g. "Chest Exercise")
     if (s.exercises) {
       for (const m of MUSCLES) {
@@ -5396,7 +6152,1097 @@ function loadState() {
 
 function save() {
   localStorage.setItem('trainhard_v1', JSON.stringify(state));
+  queueCloudPush();
 }
+
+// Push the local state to Supabase a moment after the last edit, so rapid
+// successive saves (e.g. logging several sets in a row) collapse into one
+// network write instead of one per save().
+function queueCloudPush() {
+  if (!cloudSession || suppressNextCloudPush) return;
+  clearTimeout(cloudSyncTimer);
+  cloudSyncTimer = setTimeout(async () => {
+    const { error } = await supabase
+      .from('profiles')
+      .update({ state })
+      .eq('id', cloudSession.user.id);
+    if (!error) recordSyncSuccess();
+    setSyncStatus(error ? 'Sync failed — will retry on next change' : 'Synced just now');
+  }, 1500);
+}
+
+function setSyncStatus(text) {
+  const el = document.getElementById('acct-sync-status');
+  if (el) el.textContent = text;
+}
+
+// Tracks the last confirmed successful sync (push or pull) so the account
+// view can show "Last synced <time>" even after the "Synced just now"
+// message has become stale.
+function recordSyncSuccess() {
+  localStorage.setItem('trainhard_last_synced_at', new Date().toISOString());
+  renderLastSyncedTime();
+}
+
+function renderLastSyncedTime() {
+  const el = document.getElementById('acct-last-synced');
+  if (!el) return;
+  const iso = localStorage.getItem('trainhard_last_synced_at');
+  el.textContent = iso
+    ? 'Last synced ' + new Date(iso).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
+    : '';
+}
+
+// Pull the cloud profile down and make it the local state. Called right
+// after sign-in — the cloud copy (if any) wins over whatever is in
+// localStorage on this device.
+async function pullCloudState(userId) {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('username, state')
+    .eq('id', userId)
+    .single();
+  if (error || !data) return;
+  suppressNextCloudPush = true;
+  if (data.state && Object.keys(data.state).length > 0) {
+    state = { ...defaultState(), ...data.state };
+  } else {
+    // First login on any device: seed the cloud with whatever's local.
+    await supabase.from('profiles').update({ state }).eq('id', userId);
+  }
+  localStorage.setItem('trainhard_v1', JSON.stringify(state));
+  recordSyncSuccess();
+  recalcStats();
+  renderExercises();
+  renderHistory();
+  suppressNextCloudPush = false;
+}
+
+async function refreshAccountView() {
+  const { data: { session } } = await supabase.auth.getSession();
+  cloudSession = session;
+  const signedOut = document.getElementById('acct-signedout');
+  const signedIn = document.getElementById('acct-signedin');
+  if (session) {
+    signedOut.style.display = 'none';
+    signedIn.style.display = 'block';
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('username, avatar_url')
+      .eq('id', session.user.id)
+      .single();
+    document.getElementById('acct-username-display').textContent = profile ? profile.username : '';
+    myAvatarUrl = profile ? profile.avatar_url : null;
+    document.getElementById('acct-email-display').textContent = session.user.email || '';
+    setSyncStatus('Synced');
+    renderLastSyncedTime();
+  } else {
+    signedOut.style.display = 'block';
+    signedIn.style.display = 'none';
+    myAvatarUrl = null;
+  }
+}
+
+function showAcctError(id, message) {
+  const el = document.getElementById(id);
+  el.textContent = message;
+  el.classList.toggle('show', !!message);
+}
+
+document.getElementById('acct-show-signup-btn').addEventListener('click', () => {
+  document.getElementById('acct-login-form').style.display = 'none';
+  document.getElementById('acct-signup-form').style.display = 'block';
+});
+document.getElementById('acct-show-login-btn').addEventListener('click', () => {
+  document.getElementById('acct-signup-form').style.display = 'none';
+  document.getElementById('acct-login-form').style.display = 'block';
+});
+
+document.getElementById('acct-login-btn').addEventListener('click', async () => {
+  showAcctError('acct-login-error', '');
+  const email = document.getElementById('acct-login-email').value.trim();
+  const password = document.getElementById('acct-login-password').value;
+  if (!email || !password) { showAcctError('acct-login-error', 'Enter your email and password.'); return; }
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error) { showAcctError('acct-login-error', error.message); return; }
+  cloudSession = data.session;
+  await pullCloudState(data.session.user.id);
+  subscribeFriendshipUpdates();
+  subscribeChallengeUpdates();
+  await refreshAccountView();
+});
+
+// Usernames are compared purely by lowercase text ("test1" and "TEST1"
+// collide) and can't contain spaces at all — strip them as the user types
+// so what they see matches what actually gets saved.
+document.getElementById('acct-signup-username').addEventListener('input', (e) => {
+  e.target.value = e.target.value.replace(/\s+/g, '');
+});
+
+document.getElementById('acct-signup-btn').addEventListener('click', async () => {
+  showAcctError('acct-signup-error', '');
+  const username = document.getElementById('acct-signup-username').value.trim().replace(/\s+/g, '');
+  const email = document.getElementById('acct-signup-email').value.trim();
+  const password = document.getElementById('acct-signup-password').value;
+  if (!username || !email || !password) { showAcctError('acct-signup-error', 'Fill in all fields.'); return; }
+  if (password.length < 6) { showAcctError('acct-signup-error', 'Password must be at least 6 characters.'); return; }
+  const { data: takenBy } = await supabase.rpc('find_profile_by_username', { search: username });
+  if (takenBy && takenBy.length) { showAcctError('acct-signup-error', 'That username is already taken.'); return; }
+  const { data, error } = await supabase.auth.signUp({
+    email, password,
+    options: { data: { username } }
+  });
+  if (error) {
+    showAcctError('acct-signup-error', error.message.includes('duplicate key') ? 'That username is already taken.' : error.message);
+    return;
+  }
+  if (!data.session) {
+    // Email confirmation is required before a session exists.
+    showAcctError('acct-signup-error', 'Check your email to confirm your account, then log in.');
+    document.getElementById('acct-signup-form').style.display = 'none';
+    document.getElementById('acct-login-form').style.display = 'block';
+    return;
+  }
+  cloudSession = data.session;
+  await pullCloudState(data.session.user.id);
+  subscribeFriendshipUpdates();
+  subscribeChallengeUpdates();
+  await refreshAccountView();
+});
+
+document.getElementById('avatar-username-edit-btn').addEventListener('click', async () => {
+  if (!cloudSession) return;
+  showAcctError('avatar-username-error', '');
+  const current = document.getElementById('acct-username-display').textContent || '';
+  const raw = await customPrompt('Enter a new username:', 'Username', current);
+  if (!raw) return;
+  const next = raw.replace(/\s+/g, '');
+  if (!next || next === current) return;
+  if (next.toLowerCase() === current.toLowerCase()) {
+    // Case-only change (e.g. "Bob" -> "bob") — no availability conflict with self.
+  } else {
+    const { data: found } = await supabase.rpc('find_profile_by_username', { search: next });
+    if (found && found.length && found[0].id !== cloudSession.user.id) {
+      showAcctError('avatar-username-error', 'That username is already taken.');
+      return;
+    }
+  }
+  const { error } = await supabase.from('profiles').update({ username: next }).eq('id', cloudSession.user.id);
+  if (error) {
+    showAcctError('avatar-username-error', error.code === '23505' ? 'That username is already taken.' : error.message);
+    return;
+  }
+  document.getElementById('acct-username-display').textContent = next;
+  document.getElementById('avatar-username-value').textContent = next;
+});
+
+// Downloads the current local state blob as a JSON file, so a user can keep
+// their own copy before signing out (or any time) instead of only trusting
+// the cloud copy.
+function downloadLocalBackup() {
+  const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `trainhard-backup-${new Date().toISOString().slice(0, 10)}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function closeSignoutMenu() {
+  document.getElementById('signout-menu').classList.remove('open');
+}
+
+document.getElementById('acct-signout-btn').addEventListener('click', () => {
+  document.getElementById('signout-menu').classList.add('open');
+});
+document.getElementById('signout-download-btn').addEventListener('click', downloadLocalBackup);
+document.getElementById('signout-menu-cancel-btn').addEventListener('click', closeSignoutMenu);
+document.getElementById('signout-menu').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('signout-menu')) closeSignoutMenu();
+});
+
+document.getElementById('signout-confirm-btn').addEventListener('click', async () => {
+  closeSignoutMenu();
+  const ok = await customConfirm('Sign out? Your data is safely stored in your account, but it will be cleared from this device.', 'Sign Out', 'Cancel');
+  if (!ok) return;
+  await supabase.auth.signOut();
+  cloudSession = null;
+  unsubscribeFriendshipUpdates();
+  unsubscribeChallengeUpdates();
+  if (challengeMessagesChannel) { supabase.removeChannel(challengeMessagesChannel); challengeMessagesChannel = null; }
+  document.getElementById('challenge-detail-modal').classList.remove('open');
+  currentChallengeId = null;
+  suppressNextCloudPush = true;
+  state = defaultState();
+  localStorage.removeItem('trainhard_v1');
+  recalcStats();
+  renderExercises();
+  renderHistory();
+  suppressNextCloudPush = false;
+  await refreshAccountView();
+});
+
+// Restore an existing session on page load (Supabase persists it in
+// localStorage under its own key) so returning users don't have to log in
+// every visit, and pull down whatever's newest in the cloud.
+supabase.auth.getSession().then(async ({ data: { session } }) => {
+  if (!session) return;
+  cloudSession = session;
+  pullCloudState(session.user.id);
+  subscribeFriendshipUpdates();
+  subscribeChallengeUpdates();
+  await refreshAccountView();
+});
+
+// ═══════════════════════════════════════════════════════════
+// FRIENDS
+// ═══════════════════════════════════════════════════════════
+
+// Live-updates the friends UI on request sent/accepted/removed, so neither
+// side has to leave and re-open Account & Friends to see a change. Realtime
+// still enforces the friendships RLS policies, so each connection only
+// receives events for rows that user is already allowed to see.
+function subscribeFriendshipUpdates() {
+  if (friendshipsChannel) return;
+  friendshipsChannel = supabase
+    .channel('friendships-changes')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'friendships' }, () => {
+      refreshFriends();
+    })
+    .subscribe();
+}
+
+function unsubscribeFriendshipUpdates() {
+  if (friendshipsChannel) {
+    supabase.removeChannel(friendshipsChannel);
+    friendshipsChannel = null;
+  }
+}
+
+async function refreshFriends() {
+  if (!cloudSession) return;
+  const uid = cloudSession.user.id;
+  const { data: rows, error } = await supabase
+    .from('friendships')
+    .select('id, requester_id, addressee_id, status, requester_username, addressee_username, updated_at')
+    .or(`requester_id.eq.${uid},addressee_id.eq.${uid}`);
+  if (error) { console.error(error); return; }
+
+  const incoming = rows.filter(r => r.status === 'pending' && r.addressee_id === uid);
+  const outgoing = rows.filter(r => r.status === 'pending' && r.requester_id === uid);
+  const accepted = rows.filter(r => r.status === 'accepted');
+
+  const otherUsername = r => r.requester_id === uid ? r.addressee_username : r.requester_username;
+
+  const reqLabel = document.getElementById('friend-requests-label');
+  const reqList = document.getElementById('friend-requests-list');
+  reqList.innerHTML = '';
+  reqLabel.style.display = (incoming.length || outgoing.length) ? 'block' : 'none';
+
+  for (const r of incoming) {
+    const row = document.createElement('div');
+    row.className = 'friend-row';
+    row.innerHTML = `
+      <div><div class="friend-row-name">${escapeHtml(otherUsername(r))}</div><div class="friend-row-sub">wants to be friends</div></div>
+      <div class="friend-row-actions">
+        <button class="friend-row-btn friend-row-btn-accept" data-id="${r.id}" data-action="accept">Accept</button>
+        <button class="friend-row-btn friend-row-btn-decline" data-id="${r.id}" data-action="decline">Decline</button>
+      </div>`;
+    reqList.appendChild(row);
+  }
+  for (const r of outgoing) {
+    const row = document.createElement('div');
+    row.className = 'friend-row';
+    row.innerHTML = `
+      <div><div class="friend-row-name">${escapeHtml(otherUsername(r))}</div><div class="friend-row-sub">request sent</div></div>
+      <div class="friend-row-actions">
+        <button class="friend-row-btn friend-row-btn-decline" data-id="${r.id}" data-action="cancel">Cancel</button>
+      </div>`;
+    reqList.appendChild(row);
+  }
+
+  const friendsList = document.getElementById('friends-list');
+  friendsList.innerHTML = '';
+  if (!accepted.length) {
+    friendsList.innerHTML = '<div class="friend-empty">No friends yet — add one above.</div>';
+  }
+
+  const friendIds = accepted.map(r => r.requester_id === uid ? r.addressee_id : r.requester_id);
+  let avatarsById = {}, statesById = {}, nicknamesById = {};
+  if (friendIds.length) {
+    const { data: profs } = await supabase.from('profiles').select('id, avatar_url, state').in('id', friendIds);
+    (profs || []).forEach(p => { avatarsById[p.id] = p.avatar_url; statesById[p.id] = p.state || {}; });
+    const { data: nicks } = await supabase.from('friend_nicknames').select('friend_id, nickname').eq('user_id', uid);
+    (nicks || []).forEach(n => { nicknamesById[n.friend_id] = n.nickname; });
+  }
+
+  for (const r of accepted) {
+    const friendId = r.requester_id === uid ? r.addressee_id : r.requester_id;
+    const username = otherUsername(r);
+    const nickname = nicknamesById[friendId];
+    const displayName = nickname ? `${username} (${escapeHtml(nickname)})` : escapeHtml(username);
+    const lv = computeFriendHairLevel(statesById[friendId] || {});
+    const lvColor = HAIR_COLORS[lv];
+    const row = document.createElement('div');
+    row.className = 'friend-row';
+    row.innerHTML = `
+      <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;">
+        <div class="friend-row-avatar-slot"></div>
+        <div style="min-width:0;">
+          <div class="friend-row-name clickable" data-friend-id="${friendId}" data-friend-username="${escapeHtml(username)}">${displayName}</div>
+          <div class="friend-row-sub">${friendsSinceLabel(r.updated_at)}</div>
+          <div class="friend-row-level">
+            <div class="friend-row-level-dot" style="background:${lvColor};"></div>
+            <div class="friend-row-level-text" style="color:${lvColor};">Level ${lv}</div>
+          </div>
+        </div>
+      </div>
+      <div class="friend-row-actions">
+        <button class="friend-row-edit-btn" data-id="${r.id}" data-friend-id="${friendId}" data-username="${escapeHtml(username)}" data-nickname="${escapeHtml(nickname || '')}" title="Edit">✎</button>
+      </div>`;
+    const avatarEl = document.createElement('div');
+    avatarEl.className = 'challenge-lb-avatar';
+    setLbAvatar(avatarEl, avatarsById[friendId], username);
+    row.querySelector('.friend-row-avatar-slot').replaceWith(avatarEl);
+    friendsList.appendChild(row);
+  }
+
+  reqList.querySelectorAll('button[data-action]').forEach(btn => {
+    btn.addEventListener('click', () => handleFriendshipAction(btn.dataset.id, btn.dataset.action));
+  });
+  friendsList.querySelectorAll('.friend-row-edit-btn').forEach(btn => {
+    btn.addEventListener('click', () => openFriendEditMenu(btn.dataset.id, btn.dataset.friendId, btn.dataset.username, btn.dataset.nickname));
+  });
+  friendsList.querySelectorAll('.friend-row-name.clickable').forEach(el => {
+    el.addEventListener('click', () => openFriendDetail(el.dataset.friendId, el.dataset.friendUsername));
+  });
+}
+
+let friendEditContext = null; // { friendshipId, friendId, username, nickname } for whichever menu is open
+
+function openFriendEditMenu(friendshipId, friendId, username, nickname) {
+  friendEditContext = { friendshipId, friendId, username, nickname };
+  document.getElementById('friend-edit-menu-name').textContent = username;
+  document.getElementById('friend-edit-menu').classList.add('open');
+}
+
+function closeFriendEditMenu() {
+  document.getElementById('friend-edit-menu').classList.remove('open');
+  friendEditContext = null;
+}
+
+document.getElementById('friend-edit-nickname-btn').addEventListener('click', async () => {
+  if (!friendEditContext) return;
+  const { friendId, username, nickname } = friendEditContext;
+  closeFriendEditMenu();
+  const next = await customPrompt(`Nickname for ${username}:`, username, nickname || '');
+  if (next === null) return;
+  if (next) {
+    await supabase.from('friend_nicknames').upsert({ user_id: cloudSession.user.id, friend_id: friendId, nickname: next });
+  } else {
+    await supabase.from('friend_nicknames').delete().eq('user_id', cloudSession.user.id).eq('friend_id', friendId);
+  }
+  refreshFriends();
+});
+
+document.getElementById('friend-edit-remove-btn').addEventListener('click', async () => {
+  if (!friendEditContext) return;
+  const { friendshipId, username } = friendEditContext;
+  closeFriendEditMenu();
+  await handleFriendshipAction(friendshipId, 'remove', username);
+});
+
+document.getElementById('friend-edit-cancel-btn').addEventListener('click', closeFriendEditMenu);
+document.getElementById('friend-edit-menu').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('friend-edit-menu')) closeFriendEditMenu();
+});
+
+// Friendships don't have a dedicated "accepted at" column — `updated_at` is
+// set by set_updated_at() on every UPDATE, and the only UPDATE a friendship
+// row ever gets is the accept action, so it doubles as the accept timestamp.
+function friendsSinceLabel(updatedAt) {
+  if (!updatedAt) return '';
+  const days = Math.floor((Date.now() - new Date(updatedAt).getTime()) / 86400000);
+  if (days <= 0) return 'Friends since today';
+  if (days === 1) return 'Friends for 1 day';
+  return `Friends for ${days} days`;
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+}
+
+async function handleFriendshipAction(id, action, username) {
+  if (action === 'accept') {
+    await supabase.from('friendships').update({ status: 'accepted' }).eq('id', id);
+  } else if (action === 'remove') {
+    const ok = await customConfirm(`Remove ${username || 'this friend'}? You'll need to send a new request to become friends again.`, 'Remove', 'Cancel');
+    if (!ok) return;
+    await supabase.from('friendships').delete().eq('id', id);
+  } else if (action === 'decline' || action === 'cancel') {
+    await supabase.from('friendships').delete().eq('id', id);
+  }
+  refreshFriends();
+}
+
+document.getElementById('friend-add-btn').addEventListener('click', async () => {
+  showAcctError('friend-add-error', '');
+  const input = document.getElementById('friend-search-input');
+  const username = input.value.trim();
+  if (!username) return;
+  if (username.toLowerCase() === document.getElementById('acct-username-display').textContent.toLowerCase()) {
+    showAcctError('friend-add-error', "That's your own username.");
+    return;
+  }
+  const { data: found, error: findError } = await supabase.rpc('find_profile_by_username', { search: username });
+  if (findError || !found || !found.length) {
+    showAcctError('friend-add-error', 'No user found with that username.');
+    return;
+  }
+  const targetId = found[0].id;
+  const { error: insertError } = await supabase
+    .from('friendships')
+    .insert({ requester_id: cloudSession.user.id, addressee_id: targetId });
+  if (insertError) {
+    showAcctError('friend-add-error', insertError.code === '23505' ? 'You already have a request or friendship with this user.' : insertError.message);
+    return;
+  }
+  input.value = '';
+  refreshFriends();
+});
+
+// ── Friend detail (read-only muscle levels) ──
+function computeFriendLevel(muscle, friendState) {
+  const goals = friendState.goals || {};
+  const goalVal = parseInt(goals[muscle]);
+  const goal = (!isNaN(goalVal) && goalVal >= 5) ? goalVal : 15;
+  const s = (friendState.weeklySets && friendState.weeklySets[muscle]) || 0;
+  if (s >= goal) return 5;
+  const step = goal / 4;
+  if (s >= Math.floor(step * 3)) return 4;
+  if (s >= Math.floor(step * 2)) return 3;
+  if (s >= Math.floor(step * 1)) return 2;
+  return 1;
+}
+
+// Mirrors getHairLevel()'s "every muscle must reach this level" rule, but
+// against an explicit friend-state object instead of the global state.
+function computeFriendHairLevel(friendState) {
+  const levels = MUSCLES.map(m => computeFriendLevel(m, friendState));
+  if (levels.every(l => l >= 5)) return 5;
+  if (levels.every(l => l >= 4)) return 4;
+  if (levels.every(l => l >= 3)) return 3;
+  if (levels.every(l => l >= 2)) return 2;
+  return 1;
+}
+
+const HAIR_LEVEL_BADGES = { 1: 'Base Form', 2: 'Super Saiyan', 3: 'Super Saiyan God', 4: 'Super Saiyan Blue', 5: 'Ultra Ego' };
+
+async function openFriendDetail(friendId, username) {
+  document.getElementById('friend-detail-name').textContent = username;
+  setLbAvatar(document.getElementById('friend-detail-avatar'), null, username);
+  const body = document.getElementById('friend-detail-body');
+  body.innerHTML = '<div class="friend-empty">Loading…</div>';
+  document.getElementById('friend-detail-modal').classList.add('open');
+
+  const { data: profile, error } = await supabase
+    .from('profiles')
+    .select('state, avatar_url')
+    .eq('id', friendId)
+    .single();
+  if (error || !profile) {
+    body.innerHTML = '<div class="friend-empty">Could not load this friend\'s data.</div>';
+    return;
+  }
+  setLbAvatar(document.getElementById('friend-detail-avatar'), profile.avatar_url, username);
+  const friendState = profile.state || {};
+  const lv = computeFriendHairLevel(friendState);
+  const color = HAIR_COLORS[lv];
+  body.innerHTML = `
+    <div class="friend-level-display">
+      <div class="friend-level-dot" style="background:${color};box-shadow:0 0 16px ${color};"></div>
+      <div class="friend-level-num" style="color:${color};">Level ${lv}</div>
+      <div class="friend-level-badge">${HAIR_LEVEL_BADGES[lv]}</div>
+    </div>`;
+}
+
+document.getElementById('friend-detail-close').addEventListener('click', () => {
+  document.getElementById('friend-detail-modal').classList.remove('open');
+});
+
+// ═══════════════════════════════════════════════════════════
+// CHALLENGES
+// ═══════════════════════════════════════════════════════════
+
+function subscribeChallengeUpdates() {
+  if (challengesChannel) return;
+  challengesChannel = supabase
+    .channel('challenges-changes')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'challenges' }, () => refreshChallenges())
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'challenge_participants' }, () => refreshChallenges())
+    .subscribe();
+}
+
+function unsubscribeChallengeUpdates() {
+  if (challengesChannel) {
+    supabase.removeChannel(challengesChannel);
+    challengesChannel = null;
+  }
+}
+
+// Reuses the app's existing muscle-grid → exercise-list picker (the same one
+// Train/History/Templates use) instead of a separate exercise chooser, so
+// picking an exercise for a challenge looks and behaves identically.
+function openExercisePickerForChallenge(callback) {
+  const picker = document.getElementById('picker');
+  picker._histMode = false;
+  picker._tplMode = false;
+  picker._challengeMode = true;
+  picker._challengeCallback = callback;
+  document.getElementById('picker-heading').textContent = 'Select Exercise';
+  openPicker();
+}
+
+async function getAcceptedFriends() {
+  const uid = cloudSession.user.id;
+  const { data: rows } = await supabase
+    .from('friendships')
+    .select('requester_id, addressee_id, requester_username, addressee_username, status')
+    .or(`requester_id.eq.${uid},addressee_id.eq.${uid}`)
+    .eq('status', 'accepted');
+  return (rows || []).map(r => ({
+    id: r.requester_id === uid ? r.addressee_id : r.requester_id,
+    username: r.requester_id === uid ? r.addressee_username : r.requester_username
+  }));
+}
+
+let challengeFriendPickerFriends = [];
+let challengeFriendPickerCallback = null;
+
+function renderChallengeFriendPickerList(filter) {
+  const q = (filter || '').trim().toLowerCase();
+  const list = document.getElementById('challenge-friend-picker-list');
+  const friends = challengeFriendPickerFriends.filter(f => !q || f.username.toLowerCase().includes(q));
+  list.innerHTML = '';
+  if (!friends.length) {
+    list.innerHTML = `<div class="friend-empty">${challengeFriendPickerFriends.length ? 'No matches' : 'No friends yet — add one first'}</div>`;
+    return;
+  }
+  for (const f of friends) {
+    const row = document.createElement('div');
+    row.className = 'friend-row';
+    row.innerHTML = `<div class="friend-row-name clickable">${escapeHtml(f.username)}</div>`;
+    row.addEventListener('click', () => {
+      document.getElementById('challenge-friend-picker').classList.remove('open');
+      if (challengeFriendPickerCallback) challengeFriendPickerCallback(f);
+    });
+    list.appendChild(row);
+  }
+}
+
+async function openFriendPickerForChallenge(callback) {
+  challengeFriendPickerCallback = callback;
+  const search = document.getElementById('challenge-friend-picker-search');
+  search.value = '';
+  const list = document.getElementById('challenge-friend-picker-list');
+  list.innerHTML = '<div class="friend-empty">Loading…</div>';
+  document.getElementById('challenge-friend-picker').classList.add('open');
+  challengeFriendPickerFriends = await getAcceptedFriends();
+  renderChallengeFriendPickerList('');
+}
+
+document.getElementById('challenge-friend-picker-search').addEventListener('input', e => {
+  renderChallengeFriendPickerList(e.target.value);
+});
+function cancelChallengeFriendPicker() {
+  document.getElementById('challenge-friend-picker').classList.remove('open');
+  document.getElementById('challenge-new-modal').classList.add('open');
+}
+document.getElementById('challenge-friend-picker-close').addEventListener('click', cancelChallengeFriendPicker);
+document.getElementById('challenge-friend-picker').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('challenge-friend-picker')) cancelChallengeFriendPicker();
+});
+
+async function refreshChallenges() {
+  if (!cloudSession) return;
+  const uid = cloudSession.user.id;
+  const { data: rows, error } = await supabase
+    .from('challenges')
+    .select('*, challenge_participants(*)')
+    .order('created_at', { ascending: false });
+  if (error) { console.error(error); return; }
+
+  const list = document.getElementById('challenges-list');
+  list.innerHTML = '';
+  if (!rows || !rows.length) {
+    list.innerHTML = '<div class="friend-empty">No challenges yet.</div>';
+    return;
+  }
+  for (const c of rows) {
+    const me = c.challenge_participants.find(p => p.user_id === uid);
+    const others = c.challenge_participants.filter(p => p.user_id !== uid);
+    const otherNames = others.map(p => p.username).join(', ') || '—';
+
+    let badge = 'Active';
+    if (me && me.status === 'invited') {
+      badge = 'Invite Pending';
+    } else {
+      const end = new Date(c.start_date + 'T00:00:00');
+      end.setDate(end.getDate() + c.duration_weeks * 7);
+      if (new Date() > end) badge = 'Completed';
+    }
+
+    const row = document.createElement('div');
+    row.className = 'challenge-row';
+    row.innerHTML = `
+      <div class="challenge-row-title">${escapeHtml(c.title)}<span class="challenge-row-badge">${badge}</span></div>
+      <div class="challenge-row-sub">vs ${escapeHtml(otherNames)} &middot; ${c.duration_weeks} weeks</div>`;
+    row.addEventListener('click', () => openChallengeDetail(c.id));
+    list.appendChild(row);
+  }
+}
+
+document.getElementById('challenge-new-btn').addEventListener('click', () => {
+  showAcctError('challenge-new-error', '');
+  challengeTypeWheel.setIndex(0, false);
+  challengeNewType = CHALLENGE_TYPES[0];
+  document.getElementById('challenge-new-fields').style.display = 'block';
+  document.getElementById('challenge-new-title').value = '';
+  document.getElementById('challenge-new-description').value = '';
+  document.getElementById('challenge-new-weeks').value = 6;
+  challengeNewFriend = null;
+  challengeNewExercise = null;
+  const friendLabel = document.getElementById('challenge-new-friend-label');
+  friendLabel.textContent = 'Select a friend';
+  friendLabel.classList.add('select-row-placeholder');
+  const exLabel = document.getElementById('challenge-new-exercise-label');
+  exLabel.textContent = 'Select an exercise';
+  exLabel.classList.add('select-row-placeholder');
+  document.getElementById('challenge-new-modal').classList.add('open');
+});
+
+document.getElementById('challenge-new-friend-btn').addEventListener('click', () => {
+  document.getElementById('challenge-new-modal').classList.remove('open');
+  openFriendPickerForChallenge(f => {
+    challengeNewFriend = f;
+    const label = document.getElementById('challenge-new-friend-label');
+    label.textContent = f.username;
+    label.classList.remove('select-row-placeholder');
+    document.getElementById('challenge-new-modal').classList.add('open');
+  });
+});
+
+document.getElementById('challenge-new-exercise-btn').addEventListener('click', () => {
+  document.getElementById('challenge-new-modal').classList.remove('open');
+  challengeExercisePickerReturnModal = 'challenge-new-modal';
+  openExercisePickerForChallenge((ex, muscle) => {
+    challengeNewExercise = { name: ex, muscle };
+    const label = document.getElementById('challenge-new-exercise-label');
+    label.textContent = exerciseLabelWithCategory(ex, state.exerciseMeta);
+    label.classList.remove('select-row-placeholder');
+    document.getElementById('challenge-new-modal').classList.add('open');
+  });
+});
+
+document.getElementById('challenge-new-close').addEventListener('click', () => {
+  document.getElementById('challenge-new-modal').classList.remove('open');
+});
+
+document.getElementById('challenge-new-create-btn').addEventListener('click', async () => {
+  showAcctError('challenge-new-error', '');
+  const weeks = Math.min(52, Math.max(1, parseInt(document.getElementById('challenge-new-weeks').value) || 6));
+  const description = document.getElementById('challenge-new-description').value.trim();
+  let title = document.getElementById('challenge-new-title').value.trim();
+  if (!challengeNewFriend) { showAcctError('challenge-new-error', 'Pick a friend.'); return; }
+  if (!challengeNewExercise) { showAcctError('challenge-new-error', 'Pick the exercise you want to track.'); return; }
+  if (!title) title = `${challengeNewExercise.name} — ${weeks} Week Challenge`;
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) { showAcctError('challenge-new-error', 'Your session expired — sign in again.'); return; }
+
+  const startDate = new Date().toISOString().slice(0, 10);
+  const { data: challenge, error: cErr } = await supabase
+    .from('challenges')
+    .insert({ creator_id: user.id, title, description: description || null, duration_weeks: weeks, start_date: startDate })
+    .select()
+    .single();
+  if (cErr || !challenge) {
+    let msg = cErr ? cErr.message : 'Could not create challenge.';
+    const { data: who } = await supabase.rpc('debug_whoami');
+    if (who && who[0]) msg += ` [debug: uid=${who[0].uid || 'null'} role=${who[0].role || 'null'}]`;
+    showAcctError('challenge-new-error', msg);
+    return;
+  }
+
+  await supabase.from('challenge_participants')
+    .update({ exercise_name: challengeNewExercise.name })
+    .eq('challenge_id', challenge.id)
+    .eq('user_id', cloudSession.user.id);
+
+  const { error: pErr } = await supabase.from('challenge_participants')
+    .insert({ challenge_id: challenge.id, user_id: challengeNewFriend.id, status: 'invited' });
+  if (pErr) { showAcctError('challenge-new-error', pErr.message); return; }
+
+  document.getElementById('challenge-new-modal').classList.remove('open');
+  refreshChallenges();
+});
+
+// Mirrors getLevel()'s Epley-based E1RM logic but reads an explicit
+// participant state object (self or a friend's synced `state`) instead of
+// the global `state`, and scopes to history on/after the challenge start.
+function computeChallengeProgress(pState, exerciseName, startDateISO) {
+  const result = { timesTrained: 0, thisWeekCount: 0, baseline: null, current: null, changePct: null };
+  if (!exerciseName || !pState) return result;
+  const startDate = new Date(startDateISO + 'T00:00:00');
+  const monday = getMondayStr();
+  const entries = [];
+  for (const w of (pState.history || [])) {
+    if (!w.date || !w.exercises) continue;
+    const d = _parseDateStr(w.date);
+    if (!d || d < startDate) continue;
+    const ex = w.exercises.find(e => e.name === exerciseName);
+    if (!ex || !ex.sets || !ex.sets.length) continue;
+    let bestSet = 0;
+    for (const s of ex.sets) {
+      const weight = parseFloat(s.weight) || 0;
+      const reps = parseInt(s.reps) || 0;
+      bestSet = Math.max(bestSet, estimate1RM(weight, reps));
+    }
+    entries.push({ date: d, e1rm: bestSet });
+    result.timesTrained++;
+    if (isThisWeek(w.date, monday)) result.thisWeekCount++;
+  }
+  if (!entries.length) return result;
+  entries.sort((a, b) => a.date - b.date);
+  result.baseline = entries[0].e1rm;
+  result.current = Math.max(...entries.map(e => e.e1rm));
+  if (result.baseline > 0) result.changePct = ((result.current - result.baseline) / result.baseline) * 100;
+  return result;
+}
+
+async function openChallengeDetail(challengeId) {
+  currentChallengeId = challengeId;
+  document.getElementById('challenge-detail-modal').classList.add('open');
+  await renderChallengeDetail();
+}
+
+async function renderChallengeDetail() {
+  const uid = cloudSession.user.id;
+  const { data: c, error } = await supabase
+    .from('challenges')
+    .select('*, challenge_participants(*)')
+    .eq('id', currentChallengeId)
+    .single();
+
+  const joinBox = document.getElementById('challenge-detail-join-box');
+  const partList = document.getElementById('challenge-participants-list');
+  const chatLog = document.getElementById('challenge-chat-log');
+  const chatRow = document.getElementById('challenge-chat-input-row');
+  const cancelBtn = document.getElementById('challenge-cancel-btn');
+
+  if (error || !c) {
+    document.getElementById('challenge-detail-title').textContent = 'Challenge';
+    document.getElementById('challenge-detail-sub').textContent = '';
+    joinBox.style.display = 'none';
+    chatLog.style.display = 'none';
+    chatRow.style.display = 'none';
+    cancelBtn.style.display = 'none';
+    document.getElementById('challenge-leader-card').style.display = 'none';
+    partList.style.display = 'block';
+    partList.innerHTML = '<div class="friend-empty">Could not load this challenge.</div>';
+    return;
+  }
+
+  cancelBtn.style.display = (c.creator_id === uid) ? 'block' : 'none';
+
+  document.getElementById('challenge-detail-title').textContent = c.title;
+  const end = new Date(c.start_date + 'T00:00:00');
+  end.setDate(end.getDate() + c.duration_weeks * 7);
+  document.getElementById('challenge-detail-sub').textContent =
+    `${c.duration_weeks} weeks · started ${c.start_date} · ends ${end.toISOString().slice(0, 10)}`;
+
+  const descEl = document.getElementById('challenge-detail-description');
+  if (c.description) {
+    descEl.textContent = c.description;
+    descEl.style.display = 'block';
+  } else {
+    descEl.style.display = 'none';
+  }
+
+  const me = c.challenge_participants.find(p => p.user_id === uid);
+
+  if (me && me.status === 'invited') {
+    joinBox.style.display = 'block';
+    partList.style.display = 'none';
+    chatLog.style.display = 'none';
+    chatRow.style.display = 'none';
+    document.getElementById('challenge-leader-card').style.display = 'none';
+    challengeJoinExercise = null;
+    const label = document.getElementById('challenge-join-exercise-label');
+    label.textContent = 'Select an exercise';
+    label.classList.add('select-row-placeholder');
+
+    // Fetch the creator's chosen exercise + its settings, so "+ Add New
+    // Exercise" can pre-fill matching category/rest-time (and a starting
+    // name) instead of a blank exercise form.
+    challengeCreatorExerciseInfo = null;
+    const creatorParticipant = c.challenge_participants.find(p => p.user_id === c.creator_id);
+    if (creatorParticipant && creatorParticipant.exercise_name) {
+      const { data: creatorProfile } = await supabase.from('profiles').select('state').eq('id', c.creator_id).single();
+      const creatorState = creatorProfile ? creatorProfile.state : null;
+      if (creatorState) {
+        const exName = creatorParticipant.exercise_name;
+        let foundMuscle = null;
+        for (const m of MUSCLES) {
+          if (((creatorState.exercises || {})[m] || []).includes(exName)) { foundMuscle = m; break; }
+        }
+        const rawMeta = ((creatorState.exerciseMeta || {})[exName]) || {};
+        // Category is baked into the name for every category except Cable
+        // Machine (which stores it in exerciseMeta instead) — split it back
+        // out here so the pre-fill below gets a clean base name plus the
+        // right category, instead of dumping "Throw - Barbell" into the name
+        // field with no category chip highlighted.
+        const { baseName, category } = splitExerciseNameCategory(exName, rawMeta);
+        challengeCreatorExerciseInfo = {
+          name: baseName,
+          muscle: foundMuscle,
+          meta: { ...rawMeta, category: category || rawMeta.category || null }
+        };
+      }
+    }
+    return;
+  }
+
+  joinBox.style.display = 'none';
+  partList.style.display = 'block';
+  chatLog.style.display = 'block';
+  chatRow.style.display = 'flex';
+
+  // Gather every joined participant's progress + avatar first, so they can
+  // be ranked (highest % change first) before anything renders — the #1
+  // spot gets the large "leader" treatment, everyone else is a compact row.
+  const ranked = [];
+  for (const p of c.challenge_participants) {
+    if (p.status !== 'joined') continue;
+    let pState, avatarUrl;
+    if (p.user_id === uid) {
+      pState = state;
+      avatarUrl = myAvatarUrl;
+    } else {
+      const { data: prof } = await supabase.from('profiles').select('state, avatar_url').eq('id', p.user_id).single();
+      pState = prof ? prof.state : {};
+      avatarUrl = prof ? prof.avatar_url : null;
+    }
+    const prog = computeChallengeProgress(pState, p.exercise_name, c.start_date);
+    ranked.push({ p, prog, avatarUrl, isMe: p.user_id === uid, pState });
+  }
+  ranked.sort((a, b) => {
+    if (a.prog.changePct === null && b.prog.changePct === null) return 0;
+    if (a.prog.changePct === null) return 1;
+    if (b.prog.changePct === null) return -1;
+    return b.prog.changePct - a.prog.changePct;
+  });
+
+  const leaderCard = document.getElementById('challenge-leader-card');
+  partList.innerHTML = '';
+
+  if (!ranked.length) {
+    leaderCard.style.display = 'none';
+    partList.innerHTML = '<div class="friend-empty">No one has joined yet.</div>';
+  } else {
+    const [leader, ...rest] = ranked;
+    leaderCard.style.display = 'flex';
+    setLbAvatar(document.getElementById('challenge-leader-avatar'), leader.avatarUrl, leader.p.username);
+    document.getElementById('challenge-leader-name').textContent = leader.p.username + (leader.isMe ? ' (you)' : '');
+    document.getElementById('challenge-leader-ex').textContent = leader.p.exercise_name
+      ? exerciseLabelWithCategory(leader.p.exercise_name, (leader.pState || {}).exerciseMeta)
+      : 'No exercise set';
+    document.getElementById('challenge-leader-stat').innerHTML = lbStatHtml(leader.prog, true);
+
+    rest.forEach((entry, i) => {
+      const row = document.createElement('div');
+      row.className = 'challenge-lb-row';
+      const avatarEl = document.createElement('div');
+      avatarEl.className = 'challenge-lb-avatar';
+      setLbAvatar(avatarEl, entry.avatarUrl, entry.p.username);
+      row.innerHTML = `
+        <div class="challenge-lb-rank">${i + 2}</div>
+        <div class="challenge-lb-avatar-slot"></div>
+        <div class="challenge-lb-info">
+          <div class="challenge-lb-name">${escapeHtml(entry.p.username)}${entry.isMe ? ' (you)' : ''}</div>
+          <div class="challenge-lb-ex-sub">${escapeHtml(entry.p.exercise_name ? exerciseLabelWithCategory(entry.p.exercise_name, (entry.pState || {}).exerciseMeta) : 'No exercise set')}</div>
+        </div>
+        <div class="challenge-lb-stat">${lbStatHtml(entry.prog, false)}</div>`;
+      row.querySelector('.challenge-lb-avatar-slot').replaceWith(avatarEl);
+      partList.appendChild(row);
+    });
+  }
+
+  await renderChallengeChat();
+  subscribeChallengeChat(currentChallengeId);
+}
+
+function setLbAvatar(el, url, username) {
+  if (url) {
+    el.style.backgroundImage = `url("${url}")`;
+    el.textContent = '';
+  } else {
+    el.style.backgroundImage = 'none';
+    el.textContent = (username || '?')[0].toUpperCase();
+  }
+}
+
+function lbStatHtml(prog, large) {
+  if (prog.changePct === null) {
+    return `<div class="challenge-lb-stat-sub">No sets logged yet</div>`;
+  }
+  const positive = prog.changePct >= 0;
+  const color = positive ? '#4ADE80' : '#F87171';
+  const sign = positive ? '+' : '';
+  const pctClass = large ? 'font-size:22px;font-weight:800;' : '';
+  return `
+    <div class="challenge-lb-stat-pct" style="color:${color};${pctClass}">${sign}${prog.changePct.toFixed(1)}%</div>
+    <div class="challenge-lb-stat-sub">${Math.round(prog.baseline)} → ${Math.round(prog.current)} lbs &middot; ${prog.thisWeekCount}x this week</div>`;
+}
+
+document.getElementById('challenge-join-exercise-btn').addEventListener('click', () => {
+  document.getElementById('challenge-detail-modal').classList.remove('open');
+  challengeExercisePickerReturnModal = 'challenge-detail-modal';
+  openExercisePickerForChallenge((ex, muscle) => {
+    challengeJoinExercise = { name: ex, muscle };
+    const label = document.getElementById('challenge-join-exercise-label');
+    label.textContent = exerciseLabelWithCategory(ex, state.exerciseMeta);
+    label.classList.remove('select-row-placeholder');
+    document.getElementById('challenge-detail-modal').classList.add('open');
+  });
+});
+
+// "+ Add New Exercise" in the join box skips the muscle/exercise picker
+// entirely and opens the new-exercise form directly, pre-filled from the
+// creator's own exercise for this challenge (category, rest time, a
+// starting name) so the joiner isn't configuring it from a blank slate.
+document.getElementById('challenge-join-new-ex-btn').addEventListener('click', () => {
+  document.getElementById('challenge-detail-modal').classList.remove('open');
+  const info = challengeCreatorExerciseInfo;
+  nexChallengeCallback = (ex, muscle) => {
+    challengeJoinExercise = { name: ex, muscle };
+    const label = document.getElementById('challenge-join-exercise-label');
+    label.textContent = exerciseLabelWithCategory(ex, state.exerciseMeta);
+    label.classList.remove('select-row-placeholder');
+    document.getElementById('challenge-detail-modal').classList.add('open');
+  };
+  nexFromPicker = null;
+  nexTplMode = false;
+  openNewExModal(info ? info.muscle : null);
+  if (info) {
+    document.getElementById('nex-name').value = info.name || '';
+    if (info.meta && info.meta.category) {
+      const cat = info.meta.category;
+      nexCategory = cat;
+      document.querySelectorAll('#nex-category .nex-chip').forEach(chip => {
+        chip.classList.toggle('selected', chip.textContent === cat);
+      });
+    }
+    if (info.meta && info.meta.restTime != null) {
+      nexRestSecs = info.meta.restTime;
+      updateNexRestDisplay();
+    }
+  }
+});
+
+document.getElementById('challenge-join-btn').addEventListener('click', async () => {
+  if (!challengeJoinExercise) return;
+  await supabase.from('challenge_participants')
+    .update({ exercise_name: challengeJoinExercise.name, status: 'joined', joined_at: new Date().toISOString() })
+    .eq('challenge_id', currentChallengeId)
+    .eq('user_id', cloudSession.user.id);
+  challengeJoinExercise = null;
+  await renderChallengeDetail();
+  refreshChallenges();
+});
+
+document.getElementById('challenge-decline-btn').addEventListener('click', async () => {
+  await supabase.from('challenge_participants')
+    .delete()
+    .eq('challenge_id', currentChallengeId)
+    .eq('user_id', cloudSession.user.id);
+  document.getElementById('challenge-detail-modal').classList.remove('open');
+  refreshChallenges();
+});
+
+document.getElementById('challenge-cancel-btn').addEventListener('click', async () => {
+  const ok = await customConfirm('Delete this challenge for everyone? This cannot be undone.', 'Delete Challenge', 'Go Back');
+  if (!ok) return;
+  // Delete children explicitly before the parent — relying on the
+  // foreign keys' ON DELETE CASCADE hits the same RLS-vs-cascade-timing
+  // issue as the challenges SELECT/RETURNING bug: the participant-removal
+  // policy checks "does the parent challenge still exist with me as
+  // creator," which fails once the parent row is already gone. Deleting
+  // in this order keeps the parent visible for that check the whole time.
+  await supabase.from('challenge_messages').delete().eq('challenge_id', currentChallengeId);
+  await supabase.from('challenge_participants').delete().eq('challenge_id', currentChallengeId);
+  const { error } = await supabase.from('challenges').delete().eq('id', currentChallengeId);
+  if (error) { console.error('Cancel challenge failed:', error); return; }
+  document.getElementById('challenge-detail-modal').classList.remove('open');
+  if (challengeMessagesChannel) { supabase.removeChannel(challengeMessagesChannel); challengeMessagesChannel = null; }
+  currentChallengeId = null;
+  refreshChallenges();
+});
+
+async function renderChallengeChat() {
+  const { data: msgs } = await supabase
+    .from('challenge_messages')
+    .select('*')
+    .eq('challenge_id', currentChallengeId)
+    .order('created_at', { ascending: true });
+  const log = document.getElementById('challenge-chat-log');
+  log.innerHTML = (msgs || []).map(m => `
+    <div class="challenge-chat-msg">
+      <div class="challenge-chat-msg-name">${escapeHtml(m.username || '')}</div>
+      <div class="challenge-chat-msg-body">${escapeHtml(m.body)}</div>
+    </div>`).join('');
+  log.scrollTop = log.scrollHeight;
+}
+
+function subscribeChallengeChat(challengeId) {
+  if (challengeMessagesChannel) {
+    supabase.removeChannel(challengeMessagesChannel);
+    challengeMessagesChannel = null;
+  }
+  challengeMessagesChannel = supabase
+    .channel('challenge-' + challengeId)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'challenge_messages', filter: `challenge_id=eq.${challengeId}` }, () => {
+      renderChallengeChat();
+    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'challenge_participants', filter: `challenge_id=eq.${challengeId}` }, () => {
+      renderChallengeDetail();
+    })
+    .subscribe();
+}
+
+async function sendChallengeMessage() {
+  const input = document.getElementById('challenge-chat-input');
+  const body = input.value.trim();
+  if (!body || !currentChallengeId) return;
+  input.value = '';
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
+  await supabase.from('challenge_messages').insert({ challenge_id: currentChallengeId, user_id: user.id, body });
+}
+
+document.getElementById('challenge-chat-send').addEventListener('click', sendChallengeMessage);
+document.getElementById('challenge-chat-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') sendChallengeMessage();
+});
+
+document.getElementById('challenge-detail-close').addEventListener('click', () => {
+  document.getElementById('challenge-detail-modal').classList.remove('open');
+  if (challengeMessagesChannel) { supabase.removeChannel(challengeMessagesChannel); challengeMessagesChannel = null; }
+  currentChallengeId = null;
+});
 
 let state = loadState();
 recalcAllPRs();
@@ -5422,7 +7268,9 @@ function getVisualViewportSize() {
 }
 
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true, stencil: true });
-renderer.setPixelRatio(devicePixelRatio);
+// Cap at 2x — beyond that, MSAA + shader cost scale up with no visible
+// benefit but real GPU load, especially on high-DPI desktop displays.
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 {
   const sz = getVisualViewportSize();
   renderer.setSize(sz.w, sz.h);
@@ -5449,7 +7297,7 @@ controls.rotateSpeed = 2.5;
 controls.minPolarAngle = Math.PI / 2;
 controls.maxPolarAngle = Math.PI / 2;
 
-let autoRotateEnabled = localStorage.getItem('trainhard_autorotate') !== 'off';
+const autoRotateEnabled = true;
 
 // ── Core Aura (the toon-outline hugging shell) — on/off + level-driven presets ──
 // One preset JSON per character level (2-5), same trigger as the hair Super
@@ -5600,11 +7448,8 @@ if (MUSCLES.includes(part)) {
 }
 
 function getGoal(muscle) {
-  try {
-    const goals = JSON.parse(localStorage.getItem('trainhard_goals') || '{}');
-    const val = parseInt(goals[muscle]);
-    return (!isNaN(val) && val >= 5) ? val : 15;
-  } catch { return 15; }
+  const val = parseInt((state.goals || {})[muscle]);
+  return (!isNaN(val) && val >= 5) ? val : 15;
 }
 
 function loadOverrides() {
@@ -5921,7 +7766,14 @@ function closePicker() {
   const picker = document.getElementById('picker');
   picker._histMode = false;
   picker._tplMode = false;
+  picker._challengeMode = false;
+  picker._challengeCallback = null;
+  document.getElementById('picker-heading').textContent = 'Add Exercise';
   picker.classList.remove('open');
+  if (challengeExercisePickerReturnModal) {
+    document.getElementById(challengeExercisePickerReturnModal).classList.add('open');
+    challengeExercisePickerReturnModal = null;
+  }
 }
 
 let prevTab = 'profile';
@@ -5943,6 +7795,7 @@ function goToTab(tab) {
   document.getElementById(tabSections[tab]).classList.add('active');
   document.getElementById('canvas-container').style.display = tab === 'profile' ? 'block' : 'none';
   document.getElementById('profile-btns').classList.toggle('visible', tab === 'profile');
+  document.getElementById('profile-btns-right').classList.toggle('visible', tab === 'profile');
   if (tab === 'history')   renderHistory();
   if (tab === 'exercises') renderExercises();
   if (tab === 'stats')     showStatsMenu();
@@ -8117,13 +9970,13 @@ function saveTemplates(tpls) {
   localStorage.setItem('trainhard_templates', JSON.stringify(tpls));
 }
 
-function customPrompt(message, placeholder) {
+function customPrompt(message, placeholder, defaultValue) {
   return new Promise(resolve => {
     const modal = document.getElementById('custom-prompt');
     const inp = document.getElementById('custom-prompt-input');
     document.getElementById('custom-prompt-msg').textContent = message;
     inp.placeholder = placeholder || '';
-    inp.value = '';
+    inp.value = defaultValue || '';
     modal.classList.add('open');
     setTimeout(() => inp.focus(), 80);
     function cleanup(val) {
@@ -9311,6 +11164,191 @@ function setExposureWheelFieldsDisabled(fields, disabled) {
   });
 }
 
+// ── Generic scroll-snap text wheel (same drag/momentum/snap feel as the
+// exposure h/m/s/temp wheels above, but for an arbitrary list of labels
+// instead of a numeric range) — used for the New Challenge type picker.
+function createTextWheel(col, items, onChange) {
+  const ITEM_H = 30;
+  col.innerHTML = '';
+  col.appendChild(Object.assign(document.createElement('div'), { className: 'ewheel-spacer' }));
+  items.forEach(label => {
+    const item = document.createElement('div');
+    item.className = 'ewheel-item';
+    item.textContent = label;
+    col.appendChild(item);
+  });
+  col.appendChild(Object.assign(document.createElement('div'), { className: 'ewheel-spacer' }));
+
+  let lastIdx = null;
+  let momentumFrame = null;
+  let settleTimer = null;
+  let rafPending = false;
+  let dragging = false;
+
+  function cancelMomentum() {
+    if (momentumFrame) { cancelAnimationFrame(momentumFrame); momentumFrame = null; }
+  }
+
+  function updateCentered(playTick = true) {
+    const idx = Math.max(0, Math.min(items.length - 1, Math.round(col.scrollTop / ITEM_H)));
+    if (lastIdx === idx) return;
+    if (lastIdx !== null) {
+      const prevEl = col.children[lastIdx + 1]; // +1 skips the leading spacer
+      if (prevEl) prevEl.classList.remove('centered');
+    }
+    const curEl = col.children[idx + 1];
+    if (curEl) curEl.classList.add('centered');
+    if (playTick && lastIdx !== null) playSound('timerWheel');
+    lastIdx = idx;
+    onChange(items[idx], idx);
+  }
+
+  function animateScrollTo(targetTop, duration) {
+    cancelMomentum();
+    const startTop = col.scrollTop;
+    const delta = targetTop - startTop;
+    if (Math.abs(delta) < 0.5) { col.scrollTop = targetTop; updateCentered(); return; }
+    const startTime = performance.now();
+    const easeOutCubic = t => 1 - Math.pow(1 - t, 3);
+    function step(now) {
+      const t = Math.min(1, (now - startTime) / duration);
+      col.scrollTop = startTop + delta * easeOutCubic(t);
+      updateCentered();
+      if (t < 1) momentumFrame = requestAnimationFrame(step);
+      else momentumFrame = null;
+    }
+    momentumFrame = requestAnimationFrame(step);
+  }
+
+  function snap() {
+    const idx = Math.round(col.scrollTop / ITEM_H);
+    const targetTop = idx * ITEM_H;
+    const dist = Math.abs(targetTop - col.scrollTop);
+    const duration = Math.min(260, Math.max(140, dist * 4));
+    animateScrollTo(targetTop, duration);
+  }
+
+  function startMomentum(velocityPxPerMs) {
+    cancelMomentum();
+    const FRICTION = 0.955;
+    const STOP_THRESHOLD = 0.2;
+    const MAX_VELOCITY = 45;
+    let velocity = Math.max(-MAX_VELOCITY, Math.min(MAX_VELOCITY, velocityPxPerMs * 16));
+    if (Math.abs(velocity) < STOP_THRESHOLD) { snap(); return; }
+    function step() {
+      velocity *= FRICTION;
+      col.scrollTop += velocity;
+      updateCentered();
+      const maxScroll = col.scrollHeight - col.clientHeight;
+      const hitEnd = col.scrollTop <= 0 || col.scrollTop >= maxScroll;
+      if (hitEnd) col.scrollTop = Math.max(0, Math.min(maxScroll, col.scrollTop));
+      if (hitEnd || Math.abs(velocity) < STOP_THRESHOLD) { momentumFrame = null; snap(); return; }
+      momentumFrame = requestAnimationFrame(step);
+    }
+    momentumFrame = requestAnimationFrame(step);
+  }
+
+  col.addEventListener('scroll', () => {
+    if (!rafPending) { rafPending = true; requestAnimationFrame(() => { updateCentered(); rafPending = false; }); }
+    if (dragging || momentumFrame) return;
+    clearTimeout(settleTimer);
+    settleTimer = setTimeout(snap, 100);
+  }, { passive: true });
+
+  // Finds the nearest scrollable ancestor (e.g. a modal card taller than the
+  // screen) so it can be locked for the duration of a drag — on real touch
+  // devices, a gesture that runs past this wheel's own scroll limit can
+  // otherwise hand off to that ancestor's native scrolling, making the whole
+  // card appear to shift/float instead of just the wheel's items.
+  function findScrollableAncestor(el) {
+    let node = el.parentElement;
+    while (node && node !== document.body) {
+      const cs = getComputedStyle(node);
+      if (cs.overflowY === 'auto' || cs.overflowY === 'scroll') return node;
+      node = node.parentElement;
+    }
+    return null;
+  }
+  let lockedAncestor = null;
+  let lockedAncestorPrevOverflow = '';
+
+  let lastY = 0;
+  const samples = [];
+  col.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    dragging = true;
+    col.classList.add('grabbing');
+    cancelMomentum();
+    clearTimeout(settleTimer);
+    col.setPointerCapture(e.pointerId);
+    lastY = e.clientY;
+    samples.length = 0;
+    samples.push({ y: e.clientY, t: performance.now() });
+    lockedAncestor = findScrollableAncestor(col);
+    if (lockedAncestor) {
+      lockedAncestorPrevOverflow = lockedAncestor.style.overflowY;
+      lockedAncestor.style.overflowY = 'hidden';
+    }
+  });
+  col.addEventListener('pointermove', (e) => {
+    if (!dragging) return;
+    e.preventDefault();
+    const y = e.clientY;
+    col.scrollTop += lastY - y;
+    lastY = y;
+    samples.push({ y, t: performance.now() });
+    if (samples.length > 6) samples.shift();
+    updateCentered();
+  });
+  function endDrag() {
+    if (!dragging) return;
+    dragging = false;
+    col.classList.remove('grabbing');
+    if (lockedAncestor) {
+      lockedAncestor.style.overflowY = lockedAncestorPrevOverflow;
+      lockedAncestor = null;
+    }
+    const now = performance.now();
+    const recent = samples.filter(s => now - s.t < 120);
+    let v = 0;
+    if (recent.length >= 2) {
+      const first = recent[0], last = recent[recent.length - 1];
+      const dt = last.t - first.t;
+      if (dt > 0) v = (first.y - last.y) / dt;
+    }
+    startMomentum(v);
+  }
+  col.addEventListener('pointerup', endDrag);
+  col.addEventListener('pointercancel', endDrag);
+
+  return {
+    setIndex(idx, playTick = false) {
+      cancelMomentum();
+      col.scrollTop = idx * ITEM_H;
+      updateCentered(playTick);
+    },
+  };
+}
+
+// 15 slots total — only "E1RM Battle" is wired up to anything yet; the rest
+// are placeholders reserving room for future challenge types.
+const CHALLENGE_TYPES = [
+  'E1RM Battle',
+  'Coming Soon 2', 'Coming Soon 3', 'Coming Soon 4', 'Coming Soon 5',
+  'Coming Soon 6', 'Coming Soon 7', 'Coming Soon 8', 'Coming Soon 9',
+  'Coming Soon 10', 'Coming Soon 11', 'Coming Soon 12', 'Coming Soon 13',
+  'Coming Soon 14', 'Coming Soon 15',
+];
+let challengeNewType = CHALLENGE_TYPES[0];
+const challengeTypeWheel = createTextWheel(
+  document.getElementById('challenge-type-wheel'),
+  CHALLENGE_TYPES,
+  (label) => {
+    challengeNewType = label;
+    document.getElementById('challenge-new-fields').style.display = label === 'E1RM Battle' ? 'block' : 'none';
+  }
+);
+
 function updateExposureTargetFieldsFromSecs() {
   if (!exposureTimerState) return;
   const total = exposureTimerState.targetSecs;
@@ -9589,6 +11627,13 @@ function openPickerExPopup(muscle) {
       } else if (picker._tplMode) {
         picker._tplMode = false;
         addTplExerciseBlock(ex, muscle);
+      } else if (picker._challengeMode) {
+        picker._challengeMode = false;
+        const cb = picker._challengeCallback;
+        picker._challengeCallback = null;
+        challengeExercisePickerReturnModal = null;
+        document.getElementById('picker-heading').textContent = 'Add Exercise';
+        if (cb) cb(ex, muscle);
       } else {
         addExerciseBlock(ex, muscle);
       }
@@ -9604,8 +11649,22 @@ function openPickerExPopup(muscle) {
     newBtn.style.display = 'block';
     newBtn.onclick = () => {
       const isTpl = picker._tplMode;
+      const isChallenge = picker._challengeMode;
+      const challengeCb = picker._challengeCallback;
       document.getElementById('picker-ex-popup').classList.remove('open');
       picker.classList.remove('open');
+      if (isChallenge) {
+        picker._challengeMode = false;
+        picker._challengeCallback = null;
+        document.getElementById('picker-heading').textContent = 'Add Exercise';
+        // The challenge modal stays closed (not reopened via closePicker's
+        // return-modal mechanism) until the new exercise is actually saved —
+        // the callback itself reopens the right modal once that happens.
+        challengeExercisePickerReturnModal = null;
+        nexChallengeCallback = challengeCb;
+      } else {
+        nexChallengeCallback = null;
+      }
       nexTplMode = isTpl;
       nexFromPicker = muscle;
       openNewExModal(muscle);
@@ -9652,10 +11711,7 @@ document.getElementById('chest-popup').addEventListener('click', (e) => {
 
 document.getElementById('picker-close').addEventListener('click', () => {
   playSound('delete');
-  const picker = document.getElementById('picker');
-  picker._histMode = false;
-  picker._tplMode = false;
-  picker.classList.remove('open');
+  closePicker();
 });
 
 document.getElementById('picker-catchup-btn').addEventListener('click', () => {
@@ -9666,12 +11722,7 @@ document.getElementById('picker-catchup-btn').addEventListener('click', () => {
 });
 
 document.getElementById('picker').addEventListener('click', (e) => {
-  if (e.target === document.getElementById('picker')) {
-    const picker = document.getElementById('picker');
-    picker._histMode = false;
-    picker._tplMode = false;
-    picker.classList.remove('open');
-  }
+  if (e.target === document.getElementById('picker')) closePicker();
 });
 
 document.getElementById('picker-ex-close').addEventListener('click', () => {
@@ -10028,7 +12079,11 @@ window.addEventListener('touchstart', e => {
 window.addEventListener('touchmove', e => { if (arcDragging) arcDragMove(e.touches[0].clientY); }, { passive: true });
 window.addEventListener('touchend', () => { arcDragEnd(); });
 
-document.getElementById('room-btn').addEventListener('click', () => { playSound('commonButton'); openRoomOverlay(); });
+document.getElementById('avatar-room-btn').addEventListener('click', () => {
+  playSound('commonButton');
+  document.getElementById('avatar-overlay').classList.remove('open');
+  openRoomOverlay();
+});
 
 document.getElementById('room-close-btn').addEventListener('click', () => {
   playSound('roomSelect');
@@ -10039,6 +12094,7 @@ document.getElementById('room-close-btn').addEventListener('click', () => {
 
 setRoom(activeRoom);
 document.getElementById('profile-btns').classList.add('visible');
+document.getElementById('profile-btns-right').classList.add('visible');
 
 // ═══════════════════════════════════════════════════════════
 // REP PR TRACKING
@@ -10379,6 +12435,7 @@ const NEX_CATEGORIES = [
 let nexBodyPart = null;
 let nexCategory = null;
 let nexFromPicker = null;
+let nexChallengeCallback = null; // set when "+ New Exercise" is opened from the challenge exercise picker
 let nexRestSecs = 90;
 
 function updateNexRestDisplay() {
@@ -10446,6 +12503,7 @@ function openNewExModal(preselectedMuscle) {
 function closeNewExModal() {
   document.getElementById('new-ex-modal').classList.remove('open');
   nexFromPicker = null;
+  nexChallengeCallback = null;
 }
 
 document.getElementById('new-ex-btn').addEventListener('click', () => openNewExModal());
@@ -10490,9 +12548,10 @@ document.getElementById('new-ex-save').addEventListener('click', () => {
 
   const fromPicker = nexFromPicker;
   const isTpl = nexTplMode;
+  const challengeCb = nexChallengeCallback;
 
   if (nexCategory === 'Cable Machine') {
-    pendingCableExercise = { name, muscle, restSecs: nexRestSecs, fromPicker, isTpl };
+    pendingCableExercise = { name, muscle, restSecs: nexRestSecs, fromPicker, isTpl, challengeCb };
     closeNewExModal();
     document.getElementById('pulley-modal').classList.add('open');
     return;
@@ -10509,7 +12568,9 @@ document.getElementById('new-ex-save').addEventListener('click', () => {
   renderExercises();
   closeNewExModal();
 
-  if (fromPicker) {
+  if (challengeCb) {
+    challengeCb(storedName, muscle);
+  } else if (fromPicker) {
     if (isTpl) { addTplExerciseBlock(storedName, muscle); } else { addExerciseBlock(storedName, muscle); }
   }
 });
@@ -10528,9 +12589,38 @@ function parseCableExName(storedName) {
   return { displayName: storedName, pulleyCount: pc || null };
 }
 
+// For most categories the category is baked directly into the stored name
+// (e.g. "Bench Press - Barbell"), but Cable Machine exercises only carry
+// their category in exerciseMeta (the name just has the pulley count).
+// Anywhere a raw exercise name is shown as a plain label — outside the main
+// exercise picker/list, which already reconstructs this — needs this to
+// avoid silently dropping "Cable Machine" from the display.
+function exerciseLabelWithCategory(name, exerciseMeta) {
+  const { displayName, pulleyCount } = parseCableExName(name);
+  const cat = exerciseMeta && exerciseMeta[name] ? exerciseMeta[name].category : null;
+  return `${displayName}${cat ? ' - ' + cat : ''}${pulleyCount ? ' (' + pulleyCount + 'P)' : ''}`;
+}
+
+// Reverses the name-baking done at save time: given a stored exercise name
+// (and its exerciseMeta entry, if any), returns the plain base name plus
+// whichever category it actually has — from exerciseMeta for Cable Machine,
+// or parsed back out of the " - Category" suffix for everything else.
+function splitExerciseNameCategory(storedName, meta) {
+  if (meta && meta.category) {
+    return { baseName: parseCableExName(storedName).displayName, category: meta.category };
+  }
+  for (const cat of NEX_CATEGORIES) {
+    const suffix = ' - ' + cat;
+    if (storedName.endsWith(suffix)) {
+      return { baseName: storedName.slice(0, -suffix.length), category: cat };
+    }
+  }
+  return { baseName: storedName, category: null };
+}
+
 function savePendingCableExercise(pulleyCount) {
   if (!pendingCableExercise) return;
-  const { name, muscle, restSecs, fromPicker, isTpl } = pendingCableExercise;
+  const { name, muscle, restSecs, fromPicker, isTpl, challengeCb } = pendingCableExercise;
   pendingCableExercise = null;
   document.querySelectorAll('.pulley-btn').forEach(b => b.classList.remove('pulley-btn-active'));
 
@@ -10548,7 +12638,9 @@ function savePendingCableExercise(pulleyCount) {
     renderExercises();
   }
 
-  if (fromPicker) {
+  if (challengeCb) {
+    challengeCb(storedName, muscle);
+  } else if (fromPicker) {
     if (isTpl) { addTplExerciseBlock(storedName, muscle); } else { addExerciseBlock(storedName, muscle); }
   }
 }
@@ -10579,13 +12671,12 @@ document.getElementById('pulley-modal').addEventListener('click', (e) => {
 // ═══════════════════════════════════════════════════════════
 
 function loadGoals() {
-  try {
-    return JSON.parse(localStorage.getItem('trainhard_goals') || '{}');
-  } catch { return {}; }
+  return state.goals || {};
 }
 
 function saveGoals(goals) {
-  localStorage.setItem('trainhard_goals', JSON.stringify(goals));
+  state.goals = goals;
+  save();
 }
 
 function buildGoalsList() {
@@ -10802,6 +12893,326 @@ document.getElementById('avatar-btn').addEventListener('click', () => {
   document.getElementById('avatar-overlay').classList.add('open');
 });
 
+document.getElementById('profile-menu-btn').addEventListener('click', async () => {
+  playSound('commonButton');
+  await refreshAccountView();
+  if (cloudSession) {
+    renderAvatarPfpPreview();
+    document.getElementById('avatar-username-value').textContent = document.getElementById('acct-username-display').textContent;
+  }
+  document.getElementById('profile-menu-overlay').classList.add('open');
+});
+
+document.getElementById('profile-menu-close-btn').addEventListener('click', () => {
+  playSound('delete');
+  document.getElementById('profile-menu-overlay').classList.remove('open');
+});
+
+function renderAvatarPfpPreview() {
+  const el = document.getElementById('avatar-pfp-preview');
+  const removeBtn = document.getElementById('avatar-pfp-remove-btn');
+  if (myAvatarUrl) {
+    el.style.backgroundImage = `url("${myAvatarUrl}")`;
+    el.textContent = '';
+    removeBtn.style.display = 'block';
+  } else {
+    el.style.backgroundImage = 'none';
+    const uname = document.getElementById('acct-username-display').textContent || '';
+    el.textContent = uname ? uname[0].toUpperCase() : '?';
+    removeBtn.style.display = 'none';
+  }
+}
+
+function closeAvatarPfpMenu() {
+  document.getElementById('avatar-pfp-menu').classList.remove('open');
+}
+
+document.getElementById('avatar-pfp-edit-badge').addEventListener('click', () => {
+  if (!cloudSession) return;
+  document.getElementById('avatar-pfp-remove-btn').style.display = myAvatarUrl ? 'block' : 'none';
+  document.getElementById('avatar-pfp-menu').classList.add('open');
+});
+document.getElementById('avatar-pfp-menu-cancel-btn').addEventListener('click', closeAvatarPfpMenu);
+document.getElementById('avatar-pfp-menu').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('avatar-pfp-menu')) closeAvatarPfpMenu();
+});
+
+document.getElementById('avatar-pfp-preview').addEventListener('click', () => {
+  if (!myAvatarUrl) return;
+  document.getElementById('avatar-pfp-view-circle').style.backgroundImage = `url("${myAvatarUrl}")`;
+  document.getElementById('avatar-pfp-view-modal').classList.add('open');
+});
+document.getElementById('avatar-pfp-view-modal').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('avatar-pfp-view-modal')) {
+    document.getElementById('avatar-pfp-view-modal').classList.remove('open');
+  }
+});
+
+document.getElementById('avatar-pfp-change-btn').addEventListener('click', () => {
+  closeAvatarPfpMenu();
+  document.getElementById('avatar-pfp-file').click();
+});
+
+document.getElementById('avatar-pfp-file').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  e.target.value = '';
+  if (!file || !cloudSession) return;
+  showAcctError('avatar-pfp-error', '');
+  openAvatarCropModal(file);
+});
+
+document.getElementById('avatar-pfp-remove-btn').addEventListener('click', async () => {
+  if (!cloudSession) return;
+  closeAvatarPfpMenu();
+  const ok = await customConfirm('Remove your profile picture?', 'Remove', 'Cancel');
+  if (!ok) return;
+  await supabase.storage.from('avatars').remove([`${cloudSession.user.id}/avatar.jpg`]);
+  await supabase.from('profiles').update({ avatar_url: null }).eq('id', cloudSession.user.id);
+  myAvatarUrl = null;
+  renderAvatarPfpPreview();
+});
+
+// Shared by both the cropped-photo flow and the preset picker below —
+// whichever produced the final square JPEG, uploading and wiring it up as
+// the profile picture works identically from here on.
+async function uploadAvatarBlob(blob) {
+  if (!cloudSession) return;
+  try {
+    const path = `${cloudSession.user.id}/avatar.jpg`;
+    const { error: upErr } = await supabase.storage.from('avatars').upload(path, blob, {
+      upsert: true,
+      contentType: 'image/jpeg',
+    });
+    if (upErr) { showAcctError('avatar-pfp-error', upErr.message); return; }
+
+    const { data: pub } = supabase.storage.from('avatars').getPublicUrl(path);
+    const urlWithCacheBust = `${pub.publicUrl}?t=${Date.now()}`;
+    const { error: dbErr } = await supabase.from('profiles').update({ avatar_url: urlWithCacheBust }).eq('id', cloudSession.user.id);
+    if (dbErr) { showAcctError('avatar-pfp-error', dbErr.message); return; }
+
+    myAvatarUrl = urlWithCacheBust;
+    renderAvatarPfpPreview();
+  } catch (err) {
+    showAcctError('avatar-pfp-error', 'Could not upload that image.');
+  }
+}
+
+// ── Avatar crop/reposition ──
+// Lets the user pan and zoom a selected photo within a circular viewport
+// before it's uploaded, instead of always auto-cropping to dead-center.
+const CROP_VIEWPORT = 240;
+const CROP_ZOOM_MAX = 300; // max zoom as a percent of the cover-fit base scale
+let cropState = { img: null, objectUrl: null, scale: 1, baseScale: 1, offsetX: 0, offsetY: 0 };
+
+function openAvatarCropModal(file) {
+  const url = URL.createObjectURL(file);
+  const img = new Image();
+  img.onload = () => {
+    cropState.img = img;
+    cropState.objectUrl = url;
+    const minScale = CROP_VIEWPORT / Math.min(img.naturalWidth, img.naturalHeight);
+    cropState.baseScale = minScale;
+    cropState.scale = minScale;
+    cropState.offsetX = (CROP_VIEWPORT - img.naturalWidth * minScale) / 2;
+    cropState.offsetY = (CROP_VIEWPORT - img.naturalHeight * minScale) / 2;
+    clampCropOffset();
+    document.getElementById('avatar-crop-img').src = url;
+    applyCropTransform();
+    document.getElementById('avatar-crop-modal').classList.add('open');
+  };
+  img.onerror = () => { showAcctError('avatar-pfp-error', 'Could not load that image.'); URL.revokeObjectURL(url); };
+  img.src = url;
+}
+
+function closeAvatarCropModal() {
+  document.getElementById('avatar-crop-modal').classList.remove('open');
+  if (cropState.objectUrl) { URL.revokeObjectURL(cropState.objectUrl); cropState.objectUrl = null; }
+  cropState.img = null;
+}
+
+function clampCropOffset() {
+  const dw = cropState.img.naturalWidth * cropState.scale;
+  const dh = cropState.img.naturalHeight * cropState.scale;
+  const minX = Math.min(0, CROP_VIEWPORT - dw);
+  const minY = Math.min(0, CROP_VIEWPORT - dh);
+  cropState.offsetX = Math.max(minX, Math.min(0, cropState.offsetX));
+  cropState.offsetY = Math.max(minY, Math.min(0, cropState.offsetY));
+}
+
+function applyCropTransform() {
+  const el = document.getElementById('avatar-crop-img');
+  el.style.width = (cropState.img.naturalWidth * cropState.scale) + 'px';
+  el.style.height = (cropState.img.naturalHeight * cropState.scale) + 'px';
+  el.style.left = cropState.offsetX + 'px';
+  el.style.top = cropState.offsetY + 'px';
+}
+
+// Single finger (or mouse) drags to pan; a second finger down switches to
+// pinch-to-zoom, anchored so whatever was under the fingers' midpoint stays
+// there as the pinch spreads/pinches (and can pan at the same time, since
+// the midpoint itself is free to move during the gesture).
+(function() {
+  const viewport = document.getElementById('avatar-crop-viewport');
+  const activePointers = new Map(); // pointerId -> {x, y}, viewport-local
+  let panStart = null;
+  let pinchStart = null;
+
+  function localPoint(e) {
+    const rect = viewport.getBoundingClientRect();
+    return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+  }
+  function twoPointerGeometry() {
+    const pts = [...activePointers.values()];
+    return {
+      dist: Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y),
+      midX: (pts[0].x + pts[1].x) / 2,
+      midY: (pts[0].y + pts[1].y) / 2,
+    };
+  }
+  function beginPan() {
+    const p = [...activePointers.values()][0];
+    panStart = { x: p.x, y: p.y, offsetX: cropState.offsetX, offsetY: cropState.offsetY };
+    pinchStart = null;
+  }
+  function beginPinch() {
+    const geo = twoPointerGeometry();
+    pinchStart = { dist: geo.dist, scale: cropState.scale, offsetX: cropState.offsetX, offsetY: cropState.offsetY, midX: geo.midX, midY: geo.midY };
+    panStart = null;
+  }
+
+  viewport.addEventListener('pointerdown', e => {
+    if (!cropState.img) return;
+    viewport.setPointerCapture(e.pointerId);
+    activePointers.set(e.pointerId, localPoint(e));
+    viewport.classList.add('dragging');
+    if (activePointers.size === 1) beginPan();
+    else if (activePointers.size === 2) beginPinch();
+  });
+
+  viewport.addEventListener('pointermove', e => {
+    if (!activePointers.has(e.pointerId)) return;
+    activePointers.set(e.pointerId, localPoint(e));
+
+    if (activePointers.size === 1 && panStart) {
+      const p = [...activePointers.values()][0];
+      cropState.offsetX = panStart.offsetX + (p.x - panStart.x);
+      cropState.offsetY = panStart.offsetY + (p.y - panStart.y);
+      clampCropOffset();
+      applyCropTransform();
+    } else if (activePointers.size === 2 && pinchStart) {
+      const geo = twoPointerGeometry();
+      const minScale = cropState.baseScale;
+      const maxScale = cropState.baseScale * (CROP_ZOOM_MAX / 100);
+      let newScale = pinchStart.scale * (geo.dist / pinchStart.dist);
+      newScale = Math.max(minScale, Math.min(maxScale, newScale));
+      const nx = (pinchStart.midX - pinchStart.offsetX) / pinchStart.scale;
+      const ny = (pinchStart.midY - pinchStart.offsetY) / pinchStart.scale;
+      cropState.scale = newScale;
+      cropState.offsetX = geo.midX - nx * newScale;
+      cropState.offsetY = geo.midY - ny * newScale;
+      clampCropOffset();
+      applyCropTransform();
+    }
+  });
+
+  function endPointer(e) {
+    activePointers.delete(e.pointerId);
+    if (activePointers.size === 0) {
+      viewport.classList.remove('dragging');
+      panStart = null;
+      pinchStart = null;
+    } else if (activePointers.size === 1) {
+      beginPan(); // dropped from pinch to a single finger — resume as a pan
+    }
+  }
+  viewport.addEventListener('pointerup', endPointer);
+  viewport.addEventListener('pointercancel', endPointer);
+})();
+
+document.getElementById('avatar-crop-cancel').addEventListener('click', closeAvatarCropModal);
+document.getElementById('avatar-crop-modal').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('avatar-crop-modal')) closeAvatarCropModal();
+});
+
+document.getElementById('avatar-crop-save').addEventListener('click', () => {
+  if (!cropState.img) return;
+  const outSize = 320;
+  const canvas = document.createElement('canvas');
+  canvas.width = outSize;
+  canvas.height = outSize;
+  const ctx = canvas.getContext('2d');
+  const sx = -cropState.offsetX / cropState.scale;
+  const sy = -cropState.offsetY / cropState.scale;
+  const sSize = CROP_VIEWPORT / cropState.scale;
+  ctx.drawImage(cropState.img, sx, sy, sSize, sSize, 0, 0, outSize, outSize);
+  canvas.toBlob(async (blob) => {
+    if (!blob) return;
+    closeAvatarCropModal();
+    await uploadAvatarBlob(blob);
+  }, 'image/jpeg', 0.85);
+});
+
+// ── Avatar presets ──
+// Real image files shipped in assets/profile picture presets/ — these are
+// the only presets offered (no procedural/emoji fallback).
+const AVATAR_PRESETS = [
+  'assets/profile picture presets/preset-1.jpg',
+  'assets/profile picture presets/preset-2.jpg',
+  'assets/profile picture presets/preset-3.jpg',
+  'assets/profile picture presets/preset-4.jpg',
+  'assets/profile picture presets/preset-5.jpg',
+  'assets/profile picture presets/preset-6.jpg',
+  'assets/profile picture presets/preset-7.jpg',
+  'assets/profile picture presets/preset-8.jpg',
+  'assets/profile picture presets/preset-9.jpg',
+];
+
+document.getElementById('avatar-pfp-presets-btn').addEventListener('click', () => {
+  if (!cloudSession) return;
+  closeAvatarPfpMenu();
+  const grid = document.getElementById('avatar-preset-grid');
+  grid.innerHTML = '';
+  AVATAR_PRESETS.forEach(src => {
+    const tile = document.createElement('button');
+    tile.type = 'button';
+    tile.className = 'avatar-preset-tile';
+    tile.style.backgroundImage = `url("${src}")`;
+    tile.style.backgroundSize = 'cover';
+    tile.style.backgroundPosition = 'center';
+    tile.addEventListener('click', () => selectAvatarPreset(src));
+    grid.appendChild(tile);
+  });
+  document.getElementById('avatar-preset-modal').classList.add('open');
+});
+
+document.getElementById('avatar-preset-close').addEventListener('click', () => {
+  document.getElementById('avatar-preset-modal').classList.remove('open');
+});
+document.getElementById('avatar-preset-modal').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('avatar-preset-modal')) {
+    document.getElementById('avatar-preset-modal').classList.remove('open');
+  }
+});
+
+function selectAvatarPreset(src) {
+  const size = 320;
+  const img = new Image();
+  img.crossOrigin = 'anonymous';
+  img.onload = () => {
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0, size, size);
+    canvas.toBlob(async (blob) => {
+      if (!blob) return;
+      document.getElementById('avatar-preset-modal').classList.remove('open');
+      await uploadAvatarBlob(blob);
+    }, 'image/jpeg', 0.9);
+  };
+  img.src = src;
+}
+
 document.getElementById('avatar-close-btn').addEventListener('click', () => {
   playSound('delete');
   document.getElementById('avatar-overlay').classList.remove('open');
@@ -10832,17 +13243,32 @@ document.getElementById('exit-testing-btn').addEventListener('click', () => {
   updateModel();
 });
 
-function syncRotationToggle() {
-  const btn = document.getElementById('rotation-toggle-btn');
-  btn.textContent = 'Auto-Rotate: ' + (autoRotateEnabled ? 'On' : 'Off');
-  btn.classList.toggle('selected', autoRotateEnabled);
-}
-syncRotationToggle();
+document.getElementById('friends-btn').addEventListener('click', () => {
+  playSound('commonButton');
+  const signedIn = !!cloudSession;
+  document.getElementById('friends-overlay-signedout').style.display = signedIn ? 'none' : 'block';
+  document.getElementById('friends-overlay-content').style.display = signedIn ? 'block' : 'none';
+  document.getElementById('friends-overlay').classList.add('open');
+  if (signedIn) refreshFriends();
+});
 
-document.getElementById('rotation-toggle-btn').addEventListener('click', () => {
-  autoRotateEnabled = !autoRotateEnabled;
-  localStorage.setItem('trainhard_autorotate', autoRotateEnabled ? 'on' : 'off');
-  syncRotationToggle();
+document.getElementById('friends-overlay-close-btn').addEventListener('click', () => {
+  playSound('delete');
+  document.getElementById('friends-overlay').classList.remove('open');
+});
+
+document.getElementById('challenges-btn').addEventListener('click', () => {
+  playSound('commonButton');
+  const signedIn = !!cloudSession;
+  document.getElementById('challenges-overlay-signedout').style.display = signedIn ? 'none' : 'block';
+  document.getElementById('challenges-overlay-content').style.display = signedIn ? 'block' : 'none';
+  document.getElementById('challenges-overlay').classList.add('open');
+  if (signedIn) refreshChallenges();
+});
+
+document.getElementById('challenges-overlay-close-btn').addEventListener('click', () => {
+  playSound('delete');
+  document.getElementById('challenges-overlay').classList.remove('open');
 });
 
 function syncSoundsToggle() {
@@ -10883,12 +13309,12 @@ function syncNotificationsToggle() {
   const btn = document.getElementById('notifications-toggle-btn');
   const dbg = document.getElementById('notifications-debug');
   if (typeof Notification === 'undefined') {
-    btn.textContent = 'Rest Alerts: Unsupported';
+    btn.textContent = 'Notifications: Unsupported';
     btn.disabled = true;
     if (dbg) dbg.textContent = 'Notification API not present in this context';
     return;
   }
-  btn.textContent = 'Rest Alerts: ' + (notificationsEnabled ? 'On' : 'Off');
+  btn.textContent = 'Notifications: ' + (notificationsEnabled ? 'On' : 'Off');
   btn.classList.toggle('selected', notificationsEnabled);
   if (dbg) {
     dbg.textContent = 'permission: ' + Notification.permission +
@@ -11485,7 +13911,6 @@ function attachTrainNumpad(inp, pairInp, checkBtn, field) {
     <button id="rnp-done">Done</button>
   </div>
 </div>
-
 
 </body>
 </html>
