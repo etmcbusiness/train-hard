@@ -4054,9 +4054,28 @@
     .challenge-row {
       background: rgba(var(--c-panel1),0.7); border: 1px solid rgba(var(--c-accent2),0.25);
       border-radius: 12px; padding: 12px 14px; margin-bottom: 8px; cursor: pointer; touch-action: manipulation;
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    }
+    .challenge-row-leader {
+      display: flex; align-items: center; gap: 5px; flex-shrink: 0;
+    }
+    .challenge-row-leader-place {
+      font-size: 10px; font-weight: 800; letter-spacing: 0.3px;
+      color: rgb(var(--c-accent-light));
+    }
+    .challenge-row-leader-avatar {
+      width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
+      background-size: cover; background-position: center;
+      background-color: rgba(var(--c-accent),0.25);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 800; color: rgb(var(--c-text));
     }
     .challenge-row-title { font-size: 14px; font-weight: 700; color: rgb(var(--c-text)); }
     .challenge-row-sub { font-size: 11px; color: rgb(var(--c-text4)); margin-top: 3px; }
+    .challenge-row-type {
+      font-size: 10px; font-weight: 700; letter-spacing: 0.3px; text-transform: uppercase;
+      color: rgb(var(--c-accent-light)); margin-top: 2px;
+    }
     .challenge-row-badge {
       display: inline-block; font-size: 10px; font-weight: 800; letter-spacing: 0.4px; text-transform: uppercase;
       color: rgb(var(--c-accent-light)); background: rgba(var(--c-accent),0.15); border-radius: 6px; padding: 2px 7px; margin-left: 8px;
@@ -4789,7 +4808,7 @@
       <button class="challenge-modal-close" id="challenge-new-close">✕</button>
     </div>
     <div class="acct-error" id="challenge-new-error"></div>
-    <div class="acct-field">
+    <div class="acct-field" id="challenge-type-wheel-field">
       <label>Challenge Type</label>
       <div id="challenge-type-wheel-wrap">
         <div class="ewheel-highlight"></div>
@@ -4820,6 +4839,18 @@
         <label>Duration (weeks)</label>
         <input id="challenge-new-weeks" class="acct-input" type="number" inputmode="numeric" min="1" max="52" value="6" />
       </div>
+      <button id="challenge-new-next-btn" class="acct-btn">Next</button>
+    </div>
+    <!-- Step 2 — nothing gets created in the database until this step is
+         confirmed, so a challenge is never sent out half-finished. -->
+    <div id="challenge-new-exercise-step" style="display:none;">
+      <div class="acct-field">
+        <label>Your Exercise</label>
+        <button type="button" id="challenge-new-exercise-btn" class="select-row">
+          <span id="challenge-new-exercise-label" class="select-row-placeholder">Select an exercise</span>
+          <span class="select-row-chevron">›</span>
+        </button>
+      </div>
       <button id="challenge-new-create-btn" class="acct-btn">Create Challenge</button>
     </div>
   </div>
@@ -4843,6 +4874,7 @@
   <div id="challenge-detail-box">
     <button class="challenge-modal-close" id="challenge-detail-close">✕</button>
     <div id="challenge-detail-title" class="challenge-lb-title"></div>
+    <div id="challenge-detail-type" class="challenge-row-type" style="display:none;text-align:center;"></div>
     <div id="challenge-detail-sub" class="challenge-lb-sub"></div>
     <div id="challenge-detail-description" style="display:none;"></div>
     <div id="challenge-detail-join-box" style="display:none;">
@@ -5708,6 +5740,7 @@ let challengesChannel = null;  // Realtime subscription for live challenge invit
 let challengeMessagesChannel = null; // Realtime subscription for the currently-open challenge's chat
 let currentChallengeId = null; // challenge shown in #challenge-detail-modal, or null
 let challengeNewFriends = [];     // [{ id, username }, ...] chosen in the New Challenge modal
+let challengeNewExercise = null;  // { name, muscle } chosen in step 2 of the New Challenge modal
 let challengeJoinExercise = null; // { name, muscle } chosen when joining an invited challenge
 let challengeCreatorExerciseInfo = null; // { name, muscle, meta } — the creator's exercise, for "+ Add New Exercise" to copy settings from
 let challengeExercisePickerReturnModal = null; // id of the challenge modal to reopen when the shared exercise picker closes
@@ -6072,12 +6105,15 @@ function customConfirm(message, yesText = 'Confirm', noText = 'Cancel') {
       modal.classList.remove('open');
       document.getElementById('custom-confirm-yes').removeEventListener('click', onYes);
       document.getElementById('custom-confirm-no').removeEventListener('click', onNo);
+      modal.removeEventListener('click', onBackdrop);
       resolve(result);
     }
     function onYes() { cleanup(true); }
     function onNo()  { cleanup(false); }
+    function onBackdrop(e) { if (e.target === modal) cleanup(false); }
     document.getElementById('custom-confirm-yes').addEventListener('click', onYes);
     document.getElementById('custom-confirm-no').addEventListener('click', onNo);
+    modal.addEventListener('click', onBackdrop);
   });
 }
 
@@ -6165,6 +6201,11 @@ function loadState() {
 }
 
 function save() {
+  // Stamp every save with the time it happened so pullCloudState() can tell
+  // whether the cloud copy is actually newer than what's on this device, or
+  // just hasn't caught up yet (e.g. app closed before the debounced push
+  // finished) — without this a stale cloud pull silently wipes fresh local edits.
+  state._lu = Date.now();
   localStorage.setItem('trainhard_v1', JSON.stringify(state));
   queueCloudPush();
 }
@@ -6175,15 +6216,37 @@ function save() {
 function queueCloudPush() {
   if (!cloudSession || suppressNextCloudPush) return;
   clearTimeout(cloudSyncTimer);
-  cloudSyncTimer = setTimeout(async () => {
-    const { error } = await supabase
-      .from('profiles')
-      .update({ state })
-      .eq('id', cloudSession.user.id);
-    if (!error) recordSyncSuccess();
-    setSyncStatus(error ? 'Sync failed — will retry on next change' : 'Synced just now');
-  }, 1500);
+  cloudSyncTimer = setTimeout(doCloudPush, 1500);
 }
+
+async function doCloudPush() {
+  cloudSyncTimer = null;
+  const { error } = await supabase
+    .from('profiles')
+    .update({ state })
+    .eq('id', cloudSession.user.id);
+  if (!error) recordSyncSuccess();
+  setSyncStatus(error ? 'Sync failed — will retry on next change' : 'Synced just now');
+}
+
+// Pushes right now instead of waiting out the debounce — used after
+// deliberate one-off actions (deleting/editing a workout) where losing the
+// change to a stale cloud pull on the next reload is a real risk, and after
+// backgrounding/closing the app, since a pending debounced push is silently
+// dropped if the page unloads before its timer fires. Without this, pullCloudState()
+// on the next load overwrites the correct local edit with the older cloud copy.
+function flushCloudPush() {
+  if (!cloudSession || suppressNextCloudPush) return;
+  clearTimeout(cloudSyncTimer);
+  cloudSyncTimer = null;
+  doCloudPush();
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden' && cloudSyncTimer) flushCloudPush();
+});
+window.addEventListener('pagehide', () => {
+  if (cloudSyncTimer) flushCloudPush();
+});
 
 function setSyncStatus(text) {
   const el = document.getElementById('acct-sync-status');
@@ -6217,6 +6280,26 @@ async function pullCloudState(userId) {
     .eq('id', userId)
     .single();
   if (error || !data) return;
+  // Guard against a stale cloud copy clobbering fresher local edits: if the
+  // last debounced push never finished (app closed/killed too soon after
+  // logging a workout), the cloud row can lag behind what's already sitting
+  // in localStorage. Compare the _lu timestamp each side was saved with and
+  // only let the cloud copy win if it's actually newer; otherwise push the
+  // local copy up so it becomes the new cloud copy instead of getting erased.
+  const localRaw = localStorage.getItem('trainhard_v1');
+  let localState = null;
+  try { localState = localRaw ? JSON.parse(localRaw) : null; } catch { localState = null; }
+  const localLu = (localState && localState._lu) || 0;
+  const cloudLu = (data.state && data.state._lu) || 0;
+  if (localState && localLu > cloudLu) {
+    state = { ...defaultState(), ...localState };
+    await supabase.from('profiles').update({ state }).eq('id', userId);
+    recordSyncSuccess();
+    recalcStats();
+    renderExercises();
+    renderHistory();
+    return;
+  }
   suppressNextCloudPush = true;
   if (data.state && Object.keys(data.state).length > 0) {
     state = { ...defaultState(), ...data.state };
@@ -6686,6 +6769,11 @@ async function openFriendDetail(friendId, username) {
 document.getElementById('friend-detail-close').addEventListener('click', () => {
   document.getElementById('friend-detail-modal').classList.remove('open');
 });
+document.getElementById('friend-detail-modal').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('friend-detail-modal')) {
+    document.getElementById('friend-detail-modal').classList.remove('open');
+  }
+});
 
 // ═══════════════════════════════════════════════════════════
 // CHALLENGES
@@ -6793,43 +6881,117 @@ document.getElementById('challenge-friend-picker-done-btn').addEventListener('cl
   if (challengeFriendPickerCallback) challengeFriendPickerCallback([...challengeFriendPickerSelected.values()]);
 });
 
+// Cancelling/deleting a challenge fires the realtime subscription for both
+// the participants delete and the challenges delete separately, plus an
+// explicit call right after — so multiple refreshChallenges() calls can
+// overlap. Network responses aren't guaranteed to land in call order, so an
+// older (stale, pre-delete) fetch finishing after a newer one could repaint
+// the list with the just-deleted challenge for a moment. This token makes
+// every call check, right before it touches the DOM, that it's still the
+// most recent call — if not, it silently discards its results instead of
+// rendering stale data.
+let challengesRefreshToken = 0;
+
 async function refreshChallenges() {
   if (!cloudSession) return;
+  const myToken = ++challengesRefreshToken;
   const uid = cloudSession.user.id;
   const { data: rows, error } = await supabase
     .from('challenges')
     .select('*, challenge_participants(*)')
     .order('created_at', { ascending: false });
+  if (myToken !== challengesRefreshToken) return;
   if (error) { console.error(error); return; }
 
   const list = document.getElementById('challenges-list');
-  list.innerHTML = '';
   if (!rows || !rows.length) {
     list.innerHTML = '<div class="friend-empty">No challenges yet.</div>';
     return;
   }
+
+  // One batched profiles fetch for every joined participant (other than me)
+  // across every challenge in the list, instead of a query per row.
+  const otherIds = new Set();
+  for (const c of rows) {
+    for (const p of c.challenge_participants) {
+      if (p.user_id !== uid && p.status === 'joined') otherIds.add(p.user_id);
+    }
+  }
+  let othersById = {};
+  if (otherIds.size) {
+    const { data: profs } = await supabase.from('profiles').select('id, avatar_url, state').in('id', [...otherIds]);
+    if (myToken !== challengesRefreshToken) return;
+    (profs || []).forEach(p => { othersById[p.id] = p; });
+  }
+  list.innerHTML = '';
+
   for (const c of rows) {
     const me = c.challenge_participants.find(p => p.user_id === uid);
     const others = c.challenge_participants.filter(p => p.user_id !== uid);
     const otherNames = others.map(p => p.username).join(', ') || '—';
 
-    let badge = 'Active';
-    if (me && me.status === 'invited') {
-      badge = 'Invite Pending';
+    // "Pending" covers both directions: I haven't accepted yet, or I have
+    // but someone I invited hasn't — either way the challenge isn't fully
+    // active until everyone's actually joined.
+    const end = new Date(c.start_date + 'T00:00:00');
+    end.setDate(end.getDate() + c.duration_weeks * 7);
+    let badge;
+    if (new Date() > end) {
+      badge = 'Completed';
+    } else if (c.challenge_participants.some(p => p.status !== 'joined')) {
+      badge = 'Pending';
     } else {
-      const end = new Date(c.start_date + 'T00:00:00');
-      end.setDate(end.getDate() + c.duration_weeks * 7);
-      if (new Date() > end) badge = 'Completed';
+      badge = 'Active';
     }
+
+    // First place, if anyone's actually made progress yet — same ranking
+    // logic as the challenge's own leaderboard (highest % change wins).
+    let leader = null;
+    for (const p of c.challenge_participants) {
+      if (p.status !== 'joined') continue;
+      const pState = p.user_id === uid ? state : (othersById[p.user_id] || {}).state;
+      const prog = computeChallengeProgress(pState, p.exercise_name, c.start_date);
+      if (prog.changePct === null) continue;
+      if (!leader || prog.changePct > leader.prog.changePct) {
+        leader = { p, prog, avatarUrl: p.user_id === uid ? myAvatarUrl : (othersById[p.user_id] || {}).avatar_url };
+      }
+    }
+
+    // No stored "type" column — only E1RM Battle can be created right now,
+    // so a title that doesn't match the type name must be a custom one the
+    // creator typed, and the type name shows as a subtitle underneath it.
+    const typeSubtitle = c.title !== CHALLENGE_TYPES[0] ? `<div class="challenge-row-type">${escapeHtml(CHALLENGE_TYPES[0])}</div>` : '';
 
     const row = document.createElement('div');
     row.className = 'challenge-row';
     row.innerHTML = `
-      <div class="challenge-row-title">${escapeHtml(c.title)}<span class="challenge-row-badge">${badge}</span></div>
-      <div class="challenge-row-sub">vs ${escapeHtml(otherNames)} &middot; ${c.duration_weeks} weeks</div>`;
+      <div style="min-width:0;">
+        <div class="challenge-row-title">${escapeHtml(c.title)}<span class="challenge-row-badge">${badge}</span></div>
+        ${typeSubtitle}
+        <div class="challenge-row-sub">vs ${escapeHtml(otherNames)} &middot; ${c.duration_weeks} weeks</div>
+      </div>
+      <div class="challenge-row-leader-avatar-slot"></div>`;
+    if (leader) {
+      const wrap = document.createElement('div');
+      wrap.className = 'challenge-row-leader';
+      const avatarEl = document.createElement('div');
+      avatarEl.className = 'challenge-row-leader-avatar';
+      setLbAvatar(avatarEl, leader.avatarUrl, leader.p.username);
+      wrap.innerHTML = '<div class="challenge-row-leader-place">1st</div>';
+      wrap.appendChild(avatarEl);
+      row.querySelector('.challenge-row-leader-avatar-slot').replaceWith(wrap);
+    } else {
+      row.querySelector('.challenge-row-leader-avatar-slot').remove();
+    }
     row.addEventListener('click', () => openChallengeDetail(c.id));
     list.appendChild(row);
   }
+}
+
+function showChallengeNewStep(step) {
+  document.getElementById('challenge-type-wheel-field').style.display = step === 1 ? 'block' : 'none';
+  document.getElementById('challenge-new-fields').style.display = step === 1 ? 'block' : 'none';
+  document.getElementById('challenge-new-exercise-step').style.display = step === 2 ? 'block' : 'none';
 }
 
 document.getElementById('challenge-new-btn').addEventListener('click', () => {
@@ -6837,12 +6999,17 @@ document.getElementById('challenge-new-btn').addEventListener('click', () => {
   challengeTypeWheel.setIndex(0, false);
   challengeNewType = CHALLENGE_TYPES[0];
   document.getElementById('challenge-new-title').value = '';
-  document.getElementById('challenge-new-description').value = '';
+  document.getElementById('challenge-new-description').value = CHALLENGE_TYPE_DESCRIPTIONS[challengeNewType] || '';
   document.getElementById('challenge-new-weeks').value = 6;
   challengeNewFriends = [];
+  challengeNewExercise = null;
   const friendLabel = document.getElementById('challenge-new-friend-label');
   friendLabel.textContent = 'Select friends';
   friendLabel.classList.add('select-row-placeholder');
+  const exLabel = document.getElementById('challenge-new-exercise-label');
+  exLabel.textContent = 'Select an exercise';
+  exLabel.classList.add('select-row-placeholder');
+  showChallengeNewStep(1);
   document.getElementById('challenge-new-modal').classList.add('open');
 });
 
@@ -6865,45 +7032,101 @@ document.getElementById('challenge-new-friend-btn').addEventListener('click', ()
 document.getElementById('challenge-new-close').addEventListener('click', () => {
   document.getElementById('challenge-new-modal').classList.remove('open');
 });
+document.getElementById('challenge-new-modal').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('challenge-new-modal')) {
+    document.getElementById('challenge-new-modal').classList.remove('open');
+  }
+});
 
-document.getElementById('challenge-new-create-btn').addEventListener('click', async () => {
+// Step 1 → step 2. Nothing is written to the database here — this only
+// validates the basics and moves on to picking an exercise, so a challenge
+// never gets created (and sent to friends) half-finished.
+document.getElementById('challenge-new-next-btn').addEventListener('click', () => {
   showAcctError('challenge-new-error', '');
   if (challengeNewType !== 'E1RM Battle') {
-    showAcctError('challenge-new-error', 'This challenge is not available yet, try another one.');
+    showAcctError('challenge-new-error', 'This challenge is not yet available. Please try another one!');
     return;
   }
-  const weeks = Math.min(52, Math.max(1, parseInt(document.getElementById('challenge-new-weeks').value) || 6));
-  const description = document.getElementById('challenge-new-description').value.trim();
-  let title = document.getElementById('challenge-new-title').value.trim();
   if (!challengeNewFriends.length) { showAcctError('challenge-new-error', 'Pick at least one friend.'); return; }
-  if (!title) title = `${challengeNewType} — ${weeks} Week Challenge`;
+  const weeksVal = document.getElementById('challenge-new-weeks').value;
+  if (!weeksVal || !(parseInt(weeksVal) > 0)) { showAcctError('challenge-new-error', 'Enter a duration in weeks.'); return; }
+  // Locked in once you move on — no way back to change the type/friends/
+  // title/description/duration from step 2, per design.
+  showChallengeNewStep(2);
+});
 
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) { showAcctError('challenge-new-error', 'Your session expired — sign in again.'); return; }
-
-  const startDate = new Date().toISOString().slice(0, 10);
-  const { data: challenge, error: cErr } = await supabase
-    .from('challenges')
-    .insert({ creator_id: user.id, title, description: description || null, duration_weeks: weeks, start_date: startDate })
-    .select()
-    .single();
-  if (cErr || !challenge) {
-    let msg = cErr ? cErr.message : 'Could not create challenge.';
-    const { data: who } = await supabase.rpc('debug_whoami');
-    if (who && who[0]) msg += ` [debug: uid=${who[0].uid || 'null'} role=${who[0].role || 'null'}]`;
-    showAcctError('challenge-new-error', msg);
-    return;
-  }
-
-  const { error: pErr } = await supabase.from('challenge_participants')
-    .insert(challengeNewFriends.map(f => ({ challenge_id: challenge.id, user_id: f.id, status: 'invited' })));
-  if (pErr) { showAcctError('challenge-new-error', pErr.message); return; }
-
+document.getElementById('challenge-new-exercise-btn').addEventListener('click', () => {
   document.getElementById('challenge-new-modal').classList.remove('open');
-  refreshChallenges();
-  // Straight into the challenge's own screen next — the creator still needs
-  // to pick their own exercise there (moved out of this creation form).
-  openChallengeDetail(challenge.id);
+  challengeExercisePickerReturnModal = 'challenge-new-modal';
+  openExercisePickerForChallenge((ex, muscle) => {
+    challengeNewExercise = { name: ex, muscle };
+    const label = document.getElementById('challenge-new-exercise-label');
+    label.textContent = exerciseLabelWithCategory(ex, state.exerciseMeta);
+    label.classList.remove('select-row-placeholder');
+    document.getElementById('challenge-new-modal').classList.add('open');
+  });
+});
+
+// Step 2 → actually create the challenge. Everything (challenge row,
+// creator's exercise, every friend's invite) is written in one go here —
+// this is the only place a challenge gets created at all, so it's never
+// sent out without an exercise attached.
+let challengeNewCreating = false;
+document.getElementById('challenge-new-create-btn').addEventListener('click', async () => {
+  if (challengeNewCreating) return; // guards against a double-tap inserting the same challenge twice
+  showAcctError('challenge-new-error', '');
+  if (!challengeNewExercise) { showAcctError('challenge-new-error', 'Pick the exercise you want to track.'); return; }
+
+  challengeNewCreating = true;
+  const createBtn = document.getElementById('challenge-new-create-btn');
+  createBtn.disabled = true;
+  try {
+    const weeks = Math.min(52, Math.max(1, parseInt(document.getElementById('challenge-new-weeks').value) || 6));
+    const description = document.getElementById('challenge-new-description').value.trim();
+    // No title = the challenge type is the title (e.g. "E1RM Battle"). A
+    // custom title is stored as-is; the type name then shows as a subtitle
+    // wherever the challenge is displayed (see CHALLENGE_TYPE_DESCRIPTIONS'
+    // sibling constant below).
+    const title = document.getElementById('challenge-new-title').value.trim() || challengeNewType;
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { showAcctError('challenge-new-error', 'Your session expired — sign in again.'); return; }
+
+    const startDate = new Date().toISOString().slice(0, 10);
+    const { data: challenge, error: cErr } = await supabase
+      .from('challenges')
+      .insert({ creator_id: user.id, title, description: description || null, duration_weeks: weeks, start_date: startDate })
+      .select()
+      .single();
+    if (cErr || !challenge) {
+      let msg = cErr ? cErr.message : 'Could not create challenge.';
+      const { data: who } = await supabase.rpc('debug_whoami');
+      if (who && who[0]) msg += ` [debug: uid=${who[0].uid || 'null'} role=${who[0].role || 'null'}]`;
+      showAcctError('challenge-new-error', msg);
+      return;
+    }
+
+    const { error: exErr } = await supabase.from('challenge_participants')
+      .update({ exercise_name: challengeNewExercise.name })
+      .eq('challenge_id', challenge.id)
+      .eq('user_id', user.id);
+    const { error: pErr } = await supabase.from('challenge_participants')
+      .insert(challengeNewFriends.map(f => ({ challenge_id: challenge.id, user_id: f.id, status: 'invited' })));
+    if (exErr || pErr) {
+      // Don't leave a broken challenge sitting around — roll the whole
+      // thing back rather than saving it as a partial draft.
+      await deleteChallengeCompletely(challenge.id);
+      showAcctError('challenge-new-error', 'Could not finish setting up the challenge — please try again.');
+      return;
+    }
+
+    document.getElementById('challenge-new-modal').classList.remove('open');
+    refreshChallenges();
+    openChallengeDetail(challenge.id);
+  } finally {
+    challengeNewCreating = false;
+    createBtn.disabled = false;
+  }
 });
 
 // Mirrors getLevel()'s Epley-based E1RM logic but reads an explicit
@@ -6961,6 +7184,7 @@ async function renderChallengeDetail() {
 
   if (error || !c) {
     document.getElementById('challenge-detail-title').textContent = 'Challenge';
+    document.getElementById('challenge-detail-type').style.display = 'none';
     document.getElementById('challenge-detail-sub').textContent = '';
     joinBox.style.display = 'none';
     chatLog.style.display = 'none';
@@ -6975,6 +7199,13 @@ async function renderChallengeDetail() {
   cancelBtn.style.display = (c.creator_id === uid) ? 'block' : 'none';
 
   document.getElementById('challenge-detail-title').textContent = c.title;
+  const typeEl = document.getElementById('challenge-detail-type');
+  if (c.title !== CHALLENGE_TYPES[0]) {
+    typeEl.textContent = CHALLENGE_TYPES[0];
+    typeEl.style.display = 'block';
+  } else {
+    typeEl.style.display = 'none';
+  }
   const end = new Date(c.start_date + 'T00:00:00');
   end.setDate(end.getDate() + c.duration_weeks * 7);
   document.getElementById('challenge-detail-sub').textContent =
@@ -7045,14 +7276,17 @@ async function renderChallengeDetail() {
   chatLog.style.display = 'block';
   chatRow.style.display = 'flex';
 
-  // Gather every joined participant's progress + avatar first, so they can
-  // be ranked (highest % change first) before anything renders — the #1
+  // Gather every participant's progress + avatar first, so the joined ones
+  // can be ranked (highest % change first) before anything renders — the #1
   // spot gets the large "leader" treatment, everyone else is a compact row.
+  // Invited-but-not-yet-joined participants are still shown (per user
+  // request: "show all users"), just marked Pending instead of ranked.
   const ranked = [];
+  const pendingList = [];
   for (const p of c.challenge_participants) {
-    if (p.status !== 'joined') continue;
+    const isMe = p.user_id === uid;
     let pState, avatarUrl;
-    if (p.user_id === uid) {
+    if (isMe) {
       pState = state;
       avatarUrl = myAvatarUrl;
     } else {
@@ -7060,8 +7294,12 @@ async function renderChallengeDetail() {
       pState = prof ? prof.state : {};
       avatarUrl = prof ? prof.avatar_url : null;
     }
+    if (p.status !== 'joined') {
+      pendingList.push({ p, avatarUrl, isMe });
+      continue;
+    }
     const prog = computeChallengeProgress(pState, p.exercise_name, c.start_date);
-    ranked.push({ p, prog, avatarUrl, isMe: p.user_id === uid, pState });
+    ranked.push({ p, prog, avatarUrl, isMe, pState });
   }
   ranked.sort((a, b) => {
     if (a.prog.changePct === null && b.prog.changePct === null) return 0;
@@ -7073,33 +7311,55 @@ async function renderChallengeDetail() {
   const leaderCard = document.getElementById('challenge-leader-card');
   partList.innerHTML = '';
 
-  if (!ranked.length) {
+  if (!ranked.length && !pendingList.length) {
     leaderCard.style.display = 'none';
     partList.innerHTML = '<div class="friend-empty">No one has joined yet.</div>';
   } else {
-    const [leader, ...rest] = ranked;
-    leaderCard.style.display = 'flex';
-    setLbAvatar(document.getElementById('challenge-leader-avatar'), leader.avatarUrl, leader.p.username);
-    document.getElementById('challenge-leader-name').textContent = leader.p.username + (leader.isMe ? ' (you)' : '');
-    document.getElementById('challenge-leader-ex').textContent = leader.p.exercise_name
-      ? exerciseLabelWithCategory(leader.p.exercise_name, (leader.pState || {}).exerciseMeta)
-      : 'No exercise set';
-    document.getElementById('challenge-leader-stat').innerHTML = lbStatHtml(leader.prog, true);
+    if (ranked.length) {
+      const [leader, ...rest] = ranked;
+      leaderCard.style.display = 'flex';
+      setLbAvatar(document.getElementById('challenge-leader-avatar'), leader.avatarUrl, leader.p.username);
+      document.getElementById('challenge-leader-name').textContent = leader.p.username + (leader.isMe ? ' (you)' : '');
+      document.getElementById('challenge-leader-ex').textContent = leader.p.exercise_name
+        ? exerciseLabelWithCategory(leader.p.exercise_name, (leader.pState || {}).exerciseMeta)
+        : 'No exercise set';
+      document.getElementById('challenge-leader-stat').innerHTML = lbStatHtml(leader.prog, true);
 
-    rest.forEach((entry, i) => {
+      rest.forEach((entry, i) => {
+        const row = document.createElement('div');
+        row.className = 'challenge-lb-row';
+        const avatarEl = document.createElement('div');
+        avatarEl.className = 'challenge-lb-avatar';
+        setLbAvatar(avatarEl, entry.avatarUrl, entry.p.username);
+        row.innerHTML = `
+          <div class="challenge-lb-rank">${i + 2}</div>
+          <div class="challenge-lb-avatar-slot"></div>
+          <div class="challenge-lb-info">
+            <div class="challenge-lb-name">${escapeHtml(entry.p.username)}${entry.isMe ? ' (you)' : ''}</div>
+            <div class="challenge-lb-ex-sub">${escapeHtml(entry.p.exercise_name ? exerciseLabelWithCategory(entry.p.exercise_name, (entry.pState || {}).exerciseMeta) : 'No exercise set')}</div>
+          </div>
+          <div class="challenge-lb-stat">${lbStatHtml(entry.prog, false)}</div>`;
+        row.querySelector('.challenge-lb-avatar-slot').replaceWith(avatarEl);
+        partList.appendChild(row);
+      });
+    } else {
+      leaderCard.style.display = 'none';
+    }
+
+    pendingList.forEach((entry) => {
       const row = document.createElement('div');
       row.className = 'challenge-lb-row';
       const avatarEl = document.createElement('div');
       avatarEl.className = 'challenge-lb-avatar';
       setLbAvatar(avatarEl, entry.avatarUrl, entry.p.username);
       row.innerHTML = `
-        <div class="challenge-lb-rank">${i + 2}</div>
+        <div class="challenge-lb-rank">—</div>
         <div class="challenge-lb-avatar-slot"></div>
         <div class="challenge-lb-info">
           <div class="challenge-lb-name">${escapeHtml(entry.p.username)}${entry.isMe ? ' (you)' : ''}</div>
-          <div class="challenge-lb-ex-sub">${escapeHtml(entry.p.exercise_name ? exerciseLabelWithCategory(entry.p.exercise_name, (entry.pState || {}).exerciseMeta) : 'No exercise set')}</div>
+          <div class="challenge-lb-ex-sub">Invite pending</div>
         </div>
-        <div class="challenge-lb-stat">${lbStatHtml(entry.prog, false)}</div>`;
+        <div class="challenge-lb-stat"><div class="challenge-lb-stat-sub">Pending</div></div>`;
       row.querySelector('.challenge-lb-avatar-slot').replaceWith(avatarEl);
       partList.appendChild(row);
     });
@@ -7197,18 +7457,25 @@ document.getElementById('challenge-decline-btn').addEventListener('click', async
   refreshChallenges();
 });
 
+// Delete children explicitly before the parent — relying on the foreign
+// keys' ON DELETE CASCADE hits the same RLS-vs-cascade-timing issue as the
+// challenges SELECT/RETURNING bug: the participant-removal policy checks
+// "does the parent challenge still exist with me as creator," which fails
+// once the parent row is already gone. Deleting in this order keeps the
+// parent visible for that check the whole time. Also used to fully roll
+// back a challenge whose creation didn't finish (e.g. the participants
+// insert failed), instead of leaving a broken, friend-less challenge
+// sitting in the list.
+async function deleteChallengeCompletely(challengeId) {
+  await supabase.from('challenge_messages').delete().eq('challenge_id', challengeId);
+  await supabase.from('challenge_participants').delete().eq('challenge_id', challengeId);
+  return supabase.from('challenges').delete().eq('id', challengeId);
+}
+
 document.getElementById('challenge-cancel-btn').addEventListener('click', async () => {
   const ok = await customConfirm('Delete this challenge for everyone? This cannot be undone.', 'Delete Challenge', 'Go Back');
   if (!ok) return;
-  // Delete children explicitly before the parent — relying on the
-  // foreign keys' ON DELETE CASCADE hits the same RLS-vs-cascade-timing
-  // issue as the challenges SELECT/RETURNING bug: the participant-removal
-  // policy checks "does the parent challenge still exist with me as
-  // creator," which fails once the parent row is already gone. Deleting
-  // in this order keeps the parent visible for that check the whole time.
-  await supabase.from('challenge_messages').delete().eq('challenge_id', currentChallengeId);
-  await supabase.from('challenge_participants').delete().eq('challenge_id', currentChallengeId);
-  const { error } = await supabase.from('challenges').delete().eq('id', currentChallengeId);
+  const { error } = await deleteChallengeCompletely(currentChallengeId);
   if (error) { console.error('Cancel challenge failed:', error); return; }
   document.getElementById('challenge-detail-modal').classList.remove('open');
   if (challengeMessagesChannel) { supabase.removeChannel(challengeMessagesChannel); challengeMessagesChannel = null; }
@@ -7263,6 +7530,12 @@ document.getElementById('challenge-chat-input').addEventListener('keydown', e =>
 });
 
 document.getElementById('challenge-detail-close').addEventListener('click', () => {
+  document.getElementById('challenge-detail-modal').classList.remove('open');
+  if (challengeMessagesChannel) { supabase.removeChannel(challengeMessagesChannel); challengeMessagesChannel = null; }
+  currentChallengeId = null;
+});
+document.getElementById('challenge-detail-modal').addEventListener('click', (e) => {
+  if (e.target !== document.getElementById('challenge-detail-modal')) return;
   document.getElementById('challenge-detail-modal').classList.remove('open');
   if (challengeMessagesChannel) { supabase.removeChannel(challengeMessagesChannel); challengeMessagesChannel = null; }
   currentChallengeId = null;
@@ -8065,6 +8338,11 @@ function openHistEdit(idx) {
   renderHistEditExercises();
   document.getElementById('hist-edit-modal').classList.add('open');
 }
+document.getElementById('hist-edit-modal').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('hist-edit-modal')) {
+    document.getElementById('hist-edit-modal').classList.remove('open');
+  }
+});
 
 function renderHistEditExercises() {
   const container = document.getElementById('hist-edit-exercises');
@@ -8172,6 +8450,7 @@ document.getElementById('hist-done-btn').addEventListener('click', () => {
   }
 
   recalcStats();
+  flushCloudPush();
   document.getElementById('hist-edit-modal').classList.remove('open');
   renderHistory();
 });
@@ -8182,6 +8461,7 @@ document.getElementById('hist-delete-btn').addEventListener('click', async () =>
   playSound('delete');
   state.history.splice(histEditIdx, 1);
   recalcStats();
+  flushCloudPush();
   document.getElementById('hist-edit-modal').classList.remove('open');
   renderHistory();
 });
@@ -9981,6 +10261,11 @@ document.getElementById('summary-done-btn').addEventListener('click', () => {
   playSound('workoutComplete');
   closeTrain();
 });
+document.getElementById('workout-summary').addEventListener('click', (e) => {
+  if (e.target !== document.getElementById('workout-summary')) return;
+  document.getElementById('workout-summary').classList.remove('open');
+  closeTrain();
+});
 
 // ═══════════════════════════════════════════════════════════
 // TEMPLATES
@@ -10008,14 +10293,17 @@ function customPrompt(message, placeholder, defaultValue) {
       document.getElementById('custom-prompt-ok').removeEventListener('click', onOk);
       document.getElementById('custom-prompt-cancel').removeEventListener('click', onCancel);
       inp.removeEventListener('keydown', onKey);
+      modal.removeEventListener('click', onBackdrop);
       resolve(val);
     }
     function onOk() { cleanup(inp.value.trim() || null); }
     function onCancel() { playSound('delete'); cleanup(null); }
     function onKey(e) { if (e.key === 'Enter') onOk(); }
+    function onBackdrop(e) { if (e.target === modal) cleanup(null); }
     document.getElementById('custom-prompt-ok').addEventListener('click', onOk);
     document.getElementById('custom-prompt-cancel').addEventListener('click', onCancel);
     inp.addEventListener('keydown', onKey);
+    modal.addEventListener('click', onBackdrop);
   });
 }
 
@@ -10222,6 +10510,16 @@ document.getElementById('tpl-cancel-btn').addEventListener('click', async () => 
     if (!ok) return;
   }
   playSound('delete');
+  closeTplBuilder();
+  openTemplatePicker();
+});
+document.getElementById('tpl-builder').addEventListener('click', async (e) => {
+  if (e.target !== document.getElementById('tpl-builder')) return;
+  const hasContent = tplSession.some(Boolean);
+  if (hasContent) {
+    const ok = await customConfirm('Discard this template?', 'Discard', 'Keep Editing');
+    if (!ok) return;
+  }
   closeTplBuilder();
   openTemplatePicker();
 });
@@ -11245,12 +11543,18 @@ const CHALLENGE_TYPES = [
   'Coming Soon 10', 'Coming Soon 11', 'Coming Soon 12', 'Coming Soon 13',
   'Coming Soon 14', 'Coming Soon 15',
 ];
+// Auto-fills the Description field to match whichever challenge type is
+// selected on the wheel — only E1RM Battle has real copy so far.
+const CHALLENGE_TYPE_DESCRIPTIONS = {
+  'E1RM Battle': 'Pick 1 exercise, and see who can achieve the highest potential E1RM in a given time frame. Good luck and Train Hard!',
+};
 let challengeNewType = CHALLENGE_TYPES[0];
 const challengeTypeWheel = createTextWheel(
   document.getElementById('challenge-type-wheel'),
   CHALLENGE_TYPES,
   (label) => {
     challengeNewType = label;
+    document.getElementById('challenge-new-description').value = CHALLENGE_TYPE_DESCRIPTIONS[label] || '';
   }
 );
 
@@ -11992,6 +12296,12 @@ document.getElementById('avatar-room-btn').addEventListener('click', () => {
 
 document.getElementById('room-close-btn').addEventListener('click', () => {
   playSound('roomSelect');
+  document.getElementById('room-overlay').classList.remove('open');
+  document.getElementById('room-arc-layer').classList.remove('open');
+  stopArcAnim();
+});
+document.getElementById('room-overlay').addEventListener('click', (e) => {
+  if (e.target !== document.getElementById('room-overlay')) return;
   document.getElementById('room-overlay').classList.remove('open');
   document.getElementById('room-arc-layer').classList.remove('open');
   stopArcAnim();
@@ -12812,6 +13122,11 @@ document.getElementById('profile-menu-close-btn').addEventListener('click', () =
   playSound('delete');
   document.getElementById('profile-menu-overlay').classList.remove('open');
 });
+document.getElementById('profile-menu-overlay').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('profile-menu-overlay')) {
+    document.getElementById('profile-menu-overlay').classList.remove('open');
+  }
+});
 
 function renderAvatarPfpPreview() {
   const el = document.getElementById('avatar-pfp-preview');
@@ -13122,6 +13437,11 @@ document.getElementById('avatar-close-btn').addEventListener('click', () => {
   playSound('delete');
   document.getElementById('avatar-overlay').classList.remove('open');
 });
+document.getElementById('avatar-overlay').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('avatar-overlay')) {
+    document.getElementById('avatar-overlay').classList.remove('open');
+  }
+});
 
 document.querySelectorAll('.avatar-hair-card').forEach(card => {
   card.addEventListener('click', () => {
@@ -13161,6 +13481,11 @@ document.getElementById('friends-overlay-close-btn').addEventListener('click', (
   playSound('delete');
   document.getElementById('friends-overlay').classList.remove('open');
 });
+document.getElementById('friends-overlay').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('friends-overlay')) {
+    document.getElementById('friends-overlay').classList.remove('open');
+  }
+});
 
 document.getElementById('challenges-btn').addEventListener('click', () => {
   playSound('commonButton');
@@ -13174,6 +13499,11 @@ document.getElementById('challenges-btn').addEventListener('click', () => {
 document.getElementById('challenges-overlay-close-btn').addEventListener('click', () => {
   playSound('delete');
   document.getElementById('challenges-overlay').classList.remove('open');
+});
+document.getElementById('challenges-overlay').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('challenges-overlay')) {
+    document.getElementById('challenges-overlay').classList.remove('open');
+  }
 });
 
 function syncSoundsToggle() {
@@ -13290,9 +13620,19 @@ document.getElementById('goals-close-btn').addEventListener('click', () => {
   playSound('delete');
   document.getElementById('goals-overlay').classList.remove('open');
 });
+document.getElementById('goals-overlay').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('goals-overlay')) {
+    document.getElementById('goals-overlay').classList.remove('open');
+  }
+});
 
 document.getElementById('override-close-btn').addEventListener('click', () => {
   playSound('delete');
+  document.getElementById('override-overlay').classList.remove('open');
+  buildGoalsList();
+});
+document.getElementById('override-overlay').addEventListener('click', (e) => {
+  if (e.target !== document.getElementById('override-overlay')) return;
   document.getElementById('override-overlay').classList.remove('open');
   buildGoalsList();
 });
@@ -13416,6 +13756,11 @@ document.getElementById('weekly-overview-btn').addEventListener('click', () => {
 document.getElementById('weekly-overview-close-btn').addEventListener('click', () => {
   playSound('delete');
   document.getElementById('weekly-overview-overlay').classList.remove('open');
+});
+document.getElementById('weekly-overview-overlay').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('weekly-overview-overlay')) {
+    document.getElementById('weekly-overview-overlay').classList.remove('open');
+  }
 });
 
 document.getElementById('catchup-btn').addEventListener('click', () => {
