@@ -2232,14 +2232,17 @@
     #avatar-hair-options,
     #avatar-ui-options,
     #avatar-sound-options,
+    #avatar-coach-options,
     #avatar-notification-options {
       display: flex;
       gap: 10px;
     }
-    #avatar-ui-options {
+    #avatar-ui-options,
+    #avatar-coach-options {
       flex-wrap: wrap;
     }
-    #avatar-ui-options .avatar-inspiration-btn {
+    #avatar-ui-options .avatar-inspiration-btn,
+    #avatar-coach-options .avatar-inspiration-btn {
       flex: 1 1 calc(33.333% - 7px);
       height: 56px;
     }
@@ -5439,6 +5442,19 @@
         <button class="avatar-inspiration-btn" id="sounds-toggle-btn">Sounds: On</button>
         <button class="avatar-inspiration-btn" id="other-sounds-toggle-btn">Coach Sounds: On</button>
       </div>
+
+      <div class="avatar-section-label" style="margin-top:22px;">Coach</div>
+      <div id="avatar-coach-options">
+        <button class="avatar-inspiration-btn" id="coach-1" data-coach-value="1">Coach 1</button>
+        <button class="avatar-inspiration-btn" id="coach-2" data-coach-value="2">Coach 2</button>
+        <button class="avatar-inspiration-btn" id="coach-3" data-coach-value="3">Coach 3</button>
+        <button class="avatar-inspiration-btn" id="coach-4" data-coach-value="4">Coach 4</button>
+        <button class="avatar-inspiration-btn" id="coach-5" data-coach-value="5">Coach 5</button>
+        <button class="avatar-inspiration-btn" id="coach-6" data-coach-value="6">Coach 6</button>
+        <button class="avatar-inspiration-btn" id="coach-7" data-coach-value="7">Coach 7</button>
+        <button class="avatar-inspiration-btn" id="coach-8" data-coach-value="8">Coach 8</button>
+        <button class="avatar-inspiration-btn" id="coach-9" data-coach-value="9">Coach 9</button>
+      </div>
     </div>
   </div>
   <button id="avatar-close-btn">Done</button>
@@ -5884,18 +5900,26 @@ function playSound(key) {
 
 // Random-pick sound folders: name files 1.mp3, 2.mp3, 3.mp3, ... (in order,
 // no gaps) and whichever numbers exist get discovered and picked at random.
+// Each of the 9 selectable coaches (Avatar > Coach) has its own folder
+// coach-<n>/, containing three sibling stage-N/ subfolders — one per
+// escalation stage — so every coach can have entirely different lines.
 const RANDOM_FOLDER_MAX = 50;
-const RANDOM_FOLDERS = {
-  noTimeToRest: 'assets/sounds/no-time-to-rest/',
-  noTimeToRestStage2: 'assets/sounds/no-time-to-rest/stage-2/',
-  noTimeToRestStage3: 'assets/sounds/no-time-to-rest/stage-2/stage-3/',
-};
+let selectedCoach = localStorage.getItem('trainhard_coach') || '1';
+
+function randomFolderPaths(coach) {
+  const base = `assets/sounds/no-time-to-rest/coach-${coach}/`;
+  return {
+    noTimeToRest: `${base}stage-1/`,
+    noTimeToRestStage2: `${base}stage-2/`,
+    noTimeToRestStage3: `${base}stage-3/`,
+  };
+}
 const randomFolderBuffers = { noTimeToRest: [], noTimeToRestStage2: [], noTimeToRestStage3: [] };
 
 async function loadRandomFolder(key) {
-  if (randomFolderBuffers[key].length) return; // already loaded
-  const dir = RANDOM_FOLDERS[key];
+  const dir = randomFolderPaths(selectedCoach)[key];
   const ctx = getAudioCtx();
+  const buffers = [];
   const tasks = [];
   for (let i = 1; i <= RANDOM_FOLDER_MAX; i++) {
     tasks.push((async () => {
@@ -5904,18 +5928,24 @@ async function loadRandomFolder(key) {
         if (!res.ok) return;
         const arrBuf = await res.arrayBuffer();
         const buffer = await ctx.decodeAudioData(arrBuf);
-        randomFolderBuffers[key].push(buffer);
+        buffers.push(buffer);
       } catch (e) {
         // Missing slot or empty/placeholder file — silently skip.
       }
     })());
   }
   await Promise.all(tasks);
+  randomFolderBuffers[key] = buffers;
 }
-// Decoding doesn't need a gesture — load all three escalation folders right away.
-loadRandomFolder('noTimeToRest');
-loadRandomFolder('noTimeToRestStage2');
-loadRandomFolder('noTimeToRestStage3');
+
+function loadCoachSounds() {
+  loadRandomFolder('noTimeToRest');
+  loadRandomFolder('noTimeToRestStage2');
+  loadRandomFolder('noTimeToRestStage3');
+}
+// Decoding doesn't need a gesture — load the selected coach's three
+// escalation folders right away.
+loadCoachSounds();
 
 function playRandomFromFolder(key) {
   if (!otherSoundsEnabled) return;
@@ -6400,18 +6430,15 @@ document.getElementById('acct-login-btn').addEventListener('click', async () => 
 });
 
 // Usernames are compared purely by lowercase text ("test1" and "TEST1"
-// collide) and can't contain spaces at all — strip them as the user types
-// so what they see matches what actually gets saved.
-document.getElementById('acct-signup-username').addEventListener('input', (e) => {
-  e.target.value = e.target.value.replace(/\s+/g, '');
-});
-
+// collide) and can't contain spaces at all — reject on submit rather than
+// silently stripping, so the user knows why what they typed didn't save.
 document.getElementById('acct-signup-btn').addEventListener('click', async () => {
   showAcctError('acct-signup-error', '');
-  const username = document.getElementById('acct-signup-username').value.trim().replace(/\s+/g, '');
+  const username = document.getElementById('acct-signup-username').value.trim();
   const email = document.getElementById('acct-signup-email').value.trim();
   const password = document.getElementById('acct-signup-password').value;
   if (!username || !email || !password) { showAcctError('acct-signup-error', 'Fill in all fields.'); return; }
+  if (/\s/.test(username)) { showAcctError('acct-signup-error', 'Usernames can\'t contain spaces.'); return; }
   if (password.length < 6) { showAcctError('acct-signup-error', 'Password must be at least 6 characters.'); return; }
   const { data: takenBy } = await supabase.rpc('find_profile_by_username', { search: username });
   if (takenBy && takenBy.length) { showAcctError('acct-signup-error', 'That username is already taken.'); return; }
@@ -6443,8 +6470,9 @@ document.getElementById('avatar-username-edit-btn').addEventListener('click', as
   const current = document.getElementById('acct-username-display').textContent || '';
   const raw = await customPrompt('Enter a new username:', 'Username', current);
   if (!raw) return;
-  const next = raw.replace(/\s+/g, '');
+  const next = raw.trim();
   if (!next || next === current) return;
+  if (/\s/.test(next)) { showAcctError('avatar-username-error', 'Usernames can\'t contain spaces.'); return; }
   if (next.toLowerCase() === current.toLowerCase()) {
     // Case-only change (e.g. "Bob" -> "bob") — no availability conflict with self.
   } else {
@@ -13952,6 +13980,24 @@ document.querySelectorAll('#avatar-ui-options .avatar-inspiration-btn').forEach(
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('trainhard_uitheme', theme);
     syncUiThemeButtons();
+  });
+});
+
+function syncCoachButtons() {
+  document.querySelectorAll('#avatar-coach-options .avatar-inspiration-btn').forEach(btn => {
+    btn.classList.toggle('selected', btn.dataset.coachValue === selectedCoach);
+  });
+}
+syncCoachButtons();
+
+document.querySelectorAll('#avatar-coach-options .avatar-inspiration-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const coach = btn.dataset.coachValue;
+    if (!coach || coach === selectedCoach) return;
+    selectedCoach = coach;
+    localStorage.setItem('trainhard_coach', coach);
+    syncCoachButtons();
+    loadCoachSounds();
   });
 });
 
