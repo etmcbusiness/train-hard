@@ -1242,6 +1242,33 @@
     .exposure-set-cols, .exposure-set-row {
       grid-template-columns: 12px 1fr 48px 14px;
     }
+    .field-set-cols-single, .field-set-row-single {
+      grid-template-columns: 12px 62px 1fr 48px 14px;
+    }
+    .field-set-cols-none, .field-set-row-none {
+      grid-template-columns: 12px 1fr 48px 14px;
+    }
+    /* Cardio's Time field gets its own row below the main set row instead of
+       squeezing into the grid — the grid only has room for 1-2 compact numeric
+       fields before things start clipping. Reuses the single-field grid's
+       column widths (a leading spacer + a label column + a field column) so
+       the Time label/box line up with, and match the size of, a field box
+       above rather than stretching across the full row width. */
+    .field-time-row {
+      display: grid;
+      grid-template-columns: 12px 62px 1fr 48px 14px;
+      gap: 2px;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .field-time-label {
+      text-align: center;
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: rgb(var(--c-text4));
+    }
     .exposure-timer-btn {
       display: flex;
       flex-direction: column;
@@ -5156,6 +5183,9 @@
 
       <div class="nex-label" id="nex-bodypart-label">Body Part</div>
       <div class="nex-chips" id="nex-bodypart"></div>
+
+      <div class="nex-label" id="nex-bodypart-wellness-label">Wellness</div>
+      <div class="nex-chips" id="nex-bodypart-wellness"></div>
 
       <div class="nex-label" id="nex-category-label">Category</div>
       <div class="nex-chips" id="nex-category"></div>
@@ -9459,16 +9489,31 @@ let editCategory = null;
 let editPulleys = null;
 let editRestSecs = 90;
 
-function parseRestInput(str) {
+function parseRestInput(str, min = 15, max = 600) {
   str = (str || '').trim();
   let secs;
   if (str.includes(':')) {
-    const parts = str.split(':');
-    secs = (parseInt(parts[0]) || 0) * 60 + (parseInt(parts[1]) || 0);
+    // Supports both M:SS (rest time) and H:MM:SS (longer durations, e.g. cardio).
+    const parts = str.split(':').map(p => parseInt(p) || 0);
+    secs = parts.length >= 3
+      ? parts[0] * 3600 + parts[1] * 60 + parts[2]
+      : parts[0] * 60 + (parts[1] || 0);
   } else {
     secs = parseInt(str) || 0;
   }
-  return Math.min(600, Math.max(15, secs));
+  return Math.min(max, Math.max(min, secs));
+}
+
+// Formats seconds as H:MM:SS once past an hour, otherwise M:SS — used for
+// cardio Duration fields, which (unlike rest time) can run well past 10 minutes.
+function fmtDurationHMS(secs) {
+  secs = secs || 0;
+  const h = Math.floor(secs / 3600);
+  const m = Math.floor((secs % 3600) / 60);
+  const s = secs % 60;
+  return h > 0
+    ? `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+    : `${m}:${String(s).padStart(2, '0')}`;
 }
 
 function updateEditRestDisplay() {
@@ -9494,7 +9539,7 @@ function buildEditBodypartChips(selected) {
 function buildEditCategoryChips(selected) {
   const wrap = document.getElementById('edit-category');
   wrap.innerHTML = '';
-  NEX_CATEGORIES.forEach(cat => {
+  NEX_EDIT_CATEGORIES.forEach(cat => {
     const chip = document.createElement('div');
     chip.className = 'nex-chip' + (cat === selected ? ' selected' : '');
     chip.textContent = cat;
@@ -9741,10 +9786,15 @@ function makeStepper(initVal, step, min, onChange, max = Infinity) {
   minus.type = 'button';
   minus.textContent = '−';
 
+  // iOS Safari's keypad for type="number" never shows a decimal point (even
+  // with inputMode="decimal"), which made decimal-step fields like distance
+  // effectively impossible to type into. A plain text input with a decimal
+  // keypad — and manual digit/dot sanitizing — works everywhere instead.
+  const isDecimal = step < 1;
   const inp = document.createElement('input');
   inp.className = 'stepper-inp';
-  inp.type = 'number';
-  inp.inputMode = step < 1 ? 'decimal' : 'numeric';
+  inp.type = isDecimal ? 'text' : 'number';
+  inp.inputMode = isDecimal ? 'decimal' : 'numeric';
   inp.placeholder = '0';
   if (initVal !== '' && initVal !== undefined && initVal !== null) inp.value = initVal;
 
@@ -9757,7 +9807,16 @@ function makeStepper(initVal, step, min, onChange, max = Infinity) {
   wrap.appendChild(inp);
   wrap.appendChild(plus);
 
-  inp.addEventListener('input', () => onChange(inp.value));
+  inp.addEventListener('input', () => {
+    if (isDecimal) {
+      // Keep only digits and a single decimal point, e.g. "1.5", "1.98", "100".
+      let clean = inp.value.replace(/[^0-9.]/g, '');
+      const firstDot = clean.indexOf('.');
+      if (firstDot !== -1) clean = clean.slice(0, firstDot + 1) + clean.slice(firstDot + 1).replace(/\./g, '');
+      if (clean !== inp.value) inp.value = clean;
+    }
+    onChange(inp.value);
+  });
 
   function apply(delta) {
     const curr = parseFloat(inp.value) || 0;
@@ -9787,6 +9846,37 @@ function makeStepper(initVal, step, min, onChange, max = Infinity) {
   });
 
   return { wrap, inp };
+}
+
+// A tap-to-open H:MM:SS duration field, styled like a stepper but backed by
+// the rest-time numpad (extended to accept an unbounded range) instead of a
+// +/- stepper — used for the Cardio Duration/Distance field-kinds' time field.
+function makeDurationField(initSecs, onChange) {
+  const wrap = document.createElement('div');
+  wrap.className = 'stepper';
+
+  const inp = document.createElement('input');
+  inp.className = 'stepper-inp';
+  inp.type = 'text';
+  inp.readOnly = true;
+  inp.placeholder = '0:00';
+  inp.value = initSecs ? fmtDurationHMS(initSecs) : '';
+  inp.dataset.secs = initSecs || 0;
+  inp.addEventListener('click', () => {
+    openRestNumpad(parseInt(inp.dataset.secs) || 0, secs => {
+      inp.dataset.secs = secs;
+      inp.value = fmtDurationHMS(secs);
+      onChange(secs);
+    }, { min: 0, max: 86400, label: 'DURATION', fmt: fmtDurationHMS });
+  });
+
+  wrap.appendChild(inp);
+  return { wrap, inp };
+}
+
+function formatFieldValue(field, val) {
+  if (val === '' || val == null) return '';
+  return field.type === 'time' ? fmtDurationHMS(val) : String(val);
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -10154,7 +10244,7 @@ document.getElementById('finish-btn').addEventListener('click', () => {
     .filter(Boolean)
     .map(ex => ({
       ...ex,
-      sets: ex.sets.filter(s => s.done && (s.weight || s.reps || s.duration))
+      sets: ex.sets.filter(s => s.done && (s.weight || s.reps || s.duration || s.distance))
     }))
     .filter(ex => ex.sets.length > 0);
 
@@ -10554,12 +10644,20 @@ function addExerciseBlock(name, muscle, initialSets) {
   playSound('exerciseSelect');
   const idx = session.length;
   const isExposure = (state.exerciseMeta[name] || {}).expType === 'exposure';
+  const fieldKind = isExposure ? null : getExerciseFieldKind(name);
+  const shape = fieldKind && FIELD_KIND_SHAPES[fieldKind];
   const preSets = initialSets && initialSets.length
     ? (isExposure
         ? initialSets.map(s => ({ temp: s.temp || '', duration: s.duration || 0, done: s.done || false }))
+        : shape
+        ? initialSets.map(s => {
+            const set = { done: s.done || false };
+            shape.fields.forEach(f => { set[f.key] = s[f.key] || ''; });
+            return set;
+          })
         : initialSets.map(s => ({ weight: s.weight || '', reps: s.reps || '', done: s.done || false })))
     : [];
-  session.push({ name, muscle, sets: preSets, expType: isExposure ? 'exposure' : null });
+  session.push({ name, muscle, sets: preSets, expType: isExposure ? 'exposure' : null, fieldKind: shape ? fieldKind : null });
 
   const block = document.createElement('div');
   block.className = 'train-ex';
@@ -10608,6 +10706,8 @@ function addExerciseBlock(name, muscle, initialSets) {
   if (isExposure) {
     const epr = (state.exposurePRs || {})[name];
     prEl.innerHTML = epr ? `PR: <span>${epr.comboTemp}°F × ${fmtRestSecs(epr.comboDuration)}</span>` : '';
+  } else if (shape) {
+    prEl.innerHTML = '';
   } else {
     const pr = state.prs[name];
     const agoLabel = pr && pr.date ? `<span class="train-ex-pr-ago">(${fmtPRDaysAgo(pr.date)})</span>` : '';
@@ -10618,10 +10718,20 @@ function addExerciseBlock(name, muscle, initialSets) {
   curPrEl.className = 'train-ex-pr train-ex-cur-pr';
 
   const cols = document.createElement('div');
-  cols.className = isExposure ? 'set-cols exposure-set-cols' : 'set-cols';
-  cols.innerHTML = isExposure
-    ? '<span>Set</span><span>Temp and Duration</span><span></span><span></span>'
-    : '<span>Set</span><span>Previous</span><span>lbs</span><span>Reps</span><span></span><span></span>';
+  if (isExposure) {
+    cols.className = 'set-cols exposure-set-cols';
+    cols.innerHTML = '<span>Set</span><span>Temp and Duration</span><span></span><span></span>';
+  } else if (shape) {
+    // Time only gets bumped to its own row below when there isn't room for
+    // it alongside the other field(s) — i.e. only for the 3-field shape.
+    const rowFields = shape.fields.length > 2 ? shape.fields.filter(f => f.type !== 'time') : shape.fields;
+    cols.className = 'set-cols ' + fieldGridClassSuffix(rowFields.length, 'cols');
+    cols.innerHTML = '<span>Set</span><span>Previous</span>'
+      + rowFields.map(f => `<span>${f.label}</span>`).join('') + '<span></span><span></span>';
+  } else {
+    cols.className = 'set-cols';
+    cols.innerHTML = '<span>Set</span><span>Previous</span><span>lbs</span><span>Reps</span><span></span><span></span>';
+  }
 
   const setsContainer = document.createElement('div');
   setsContainer.className = 'sets-container';
@@ -10634,14 +10744,14 @@ function addExerciseBlock(name, muscle, initialSets) {
 
   block.appendChild(top);
   block.appendChild(prEl);
-  if (!isExposure) block.appendChild(curPrEl);
+  if (!isExposure && !shape) block.appendChild(curPrEl);
   block.appendChild(cols);
   block.appendChild(setsContainer);
   block.appendChild(addSetBtn);
 
   document.getElementById('train-exercises').appendChild(block);
   const setsEl = block.querySelector('.train-ex-sets');
-  if (setsEl) setsEl.innerHTML = isExposure ? '' : buildSetsLine(muscle);
+  if (setsEl) setsEl.innerHTML = (isExposure || shape) ? '' : buildSetsLine(muscle);
   if (preSets.length > 0) {
     renderSets(idx, block);
   } else {
@@ -10658,7 +10768,7 @@ function addExerciseBlock(name, muscle, initialSets) {
 // beat the existing per-rep-count record instead.
 function updateCurrentLbsPR(exIdx, block) {
   const ex = session[exIdx];
-  if (!ex || ex.expType === 'exposure') return;
+  if (!ex || ex.expType === 'exposure' || ex.fieldKind) return;
   const curPrEl = block.querySelector('.train-ex-cur-pr');
   if (!curPrEl) return;
   const activeSet = ex.sets.find(s => !s.done) || ex.sets[ex.sets.length - 1];
@@ -10866,6 +10976,7 @@ function renderSets(exIdx, block) {
   const ex = session[exIdx];
   if (!ex) return;
   if (ex.expType === 'exposure') { renderExposureSets(exIdx, block); return; }
+  if (ex.fieldKind && FIELD_KIND_SHAPES[ex.fieldKind]) { renderFieldSets(exIdx, block, ex.fieldKind); return; }
   const container = block.querySelector('.sets-container');
   container.innerHTML = '';
   const weightInps = [];
@@ -10983,6 +11094,157 @@ function renderSets(exIdx, block) {
     container.appendChild(row);
   }
   updateCurrentLbsPR(exIdx, block);
+}
+
+// Duration / Duration + Weight / Distance / Weighted + Distance — 1-3
+// numeric/time fields per set instead of weight+reps, data-driven off
+// FIELD_KIND_SHAPES. Only Weighted + Distance (3 fields) needs Time bumped to
+// its own row below — the other three fit their Time field inline just fine.
+function renderFieldSets(exIdx, block, kind) {
+  const ex = session[exIdx];
+  if (!ex) return;
+  const shape = FIELD_KIND_SHAPES[kind];
+  const splitTime = shape.fields.length > 2;
+  const rowFields = splitTime ? shape.fields.filter(f => f.type !== 'time') : shape.fields;
+  const timeField = splitTime ? shape.fields.find(f => f.type === 'time') : null;
+  const container = block.querySelector('.sets-container');
+  container.innerHTML = '';
+  const lastSets = getLastSetsForExercise(ex.name);
+  const rowInps = rowFields.map(() => []);
+  const timeInps = [];
+
+  function makeFieldWidget(f, setIdx, inps) {
+    const curVal = ex.sets[setIdx][f.key];
+    const onChange = val => {
+      touchActivity();
+      ex.sets[setIdx][f.key] = val;
+      for (let j = setIdx + 1; j < ex.sets.length; j++) {
+        ex.sets[j][f.key] = val;
+        if (inps[j]) {
+          if (f.type === 'time') {
+            inps[j].value = fmtDurationHMS(val);
+            inps[j].dataset.secs = val;
+          } else {
+            inps[j].value = val;
+          }
+        }
+      }
+      saveActiveSession();
+    };
+    const { wrap, inp } = f.type === 'time'
+      ? makeDurationField(curVal, onChange)
+      : makeStepper(curVal, f.step, 0, onChange);
+    if (lastSets) {
+      const hint = lastSets[Math.min(setIdx, lastSets.length - 1)];
+      if ((curVal === '' || curVal == null) && hint && hint[f.key] !== '' && hint[f.key] != null) {
+        inp.placeholder = formatFieldValue(f, hint[f.key]);
+        inp.classList.add('hist-hint');
+      }
+    }
+    return { wrap, inp };
+  }
+
+  for (let i = 0; i < ex.sets.length; i++) {
+    if (i > 0) {
+      const marker = document.createElement('div');
+      marker.className = 'rest-marker';
+      marker.dataset.exercise = ex.name;
+      const exRestSecs = (state.exerciseMeta[ex.name] || {}).restTime || restDuration;
+      marker.textContent = fmtRestSecs(exRestSecs);
+      container.appendChild(marker);
+    }
+    const setIdx = i;
+    const row = document.createElement('div');
+    row.className = 'set-row ' + fieldGridClassSuffix(rowFields.length, 'row');
+
+    const numEl = document.createElement('div');
+    numEl.className = 'set-num';
+    numEl.textContent = setIdx + 1;
+
+    const prevEl = document.createElement('div');
+    prevEl.className = 'set-previous';
+    const prevSet = lastSets && setIdx < lastSets.length ? lastSets[setIdx] : null;
+    prevEl.textContent = prevSet
+      ? shape.fields.map(f => {
+          const v = formatFieldValue(f, prevSet[f.key]);
+          return v ? (f.type === 'time' ? v : `${v}${f.label.toLowerCase()}`) : null;
+        }).filter(Boolean).join(' x ') || '—'
+      : '—';
+
+    row.appendChild(numEl);
+    row.appendChild(prevEl);
+
+    rowFields.forEach((f, fi) => {
+      const { wrap, inp } = makeFieldWidget(f, setIdx, rowInps[fi]);
+      rowInps[fi][setIdx] = inp;
+      row.appendChild(wrap);
+    });
+
+    const primaryField = shape.fields[shape.fields.length - 1].key;
+
+    const checkBtn = document.createElement('button');
+    checkBtn.className = 'set-check';
+    checkBtn.type = 'button';
+    checkBtn.textContent = '✓';
+    if (ex.sets[setIdx].done) checkBtn.classList.add('done');
+    checkBtn.addEventListener('click', () => {
+      touchActivity();
+      const val = parseFloat(ex.sets[setIdx][primaryField]) || 0;
+      if (!ex.sets[setIdx].done && val === 0) return;
+      ex.sets[setIdx].done = !ex.sets[setIdx].done;
+      checkBtn.classList.toggle('done', ex.sets[setIdx].done);
+      if (ex.sets[setIdx].done) {
+        playSound('setComplete');
+        markSetCompleted();
+        restCurrentExercise = ex.name;
+        const exRest = (state.exerciseMeta[ex.name] || {}).restTime;
+        startRestTimer(exRest || restDuration);
+      }
+      saveActiveSession();
+      updateModel();
+      updateAllTrainExSets();
+      refreshPickerIfOpen();
+    });
+    row.appendChild(checkBtn);
+
+    const delBtn = document.createElement('button');
+    delBtn.className = 'set-delete';
+    delBtn.type = 'button';
+    delBtn.textContent = '×';
+    delBtn.style.display = ex.sets.length > 1 ? '' : 'none';
+    delBtn.addEventListener('click', () => {
+      touchActivity();
+      playSound('delete');
+      ex.sets.splice(setIdx, 1);
+      renderFieldSets(parseInt(block.dataset.sessionIdx), block, kind);
+      saveActiveSession();
+      updateModel();
+      updateAllTrainExSets();
+      refreshPickerIfOpen();
+    });
+    row.appendChild(delBtn);
+
+    container.appendChild(row);
+
+    if (timeField) {
+      const timeRow = document.createElement('div');
+      timeRow.className = 'field-time-row';
+
+      // Empty spacer so the label/field land in the same grid columns as the
+      // Previous/field slots above (rather than starting flush at column 1).
+      timeRow.appendChild(document.createElement('div'));
+
+      const label = document.createElement('span');
+      label.className = 'field-time-label';
+      label.textContent = timeField.label;
+      timeRow.appendChild(label);
+
+      const { wrap, inp } = makeFieldWidget(timeField, setIdx, timeInps);
+      timeInps[setIdx] = inp;
+      timeRow.appendChild(wrap);
+      container.appendChild(timeRow);
+    }
+  }
 }
 
 function fmtExposureBtnValue(temp, duration) {
@@ -11127,6 +11389,12 @@ function addSet(exIdx, block) {
       }
     }
     ex.sets.push({ temp: prevTemp, duration: prevDuration, done: false });
+  } else if (ex.fieldKind && FIELD_KIND_SHAPES[ex.fieldKind]) {
+    const shape = FIELD_KIND_SHAPES[ex.fieldKind];
+    const prevSet = ex.sets[ex.sets.length - 1];
+    const newSet = { done: false };
+    shape.fields.forEach(f => { newSet[f.key] = prevSet ? (prevSet[f.key] ?? '') : ''; });
+    ex.sets.push(newSet);
   } else {
     ex.sets.push({ weight: '', reps: '', done: false });
   }
@@ -11683,7 +11951,7 @@ function updateAllTrainExSets() {
     const ex = session[idx];
     if (!ex) return;
     const el = block.querySelector('.train-ex-sets');
-    if (el) el.innerHTML = ex.expType === 'exposure' ? '' : buildSetsLine(ex.muscle);
+    if (el) el.innerHTML = (ex.expType === 'exposure' || ex.fieldKind) ? '' : buildSetsLine(ex.muscle);
   });
 }
 
@@ -12644,8 +12912,54 @@ document.getElementById('focus-picker-search').addEventListener('input', e => {
 
 const NEX_CATEGORIES = [
   'Barbell','Dumbbell','Cable Machine','Plate Loaded Machine',
-  'Weighted Body Weight','Assisted Body Weight','Reps Only','Cardio','Duration'
+  'Weighted Body Weight','Assisted Body Weight','Reps Only',
+  'Duration','Duration + Weight','Distance','Weighted + Distance'
 ];
+
+// The 4 categories below get real distinct logging fields (see FIELD_KIND_SHAPES)
+// instead of being a cosmetic name tag like every other category.
+const FIELD_KIND_CATEGORIES = {
+  'Duration': 'duration',
+  'Duration + Weight': 'durationWeight',
+  'Distance': 'distance',
+  'Weighted + Distance': 'weightedDistance',
+};
+// Editing an existing exercise can't safely switch it into/out of a field-kind
+// category (there's no migration path for already-logged sets), so the edit
+// modal only ever offers the plain cosmetic-tag categories.
+const NEX_EDIT_CATEGORIES = NEX_CATEGORIES.filter(c => !FIELD_KIND_CATEGORIES[c]);
+
+function getExerciseFieldKind(name) {
+  return (state.exerciseMeta[name] || {}).fieldKind || null;
+}
+
+// Each field is either a plain numeric stepper ('stepper', with a fixed step
+// size) or a tap-to-open H:MM:SS entry ('time', reusing the rest-time numpad).
+// Distance-based kinds log a time alongside distance (e.g. a 5k finish time).
+const FIELD_KIND_SHAPES = {
+  duration:         { fields: [{ key: 'duration', label: 'Time', type: 'time' }] },
+  durationWeight:   { fields: [{ key: 'weight', label: 'Lbs', type: 'stepper', step: 5 }, { key: 'duration', label: 'Time', type: 'time' }] },
+  distance:         { fields: [{ key: 'distance', label: 'Mi', type: 'stepper', step: 0.1 }, { key: 'duration', label: 'Time', type: 'time' }] },
+  weightedDistance: { fields: [{ key: 'weight', label: 'Lbs', type: 'stepper', step: 5 }, { key: 'distance', label: 'Mi', type: 'stepper', step: 0.1 }, { key: 'duration', label: 'Time', type: 'time' }] },
+};
+
+// The Time field (see FIELD_KIND_SHAPES) always renders in its own row below
+// the main one, so the main row only ever has 0-2 non-time fields: 0 reuses
+// the compact exposure-style grid, 1 uses the 5-column single-field grid,
+// and 2 reuse the standard weight+reps 6-column grid as-is.
+function fieldGridClassSuffix(fieldCount, kind) {
+  if (fieldCount === 0) return `field-set-${kind}-none`;
+  if (fieldCount === 1) return `field-set-${kind}-single`;
+  return '';
+}
+
+// Heat/Cold Exposure keep the existing Temp+Duration timer flow regardless of
+// category (see EXPOSURE_SUBTYPES) — a category tag there is purely cosmetic.
+function categoryOptionsFor(bodyPart) {
+  if (EXPOSURE_SUBTYPES[bodyPart]) return ['Duration'];
+  if (bodyPart === 'Cardio') return ['Duration', 'Duration + Weight', 'Distance', 'Weighted + Distance'];
+  return NEX_CATEGORIES;
+}
 
 let nexBodyPart = null;
 let nexCategory = null;
@@ -12670,49 +12984,74 @@ function openNewExModal(preselectedMuscle) {
   const isExposure = !!EXPOSURE_SUBTYPES[preselectedMuscle];
   const bpLabel = document.getElementById('nex-bodypart-label');
   const bpWrap = document.getElementById('nex-bodypart');
+  const wellnessLabel = document.getElementById('nex-bodypart-wellness-label');
+  const wellnessWrap = document.getElementById('nex-bodypart-wellness');
   bpLabel.style.display = isExposure ? 'none' : '';
   bpWrap.style.display = isExposure ? 'none' : '';
+  wellnessLabel.style.display = isExposure ? 'none' : '';
+  wellnessWrap.style.display = isExposure ? 'none' : '';
   bpWrap.innerHTML = '';
+  wellnessWrap.innerHTML = '';
+
+  function selectBodyPart(m, chip) {
+    bpWrap.querySelectorAll('.nex-chip').forEach(c => c.classList.remove('selected'));
+    wellnessWrap.querySelectorAll('.nex-chip').forEach(c => c.classList.remove('selected'));
+    chip.classList.add('selected');
+    nexBodyPart = m;
+    renderNexSuggestions();
+    renderNexCategoryChips();
+  }
+
   if (!isExposure) {
-    [...MUSCLES, ...WELLNESS_CATEGORIES, 'Other'].forEach(m => {
+    [...MUSCLES, 'Other'].forEach(m => {
       const chip = document.createElement('div');
       chip.className = 'nex-chip';
       chip.textContent = m;
       if (m === nexBodyPart) chip.classList.add('selected');
-      chip.addEventListener('click', () => {
-        bpWrap.querySelectorAll('.nex-chip').forEach(c => c.classList.remove('selected'));
-        chip.classList.add('selected');
-        nexBodyPart = m;
-        renderNexSuggestions();
-      });
+      chip.addEventListener('click', () => selectBodyPart(m, chip));
       bpWrap.appendChild(chip);
     });
-  }
-
-  const catLabel = document.getElementById('nex-category-label');
-  const catWrap = document.getElementById('nex-category');
-  const restLabel = document.getElementById('nex-resttime-label');
-  const restRow = document.getElementById('nex-resttime-row');
-  catLabel.style.display = isExposure ? 'none' : '';
-  catWrap.style.display = isExposure ? 'none' : '';
-  restLabel.style.display = isExposure ? 'none' : '';
-  restRow.style.display = isExposure ? 'none' : '';
-  catWrap.innerHTML = '';
-  if (!isExposure) {
-    NEX_CATEGORIES.forEach(cat => {
+    [...WELLNESS_CATEGORIES, 'Other'].forEach(m => {
       const chip = document.createElement('div');
       chip.className = 'nex-chip';
-      chip.textContent = cat;
-      chip.addEventListener('click', () => {
-        catWrap.querySelectorAll('.nex-chip').forEach(c => c.classList.remove('selected'));
-        chip.classList.add('selected');
-        nexCategory = cat;
-      });
-      catWrap.appendChild(chip);
+      chip.textContent = m;
+      if (m === nexBodyPart) chip.classList.add('selected');
+      chip.addEventListener('click', () => selectBodyPart(m, chip));
+      wellnessWrap.appendChild(chip);
     });
   }
 
+  const restLabel = document.getElementById('nex-resttime-label');
+  const restRow = document.getElementById('nex-resttime-row');
+  restLabel.style.display = isExposure ? 'none' : '';
+  restRow.style.display = isExposure ? 'none' : '';
+  renderNexCategoryChips();
+
   document.getElementById('new-ex-modal').classList.add('open');
+}
+
+function renderNexCategoryChips() {
+  const isExposure = !!EXPOSURE_SUBTYPES[nexBodyPart];
+  const catLabel = document.getElementById('nex-category-label');
+  const catWrap = document.getElementById('nex-category');
+  catLabel.style.display = isExposure ? 'none' : '';
+  catWrap.style.display = isExposure ? 'none' : '';
+  catWrap.innerHTML = '';
+  if (isExposure) return;
+
+  const options = categoryOptionsFor(nexBodyPart);
+  if (!options.includes(nexCategory)) nexCategory = null;
+  options.forEach(cat => {
+    const chip = document.createElement('div');
+    chip.className = 'nex-chip' + (cat === nexCategory ? ' selected' : '');
+    chip.textContent = cat;
+    chip.addEventListener('click', () => {
+      catWrap.querySelectorAll('.nex-chip').forEach(c => c.classList.remove('selected'));
+      chip.classList.add('selected');
+      nexCategory = cat;
+    });
+    catWrap.appendChild(chip);
+  });
 }
 
 function closeNewExModal() {
@@ -12779,6 +13118,7 @@ document.getElementById('new-ex-save').addEventListener('click', () => {
   if (!state.exerciseMeta[storedName]) state.exerciseMeta[storedName] = {};
   state.exerciseMeta[storedName].restTime = nexRestSecs;
   if (isExposure) state.exerciseMeta[storedName].expType = 'exposure';
+  if (FIELD_KIND_CATEGORIES[nexCategory]) state.exerciseMeta[storedName].fieldKind = FIELD_KIND_CATEGORIES[nexCategory];
   save();
   renderExercises();
   closeNewExModal();
@@ -14061,15 +14401,24 @@ function attachTrainNumpad(inp, pairInp, checkBtn, field) {
 (function () {
   let rnpTyped = '';
   let rnpCallback = null;
+  let rnpMin = 15;
+  let rnpMax = 600;
 
   const numpad   = document.getElementById('rest-numpad');
   const backdrop = document.getElementById('rnp-backdrop');
   const display  = document.getElementById('rnp-display');
+  const labelEl  = document.getElementById('rnp-label');
 
-  window.openRestNumpad = function (currentSecs, onDone) {
+  // opts: { min, max, label, fmt } — used to repurpose this same numpad for
+  // longer/unbounded durations (e.g. cardio sets), not just the 15s-10min rest timer.
+  window.openRestNumpad = function (currentSecs, onDone, opts) {
+    opts = opts || {};
     rnpTyped = '';
     rnpCallback = onDone;
-    display.textContent = fmtRestSecs(currentSecs);
+    rnpMin = opts.min != null ? opts.min : 15;
+    rnpMax = opts.max != null ? opts.max : 600;
+    display.textContent = (opts.fmt || fmtRestSecs)(currentSecs);
+    if (labelEl) labelEl.textContent = opts.label || 'REST TIME';
     numpad.classList.add('open');
   };
 
@@ -14081,7 +14430,7 @@ function attachTrainNumpad(inp, pairInp, checkBtn, field) {
 
   function commit() {
     if (rnpCallback) {
-      const secs = rnpTyped ? parseRestInput(rnpTyped) : null;
+      const secs = rnpTyped ? parseRestInput(rnpTyped, rnpMin, rnpMax) : null;
       if (secs !== null) rnpCallback(secs);
     }
     closeNumpad();
@@ -14091,7 +14440,7 @@ function attachTrainNumpad(inp, pairInp, checkBtn, field) {
     if (val === 'back') {
       rnpTyped = rnpTyped.slice(0, -1);
     } else if (val === ':') {
-      if (!rnpTyped.includes(':')) rnpTyped += ':';
+      if ((rnpTyped.match(/:/g) || []).length < 2) rnpTyped += ':';
     } else {
       rnpTyped += val;
     }
