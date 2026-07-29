@@ -1527,9 +1527,21 @@
       white-space: nowrap;
     }
     #picker-heading {
+      flex: 1;
+      text-align: center;
       font-size: 16px;
       font-weight: 800;
       color: rgb(var(--c-text));
+    }
+    #picker-catchup-bar {
+      display: flex;
+      padding: 14px 18px;
+      background: rgba(var(--c-panel3),0.9);
+      border-bottom: 1px solid rgba(var(--c-accent3),0.15);
+      flex-shrink: 0;
+      position: sticky;
+      top: 0;
+      z-index: 2;
     }
     #picker-muscle-grid {
       flex: 1;
@@ -1568,22 +1580,49 @@
     .picker-muscle-name { font-size: 13px; font-weight: 700; color: rgb(var(--c-text)); line-height: 1.2; }
     .picker-muscle-last { font-size: 9px; color: rgb(var(--c-text3)); opacity: 0.75; margin-top: 2px; }
     .picker-muscle-count { font-size: 11px; color: rgb(var(--c-text3)); margin-top: 2px; }
-    #picker-catchup-btn {
-      background: rgba(var(--c-panel3),0.88);
-      border: 1px solid rgba(var(--c-accent2),0.35);
-      border-radius: 10px;
-      color: rgb(var(--c-text2));
-      font-size: 11px;
-      font-weight: 700;
-      padding: 6px 12px;
-      cursor: pointer;
-      letter-spacing: 0.4px;
-      white-space: nowrap;
+    /* Catch Up bar: two separate full-size buttons filling the bar's width. */
+    .catchup-segmented {
+      display: flex;
+      flex: 1;
+      gap: 10px;
     }
-    #picker-catchup-btn.active {
+    .catchup-seg {
+      flex: 1;
+      background: rgba(var(--c-panel2),0.85);
+      border: 1px solid rgba(var(--c-accent2),0.3);
+      border-radius: 12px;
+      color: rgb(var(--c-text2));
+      font-size: 14px;
+      font-weight: 700;
+      padding: 12px 10px;
+      cursor: pointer;
+      letter-spacing: 0.3px;
+      white-space: nowrap;
+      transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+    }
+    .catchup-seg.level.active {
       border-color: #C8C8C8;
+      background: rgba(200,200,200,0.14);
       color: #C8C8C8;
-      box-shadow: 0 0 10px rgba(200,200,200,0.25);
+    }
+    .catchup-seg.oldest.active {
+      border-color: #FFB040;
+      background: rgba(255,176,64,0.14);
+      color: #FFB040;
+    }
+    .catchup-seg.level.active.pulsing {
+      animation: catchup-pulse-level 1.6s ease-in-out infinite;
+    }
+    .catchup-seg.oldest.active.pulsing {
+      animation: catchup-pulse-oldest 1.6s ease-in-out infinite;
+    }
+    @keyframes catchup-pulse-level {
+      0%, 100% { background: rgba(200,200,200,0.14); }
+      50% { background: rgba(200,200,200,0.32); }
+    }
+    @keyframes catchup-pulse-oldest {
+      0%, 100% { background: rgba(255,176,64,0.14); }
+      50% { background: rgba(255,176,64,0.32); }
     }
     .picker-muscle-btn.catchup-highlight {
       background: rgba(200,200,200,0.07);
@@ -1871,7 +1910,7 @@
     }
     #profile-btns-right.visible { display: flex; }
     #profile-btns.visible { display: flex; }
-    #profile-menu-btn, #weekly-overview-btn, #testing-btn, #exit-testing-btn, #friends-btn, #challenges-btn {
+    #profile-menu-btn, #weekly-overview-btn, #testing-btn, #testing-cardio-btn, #exit-testing-btn, #friends-btn, #challenges-btn {
       background: rgba(var(--c-panel3),0.88);
       border: 1px solid rgba(var(--c-accent2),0.35);
       border-radius: 12px;
@@ -3297,26 +3336,19 @@
     #weekly-overview-header {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      padding: 14px 16px 0;
+      justify-content: center;
+      padding: 14px 16px;
       flex-shrink: 0;
     }
-    #catchup-btn {
-      background: rgba(var(--c-panel3),0.88);
-      border: 1px solid rgba(var(--c-accent2),0.35);
-      border-radius: 10px;
-      color: rgb(var(--c-text2));
-      font-size: 11px;
-      font-weight: 700;
-      padding: 6px 12px;
-      cursor: pointer;
-      letter-spacing: 0.4px;
-      white-space: nowrap;
-    }
-    #catchup-btn.active {
-      border-color: #C8C8C8;
-      color: #C8C8C8;
-      box-shadow: 0 0 10px rgba(200,200,200,0.25);
+    #wo-catchup-bar {
+      display: flex;
+      padding: 14px 16px;
+      flex-shrink: 0;
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      background: rgba(var(--c-panel1),0.97);
+      border-bottom: 1px solid rgba(var(--c-accent3),0.15);
     }
     .wo-row.catchup-highlight {
       background: rgba(200,200,200,0.07);
@@ -3443,6 +3475,10 @@
     }
     .wo-sets-th {
       color: rgb(var(--c-text4));
+    }
+    .wo-sets-unit {
+      color: rgb(var(--c-text5));
+      margin-left: 1px;
     }
     .wo-last {
       font-size: 9px;
@@ -5099,7 +5135,12 @@
     <div id="picker-top">
       <button id="picker-close">Cancel</button>
       <div id="picker-heading">Add Exercise</div>
-      <button id="picker-catchup-btn">Catch Up</button>
+    </div>
+    <div id="picker-catchup-bar">
+      <div id="picker-catchup-group" class="catchup-segmented">
+        <button id="picker-catchup-level-btn" class="catchup-seg level">Level</button>
+        <button id="picker-catchup-oldest-btn" class="catchup-seg oldest">Oldest</button>
+      </div>
     </div>
     <div id="picker-muscle-grid"></div>
   </div>
@@ -5300,7 +5341,8 @@
   <button id="profile-menu-btn">Profile</button>
   <button id="avatar-btn">Avatar</button>
   <button id="weekly-overview-btn">Weekly Overview</button>
-  <button id="testing-btn" style="margin-top:20px;">Testing</button>
+  <button id="testing-btn" style="margin-top:20px;">Testing: Muscles</button>
+  <button id="testing-cardio-btn">Testing: Cardio</button>
   <button id="exit-testing-btn" style="display:none;">Exit Testing</button>
 </div>
 
@@ -5575,7 +5617,12 @@
   <div id="weekly-overview-inner">
     <div id="weekly-overview-header">
       <span id="weekly-overview-title">Weekly Overview</span>
-      <button id="catchup-btn">Catch Up</button>
+    </div>
+    <div id="wo-catchup-bar">
+      <div id="wo-catchup-group" class="catchup-segmented">
+        <button id="catchup-level-btn" class="catchup-seg level">Level</button>
+        <button id="catchup-oldest-btn" class="catchup-seg oldest">Oldest</button>
+      </div>
     </div>
     <div id="weekly-overview-body">
       <div id="weekly-overview-list"></div>
@@ -6024,6 +6071,7 @@ const SOUND_HANDLED_BUTTON_SELECTORS = [
   '#weekly-overview-btn',// commonButton (explicit)
   '#avatar-btn',         // commonButton (explicit)
   '#testing-btn',        // levelUp (explicit, no commonButton)
+  '#testing-cardio-btn', // levelUp (explicit, no commonButton)
   '#exit-testing-btn',   // commonButton (explicit)
   '#room-close-btn',     // roomSelect
   '#add-ex-main',        // commonButton (explicit)
@@ -7831,9 +7879,15 @@ function getLiveSessionSets(muscle) {
 
 // Profile tab "Testing" mode: when set (1-5), every muscle reports this level
 // instead of its real computed one, so the whole level-based visual system
-// (muscle glow, hair colors/badges, Core Aura) can be previewed without
-// touching real workout history. null = normal, real behavior.
+// (muscle glow, hair colors/badges) can be previewed without touching real
+// workout history. null = normal, real behavior.
 let testingLevelOverride = null;
+
+// Separate "Testing" override for Cardio's own level (drives the Core Aura —
+// see getCardioLevel()/updateCoreAuraForLevel()). Independent of
+// testingLevelOverride since Cardio's level is no longer tied to the
+// all-muscles evolution.
+let testingCardioLevelOverride = null;
 
 function getLevel(muscle) {
   if (testingLevelOverride != null) return testingLevelOverride;
@@ -7856,6 +7910,43 @@ function getHairLevel() {
   return 1;
 }
 
+// Cardio's weekly goal, in minutes (mirrors getGoal()'s sets-goal for
+// muscles, just a different unit — Cardio is tracked purely by duration).
+// Stored in state.goals.Cardio as seconds, same convention as the Heat/Cold
+// Exposure duration goals (see buildGoalsList's DURATION_GOAL_CATEGORIES).
+function getCardioGoal() {
+  const val = parseInt((state.goals || {}).Cardio);
+  const secs = (!isNaN(val) && val >= 300) ? val : 3600;
+  return secs / 60;
+}
+
+function getCardioLiveSessionDuration() {
+  if (!livePreviewActive) return 0;
+  let secs = 0;
+  for (const ex of session) {
+    if (ex && ex.muscle === 'Cardio') {
+      secs += ex.sets.filter(s => s.done).reduce((sum, s) => sum + (s.duration || 0), 0);
+    }
+  }
+  return secs;
+}
+
+// Cardio's own level (1-5), same quarter-of-goal math as getLevel() for
+// muscles, but measured in minutes of weekly duration instead of set count.
+// Drives the Core Aura (see updateCoreAuraForLevel()) — independent of the
+// all-muscles evolution used for hair/badges.
+function getCardioLevel() {
+  if (testingCardioLevelOverride != null) return testingCardioLevelOverride;
+  const minutes = (getWellnessWeeklyDuration('Cardio') + getCardioLiveSessionDuration()) / 60;
+  const goal = getCardioGoal();
+  if (minutes >= goal) return 5;
+  const step = goal / 4;
+  if (minutes >= step * 3) return 4;
+  if (minutes >= step * 2) return 3;
+  if (minutes >= step * 1) return 2;
+  return 1;
+}
+
 function updateModel() {
   for (const muscle of MUSCLES) {
     const meshes = meshMap[muscle];
@@ -7869,7 +7960,7 @@ function updateModel() {
 
   const hl = getHairLevel();
   const hairOpt = loadHairOption();
-  updateCoreAuraForLevel(hl);
+  updateCoreAuraForLevel(getCardioLevel());
 
   const hair = meshMap['Hair'];
   if (hair) {
@@ -10054,6 +10145,7 @@ function startRestTimer(duration) {
   updateRestDisplay();
   document.getElementById('rest-timer-bar').classList.add('active');
   restInterval = setInterval(tickRestTimer, 500);
+  scheduleNativeRestNotification(restEndTime);
 }
 
 function tickRestTimer() {
@@ -10075,6 +10167,7 @@ function stopRestTimer() {
   restEndTime = 0;
   document.getElementById('rest-timer-bar').classList.remove('active');
   document.getElementById('rest-complete-flash').classList.remove('flash');
+  cancelNativeRestNotification();
 }
 
 function flashRestComplete() {
@@ -10112,6 +10205,7 @@ document.getElementById('rest-minus-btn').addEventListener('click', () => {
   if (restInterval) {
     restEndTime = Math.max(Date.now() + 1000, restEndTime - 15000);
     tickRestTimer();
+    if (restInterval) scheduleNativeRestNotification(restEndTime);
   }
 });
 
@@ -10130,6 +10224,7 @@ document.getElementById('rest-plus-btn').addEventListener('click', () => {
   if (restInterval) {
     restEndTime = restEndTime + 15000;
     tickRestTimer();
+    scheduleNativeRestNotification(restEndTime);
   }
 });
 
@@ -10779,7 +10874,10 @@ function addExerciseBlock(name, muscle, initialSets) {
 
   document.getElementById('train-exercises').appendChild(block);
   const setsEl = block.querySelector('.train-ex-sets');
-  if (setsEl) setsEl.innerHTML = (isExposure || shape) ? '' : buildSetsLine(muscle);
+  if (setsEl) {
+    if (muscle === 'Cardio') setsEl.innerHTML = buildCardioSetsLine();
+    else setsEl.innerHTML = (isExposure || shape) ? '' : buildSetsLine(muscle);
+  }
   if (preSets.length > 0) {
     renderSets(idx, block);
   } else {
@@ -11970,7 +12068,22 @@ function buildSetsLine(muscle) {
   const step = goal / 4;
   const thresholds = [Math.floor(step), Math.floor(step * 2), Math.floor(step * 3), goal];
   return `<span class="wo-sets-cur" style="color:${color}">${sets}</span>`
-    + thresholds.map(t => `<span class="wo-sets-sep">/</span><span class="wo-sets-th">${t}</span>`).join('');
+    + thresholds.map(t => `<span class="wo-sets-sep">/</span><span class="wo-sets-th">${t}</span>`).join('')
+    + `<span class="wo-sets-unit"> sets</span>`;
+}
+
+// Cardio equivalent of buildSetsLine() — same current/thresholds shape, just
+// in minutes instead of sets.
+function buildCardioSetsLine() {
+  const lv = getCardioLevel();
+  const color = LEVEL_COLORS[lv];
+  const minutes = Math.round((getWellnessWeeklyDuration('Cardio') + getCardioLiveSessionDuration()) / 60);
+  const goal = getCardioGoal();
+  const step = goal / 4;
+  const thresholds = [Math.round(step), Math.round(step * 2), Math.round(step * 3), Math.round(goal)];
+  return `<span class="wo-sets-cur" style="color:${color}">${minutes}</span>`
+    + thresholds.map(t => `<span class="wo-sets-sep">/</span><span class="wo-sets-th">${t}</span>`).join('')
+    + `<span class="wo-sets-unit"> min</span>`;
 }
 
 function updateAllTrainExSets() {
@@ -11979,33 +12092,58 @@ function updateAllTrainExSets() {
     const ex = session[idx];
     if (!ex) return;
     const el = block.querySelector('.train-ex-sets');
-    if (el) el.innerHTML = (ex.expType === 'exposure' || ex.fieldKind) ? '' : buildSetsLine(ex.muscle);
+    if (!el) return;
+    if (ex.muscle === 'Cardio') el.innerHTML = buildCardioSetsLine();
+    else el.innerHTML = (ex.expType === 'exposure' || ex.fieldKind) ? '' : buildSetsLine(ex.muscle);
   });
 }
 
-// Cycles a Catch Up button through: off -> highlight by lowest level -> highlight by oldest last-worked -> off.
-// While in a highlight mode, steps through each rank (lowest/oldest first) one at a time,
-// holding each for 1s, then pausing 2s before looping back to the start.
-function applyCatchupMode(mode, rowSelector, btn) {
+// Current Catch Up state per overlay — lives here rather than on a button's
+// dataset since each overlay now has two buttons sharing one active state.
+// mode: 0 = off, 1 = Level, 2 = Oldest. stage (only meaningful when mode is
+// 1 or 2): 1 = static highlight (single most-extreme row, no animation),
+// 2 = pulsing highlight (steps through every rank + a pulsing button glow).
+let pickerCatchupMode = 0;
+let pickerCatchupStage = 0;
+let weeklyCatchupMode = 0;
+let weeklyCatchupStage = 0;
+
+// Drives a pair of independent Catch Up toggle buttons (Level / Oldest)
+// sharing one set of rows. Only one can be active at a time — turning one on
+// switches the other off — since both would otherwise fight over the same
+// rows' highlight class.
+function applyCatchupMode(mode, stage, rowSelector, levelBtn, oldestBtn) {
   const rows = document.querySelectorAll(rowSelector);
   rows.forEach(r => r.classList.remove('catchup-highlight', 'catchup-highlight-oldest'));
-  if (btn._catchupTimer) {
-    clearTimeout(btn._catchupTimer);
-    btn._catchupTimer = null;
-  }
-  btn.classList.remove('active');
-  btn.textContent = 'Catch Up';
+  [levelBtn, oldestBtn].forEach(b => {
+    if (b._catchupTimer) {
+      clearTimeout(b._catchupTimer);
+      b._catchupTimer = null;
+    }
+    b.classList.remove('active', 'pulsing');
+  });
   if (mode !== 1 && mode !== 2) return;
 
+  const btn = mode === 1 ? levelBtn : oldestBtn;
   const highlightClass = mode === 1 ? 'catchup-highlight' : 'catchup-highlight-oldest';
   btn.classList.add('active');
-  btn.textContent = mode === 1 ? 'Catch Up: Level' : 'Catch Up: Oldest';
 
   const getVal = r => mode === 1 ? parseInt(r.dataset.level) : parseFloat(r.dataset.hoursAgo);
   const rowsArr = [...rows];
   const ranks = [...new Set(rowsArr.map(getVal))].sort((a, b) => mode === 1 ? a - b : b - a);
   if (!ranks.length) return;
 
+  if (stage === 1) {
+    // Static highlight — just the single most-extreme rank, held constant.
+    const val = ranks[0];
+    rowsArr.forEach(r => r.classList.toggle(highlightClass, getVal(r) === val));
+    return;
+  }
+
+  // stage 2 — pulsing: button glow pulses, and it steps through every rank
+  // (lowest level / oldest last-worked first) one at a time, holding each
+  // for 2s, pausing 4s before looping back to the start.
+  btn.classList.add('pulsing');
   let i = 0;
   const step = () => {
     if (i >= ranks.length) {
@@ -12024,22 +12162,27 @@ function applyCatchupMode(mode, rowSelector, btn) {
 
 function refreshPickerIfOpen() {
   if (!document.getElementById('picker').classList.contains('open')) return;
-  const btn = document.getElementById('picker-catchup-btn');
-  const modeWas = parseInt(btn.dataset.mode || '0');
+  const modeWas = pickerCatchupMode;
+  const stageWas = pickerCatchupStage;
   renderPickerMuscleGrid();
   if (modeWas) {
-    btn.dataset.mode = modeWas;
-    applyCatchupMode(modeWas, '.picker-muscle-btn', btn);
+    pickerCatchupMode = modeWas;
+    pickerCatchupStage = stageWas;
+    applyCatchupMode(
+      modeWas, stageWas, '.picker-muscle-btn',
+      document.getElementById('picker-catchup-level-btn'),
+      document.getElementById('picker-catchup-oldest-btn')
+    );
   }
 }
 
 function renderPickerMuscleGrid() {
   const grid = document.getElementById('picker-muscle-grid');
   grid.innerHTML = '';
-  const catchupBtn = document.getElementById('picker-catchup-btn');
-  catchupBtn.dataset.mode = '0';
-  catchupBtn.classList.remove('active');
-  catchupBtn.textContent = 'Catch Up';
+  pickerCatchupMode = 0;
+  pickerCatchupStage = 0;
+  document.getElementById('picker-catchup-level-btn').classList.remove('active', 'pulsing');
+  document.getElementById('picker-catchup-oldest-btn').classList.remove('active', 'pulsing');
   for (const group of MUSCLE_GROUPS) {
     const header = document.createElement('div');
     header.className = 'picker-group-header';
@@ -12075,18 +12218,36 @@ function renderPickerMuscleGrid() {
   for (const category of WELLNESS_CATEGORIES) {
     const lastInfo = getMuscleLastTrainedInfo(category);
     const lastLabel = fmtMuscleLastTrained(lastInfo);
-    const count = (state.exercises[category] || []).length;
-    const countLabel = count ? `${count} exercise${count === 1 ? '' : 's'}` : 'Tap to add';
     const btn = document.createElement('button');
     btn.className = 'picker-wellness-btn';
-    btn.innerHTML = `
-      <div class="picker-muscle-dot" style="background:rgba(var(--c-text3),0.6);"></div>
-      <div>
-        <div class="picker-muscle-name">${category}</div>
-        <div class="picker-muscle-last">${lastLabel || 'never'}</div>
-        <div class="picker-muscle-count" style="font-size:10px;">${countLabel}</div>
-      </div>
-    `;
+    if (category === 'Cardio') {
+      const lv = getCardioLevel();
+      const dotColor = LEVEL_COLORS[lv];
+      // Also a '.picker-muscle-btn' so Cardio participates in Catch Up
+      // (level/oldest ranking) alongside the actual muscles.
+      btn.classList.add('picker-muscle-btn');
+      btn.dataset.level = lv;
+      btn.dataset.hoursAgo = lastInfo ? lastInfo.hoursAgo : 'Infinity';
+      btn.innerHTML = `
+        <div class="picker-muscle-dot" style="background:${dotColor};box-shadow:0 0 6px ${dotColor};"></div>
+        <div>
+          <div class="picker-muscle-name">${category}</div>
+          <div class="picker-muscle-last">${lastLabel || 'never'}</div>
+          <div class="picker-muscle-count" style="font-size:10px;"><span style="color:${dotColor}">Lv ${lv}</span> · ${buildCardioSetsLine()}</div>
+        </div>
+      `;
+    } else {
+      const count = (state.exercises[category] || []).length;
+      const countLabel = count ? `${count} exercise${count === 1 ? '' : 's'}` : 'Tap to add';
+      btn.innerHTML = `
+        <div class="picker-muscle-dot" style="background:rgba(var(--c-text3),0.6);"></div>
+        <div>
+          <div class="picker-muscle-name">${category}</div>
+          <div class="picker-muscle-last">${lastLabel || 'never'}</div>
+          <div class="picker-muscle-count" style="font-size:10px;">${countLabel}</div>
+        </div>
+      `;
+    }
     btn.addEventListener('click', () => { playSound('commonButton'); openPickerExPopup(category); });
     grid.appendChild(btn);
   }
@@ -12094,18 +12255,19 @@ function renderPickerMuscleGrid() {
 
 function openPickerExPopup(muscle) {
   const isWellness = WELLNESS_CATEGORIES.includes(muscle);
-  const lv = getLevel(muscle);
+  const isCardio = muscle === 'Cardio';
+  const lv = isCardio ? getCardioLevel() : getLevel(muscle);
   const dotColor = LEVEL_COLORS[lv];
   const exList = state.exercises[muscle] || [];
 
-  document.getElementById('picker-ex-dot').style.cssText = isWellness
+  document.getElementById('picker-ex-dot').style.cssText = (isWellness && !isCardio)
     ? 'display:none;'
     : `background:${dotColor};box-shadow:0 0 8px ${dotColor};width:12px;height:12px;border-radius:50%;flex-shrink:0;`;
   document.getElementById('picker-ex-name').textContent = muscle;
 
   const exSetsEl = document.getElementById('picker-ex-sets');
-  exSetsEl.style.display = isWellness ? 'none' : '';
-  exSetsEl.innerHTML = isWellness ? '' : buildSetsLine(muscle);
+  exSetsEl.style.display = (isWellness && !isCardio) ? 'none' : '';
+  exSetsEl.innerHTML = isCardio ? buildCardioSetsLine() : (isWellness ? '' : buildSetsLine(muscle));
 
   const list = document.getElementById('picker-ex-list');
   list.innerHTML = '';
@@ -12219,12 +12381,23 @@ document.getElementById('picker-close').addEventListener('click', () => {
   closePicker();
 });
 
-document.getElementById('picker-catchup-btn').addEventListener('click', () => {
-  const btn = document.getElementById('picker-catchup-btn');
-  const mode = (parseInt(btn.dataset.mode || '0') + 1) % 3;
-  btn.dataset.mode = mode;
-  applyCatchupMode(mode, '.picker-muscle-btn', btn);
-});
+function pickerCatchupToggle(which) {
+  if (pickerCatchupMode !== which) {
+    // Switching to this button (or turning on from off) — start at stage 1.
+    pickerCatchupMode = which;
+    pickerCatchupStage = 1;
+  } else {
+    pickerCatchupStage++;
+    if (pickerCatchupStage > 2) { pickerCatchupMode = 0; pickerCatchupStage = 0; }
+  }
+  applyCatchupMode(
+    pickerCatchupMode, pickerCatchupStage, '.picker-muscle-btn',
+    document.getElementById('picker-catchup-level-btn'),
+    document.getElementById('picker-catchup-oldest-btn')
+  );
+}
+document.getElementById('picker-catchup-level-btn').addEventListener('click', () => pickerCatchupToggle(1));
+document.getElementById('picker-catchup-oldest-btn').addEventListener('click', () => pickerCatchupToggle(2));
 
 document.getElementById('picker').addEventListener('click', (e) => {
   if (e.target === document.getElementById('picker')) closePicker();
@@ -13309,14 +13482,16 @@ function buildGoalsList() {
     }
   }
 
-  // Wellness categories get a goal too, but intentionally stay disconnected
-  // from getLevel()/updateModel() — no avatar or leveling effect.
+  // Wellness categories get a goal too. Most stay intentionally disconnected
+  // from getLevel()/updateModel() — no avatar or leveling effect — except
+  // Cardio, whose duration goal drives getCardioLevel() (see below) and
+  // therefore the Core Aura, so its stepper does call updateModel().
   const wellnessHeader = document.createElement('div');
   wellnessHeader.className = 'picker-group-header';
   wellnessHeader.textContent = 'Wellness';
   list.appendChild(wellnessHeader);
 
-  const DURATION_GOAL_CATEGORIES = new Set(['Heat Exposure', 'Cold Exposure']);
+  const DURATION_GOAL_CATEGORIES = new Set(['Heat Exposure', 'Cold Exposure', 'Cardio']);
 
   for (const muscle of WELLNESS_CATEGORIES) {
     const key = muscle.replace(/\s/g, '_');
@@ -13347,7 +13522,9 @@ function buildGoalsList() {
         inp.value = mins;
         const lbl = document.getElementById(`goal-label-${key}`);
         if (lbl) lbl.textContent = fmtHMS(g[muscle]);
-        // No updateModel() — wellness goals don't touch the avatar or leveling.
+        // Cardio's duration goal drives getCardioLevel()/the Core Aura;
+        // Heat/Cold Exposure don't touch the avatar or leveling.
+        if (muscle === 'Cardio') updateModel();
       });
       stepperWrap.appendChild(wrap);
     } else {
@@ -13823,7 +14000,15 @@ document.querySelectorAll('.avatar-hair-card').forEach(card => {
 document.getElementById('testing-btn').addEventListener('click', () => {
   testingLevelOverride = testingLevelOverride == null ? 1 : (testingLevelOverride % 5) + 1;
   playSound('levelUp');
-  document.getElementById('testing-btn').textContent = 'Testing: Level ' + testingLevelOverride;
+  document.getElementById('testing-btn').textContent = 'Testing: Muscles ' + testingLevelOverride;
+  document.getElementById('exit-testing-btn').style.display = '';
+  updateModel();
+});
+
+document.getElementById('testing-cardio-btn').addEventListener('click', () => {
+  testingCardioLevelOverride = testingCardioLevelOverride == null ? 1 : (testingCardioLevelOverride % 5) + 1;
+  playSound('levelUp');
+  document.getElementById('testing-cardio-btn').textContent = 'Testing: Cardio ' + testingCardioLevelOverride;
   document.getElementById('exit-testing-btn').style.display = '';
   updateModel();
 });
@@ -13831,7 +14016,9 @@ document.getElementById('testing-btn').addEventListener('click', () => {
 document.getElementById('exit-testing-btn').addEventListener('click', () => {
   playSound('commonButton');
   testingLevelOverride = null;
-  document.getElementById('testing-btn').textContent = 'Testing';
+  testingCardioLevelOverride = null;
+  document.getElementById('testing-btn').textContent = 'Testing: Muscles';
+  document.getElementById('testing-cardio-btn').textContent = 'Testing: Cardio';
   document.getElementById('exit-testing-btn').style.display = 'none';
   updateModel();
 });
@@ -13900,18 +14087,75 @@ document.getElementById('other-sounds-toggle-btn').addEventListener('click', () 
   syncOtherSoundsToggle();
 });
 
-// Rest-timer completion alert via the Notification API. Only fires while
-// the tab/PWA is backgrounded — when it's in view, the on-screen flash and
-// sound already cover it — so this needs both the toggle on and OS-level
-// permission granted (requested from the toggle's click, a user gesture).
-let notificationsEnabled = typeof Notification !== 'undefined' &&
-  Notification.permission === 'granted' &&
-  localStorage.getItem('trainhard_notifications') === 'on';
+// ── Native local notifications (Capacitor wrapper) ──
+// In the wrapped iOS/Android app, the web Notification API below can't be
+// relied on: iOS suspends a backgrounded WebView's JS almost immediately,
+// so a `setInterval`-driven notification never fires once you leave the
+// app. Capacitor's LocalNotifications plugin instead hands the OS a
+// wall-clock time up front, so delivery doesn't depend on our JS still
+// running. `Capacitor.Plugins.<Name>` works without a bundler/import —
+// the native runtime exposes every registered native plugin there directly.
+const REST_NOTIF_ID = 90210;
+
+function isNativeApp() {
+  return typeof Capacitor !== 'undefined' && Capacitor.isNativePlatform && Capacitor.isNativePlatform();
+}
+
+function nativeLocalNotifications() {
+  return isNativeApp() && Capacitor.Plugins && Capacitor.Plugins.LocalNotifications;
+}
+
+async function ensureNativeNotificationPermission() {
+  const LN = nativeLocalNotifications();
+  if (!LN) return false;
+  const current = await LN.checkPermissions().catch(() => ({ display: 'denied' }));
+  if (current.display === 'granted') return true;
+  const req = await LN.requestPermissions().catch(() => ({ display: 'denied' }));
+  return req.display === 'granted';
+}
+
+async function scheduleNativeRestNotification(endTime) {
+  const LN = nativeLocalNotifications();
+  if (!LN || !notificationsEnabled) return;
+  await LN.cancel({ notifications: [{ id: REST_NOTIF_ID }] }).catch(() => {});
+  await LN.schedule({
+    notifications: [{
+      id: REST_NOTIF_ID,
+      title: 'Rest Complete: Time to Train Hard',
+      body: 'Tap to get back to your workout.',
+      schedule: { at: new Date(endTime) },
+    }],
+  }).catch(() => {});
+}
+
+async function cancelNativeRestNotification() {
+  const LN = nativeLocalNotifications();
+  if (!LN) return;
+  await LN.cancel({ notifications: [{ id: REST_NOTIF_ID }] }).catch(() => {});
+}
+
+// Rest-timer completion alert. On the web/PWA this only fires while the
+// tab is backgrounded — in view, the on-screen flash and sound already
+// cover it — so this needs both the toggle on and OS-level permission
+// granted (requested from the toggle's click, a user gesture). In the
+// native wrapper, delivery is instead handled by scheduleNativeRestNotification
+// at startRestTimer, so notifyRestComplete() is a no-op there.
+let notificationsEnabled = localStorage.getItem('trainhard_notifications') === 'on' &&
+  (isNativeApp() || (typeof Notification !== 'undefined' && Notification.permission === 'granted'));
+
+if (isNativeApp()) {
+  // Permission state has to be checked async, so correct the initial
+  // (optimistic, localStorage-only) value once the plugin responds.
+  ensureNativeNotificationPermission().then(granted => {
+    if (!granted) notificationsEnabled = false;
+    syncNotificationsToggle();
+  });
+}
 
 function syncNotificationsToggle() {
   const btn = document.getElementById('notifications-toggle-btn');
   const dbg = document.getElementById('notifications-debug');
-  if (typeof Notification === 'undefined') {
+  if (!isNativeApp() && typeof Notification === 'undefined') {
     btn.textContent = 'Notifications: Unsupported';
     btn.disabled = true;
     if (dbg) dbg.textContent = 'Notification API not present in this context';
@@ -13920,21 +14164,30 @@ function syncNotificationsToggle() {
   btn.textContent = 'Notifications: ' + (notificationsEnabled ? 'On' : 'Off');
   btn.classList.toggle('selected', notificationsEnabled);
   if (dbg) {
-    dbg.textContent = 'permission: ' + Notification.permission +
-      ' | standalone: ' + (window.navigator.standalone === true) +
-      ' | SW: ' + (navigator.serviceWorker && navigator.serviceWorker.controller ? 'active' : 'none');
+    dbg.textContent = isNativeApp()
+      ? 'native app | notifications: ' + (notificationsEnabled ? 'granted' : 'not granted')
+      : 'permission: ' + Notification.permission +
+        ' | standalone: ' + (window.navigator.standalone === true) +
+        ' | SW: ' + (navigator.serviceWorker && navigator.serviceWorker.controller ? 'active' : 'none');
   }
 }
 syncNotificationsToggle();
 
 document.getElementById('notifications-toggle-btn').addEventListener('click', async () => {
-  if (typeof Notification === 'undefined') return;
   if (notificationsEnabled) {
     notificationsEnabled = false;
     localStorage.setItem('trainhard_notifications', 'off');
+    await cancelNativeRestNotification();
     syncNotificationsToggle();
     return;
   }
+  if (isNativeApp()) {
+    notificationsEnabled = await ensureNativeNotificationPermission();
+    localStorage.setItem('trainhard_notifications', notificationsEnabled ? 'on' : 'off');
+    syncNotificationsToggle();
+    return;
+  }
+  if (typeof Notification === 'undefined') return;
   if (Notification.permission === 'denied') {
     // iOS/browsers never re-show the system prompt once denied — requestPermission()
     // would just silently resolve to 'denied' again with no visible change, which
@@ -13949,9 +14202,12 @@ document.getElementById('notifications-toggle-btn').addEventListener('click', as
 });
 
 function notifyRestComplete() {
+  if (isNativeApp()) return; // handled by scheduleNativeRestNotification() instead
   if (!notificationsEnabled || Notification.permission !== 'granted' || !document.hidden) return;
   const opts = {
+    body: 'Tap to get back to your workout.',
     icon: './assets/icons/icon.svg',
+    badge: './assets/icons/icon.svg',
     tag: 'rest-timer',
     renotify: true,
     vibrate: [200, 100, 200],
@@ -14095,7 +14351,8 @@ function buildWeeklyOverview() {
       const step = goal / 4;
       const thresholds = [Math.floor(step), Math.floor(step * 2), Math.floor(step * 3), goal];
       const setsLine = `<span class="wo-sets-cur" style="color:${color}">${sets}</span>`
-        + thresholds.map(t => `<span class="wo-sets-sep">/</span><span class="wo-sets-th">${t}</span>`).join('');
+        + thresholds.map(t => `<span class="wo-sets-sep">/</span><span class="wo-sets-th">${t}</span>`).join('')
+        + `<span class="wo-sets-unit"> sets</span>`;
 
       const row = document.createElement('div');
       row.className = 'wo-row';
@@ -14120,9 +14377,27 @@ function buildWeeklyOverview() {
     for (const label of pair) {
       const cell = document.createElement('div');
       cell.className = 'wo-extra-cell';
-      cell.innerHTML =
-        `<div class="wo-extra-label">${label}</div>` +
-        `<div class="wo-placeholder">Not tracked yet</div>`;
+      if (label === 'Cardio') {
+        const lv = getCardioLevel();
+        const color = LEVEL_COLORS[lv];
+        const daysAgo = getLastWorkedDaysAgo('Cardio');
+        const lastLabel = daysAgo === null ? 'never' : daysAgo === 0 ? 'today' : daysAgo === 1 ? 'yesterday' : `${daysAgo}d ago`;
+        // Also a '.wo-row' so Cardio participates in Catch Up (level/oldest
+        // ranking) alongside the actual muscles, and gets the same card look.
+        const cardioLastInfo = getMuscleLastTrainedInfo('Cardio');
+        cell.classList.add('wo-row');
+        cell.dataset.level = lv;
+        cell.dataset.hoursAgo = cardioLastInfo ? cardioLastInfo.hoursAgo : 'Infinity';
+        cell.innerHTML =
+          `<div class="wo-extra-label">Cardio</div>` +
+          `<div class="wo-level" style="color:${color}">Level ${lv}</div>` +
+          `<div class="wo-sets">${buildCardioSetsLine()}</div>` +
+          `<div class="wo-last">${lastLabel}</div>`;
+      } else {
+        cell.innerHTML =
+          `<div class="wo-extra-label">${label}</div>` +
+          `<div class="wo-placeholder">Not tracked yet</div>`;
+      }
       row.appendChild(cell);
     }
     list.appendChild(row);
@@ -14132,10 +14407,14 @@ function buildWeeklyOverview() {
 document.getElementById('weekly-overview-btn').addEventListener('click', () => {
   playSound('commonButton');
   buildWeeklyOverview();
-  const catchupBtn = document.getElementById('catchup-btn');
-  catchupBtn.dataset.mode = '0';
-  catchupBtn.classList.remove('active');
-  catchupBtn.textContent = 'Catch Up';
+  weeklyCatchupMode = 0;
+  weeklyCatchupStage = 0;
+  const levelBtn = document.getElementById('catchup-level-btn');
+  const oldestBtn = document.getElementById('catchup-oldest-btn');
+  [levelBtn, oldestBtn].forEach(b => {
+    if (b._catchupTimer) { clearTimeout(b._catchupTimer); b._catchupTimer = null; }
+    b.classList.remove('active', 'pulsing');
+  });
   document.getElementById('weekly-overview-overlay').classList.add('open');
 });
 
@@ -14149,12 +14428,22 @@ document.getElementById('weekly-overview-overlay').addEventListener('click', (e)
   }
 });
 
-document.getElementById('catchup-btn').addEventListener('click', () => {
-  const btn = document.getElementById('catchup-btn');
-  const mode = (parseInt(btn.dataset.mode || '0') + 1) % 3;
-  btn.dataset.mode = mode;
-  applyCatchupMode(mode, '.wo-row', btn);
-});
+function weeklyCatchupToggle(which) {
+  if (weeklyCatchupMode !== which) {
+    weeklyCatchupMode = which;
+    weeklyCatchupStage = 1;
+  } else {
+    weeklyCatchupStage++;
+    if (weeklyCatchupStage > 2) { weeklyCatchupMode = 0; weeklyCatchupStage = 0; }
+  }
+  applyCatchupMode(
+    weeklyCatchupMode, weeklyCatchupStage, '.wo-row',
+    document.getElementById('catchup-level-btn'),
+    document.getElementById('catchup-oldest-btn')
+  );
+}
+document.getElementById('catchup-level-btn').addEventListener('click', () => weeklyCatchupToggle(1));
+document.getElementById('catchup-oldest-btn').addEventListener('click', () => weeklyCatchupToggle(2));
 
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./sw.js').catch(() => {});

@@ -1,0 +1,9 @@
+{
+  "appId": "com.trainhard.app",
+  "appName": "Train Hard",
+  "webDir": "www",
+  "backgroundColor": "#1D2A5E",
+  "server": {
+    "androidScheme": "https"
+  }
+}

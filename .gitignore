@@ -2,3 +2,10 @@
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# Capacitor
+node_modules/
+www/
+# android/ and ios/ are intentionally NOT ignored: once generated they hold
+# manual native config (permissions, icons, signing) that `npx cap add`
+# won't recreate, so they belong in version control.
