@@ -2434,9 +2434,31 @@
     slider.value = current;
     document.getElementById('ep-scan-zoom-row').style.display = '';
   }
-  document.getElementById('ep-scan-zoom-slider').addEventListener('input', (e) => {
+  // Applying a zoom constraint on every 'input' tick (continuous while
+  // dragging) was flooding the camera pipeline with rapid constraint
+  // changes and freezing the stream on some Android hardware badly enough
+  // that the camera couldn't be reopened afterward. 'change' only fires
+  // once the slider is released/committed, and a pending-call guard drops
+  // this to at most one applyVideoConstraints in flight at a time.
+  let zoomApplyPending = false;
+  let zoomApplyQueuedValue = null;
+  function applyZoom(value) {
     if (!scanFoodInstance) return;
-    scanFoodInstance.applyVideoConstraints({ advanced: [{ zoom: parseFloat(e.target.value) }] }).catch(() => {});
+    if (zoomApplyPending) { zoomApplyQueuedValue = value; return; }
+    zoomApplyPending = true;
+    scanFoodInstance.applyVideoConstraints({ advanced: [{ zoom: value }] })
+      .catch(() => {})
+      .then(() => {
+        zoomApplyPending = false;
+        if (zoomApplyQueuedValue != null) {
+          const queued = zoomApplyQueuedValue;
+          zoomApplyQueuedValue = null;
+          applyZoom(queued);
+        }
+      });
+  }
+  document.getElementById('ep-scan-zoom-slider').addEventListener('change', (e) => {
+    applyZoom(parseFloat(e.target.value));
   });
 
   function startScanner() {
