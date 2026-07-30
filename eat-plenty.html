@@ -1,0 +1,2730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#1D2A5E" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Eat Plenty" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="assets/icons/icon.svg" />
+  <title>Eat Plenty</title>
+  <script>
+    // Same theme key as Train Hard, so switching pages never jars the user
+    // with a different color scheme.
+    (function() {
+      var t = localStorage.getItem('trainhard_uitheme') || 'vegeta';
+      document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script>
+  <style>
+    /* ── Reset + theme tokens — kept byte-for-byte identical to Train Hard's
+       index.html so the two pages read as one app, not two glued together. ── */
+    * {
+      margin: 0; padding: 0; box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+    }
+    input, textarea, [contenteditable] {
+      -webkit-user-select: text;
+      user-select: text;
+      -webkit-touch-callout: default;
+    }
+    *, *::before, *::after {
+      transition: background-color .35s ease, color .35s ease, border-color .35s ease, box-shadow .35s ease, fill .35s ease;
+    }
+
+    :root {
+      --rvh: 1dvh;
+      --rvw: 1vw;
+      --c-bg: 29,42,94;
+      --c-panel1: 38,52,110;
+      --c-panel2: 33,46,100;
+      --c-panel3: 31,44,97;
+      --c-panel4: 42,58,118;
+      --c-shadow: 27,32,66;
+      --c-accent: 232,168,33;
+      --c-accent-dark: 180,120,20;
+      --c-accent2: 200,178,106;
+      --c-accent3: 190,165,95;
+      --c-accent-light: 248,210,28;
+      --c-text: 245,242,234;
+      --c-text2: 200,178,106;
+      --c-text3: 222,222,222;
+      --c-text4: 195,195,195;
+      --c-text5: 170,170,170;
+    }
+    :root[data-theme="classic"] {
+      --c-bg: 3,7,24; --c-panel1: 10,22,60; --c-panel2: 5,12,40; --c-panel3: 4,10,32; --c-panel4: 14,28,70;
+      --c-shadow: 0,0,8; --c-accent: 74,144,217; --c-accent-dark: 44,106,173; --c-accent2: 50,100,200;
+      --c-accent3: 40,80,180; --c-accent-light: 90,171,255; --c-text: 255,255,255; --c-text2: 122,154,204;
+      --c-text3: 222,222,222; --c-text4: 195,195,195; --c-text5: 170,170,170;
+    }
+    :root[data-theme="minimal"] {
+      --c-bg: 20,20,24; --c-panel1: 32,32,38; --c-panel2: 28,28,33; --c-panel3: 26,26,31; --c-panel4: 36,36,42;
+      --c-shadow: 12,12,15; --c-accent: 230,230,235; --c-accent-dark: 170,170,178; --c-accent2: 170,170,178;
+      --c-accent3: 150,150,158; --c-accent-light: 210,210,216; --c-text: 240,240,242; --c-text2: 190,190,196;
+      --c-text3: 222,222,222; --c-text4: 195,195,195; --c-text5: 170,170,170;
+    }
+    :root[data-theme="noir"] {
+      --c-bg: 8,8,8; --c-panel1: 32,32,32; --c-panel2: 24,24,24; --c-panel3: 20,20,20; --c-panel4: 40,40,40;
+      --c-shadow: 4,4,4; --c-accent: 255,255,255; --c-accent-dark: 180,180,180; --c-accent2: 140,140,140;
+      --c-accent3: 100,100,100; --c-accent-light: 230,230,230; --c-text: 255,255,255; --c-text2: 205,205,205;
+      --c-text3: 222,222,222; --c-text4: 195,195,195; --c-text5: 170,170,170;
+    }
+    :root[data-theme="jiren"] {
+      --c-bg: 26,18,20; --c-panel1: 46,32,36; --c-panel2: 40,28,31; --c-panel3: 36,25,28; --c-panel4: 52,38,42;
+      --c-shadow: 30,20,23; --c-accent: 211,31,43; --c-accent-dark: 209,18,31; --c-accent2: 125,130,140;
+      --c-accent3: 169,173,181; --c-accent-light: 255,200,110; --c-text: 255,255,255; --c-text2: 201,206,214;
+      --c-text3: 222,222,222; --c-text4: 195,195,195; --c-text5: 170,170,170;
+    }
+    :root[data-theme="goku"] {
+      --c-bg: 22,31,61; --c-panel1: 46,52,88; --c-panel2: 38,44,76; --c-panel3: 34,40,70; --c-panel4: 54,60,98;
+      --c-shadow: 16,20,40; --c-accent: 244,123,32; --c-accent-dark: 194,42,42; --c-accent2: 90,120,220;
+      --c-accent3: 60,85,170; --c-accent-light: 250,180,40; --c-text: 245,242,234; --c-text2: 150,175,235;
+      --c-text3: 222,222,222; --c-text4: 195,195,195; --c-text5: 170,170,170;
+    }
+    :root[data-theme="trunks"] {
+      --c-bg: 27,21,48; --c-panel1: 47,38,72; --c-panel2: 40,32,62; --c-panel3: 36,29,56; --c-panel4: 54,44,82;
+      --c-shadow: 33,26,54; --c-accent: 181,142,222; --c-accent-dark: 74,91,143; --c-accent2: 61,107,216;
+      --c-accent3: 110,105,125; --c-accent-light: 248,210,28; --c-text: 245,242,234; --c-text2: 130,160,225;
+      --c-text3: 222,222,222; --c-text4: 195,195,195; --c-text5: 170,170,170;
+    }
+    :root[data-theme="broly"] {
+      --c-bg: 15,28,18; --c-panel1: 40,58,42; --c-panel2: 33,50,36; --c-panel3: 30,45,33; --c-panel4: 46,64,48;
+      --c-shadow: 22,36,25; --c-accent: 201,232,100; --c-accent-dark: 26,122,42; --c-accent2: 62,122,62;
+      --c-accent3: 75,68,95; --c-accent-light: 242,255,216; --c-text: 242,240,232; --c-text2: 120,180,120;
+      --c-text3: 222,222,222; --c-text4: 195,195,195; --c-text5: 170,170,170;
+    }
+    :root[data-theme="frieza"] {
+      --c-bg: 28,18,38; --c-panel1: 50,36,64; --c-panel2: 46,33,58; --c-panel3: 43,30,54; --c-panel4: 56,40,70;
+      --c-shadow: 36,24,48; --c-accent: 138,47,216; --c-accent-dark: 90,30,150; --c-accent2: 216,31,42;
+      --c-accent3: 200,196,216; --c-accent-light: 232,122,232; --c-text: 242,240,245; --c-text2: 232,216,240;
+      --c-text3: 222,222,222; --c-text4: 195,195,195; --c-text5: 170,170,170;
+    }
+
+    html {
+      background-color: rgb(var(--c-bg));
+      height: 100%;
+      overflow: hidden;
+    }
+    @media screen and (orientation: landscape) and (hover: none) and (pointer: coarse) {
+      html {
+        width: 100vh; height: 100vw;
+        transform: rotate(-90deg);
+        transform-origin: left top;
+        position: absolute; top: 100%; left: 0;
+        overflow-x: hidden;
+      }
+    }
+    body {
+      background: transparent;
+      color: rgb(var(--c-text));
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      position: fixed;
+      width: 100%; height: 100%;
+      overflow: hidden;
+      overscroll-behavior: none;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.9), 0 1px 5px rgba(0,0,0,0.5);
+    }
+
+    /* ── Loading — identical animation/timing to Train Hard, "Eat Plenty" text ── */
+    #loading {
+      position: fixed;
+      inset: 0;
+      z-index: 500;
+      background: rgb(var(--c-bg));
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      transition: opacity 1s ease;
+    }
+    #loading.fade-out { opacity: 0; pointer-events: none; }
+    #load-word-eat, #load-word-plenty {
+      display: flex;
+      gap: 5px;
+      font-size: 56px;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+    .load-letter {
+      display: inline-block;
+      opacity: 0.12;
+      transform: translateY(22px);
+      transition: transform 0.5s cubic-bezier(0.19, 1, 0.22, 1), opacity 0.4s ease-out;
+    }
+    .load-letter.risen { opacity: 1; transform: translateY(0); }
+    #load-word-eat .load-letter {
+      color: rgb(var(--c-text));
+      text-shadow: 0 2px 30px rgba(var(--c-accent-light),0.35);
+    }
+    #load-word-plenty .load-letter {
+      color: rgb(var(--c-accent));
+      text-shadow: 0 2px 30px rgba(var(--c-accent),0.45);
+    }
+
+    /* ── App shell ── */
+    #app {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      z-index: 10;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 1.2s ease-out;
+    }
+    #app.visible { opacity: 1; pointer-events: all; }
+
+    /* Header: 3-column grid so the title sits truly centered regardless of
+       the back button's width. Persistent across every tab. */
+    #ep-header {
+      display: grid;
+      grid-template-columns: 44px 1fr 44px;
+      align-items: center;
+      gap: 8px;
+      padding: calc(10px + env(safe-area-inset-top, 0px)) 16px 10px;
+      flex-shrink: 0;
+      border-bottom: 1px solid rgba(var(--c-accent3),0.2);
+      background: rgba(var(--c-panel3),0.9);
+    }
+    #ep-back-btn {
+      width: 44px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(var(--c-panel2),0.85);
+      border: 1px solid rgba(var(--c-accent2),0.3);
+      border-radius: 10px;
+      color: rgb(var(--c-text2));
+      font-size: 18px;
+      cursor: pointer;
+    }
+    #ep-title {
+      text-align: center;
+      font-size: 16px;
+      font-weight: 800;
+      color: rgb(var(--c-text));
+    }
+
+    /* ── Tab sections ── */
+    .section {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      display: none;
+      padding: 16px 16px calc(96px + env(safe-area-inset-bottom, 0px));
+    }
+    .section.active { display: block; }
+
+    /* Date nav — prev/next arrows + a swipeable label; swiping left/right on
+       a date-scoped section body does the same thing. Shared look for the
+       Eat Plenty and Weight tabs (each has its own instance in the DOM). */
+    .ep-date-nav {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      margin: -16px -16px 16px;
+      padding: 8px 16px;
+      background: rgba(var(--c-panel3),0.55);
+      border-bottom: 1px solid rgba(var(--c-accent3),0.12);
+    }
+    .ep-date-arrow {
+      background: none;
+      border: none;
+      color: rgb(var(--c-text3));
+      font-size: 20px;
+      line-height: 1;
+      cursor: pointer;
+      padding: 4px 10px;
+    }
+    .ep-date-arrow:disabled { opacity: 0.25; cursor: default; }
+    .ep-date-label {
+      font-size: 13px;
+      font-weight: 700;
+      color: rgb(var(--c-text2));
+      min-width: 130px;
+      text-align: center;
+      cursor: pointer;
+      text-decoration: underline;
+      text-decoration-color: rgba(var(--c-accent2),0.4);
+      text-underline-offset: 3px;
+    }
+
+    .ep-card {
+      background: rgba(var(--c-panel2),0.88);
+      border: 1px solid rgba(var(--c-accent2),0.22);
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 14px;
+    }
+    .ep-card-title {
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: rgb(var(--c-text4));
+      margin-bottom: 10px;
+    }
+
+    /* ── Totals: calorie readout + three macro rings ── */
+    #ep-cals-row {
+      text-align: center;
+      margin-bottom: 16px;
+    }
+    #ep-cals-consumed {
+      font-size: 30px;
+      font-weight: 800;
+      color: rgb(var(--c-accent));
+      font-variant-numeric: tabular-nums;
+    }
+    #ep-cals-goal {
+      font-size: 15px;
+      font-weight: 700;
+      color: rgb(var(--c-text4));
+      margin-left: 3px;
+    }
+    #ep-cals-word {
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: rgb(var(--c-text4));
+      margin-top: 2px;
+    }
+
+    #ep-rings {
+      display: flex;
+      justify-content: space-around;
+      gap: 6px;
+    }
+    .ep-ring-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      flex: 1;
+      min-width: 0;
+    }
+    .ep-ring-svg-wrap {
+      position: relative;
+      width: 76px;
+      height: 76px;
+    }
+    .ep-ring-svg {
+      width: 76px;
+      height: 76px;
+      transform: rotate(-90deg);
+    }
+    .ep-ring-track { fill: none; stroke: rgba(var(--c-panel1),0.9); stroke-width: 8; }
+    .ep-ring-fill {
+      fill: none;
+      stroke: rgb(var(--c-accent));
+      stroke-width: 8;
+      stroke-linecap: round;
+      transition: stroke-dashoffset 0.4s ease, stroke 0.3s ease;
+    }
+    .ep-ring-fill.over { stroke: #e0453c; }
+    .ep-ring-pct {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 800;
+      color: rgb(var(--c-text));
+      font-variant-numeric: tabular-nums;
+    }
+    .ep-ring-label {
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: rgb(var(--c-text4));
+    }
+    .ep-ring-value {
+      font-size: 11.5px;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+    .ep-ring-consumed { color: rgb(var(--c-text)); font-weight: 800; }
+    .ep-ring-goal { color: rgb(var(--c-text4)); }
+
+    /* ── Meal sections ── */
+    .ep-meal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .ep-meal-label {
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: rgb(var(--c-text3));
+    }
+    .ep-meal-header-right { display: flex; align-items: center; gap: 10px; }
+    .ep-meal-subtotal {
+      font-size: 10.5px;
+      color: rgb(var(--c-text4));
+      font-variant-numeric: tabular-nums;
+    }
+    .ep-meal-add-btn {
+      background: rgba(var(--c-accent),0.14);
+      border: 1px solid rgba(var(--c-accent),0.4);
+      border-radius: 10px;
+      color: rgb(var(--c-accent));
+      font-size: 13px;
+      font-weight: 700;
+      padding: 9px 16px;
+      cursor: pointer;
+    }
+    .ep-meal-log-list { display: flex; flex-direction: column; gap: 8px; }
+    .ep-meal-empty {
+      font-size: 11px;
+      color: rgb(var(--c-text3));
+      opacity: 0.55;
+      font-style: italic;
+      padding: 2px 2px 4px;
+    }
+
+    .ep-log-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(var(--c-panel1),0.7);
+      border: 1px solid rgba(var(--c-accent2),0.15);
+      border-radius: 10px;
+      padding: 10px 12px;
+    }
+    .ep-log-info { flex: 1; min-width: 0; cursor: pointer; }
+    .ep-log-name {
+      font-size: 13px;
+      font-weight: 700;
+      color: rgb(var(--c-text));
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .ep-log-macros {
+      font-size: 10.5px;
+      color: rgb(var(--c-text4));
+      margin-top: 2px;
+      font-variant-numeric: tabular-nums;
+    }
+    .ep-log-delete {
+      background: none;
+      border: none;
+      color: rgb(var(--c-text4));
+      font-size: 18px;
+      line-height: 1;
+      cursor: pointer;
+      padding: 4px 6px;
+      flex-shrink: 0;
+    }
+
+    /* ── My Foods (recent + custom food library) ── */
+    #ep-myfoods-custom-list, #ep-myfoods-recent-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .ep-food-lib-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(var(--c-panel1),0.7);
+      border: 1px solid rgba(var(--c-accent2),0.15);
+      border-radius: 10px;
+      padding: 10px 12px;
+      cursor: pointer;
+      text-align: left;
+      width: 100%;
+    }
+    .ep-food-lib-info { flex: 1; min-width: 0; cursor: pointer; }
+    .ep-food-lib-name {
+      font-size: 13px;
+      font-weight: 700;
+      color: rgb(var(--c-text));
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .ep-food-lib-macros {
+      font-size: 10.5px;
+      color: rgb(var(--c-text4));
+      margin-top: 2px;
+      font-variant-numeric: tabular-nums;
+    }
+    .ep-food-lib-edit-icon {
+      font-size: 15px;
+      color: rgb(var(--c-text4));
+      flex-shrink: 0;
+    }
+
+    /* ── Search Food ── */
+    /* The generic .ep-modal-overlay centers its box vertically, which is
+       fine for fixed-height modals — but this one grows tall as results
+       stream in, and centering would push its top edge upward off-screen
+       as it grows. Anchor it near the top instead so growth only ever
+       extends downward (into its own internal scroll), never clipping. */
+    #ep-search-food-modal { align-items: flex-start; padding-top: max(60px, calc(var(--rvh) * 14)); }
+    #ep-search-food-input { margin-bottom: 10px; }
+    #ep-search-food-status {
+      font-size: 12px;
+      color: rgb(var(--c-text4));
+      text-align: center;
+      padding: 6px 0;
+    }
+    #ep-search-food-results {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: calc(var(--rvh) * 48);
+      overflow-y: auto;
+    }
+    .ep-food-lib-brand {
+      font-size: 10px;
+      font-weight: 700;
+      color: rgb(var(--c-accent));
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      margin-top: 1px;
+    }
+    #ep-search-food-attribution {
+      display: block;
+      text-align: center;
+      font-size: 10px;
+      color: rgb(var(--c-text5));
+      margin-top: 10px;
+      text-decoration: none;
+    }
+
+    /* ── Scan Barcode ── */
+    #ep-scan-reader {
+      width: 100%;
+      border-radius: 12px;
+      overflow: hidden;
+      background: rgb(0,0,0);
+      min-height: 220px;
+    }
+    #ep-scan-reader video { width: 100%; display: block; }
+    #ep-scan-food-status {
+      font-size: 12px;
+      color: rgb(var(--c-text4));
+      text-align: center;
+      padding: 10px 0 0;
+    }
+
+    /* ── Create Food / Log Custom Food ── */
+    #ep-create-food-serving-row, #ep-log-custom-amount-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    #ep-create-food-serving-row input, #ep-log-custom-amount-row input {
+      flex: 1;
+      text-align: center;
+      font-variant-numeric: tabular-nums;
+    }
+    #ep-create-food-unit, #ep-log-custom-unit-select {
+      background: rgba(var(--c-panel1),0.8);
+      border: 1px solid rgba(var(--c-accent2),0.25);
+      border-radius: 10px;
+      color: rgb(var(--c-text));
+      font-size: 14px;
+      font-family: inherit;
+      padding: 10px 8px;
+      outline: none;
+    }
+    #ep-log-custom-preview {
+      font-size: 13px;
+      font-weight: 700;
+      color: rgb(var(--c-text));
+      font-variant-numeric: tabular-nums;
+      text-align: center;
+      margin: 12px 0;
+    }
+
+    /* ── Add Food modal (shared by every meal section) ── */
+    .ep-modal-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 600;
+      background: rgba(var(--c-shadow),0.6);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .ep-modal-overlay.open { display: flex; }
+    .ep-modal-box {
+      background: rgba(var(--c-panel2),0.97);
+      border: 1px solid rgba(var(--c-accent2),0.3);
+      border-radius: 16px;
+      width: 100%;
+      max-width: 360px;
+      max-height: calc(var(--rvh) * 82);
+      overflow-y: auto;
+      padding: 18px;
+    }
+    .ep-modal-title {
+      font-size: 15px;
+      font-weight: 800;
+      text-align: center;
+      margin-bottom: 14px;
+      color: rgb(var(--c-text));
+    }
+    .ep-modal-subtitle {
+      font-size: 10.5px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      text-align: center;
+      color: rgb(var(--c-accent));
+      margin: -10px 0 14px;
+    }
+    /* ── Calendar popup ── */
+    #ep-calendar-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    #ep-calendar-month-label {
+      font-size: 14px;
+      font-weight: 800;
+      color: rgb(var(--c-text));
+    }
+    #ep-calendar-weekdays {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      margin-bottom: 6px;
+    }
+    #ep-calendar-weekdays span {
+      text-align: center;
+      font-size: 10px;
+      font-weight: 800;
+      color: rgb(var(--c-text4));
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    #ep-calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+    }
+    .ep-cal-day {
+      aspect-ratio: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1px;
+      border-radius: 10px;
+      border: 1px solid transparent;
+      background: rgba(var(--c-panel1),0.6);
+      color: rgb(var(--c-text2));
+      font-size: 12.5px;
+      font-weight: 700;
+      cursor: pointer;
+      font-variant-numeric: tabular-nums;
+    }
+    .ep-cal-day.ep-cal-empty { background: transparent; cursor: default; }
+    .ep-cal-day.ep-cal-future { color: rgb(var(--c-text5)); opacity: 0.35; cursor: default; }
+    .ep-cal-day.ep-cal-today { border-color: rgba(var(--c-accent),0.6); color: rgb(var(--c-accent)); }
+    .ep-cal-day.ep-cal-selected {
+      background: rgba(var(--c-accent),0.22);
+      border-color: rgba(var(--c-accent),0.7);
+      color: rgb(var(--c-text));
+    }
+    .ep-cal-dot { width: 4px; height: 4px; border-radius: 50%; background: rgb(var(--c-accent)); }
+
+    .ep-modal-box input {
+      width: 100%;
+      background: rgba(var(--c-panel1),0.8);
+      border: 1px solid rgba(var(--c-accent2),0.25);
+      border-radius: 10px;
+      color: rgb(var(--c-text));
+      font-size: 14px;
+      font-family: inherit;
+      padding: 10px 12px;
+      outline: none;
+    }
+    #ep-food-form { display: flex; flex-direction: column; gap: 8px; }
+    #ep-food-macro-inputs, #ep-create-food-macro-inputs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    /* Each macro field keeps a persistent label above it, instead of relying
+       on the input's placeholder — placeholders vanish once a value is
+       typed, which made it impossible to tell P/C/F apart at a glance. */
+    .ep-macro-field { display: flex; flex-direction: column; gap: 4px; }
+    .ep-macro-field-label {
+      font-size: 9px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: rgb(var(--c-text4));
+      text-align: center;
+    }
+    .ep-macro-field input { text-align: center; font-variant-numeric: tabular-nums; }
+    .ep-modal-save-btn {
+      background: rgba(var(--c-accent),0.16);
+      border: 1px solid rgba(var(--c-accent),0.45);
+      border-radius: 10px;
+      color: rgb(var(--c-accent));
+      font-size: 14px;
+      font-weight: 700;
+      padding: 11px;
+      cursor: pointer;
+      margin-top: 2px;
+      width: 100%;
+    }
+    #ep-add-choice-options { display: flex; flex-direction: column; gap: 10px; }
+    .ep-choice-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: rgba(var(--c-accent),0.16);
+      border: 1px solid rgba(var(--c-accent),0.45);
+      border-radius: 12px;
+      color: rgb(var(--c-accent));
+      font-size: 15px;
+      font-weight: 700;
+      padding: 14px;
+      cursor: pointer;
+    }
+    .ep-choice-btn.ep-choice-disabled {
+      background: rgba(var(--c-panel1),0.7);
+      border-color: rgba(var(--c-accent2),0.2);
+      color: rgb(var(--c-text4));
+      cursor: default;
+    }
+    .ep-choice-soon {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: rgb(var(--c-text5));
+      background: rgba(var(--c-panel3),0.9);
+      border-radius: 999px;
+      padding: 3px 8px;
+    }
+    .ep-delete-food-btn {
+      display: block;
+      width: 100%;
+      background: rgba(224,69,60,0.12);
+      border: 1px solid rgba(224,69,60,0.4);
+      border-radius: 10px;
+      color: #e0453c;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 11px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    .ep-modal-close-row { display: flex; gap: 10px; margin-top: 10px; }
+    .ep-modal-cancel-btn {
+      flex: 1;
+      background: rgba(var(--c-panel1),0.8);
+      border: 1px solid rgba(var(--c-accent2),0.25);
+      border-radius: 10px;
+      color: rgb(var(--c-text2));
+      font-size: 13px;
+      font-weight: 700;
+      padding: 10px;
+      cursor: pointer;
+    }
+
+    /* ── Numeric entry popup — same look/feel as Train Hard's on-screen
+       numpad (tap a number field, a keypad slides up from the bottom
+       instead of the OS keyboard). Class names kept identical to Train
+       Hard's .tnp-* so the two apps' number entry is visually the same. ── */
+    #ep-numpad {
+      position: fixed;
+      inset: 0;
+      z-index: 2000;
+      display: flex;
+      align-items: flex-end;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    #ep-numpad.open { pointer-events: all; opacity: 1; }
+    .tnp-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.4); }
+    .tnp-panel {
+      position: relative;
+      width: 100%;
+      background: rgb(6, 14, 40);
+      border-top: 1.5px solid rgba(var(--c-accent),0.4);
+      border-radius: 20px 20px 0 0;
+      padding: 16px 16px calc(16px + env(safe-area-inset-bottom, 0px));
+      transform: translateY(100%);
+      transition: transform 0.25s cubic-bezier(0.32,0.72,0,1);
+      box-shadow: 0 -8px 48px rgba(var(--c-shadow),0.6);
+    }
+    #ep-numpad.open .tnp-panel { transform: translateY(0); }
+    .tnp-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      padding: 0 4px;
+    }
+    .tnp-label {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      color: rgb(var(--c-accent));
+      text-transform: uppercase;
+    }
+    .tnp-display {
+      font-size: 32px;
+      font-weight: 800;
+      color: rgb(var(--c-text));
+      font-variant-numeric: tabular-nums;
+      min-width: 100px;
+      text-align: right;
+      letter-spacing: -1px;
+    }
+    .tnp-display.empty { color: rgb(var(--c-text5)); }
+    .tnp-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .tnp-key {
+      height: 56px;
+      border-radius: 12px;
+      border: 1px solid rgba(var(--c-accent2),0.25);
+      background: rgba(var(--c-panel1),0.9);
+      color: rgb(var(--c-text));
+      font-size: 22px;
+      font-weight: 600;
+      cursor: pointer;
+      touch-action: manipulation;
+      transition: background 0.1s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .tnp-key:active { background: rgba(var(--c-accent),0.22); }
+    .tnp-key.tnp-back { font-size: 20px; color: rgb(var(--c-text2)); }
+    .tnp-done-btn {
+      display: block;
+      width: 100%;
+      height: 52px;
+      border-radius: 14px;
+      border: 1.5px solid rgba(var(--c-accent),0.5);
+      background: rgba(var(--c-accent),0.12);
+      color: rgb(var(--c-accent));
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      cursor: pointer;
+      touch-action: manipulation;
+      transition: background 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .tnp-done-btn:active { background: rgba(var(--c-accent),0.28); }
+
+    /* Quick fade when switching which field the numpad is editing, so the
+       label/value swap doesn't feel like an abrupt jump-cut. */
+    .tnp-label, .tnp-display {
+      transition: opacity 0.12s ease;
+    }
+    .tnp-header.switching .tnp-label,
+    .tnp-header.switching .tnp-display {
+      opacity: 0;
+    }
+
+    /* ── Profile tab (daily goals) ── */
+    .ep-goal-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(var(--c-accent2),0.15);
+    }
+    .ep-goal-row:last-child { border-bottom: none; }
+    .ep-goal-name { font-size: 13px; font-weight: 700; color: rgb(var(--c-text)); }
+    .ep-goal-input {
+      width: 90px;
+      text-align: center;
+      background: rgba(var(--c-panel1),0.8);
+      border: 1px solid rgba(var(--c-accent2),0.25);
+      border-radius: 10px;
+      color: rgb(var(--c-text));
+      font-size: 14px;
+      font-family: inherit;
+      font-variant-numeric: tabular-nums;
+      padding: 8px 6px;
+      outline: none;
+    }
+    .ep-profile-note {
+      font-size: 11.5px;
+      color: rgb(var(--c-text3));
+      opacity: 0.7;
+      font-style: italic;
+    }
+    .ep-form-note {
+      font-size: 11px;
+      line-height: 1.5;
+      color: rgb(var(--c-text4));
+      padding: 4px 2px 2px;
+    }
+
+    /* ── Recipes tab ── */
+    #ep-recipes-list { display: flex; flex-direction: column; gap: 8px; }
+    .ep-empty-state {
+      font-size: 12px;
+      color: rgb(var(--c-text3));
+      opacity: 0.6;
+      font-style: italic;
+      text-align: center;
+      padding: 20px 0;
+    }
+
+    /* ── Weight tab ── */
+    #ep-weight-log-form { display: flex; gap: 10px; margin-bottom: 16px; }
+    #ep-weight-input {
+      flex: 1;
+      background: rgba(var(--c-panel1),0.8);
+      border: 1px solid rgba(var(--c-accent2),0.25);
+      border-radius: 10px;
+      color: rgb(var(--c-text));
+      font-size: 15px;
+      font-family: inherit;
+      padding: 10px 12px;
+      outline: none;
+      text-align: center;
+      font-variant-numeric: tabular-nums;
+    }
+    #ep-weight-save-btn {
+      background: rgba(var(--c-accent),0.16);
+      border: 1px solid rgba(var(--c-accent),0.45);
+      border-radius: 10px;
+      color: rgb(var(--c-accent));
+      font-size: 14px;
+      font-weight: 700;
+      padding: 0 18px;
+      cursor: pointer;
+    }
+    #ep-weight-chart { width: 100%; height: 110px; display: block; margin-bottom: 4px; }
+    .ep-weight-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12.5px;
+      padding: 8px 2px;
+      border-bottom: 1px solid rgba(var(--c-accent2),0.12);
+    }
+    .ep-weight-row:last-child { border-bottom: none; }
+    .ep-weight-row-val { font-weight: 700; color: rgb(var(--c-text)); font-variant-numeric: tabular-nums; }
+    .ep-weight-row-date { color: rgb(var(--c-text4)); }
+
+    /* ── Stats tab ── */
+    #ep-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+    .ep-stat-tile {
+      background: rgba(var(--c-panel1),0.7);
+      border: 1px solid rgba(var(--c-accent2),0.15);
+      border-radius: 12px;
+      padding: 14px;
+      text-align: center;
+    }
+    .ep-stat-val {
+      font-size: 22px;
+      font-weight: 800;
+      color: rgb(var(--c-accent));
+      font-variant-numeric: tabular-nums;
+    }
+    .ep-stat-label {
+      font-size: 10px;
+      color: rgb(var(--c-text4));
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-top: 4px;
+    }
+
+    /* ── Nav Bar — same look as Train Hard's ── */
+    #nav {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: rgb(var(--c-bg));
+      border-top: 1.5px solid rgba(var(--c-accent),0.4);
+      box-shadow: 0 -6px 32px rgba(var(--c-accent-dark),0.4);
+      display: flex;
+      align-items: flex-end;
+      padding-top: 10px;
+      padding-bottom: 0;
+      z-index: 300;
+      pointer-events: all;
+    }
+    .nav-btn {
+      flex: 1;
+      height: 60px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      background: none;
+      border: none;
+      color: rgba(var(--c-text), 0.38);
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      letter-spacing: 0.3px;
+    }
+    .nav-btn.active { color: rgb(var(--c-text)); }
+    .nav-btn svg { width: 26px; height: 26px; fill: currentColor; }
+    /* PNG nav icons (white silhouettes) — approximate the same active/dim
+       behavior as the currentColor SVG icons via opacity instead. */
+    .nav-btn img {
+      width: 26px;
+      height: 26px;
+      object-fit: contain;
+      opacity: 0.38;
+      transition: opacity 0.2s ease;
+    }
+    .nav-btn.active img { opacity: 1; }
+  </style>
+</head>
+<body>
+
+<!-- Loading -->
+<div id="loading">
+  <div id="load-word-eat">
+    <span class="load-letter">E</span>
+    <span class="load-letter">a</span>
+    <span class="load-letter">t</span>
+  </div>
+  <div id="load-word-plenty">
+    <span class="load-letter">P</span>
+    <span class="load-letter">l</span>
+    <span class="load-letter">e</span>
+    <span class="load-letter">n</span>
+    <span class="load-letter">t</span>
+    <span class="load-letter">y</span>
+  </div>
+</div>
+
+<!-- App -->
+<div id="app">
+  <div id="ep-header">
+    <button id="ep-back-btn">&larr;</button>
+    <div id="ep-title">Eat Plenty</div>
+    <div></div>
+  </div>
+
+  <!-- Profile -->
+  <div id="profile-section" class="section">
+    <div class="ep-card">
+      <div class="ep-card-title">Daily Goals</div>
+      <div class="ep-goal-row">
+        <span class="ep-goal-name">Calories</span>
+        <input type="number" class="ep-goal-input" id="ep-goal-calories" min="0" inputmode="numeric" />
+      </div>
+      <div class="ep-goal-row">
+        <span class="ep-goal-name">Protein (g)</span>
+        <input type="number" class="ep-goal-input" id="ep-goal-protein" min="0" inputmode="numeric" />
+      </div>
+      <div class="ep-goal-row">
+        <span class="ep-goal-name">Carbs (g)</span>
+        <input type="number" class="ep-goal-input" id="ep-goal-carbs" min="0" inputmode="numeric" />
+      </div>
+      <div class="ep-goal-row">
+        <span class="ep-goal-name">Fat (g)</span>
+        <input type="number" class="ep-goal-input" id="ep-goal-fat" min="0" inputmode="numeric" />
+      </div>
+    </div>
+
+    <div class="ep-profile-note">Theme is set in Train Hard's Profile &gt; Avatar screen and carries over automatically. More profile options coming soon.</div>
+  </div>
+
+  <!-- Recipes — full create/edit/delete for custom foods -->
+  <div id="recipes-section" class="section">
+    <button class="ep-modal-save-btn" id="ep-recipes-create-btn" style="margin-bottom:14px;">+ Create Food</button>
+    <div id="ep-recipes-list"></div>
+  </div>
+
+  <!-- Eat Plenty (today's totals + meal logging) -->
+  <div id="eatplenty-section" class="section active">
+    <div class="ep-date-nav">
+      <button class="ep-date-arrow" id="ep-date-prev">&lsaquo;</button>
+      <div class="ep-date-label" id="ep-date-label">Today</div>
+      <button class="ep-date-arrow" id="ep-date-next">&rsaquo;</button>
+    </div>
+
+    <div class="ep-card">
+      <div id="ep-cals-row">
+        <span id="ep-cals-consumed">0</span><span id="ep-cals-goal">/2200</span>
+        <div id="ep-cals-word">Calories</div>
+      </div>
+      <div id="ep-rings">
+        <div class="ep-ring-wrap" data-macro="protein">
+          <div class="ep-ring-svg-wrap">
+            <svg class="ep-ring-svg" viewBox="0 0 80 80">
+              <circle class="ep-ring-track" cx="40" cy="40" r="34"></circle>
+              <circle class="ep-ring-fill" id="ep-ring-fill-protein" cx="40" cy="40" r="34"></circle>
+            </svg>
+            <div class="ep-ring-pct" id="ep-ring-pct-protein">0%</div>
+          </div>
+          <div class="ep-ring-label">Protein</div>
+          <div class="ep-ring-value">
+            <span class="ep-ring-consumed" id="ep-ring-consumed-protein">0g</span><span class="ep-ring-goal" id="ep-ring-goal-protein">/180g</span>
+          </div>
+        </div>
+        <div class="ep-ring-wrap" data-macro="carbs">
+          <div class="ep-ring-svg-wrap">
+            <svg class="ep-ring-svg" viewBox="0 0 80 80">
+              <circle class="ep-ring-track" cx="40" cy="40" r="34"></circle>
+              <circle class="ep-ring-fill" id="ep-ring-fill-carbs" cx="40" cy="40" r="34"></circle>
+            </svg>
+            <div class="ep-ring-pct" id="ep-ring-pct-carbs">0%</div>
+          </div>
+          <div class="ep-ring-label">Carbs</div>
+          <div class="ep-ring-value">
+            <span class="ep-ring-consumed" id="ep-ring-consumed-carbs">0g</span><span class="ep-ring-goal" id="ep-ring-goal-carbs">/250g</span>
+          </div>
+        </div>
+        <div class="ep-ring-wrap" data-macro="fat">
+          <div class="ep-ring-svg-wrap">
+            <svg class="ep-ring-svg" viewBox="0 0 80 80">
+              <circle class="ep-ring-track" cx="40" cy="40" r="34"></circle>
+              <circle class="ep-ring-fill" id="ep-ring-fill-fat" cx="40" cy="40" r="34"></circle>
+            </svg>
+            <div class="ep-ring-pct" id="ep-ring-pct-fat">0%</div>
+          </div>
+          <div class="ep-ring-label">Fat</div>
+          <div class="ep-ring-value">
+            <span class="ep-ring-consumed" id="ep-ring-consumed-fat">0g</span><span class="ep-ring-goal" id="ep-ring-goal-fat">/70g</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="ep-meal-sections"></div>
+  </div>
+
+  <!-- Weight -->
+  <div id="weight-section" class="section">
+    <div class="ep-date-nav">
+      <button class="ep-date-arrow" id="wt-date-prev">&lsaquo;</button>
+      <div class="ep-date-label" id="wt-date-label">Today</div>
+      <button class="ep-date-arrow" id="wt-date-next">&rsaquo;</button>
+    </div>
+
+    <div class="ep-card">
+      <div class="ep-card-title">Log Weight</div>
+      <form id="ep-weight-log-form">
+        <input type="number" id="ep-weight-input" placeholder="Weight (lbs)" min="0" step="0.1" inputmode="decimal" required />
+        <button type="submit" id="ep-weight-save-btn">Save</button>
+      </form>
+    </div>
+
+    <div class="ep-card">
+      <div class="ep-card-title">History</div>
+      <svg id="ep-weight-chart" viewBox="0 0 300 110" preserveAspectRatio="none"></svg>
+      <div id="ep-weight-history-list"></div>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div id="stats-section" class="section">
+    <div class="ep-card">
+      <div class="ep-card-title">Last 7 Days (Avg / Logged Day)</div>
+      <div id="ep-stats-grid">
+        <div class="ep-stat-tile"><div class="ep-stat-val" id="ep-stat-cals">0</div><div class="ep-stat-label">Cals</div></div>
+        <div class="ep-stat-tile"><div class="ep-stat-val" id="ep-stat-protein">0g</div><div class="ep-stat-label">Protein</div></div>
+        <div class="ep-stat-tile"><div class="ep-stat-val" id="ep-stat-carbs">0g</div><div class="ep-stat-label">Carbs</div></div>
+        <div class="ep-stat-tile"><div class="ep-stat-val" id="ep-stat-fat">0g</div><div class="ep-stat-label">Fat</div></div>
+      </div>
+    </div>
+    <div class="ep-profile-note">More stats coming soon.</div>
+  </div>
+
+  <!-- Nav (persistent, matches Train Hard's bottom nav) -->
+  <nav id="nav">
+    <button class="nav-btn" data-tab="profile">
+      <svg viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
+      Profile
+    </button>
+    <button class="nav-btn" data-tab="recipes">
+      <svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><rect x="6.5" y="3" width="1.6" height="18" fill="rgb(var(--c-bg))"/><rect x="10" y="7" width="8" height="1.6" rx="0.8" fill="rgb(var(--c-bg))"/><rect x="10" y="11" width="8" height="1.6" rx="0.8" fill="rgb(var(--c-bg))"/><rect x="10" y="15" width="8" height="1.6" rx="0.8" fill="rgb(var(--c-bg))"/></svg>
+      Recipes
+    </button>
+    <button class="nav-btn active" data-tab="eatplenty">
+      <img src="assets/icons/nav-eat-plenty.png" alt="" />
+      Eat Plenty
+    </button>
+    <button class="nav-btn" data-tab="weight">
+      <img src="assets/icons/nav-weight.png" alt="" />
+      Weight
+    </button>
+    <button class="nav-btn" data-tab="stats">
+      <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg>
+      Stats
+    </button>
+  </nav>
+</div>
+
+<!-- Numeric entry popup — attached to every number field on this page -->
+<div id="ep-numpad">
+  <div class="tnp-backdrop" id="ep-numpad-backdrop"></div>
+  <div class="tnp-panel">
+    <div class="tnp-header">
+      <span class="tnp-label" id="ep-numpad-label">VALUE</span>
+      <span class="tnp-display" id="ep-numpad-display">0</span>
+    </div>
+    <div class="tnp-grid">
+      <button class="tnp-key" data-val="1">1</button>
+      <button class="tnp-key" data-val="2">2</button>
+      <button class="tnp-key" data-val="3">3</button>
+      <button class="tnp-key" data-val="4">4</button>
+      <button class="tnp-key" data-val="5">5</button>
+      <button class="tnp-key" data-val="6">6</button>
+      <button class="tnp-key" data-val="7">7</button>
+      <button class="tnp-key" data-val="8">8</button>
+      <button class="tnp-key" data-val="9">9</button>
+      <button class="tnp-key" data-val=".">.</button>
+      <button class="tnp-key" data-val="0">0</button>
+      <button class="tnp-key tnp-back" data-val="back">&#9003;</button>
+    </div>
+    <button class="tnp-done-btn" id="ep-numpad-done">Done</button>
+  </div>
+</div>
+
+<!-- Calendar popup — jump to any date, tapped from either date-nav label -->
+<div class="ep-modal-overlay" id="ep-calendar-modal">
+  <div class="ep-modal-box">
+    <div id="ep-calendar-header">
+      <button class="ep-date-arrow" id="ep-cal-prev-month">&lsaquo;</button>
+      <div id="ep-calendar-month-label">Month Year</div>
+      <button class="ep-date-arrow" id="ep-cal-next-month">&rsaquo;</button>
+    </div>
+    <div id="ep-calendar-weekdays">
+      <span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
+    </div>
+    <div id="ep-calendar-grid"></div>
+    <div class="ep-modal-close-row">
+      <button class="ep-modal-cancel-btn" id="ep-calendar-cancel">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add-to-meal choice modal -->
+<div class="ep-modal-overlay" id="ep-add-choice-modal">
+  <div class="ep-modal-box">
+    <div class="ep-modal-title" id="ep-add-choice-title">Add Food</div>
+    <div id="ep-add-choice-options">
+      <button class="ep-choice-btn" id="ep-choice-quick">Quick Add</button>
+      <button class="ep-choice-btn" id="ep-choice-myfoods">My Foods</button>
+      <button class="ep-choice-btn" id="ep-choice-search">Search Food</button>
+      <button class="ep-choice-btn" id="ep-choice-scan">Scan Barcode</button>
+    </div>
+    <div class="ep-modal-close-row">
+      <button class="ep-modal-cancel-btn" id="ep-add-choice-cancel">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- My Foods modal — recent foods (quick re-add) + user-created custom foods -->
+<div class="ep-modal-overlay" id="ep-myfoods-modal">
+  <div class="ep-modal-box">
+    <div class="ep-modal-title" id="ep-myfoods-title">My Foods</div>
+    <button class="ep-modal-save-btn" id="ep-myfoods-create-btn" style="margin-bottom:14px;">+ Create Food</button>
+
+    <div class="ep-card-title">Custom Foods</div>
+    <div id="ep-myfoods-custom-list" style="margin-bottom:14px;"></div>
+
+    <div class="ep-card-title">Recent</div>
+    <div id="ep-myfoods-recent-list"></div>
+
+    <div class="ep-modal-close-row">
+      <button class="ep-modal-cancel-btn" id="ep-myfoods-cancel">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Create Food modal — also doubles as the Edit Food form (prefilled +
+     Delete button shown) when opened from the Recipes tab -->
+<div class="ep-modal-overlay" id="ep-create-food-modal">
+  <div class="ep-modal-box">
+    <div class="ep-modal-title" id="ep-create-food-modal-title">Create Food</div>
+    <form id="ep-create-food-form">
+      <input type="text" id="ep-create-food-name" placeholder="Food name" autocomplete="off" required />
+      <div id="ep-create-food-serving-row">
+        <input type="number" id="ep-create-food-serving-size" placeholder="Serving size" min="0" step="0.01" inputmode="decimal" required />
+        <select id="ep-create-food-unit">
+          <option value="g">g</option>
+          <option value="oz">oz</option>
+          <option value="fl oz">fl oz</option>
+          <option value="lbs">lbs</option>
+          <option value="ml">ml</option>
+          <option value="L">L</option>
+        </select>
+      </div>
+      <div class="ep-form-note">Macros below are for one serving (the amount above)</div>
+      <div id="ep-create-food-macro-inputs">
+        <div class="ep-macro-field">
+          <label class="ep-macro-field-label">Cals</label>
+          <input type="number" id="ep-create-food-cals" min="0" inputmode="numeric" />
+        </div>
+        <div class="ep-macro-field">
+          <label class="ep-macro-field-label">Protein</label>
+          <input type="number" id="ep-create-food-protein" min="0" inputmode="numeric" />
+        </div>
+        <div class="ep-macro-field">
+          <label class="ep-macro-field-label">Carbs</label>
+          <input type="number" id="ep-create-food-carbs" min="0" inputmode="numeric" />
+        </div>
+        <div class="ep-macro-field">
+          <label class="ep-macro-field-label">Fat</label>
+          <input type="number" id="ep-create-food-fat" min="0" inputmode="numeric" />
+        </div>
+      </div>
+      <button type="submit" class="ep-modal-save-btn">Save Food</button>
+    </form>
+    <button class="ep-delete-food-btn" id="ep-create-food-delete" style="display:none;">Delete Food</button>
+    <div class="ep-modal-close-row">
+      <button class="ep-modal-cancel-btn" id="ep-create-food-cancel">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Log Custom Food modal — adjust the amount (and its unit, auto-converted
+     against the food's defined serving size) and hand-tweak the resulting
+     macros before adding -->
+<div class="ep-modal-overlay" id="ep-log-custom-modal">
+  <div class="ep-modal-box">
+    <div class="ep-modal-title" id="ep-log-custom-title">Log Food</div>
+    <div class="ep-profile-note" id="ep-log-custom-base" style="margin-bottom:10px;"></div>
+    <form id="ep-log-custom-form">
+      <div id="ep-log-custom-amount-row">
+        <input type="number" id="ep-log-custom-amount" min="0" step="0.01" inputmode="decimal" required />
+        <select id="ep-log-custom-unit-select"></select>
+      </div>
+      <div id="ep-log-custom-preview"></div>
+      <button type="submit" class="ep-modal-save-btn">Add</button>
+    </form>
+    <div class="ep-modal-close-row">
+      <button class="ep-modal-cancel-btn" id="ep-log-custom-cancel">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Search Food modal — queries USDA FoodData Central + Open Food Facts and
+     hands the tapped result straight into the Log Custom Food modal so the
+     amount can be adjusted before it's added -->
+<div class="ep-modal-overlay" id="ep-search-food-modal">
+  <div class="ep-modal-box">
+    <div class="ep-modal-title">Search Food</div>
+    <input type="text" id="ep-search-food-input" placeholder="e.g. chicken breast, Krispy Kreme donut" autocomplete="off" />
+    <div id="ep-search-food-status"></div>
+    <div id="ep-search-food-results"></div>
+    <a href="https://platform.fatsecret.com" target="_blank" rel="noopener" id="ep-search-food-attribution">Powered by fatsecret Platform API</a>
+    <div class="ep-modal-close-row">
+      <button class="ep-modal-cancel-btn" id="ep-search-food-cancel">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Scan Barcode modal — camera view for reading a product's UPC/EAN
+     barcode, then looks it up via Open Food Facts (free, keyless, no IP
+     restriction — unlike the FatSecret text search above) -->
+<div class="ep-modal-overlay" id="ep-scan-food-modal">
+  <div class="ep-modal-box">
+    <div class="ep-modal-title">Scan Barcode</div>
+    <div id="ep-scan-reader"></div>
+    <div id="ep-scan-food-status">Point your camera at a barcode</div>
+    <div class="ep-modal-close-row">
+      <button class="ep-modal-cancel-btn" id="ep-scan-food-cancel">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Food modal -->
+<div class="ep-modal-overlay" id="ep-food-modal">
+  <div class="ep-modal-box">
+    <div class="ep-modal-title" id="ep-food-modal-title">Add Food</div>
+    <div class="ep-modal-subtitle" id="ep-food-modal-subtitle" style="display:none;">Edit Entry</div>
+    <form id="ep-food-form">
+      <input type="text" id="ep-food-name" placeholder="Food name" autocomplete="off" />
+      <div id="ep-food-macro-inputs">
+        <div class="ep-macro-field">
+          <label class="ep-macro-field-label">Cals</label>
+          <input type="number" id="ep-food-cals" min="0" inputmode="numeric" />
+        </div>
+        <div class="ep-macro-field">
+          <label class="ep-macro-field-label">Protein</label>
+          <input type="number" id="ep-food-protein" min="0" inputmode="numeric" />
+        </div>
+        <div class="ep-macro-field">
+          <label class="ep-macro-field-label">Carbs</label>
+          <input type="number" id="ep-food-carbs" min="0" inputmode="numeric" />
+        </div>
+        <div class="ep-macro-field">
+          <label class="ep-macro-field-label">Fat</label>
+          <input type="number" id="ep-food-fat" min="0" inputmode="numeric" />
+        </div>
+      </div>
+      <button type="submit" class="ep-modal-save-btn">Add</button>
+    </form>
+    <div class="ep-modal-close-row">
+      <button class="ep-modal-cancel-btn" id="ep-food-modal-cancel">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Barcode scanning (Scan Barcode) — camera-based decoder; native
+     BarcodeDetector isn't available in Safari/iOS, so this app uses a JS
+     decoder that works everywhere getUserMedia does. -->
+<script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script>
+  // ── Loading screen: same fixed-clock letter-rise as Train Hard, just with
+  // no 3D model to gate the last letter on — it reveals as soon as the
+  // sequence finishes since there's nothing async to wait for.
+  const LETTER_STEP_MS = 90;
+  const loadLetters = document.querySelectorAll('#loading .load-letter');
+  let nextLetterIndex = 0;
+  function tickLetterSequence() {
+    if (nextLetterIndex < loadLetters.length) {
+      loadLetters[nextLetterIndex].classList.add('risen');
+      nextLetterIndex++;
+      setTimeout(tickLetterSequence, LETTER_STEP_MS);
+    } else {
+      setTimeout(dismissLoadingScreen, 250);
+    }
+  }
+  function dismissLoadingScreen() {
+    const loadingEl = document.getElementById('loading');
+    const appEl = document.getElementById('app');
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      appEl.classList.add('visible');
+      loadingEl.classList.add('fade-out');
+    }));
+    setTimeout(() => { loadingEl.style.display = 'none'; }, 1000);
+  }
+  tickLetterSequence();
+
+  // ── Viewport stabilizer (portrait-lock support), same approach as Train Hard ──
+  const landscapeLockQuery = window.matchMedia('(orientation: landscape) and (hover: none) and (pointer: coarse)');
+  function updateViewportVars() {
+    const rotated = landscapeLockQuery.matches;
+    const w = rotated ? innerHeight : innerWidth;
+    const h = rotated ? innerWidth : innerHeight;
+    document.documentElement.style.setProperty('--rvh', (h * 0.01) + 'px');
+    document.documentElement.style.setProperty('--rvw', (w * 0.01) + 'px');
+  }
+  function stabilizeViewport() {
+    updateViewportVars();
+    [50, 150, 350, 600].forEach(ms => setTimeout(updateViewportVars, ms));
+  }
+  stabilizeViewport();
+  window.addEventListener('orientationchange', stabilizeViewport);
+  window.addEventListener('pageshow', stabilizeViewport);
+  window.addEventListener('resize', updateViewportVars);
+  if (window.visualViewport) window.visualViewport.addEventListener('resize', stabilizeViewport);
+
+  document.getElementById('ep-back-btn').addEventListener('click', () => {
+    location.href = 'index.html';
+  });
+
+  // ═══════════════════════════════════════════════════════════
+  // TAB SWITCHING
+  // ═══════════════════════════════════════════════════════════
+  const TAB_SECTION_IDS = {
+    profile: 'profile-section',
+    recipes: 'recipes-section',
+    eatplenty: 'eatplenty-section',
+    weight: 'weight-section',
+    stats: 'stats-section',
+  };
+  function showTab(tab) {
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+    Object.entries(TAB_SECTION_IDS).forEach(([t, id]) => {
+      document.getElementById(id).classList.toggle('active', t === tab);
+    });
+    if (tab === 'profile') renderGoalsForm();
+    if (tab === 'recipes') renderRecipesList();
+    if (tab === 'stats') renderStats();
+    if (tab === 'weight') renderWeightTab();
+    if (tab === 'eatplenty') {
+      // Always jump back to today when the tab is opened — whether coming
+      // from another tab or tapping it again while already here.
+      viewedDate = new Date(today);
+      updateDateNav();
+      renderTotals();
+      renderMeals();
+    }
+  }
+  document.querySelectorAll('.nav-btn').forEach(btn => {
+    btn.addEventListener('click', () => showTab(btn.dataset.tab));
+  });
+
+  // ═══════════════════════════════════════════════════════════
+  // DATA — localStorage-only for now (same trainhard_ prefix convention as
+  // the rest of the app). No cloud sync yet; that's a follow-up.
+  // ═══════════════════════════════════════════════════════════
+  const NUTRITION_KEY = 'trainhard_nutrition';
+  const GOALS_KEY = 'trainhard_nutrition_goals';
+  const WEIGHT_KEY = 'trainhard_weight_log';
+
+  const MEAL_SECTIONS = [
+    { key: 'breakfast', label: 'Breakfast' },
+    { key: 'snack1', label: 'Snack' },
+    { key: 'lunch', label: 'Lunch' },
+    { key: 'snack2', label: 'Snack' },
+    { key: 'dinner', label: 'Dinner' },
+    { key: 'snack3', label: 'Snack' },
+  ];
+
+  function dateKey(d) {
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }
+  function startOfDay(d) {
+    const c = new Date(d);
+    c.setHours(0, 0, 0, 0);
+    return c;
+  }
+  const today = startOfDay(new Date());
+  // Shared across the Eat Plenty and Weight tabs, so cycling a day on one
+  // keeps the other in sync.
+  let viewedDate = startOfDay(new Date());
+
+  function loadNutrition() {
+    try { return JSON.parse(localStorage.getItem(NUTRITION_KEY) || '{}'); } catch { return {}; }
+  }
+  function saveNutrition(data) {
+    localStorage.setItem(NUTRITION_KEY, JSON.stringify(data));
+  }
+  function getLogForViewedDate() {
+    const data = loadNutrition();
+    return data[dateKey(viewedDate)] || [];
+  }
+  function addFoodEntry(entry) {
+    const data = loadNutrition();
+    const key = dateKey(viewedDate);
+    if (!data[key]) data[key] = [];
+    data[key].push(entry);
+    saveNutrition(data);
+  }
+  function removeFoodEntry(index) {
+    const data = loadNutrition();
+    const key = dateKey(viewedDate);
+    if (!data[key]) return;
+    data[key].splice(index, 1);
+    saveNutrition(data);
+  }
+  function updateFoodEntry(index, entry) {
+    const data = loadNutrition();
+    const key = dateKey(viewedDate);
+    if (!data[key] || !data[key][index]) return;
+    data[key][index] = entry;
+    saveNutrition(data);
+  }
+  function sumEntries(entries) {
+    return entries.reduce((acc, e) => ({
+      cals: acc.cals + (e.cals || 0),
+      protein: acc.protein + (e.protein || 0),
+      carbs: acc.carbs + (e.carbs || 0),
+      fat: acc.fat + (e.fat || 0),
+    }), { cals: 0, protein: 0, carbs: 0, fat: 0 });
+  }
+
+  function loadGoals() {
+    try {
+      return Object.assign({ calories: 2200, protein: 180, carbs: 250, fat: 70 }, JSON.parse(localStorage.getItem(GOALS_KEY) || '{}'));
+    } catch {
+      return { calories: 2200, protein: 180, carbs: 250, fat: 70 };
+    }
+  }
+  function saveGoals(goals) {
+    localStorage.setItem(GOALS_KEY, JSON.stringify(goals));
+  }
+
+  function loadWeightLog() {
+    try { return JSON.parse(localStorage.getItem(WEIGHT_KEY) || '{}'); } catch { return {}; }
+  }
+  function saveWeightLog(data) {
+    localStorage.setItem(WEIGHT_KEY, JSON.stringify(data));
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // DATE NAVIGATION — arrows + swipe both call changeDate(); "next" is
+  // capped at today since future days have nothing to show. Both the Eat
+  // Plenty and Weight tabs' nav bars stay in sync since they share
+  // viewedDate.
+  // ═══════════════════════════════════════════════════════════
+  function formatDateLabel(d) {
+    const diffDays = Math.round((today.getTime() - d.getTime()) / 86400000);
+    if (diffDays === 0) return 'Today';
+    if (diffDays === 1) return 'Yesterday';
+    return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  }
+  function updateDateNav() {
+    const label = formatDateLabel(viewedDate);
+    const disabled = viewedDate.getTime() >= today.getTime();
+    document.getElementById('ep-date-label').textContent = label;
+    document.getElementById('ep-date-next').disabled = disabled;
+    document.getElementById('wt-date-label').textContent = label;
+    document.getElementById('wt-date-next').disabled = disabled;
+  }
+  function jumpToDate(d) {
+    const target = startOfDay(d);
+    if (target.getTime() > today.getTime()) return;
+    viewedDate = target;
+    updateDateNav();
+    renderTotals();
+    renderMeals();
+    renderWeightTab();
+  }
+  function changeDate(deltaDays) {
+    const next = new Date(viewedDate);
+    next.setDate(next.getDate() + deltaDays);
+    jumpToDate(next);
+  }
+  document.getElementById('ep-date-prev').addEventListener('click', () => changeDate(-1));
+  document.getElementById('ep-date-next').addEventListener('click', () => changeDate(1));
+  document.getElementById('wt-date-prev').addEventListener('click', () => changeDate(-1));
+  document.getElementById('wt-date-next').addEventListener('click', () => changeDate(1));
+
+  // Swipe left = next day, swipe right = previous day, on either date-scoped
+  // section. Only fires on a clearly-horizontal gesture so normal vertical
+  // scrolling is never hijacked.
+  function setupSwipe(el) {
+    let startX = null, startY = null;
+    el.addEventListener('touchstart', (e) => {
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+    }, { passive: true });
+    el.addEventListener('touchend', (e) => {
+      if (startX === null) return;
+      const dx = e.changedTouches[0].clientX - startX;
+      const dy = e.changedTouches[0].clientY - startY;
+      startX = null; startY = null;
+      if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+        changeDate(dx < 0 ? 1 : -1);
+      }
+    }, { passive: true });
+  }
+  setupSwipe(document.getElementById('eatplenty-section'));
+  setupSwipe(document.getElementById('weight-section'));
+
+  // ═══════════════════════════════════════════════════════════
+  // CALENDAR POPUP — tap either date-nav label to jump straight to a date
+  // instead of stepping day by day. Shared by the Eat Plenty and Weight
+  // tabs since they share viewedDate.
+  // ═══════════════════════════════════════════════════════════
+  let calendarMonth = new Date();
+  function isSameDay(a, b) {
+    return a.getTime() === b.getTime();
+  }
+  function monthHasReachedToday(month) {
+    return month.getFullYear() > today.getFullYear() ||
+      (month.getFullYear() === today.getFullYear() && month.getMonth() >= today.getMonth());
+  }
+  function openCalendarModal() {
+    calendarMonth = new Date(viewedDate.getFullYear(), viewedDate.getMonth(), 1);
+    renderCalendarGrid();
+    document.getElementById('ep-calendar-modal').classList.add('open');
+  }
+  function closeCalendarModal() {
+    document.getElementById('ep-calendar-modal').classList.remove('open');
+  }
+  // Builds a fixed 6-row (42-cell) grid every time, padding with trailing
+  // empty cells past the end of the month — a 4-week February and a 6-week
+  // month with a leading Saturday would otherwise render different total
+  // heights, and since the modal is centered on screen, that resize made
+  // the whole box (arrows included) jump on every month change. Also loads
+  // the nutrition/weight data once per render instead of once per day cell
+  // (was re-parsing localStorage up to 31 times per render).
+  function renderCalendarGrid() {
+    document.getElementById('ep-calendar-month-label').textContent =
+      calendarMonth.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+    document.getElementById('ep-cal-next-month').disabled = monthHasReachedToday(calendarMonth);
+
+    const year = calendarMonth.getFullYear();
+    const month = calendarMonth.getMonth();
+    const firstDayOfWeek = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const nutritionData = loadNutrition();
+    const weightData = loadWeightLog();
+
+    const grid = document.getElementById('ep-calendar-grid');
+    grid.innerHTML = '';
+    const addEmptyCell = () => {
+      const empty = document.createElement('div');
+      empty.className = 'ep-cal-day ep-cal-empty';
+      grid.appendChild(empty);
+    };
+    for (let i = 0; i < firstDayOfWeek; i++) addEmptyCell();
+    for (let day = 1; day <= daysInMonth; day++) {
+      const d = new Date(year, month, day);
+      const isFuture = d.getTime() > today.getTime();
+      const cell = document.createElement('div');
+      cell.className = 'ep-cal-day';
+      if (isFuture) cell.classList.add('ep-cal-future');
+      if (isSameDay(d, today)) cell.classList.add('ep-cal-today');
+      if (isSameDay(d, viewedDate)) cell.classList.add('ep-cal-selected');
+      const key = dateKey(d);
+      const hasActivity = !isFuture && (((nutritionData[key] || []).length > 0) || weightData[key] != null);
+      cell.innerHTML = String(day) + (hasActivity ? '<span class="ep-cal-dot"></span>' : '');
+      if (!isFuture) {
+        cell.addEventListener('click', () => {
+          jumpToDate(d);
+          closeCalendarModal();
+        });
+      }
+      grid.appendChild(cell);
+    }
+    while (grid.children.length < 42) addEmptyCell();
+  }
+  document.getElementById('ep-cal-prev-month').addEventListener('click', () => {
+    calendarMonth = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() - 1, 1);
+    renderCalendarGrid();
+  });
+  document.getElementById('ep-cal-next-month').addEventListener('click', () => {
+    if (monthHasReachedToday(calendarMonth)) return;
+    calendarMonth = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 1);
+    renderCalendarGrid();
+  });
+  document.getElementById('ep-calendar-cancel').addEventListener('click', closeCalendarModal);
+  document.getElementById('ep-calendar-modal').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('ep-calendar-modal')) closeCalendarModal();
+  });
+  document.getElementById('ep-date-label').addEventListener('click', openCalendarModal);
+  document.getElementById('wt-date-label').addEventListener('click', openCalendarModal);
+
+  // ═══════════════════════════════════════════════════════════
+  // EAT PLENTY TAB — totals + macro rings + meal sections
+  // ═══════════════════════════════════════════════════════════
+  const RING_R = 34;
+  const RING_CIRC = 2 * Math.PI * RING_R;
+
+  function renderTotals() {
+    const totals = sumEntries(getLogForViewedDate());
+    const goals = loadGoals();
+
+    document.getElementById('ep-cals-consumed').textContent = Math.round(totals.cals);
+    document.getElementById('ep-cals-goal').textContent = '/' + Math.round(goals.calories);
+
+    ['protein', 'carbs', 'fat'].forEach(macro => {
+      const consumed = totals[macro];
+      const goal = goals[macro];
+      const pct = goal > 0 ? (consumed / goal) * 100 : 0;
+      const clampedPct = Math.min(pct, 100);
+      const offset = RING_CIRC - (RING_CIRC * clampedPct / 100);
+      const fillEl = document.getElementById(`ep-ring-fill-${macro}`);
+      fillEl.style.strokeDasharray = `${RING_CIRC} ${RING_CIRC}`;
+      fillEl.style.strokeDashoffset = offset;
+      fillEl.classList.toggle('over', pct > 100);
+      document.getElementById(`ep-ring-pct-${macro}`).textContent = Math.round(pct) + '%';
+      document.getElementById(`ep-ring-consumed-${macro}`).textContent = Math.round(consumed) + 'g';
+      document.getElementById(`ep-ring-goal-${macro}`).textContent = '/' + Math.round(goal) + 'g';
+    });
+  }
+
+  function buildMealSectionsDom() {
+    const container = document.getElementById('ep-meal-sections');
+    container.innerHTML = '';
+    MEAL_SECTIONS.forEach(section => {
+      const card = document.createElement('div');
+      card.className = 'ep-card ep-meal-card';
+      card.innerHTML = `
+        <div class="ep-meal-header">
+          <span class="ep-meal-label">${section.label}</span>
+          <div class="ep-meal-header-right">
+            <span class="ep-meal-subtotal" id="ep-meal-subtotal-${section.key}"></span>
+            <button class="ep-meal-add-btn" data-meal="${section.key}" data-label="${section.label}">+ Add</button>
+          </div>
+        </div>
+        <div class="ep-meal-log-list" id="ep-meal-log-${section.key}"></div>
+      `;
+      container.appendChild(card);
+    });
+    container.querySelectorAll('.ep-meal-add-btn').forEach(btn => {
+      btn.addEventListener('click', () => openAddChoiceModal(btn.dataset.meal, btn.dataset.label));
+    });
+  }
+  buildMealSectionsDom();
+
+  function renderMeals() {
+    const log = getLogForViewedDate();
+    MEAL_SECTIONS.forEach(section => {
+      const items = log
+        .map((entry, idx) => ({ entry, idx }))
+        .filter(({ entry }) => entry.meal === section.key);
+
+      const listEl = document.getElementById(`ep-meal-log-${section.key}`);
+      listEl.innerHTML = '';
+      if (!items.length) {
+        listEl.innerHTML = '<div class="ep-meal-empty">Nothing logged.</div>';
+      } else {
+        items.forEach(({ entry, idx }) => {
+          const row = document.createElement('div');
+          row.className = 'ep-log-row';
+          row.innerHTML = `
+            <div class="ep-log-info">
+              <div class="ep-log-name">${entry.name}</div>
+              <div class="ep-log-macros">${Math.round(entry.cals || 0)} cal &middot; ${Math.round(entry.protein || 0)}p &middot; ${Math.round(entry.carbs || 0)}c &middot; ${Math.round(entry.fat || 0)}f</div>
+            </div>
+            <button class="ep-log-delete">&times;</button>
+          `;
+          // Tap the entry itself to edit it; the × stays a dedicated delete.
+          row.querySelector('.ep-log-info').addEventListener('click', () => {
+            openFoodModal(section.key, section.label, entry, idx);
+          });
+          row.querySelector('.ep-log-delete').addEventListener('click', () => {
+            removeFoodEntry(idx);
+            renderTotals();
+            renderMeals();
+          });
+          listEl.appendChild(row);
+        });
+      }
+
+      const subtotalCals = items.reduce((sum, { entry }) => sum + (entry.cals || 0), 0);
+      document.getElementById(`ep-meal-subtotal-${section.key}`).textContent =
+        items.length ? `${Math.round(subtotalCals)} cal` : '';
+    });
+  }
+
+  // ── Add-to-meal choice modal (Quick Add / Search / Scan) ──
+  let choiceMealKey = null;
+  let choiceMealLabel = null;
+  function openAddChoiceModal(mealKey, mealLabel) {
+    choiceMealKey = mealKey;
+    choiceMealLabel = mealLabel;
+    document.getElementById('ep-add-choice-title').textContent = `Add to ${mealLabel}`;
+    document.getElementById('ep-add-choice-modal').classList.add('open');
+  }
+  function closeAddChoiceModal() {
+    document.getElementById('ep-add-choice-modal').classList.remove('open');
+  }
+  document.getElementById('ep-choice-quick').addEventListener('click', () => {
+    closeAddChoiceModal();
+    openFoodModal(choiceMealKey, choiceMealLabel);
+  });
+  document.getElementById('ep-choice-myfoods').addEventListener('click', () => {
+    closeAddChoiceModal();
+    openMyFoodsModal(choiceMealKey, choiceMealLabel);
+  });
+  document.getElementById('ep-choice-search').addEventListener('click', () => {
+    closeAddChoiceModal();
+    try {
+      openSearchFoodModal(choiceMealKey, choiceMealLabel);
+    } catch (err) {
+      console.error('Search Food failed to open:', err);
+    }
+  });
+  document.getElementById('ep-choice-scan').addEventListener('click', () => {
+    closeAddChoiceModal();
+    try {
+      openScanFoodModal(choiceMealKey, choiceMealLabel);
+    } catch (err) {
+      console.error('Scan Barcode failed to open:', err);
+    }
+  });
+  document.getElementById('ep-add-choice-cancel').addEventListener('click', closeAddChoiceModal);
+  document.getElementById('ep-add-choice-modal').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('ep-add-choice-modal')) closeAddChoiceModal();
+  });
+
+  // ── Add Food modal — also doubles as the "review before adding" step for
+  // My Foods > Recent (prefill, no editIndex) and as the edit form for an
+  // already-logged entry (prefill + editIndex, updates in place on submit).
+  let pendingMealKey = null;
+  let editingEntryIndex = null;
+  function openFoodModal(mealKey, mealLabel, prefill, editIndex) {
+    pendingMealKey = mealKey;
+    editingEntryIndex = (typeof editIndex === 'number') ? editIndex : null;
+    document.getElementById('ep-food-modal-title').textContent =
+      editingEntryIndex != null ? `Edit ${mealLabel} Entry` : `Add to ${mealLabel}`;
+    document.getElementById('ep-food-form').reset();
+    document.getElementById('ep-food-modal-subtitle').style.display = prefill ? '' : 'none';
+    if (prefill) {
+      document.getElementById('ep-food-name').value = prefill.name || '';
+      document.getElementById('ep-food-cals').value = prefill.cals ? Math.round(prefill.cals) : '';
+      document.getElementById('ep-food-protein').value = prefill.protein ? Math.round(prefill.protein) : '';
+      document.getElementById('ep-food-carbs').value = prefill.carbs ? Math.round(prefill.carbs) : '';
+      document.getElementById('ep-food-fat').value = prefill.fat ? Math.round(prefill.fat) : '';
+    }
+    document.getElementById('ep-food-modal').classList.add('open');
+    // Only autofocus (and pop the keyboard) for a truly blank Quick Add —
+    // reviewing a prefilled entry shouldn't auto-select/focus anything.
+    if (!prefill) document.getElementById('ep-food-name').focus();
+  }
+  function closeFoodModal() {
+    document.getElementById('ep-food-modal').classList.remove('open');
+    pendingMealKey = null;
+    editingEntryIndex = null;
+  }
+  document.getElementById('ep-food-modal-cancel').addEventListener('click', closeFoodModal);
+  document.getElementById('ep-food-modal').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('ep-food-modal')) closeFoodModal();
+  });
+  // Atwater general factors: 4 kcal/g for protein and carbs, 9 kcal/g for
+  // fat — used to fill in calories when the user only entered macros.
+  function estimateCalsFromMacros(protein, carbs, fat) {
+    return protein * 4 + carbs * 4 + fat * 9;
+  }
+
+  document.getElementById('ep-food-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const name = document.getElementById('ep-food-name').value.trim() || 'Quick Add';
+    if (!pendingMealKey) return;
+    const protein = parseFloat(document.getElementById('ep-food-protein').value) || 0;
+    const carbs = parseFloat(document.getElementById('ep-food-carbs').value) || 0;
+    const fat = parseFloat(document.getElementById('ep-food-fat').value) || 0;
+    const calsRaw = document.getElementById('ep-food-cals').value.trim();
+    const cals = calsRaw === '' ? estimateCalsFromMacros(protein, carbs, fat) : (parseFloat(calsRaw) || 0);
+    const entry = { name, meal: pendingMealKey, cals, protein, carbs, fat };
+    if (editingEntryIndex != null) {
+      updateFoodEntry(editingEntryIndex, entry);
+    } else {
+      addFoodEntry(entry);
+    }
+    closeFoodModal();
+    renderTotals();
+    renderMeals();
+  });
+
+  // ═══════════════════════════════════════════════════════════
+  // MY FOODS — recent foods (quick re-add, exact macros as last logged) +
+  // user-created custom foods (defined per a serving size, scaled on log)
+  // ═══════════════════════════════════════════════════════════
+  const CUSTOM_FOODS_KEY = 'trainhard_custom_foods';
+  function loadCustomFoods() {
+    try { return JSON.parse(localStorage.getItem(CUSTOM_FOODS_KEY) || '[]'); } catch { return []; }
+  }
+  function saveCustomFoods(list) {
+    localStorage.setItem(CUSTOM_FOODS_KEY, JSON.stringify(list));
+  }
+  function deleteCustomFood(id) {
+    saveCustomFoods(loadCustomFoods().filter(f => f.id !== id));
+  }
+
+  // Every uniquely-named food ever logged, most-recently-logged first, each
+  // remembering the macros it was logged with the last time (a simple
+  // "recent foods" quick-re-add list — separate from the custom-food
+  // library below, which has an actual serving size to scale from).
+  function getRecentFoods() {
+    const data = loadNutrition();
+    const dateStrs = Object.keys(data).sort().reverse();
+    const seen = new Map();
+    dateStrs.forEach(dateStr => {
+      const entries = data[dateStr] || [];
+      for (let i = entries.length - 1; i >= 0; i--) {
+        const e = entries[i];
+        if (!seen.has(e.name)) seen.set(e.name, e);
+      }
+    });
+    return [...seen.values()];
+  }
+
+  let myFoodsMealKey = null;
+  let myFoodsMealLabel = null;
+  function openMyFoodsModal(mealKey, mealLabel) {
+    myFoodsMealKey = mealKey;
+    myFoodsMealLabel = mealLabel;
+    document.getElementById('ep-myfoods-title').textContent = `Add to ${mealLabel}`;
+    renderMyFoodsLists();
+    document.getElementById('ep-myfoods-modal').classList.add('open');
+  }
+  function closeMyFoodsModal() {
+    document.getElementById('ep-myfoods-modal').classList.remove('open');
+  }
+  function renderMyFoodsLists() {
+    const customList = document.getElementById('ep-myfoods-custom-list');
+    const customFoods = loadCustomFoods();
+    customList.innerHTML = '';
+    if (!customFoods.length) {
+      customList.innerHTML = '<div class="ep-meal-empty">No custom foods yet.</div>';
+    } else {
+      customFoods.forEach(food => {
+        // Tap to log only — editing/deleting a custom food lives in the
+        // Recipes tab, not here.
+        const row = document.createElement('button');
+        row.type = 'button';
+        row.className = 'ep-food-lib-row';
+        row.innerHTML = `
+          <div class="ep-food-lib-info">
+            <div class="ep-food-lib-name">${food.name}</div>
+            <div class="ep-food-lib-macros">Per ${formatServingAmount(food.servingSize, food.unit)}: ${Math.round(food.cals)} cal &middot; ${Math.round(food.protein)}p &middot; ${Math.round(food.carbs)}c &middot; ${Math.round(food.fat)}f</div>
+          </div>
+        `;
+        row.addEventListener('click', () => {
+          closeMyFoodsModal();
+          openLogCustomModal(food);
+        });
+        customList.appendChild(row);
+      });
+    }
+
+    const recentList = document.getElementById('ep-myfoods-recent-list');
+    const recentFoods = getRecentFoods();
+    recentList.innerHTML = '';
+    if (!recentFoods.length) {
+      recentList.innerHTML = '<div class="ep-meal-empty">Nothing logged yet.</div>';
+    } else {
+      recentFoods.forEach(entry => {
+        const row = document.createElement('button');
+        row.type = 'button';
+        row.className = 'ep-food-lib-row';
+        row.innerHTML = `
+          <div class="ep-food-lib-info">
+            <div class="ep-food-lib-name">${entry.name}</div>
+            <div class="ep-food-lib-macros">${Math.round(entry.cals || 0)} cal &middot; ${Math.round(entry.protein || 0)}p &middot; ${Math.round(entry.carbs || 0)}c &middot; ${Math.round(entry.fat || 0)}f</div>
+          </div>
+        `;
+        row.addEventListener('click', () => {
+          // Open the Add Food form pre-filled with this food's last-logged
+          // macros so the amount can be adjusted before it's actually added,
+          // rather than re-adding blind.
+          closeMyFoodsModal();
+          openFoodModal(myFoodsMealKey, myFoodsMealLabel, entry);
+        });
+        recentList.appendChild(row);
+      });
+    }
+  }
+  document.getElementById('ep-myfoods-cancel').addEventListener('click', closeMyFoodsModal);
+  document.getElementById('ep-myfoods-modal').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('ep-myfoods-modal')) closeMyFoodsModal();
+  });
+  document.getElementById('ep-myfoods-create-btn').addEventListener('click', () => {
+    closeMyFoodsModal();
+    openCreateFoodModal(null, 'myfoods');
+  });
+
+  // ── Create Food modal — also the Edit Food form (prefilled + Delete
+  // shown) when opened from the Recipes tab on an existing food. Tracks
+  // where to return to on close/save/delete: the My Foods modal (if
+  // creating mid-log-a-food) or the Recipes list (the normal case).
+  let editingFoodId = null;
+  let createFoodReturnTo = 'recipes';
+  function openCreateFoodModal(editFood, returnTo) {
+    createFoodReturnTo = returnTo || 'recipes';
+    editingFoodId = editFood ? editFood.id : null;
+    document.getElementById('ep-create-food-modal-title').textContent = editFood ? 'Edit Food' : 'Create Food';
+    document.getElementById('ep-create-food-delete').style.display = editFood ? '' : 'none';
+    document.getElementById('ep-create-food-form').reset();
+    if (editFood) {
+      document.getElementById('ep-create-food-name').value = editFood.name;
+      document.getElementById('ep-create-food-serving-size').value = editFood.servingSize;
+      document.getElementById('ep-create-food-unit').value = editFood.unit;
+      document.getElementById('ep-create-food-cals').value = Math.round(editFood.cals);
+      document.getElementById('ep-create-food-protein').value = Math.round(editFood.protein);
+      document.getElementById('ep-create-food-carbs').value = Math.round(editFood.carbs);
+      document.getElementById('ep-create-food-fat').value = Math.round(editFood.fat);
+    } else {
+      document.getElementById('ep-create-food-unit').value = 'g';
+    }
+    document.getElementById('ep-create-food-modal').classList.add('open');
+    if (!editFood) document.getElementById('ep-create-food-name').focus();
+  }
+  function closeCreateFoodModal() {
+    document.getElementById('ep-create-food-modal').classList.remove('open');
+  }
+  function afterCreateFoodModalDone() {
+    editingFoodId = null;
+    if (createFoodReturnTo === 'myfoods') {
+      openMyFoodsModal(myFoodsMealKey, myFoodsMealLabel);
+    } else {
+      renderRecipesList();
+    }
+  }
+  document.getElementById('ep-create-food-cancel').addEventListener('click', () => {
+    closeCreateFoodModal();
+    afterCreateFoodModalDone();
+  });
+  document.getElementById('ep-create-food-modal').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('ep-create-food-modal')) {
+      closeCreateFoodModal();
+      afterCreateFoodModalDone();
+    }
+  });
+  document.getElementById('ep-create-food-delete').addEventListener('click', () => {
+    if (!editingFoodId) return;
+    deleteCustomFood(editingFoodId);
+    closeCreateFoodModal();
+    afterCreateFoodModalDone();
+  });
+  document.getElementById('ep-create-food-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const name = document.getElementById('ep-create-food-name').value.trim();
+    const servingSize = parseFloat(document.getElementById('ep-create-food-serving-size').value);
+    if (!name || isNaN(servingSize) || servingSize <= 0) return;
+    const unit = document.getElementById('ep-create-food-unit').value;
+    const protein = parseFloat(document.getElementById('ep-create-food-protein').value) || 0;
+    const carbs = parseFloat(document.getElementById('ep-create-food-carbs').value) || 0;
+    const fat = parseFloat(document.getElementById('ep-create-food-fat').value) || 0;
+    const calsRaw = document.getElementById('ep-create-food-cals').value.trim();
+    const cals = calsRaw === '' ? estimateCalsFromMacros(protein, carbs, fat) : (parseFloat(calsRaw) || 0);
+
+    const foods = loadCustomFoods();
+    if (editingFoodId) {
+      const idx = foods.findIndex(f => f.id === editingFoodId);
+      if (idx !== -1) foods[idx] = { ...foods[idx], name, servingSize, unit, cals, protein, carbs, fat };
+    } else {
+      foods.push({
+        id: Date.now() + '-' + Math.random().toString(36).slice(2),
+        name, servingSize, unit, cals, protein, carbs, fat,
+      });
+    }
+    saveCustomFoods(foods);
+    closeCreateFoodModal();
+    afterCreateFoodModalDone();
+  });
+
+  // ── Log Custom Food modal — adjust the amount and its unit (real
+  // mass/volume conversion, not just relabeling — 1 oz of the same food as
+  // a 100g-defined serving scales correctly); macros are NOT hand-editable
+  // here, only shown as a computed preview, since they're derived directly
+  // from the food's defined serving. ──
+  // Only units within the same physical quantity can convert into each
+  // other (mass <-> mass, volume <-> volume) — going from a weight to a
+  // volume isn't meaningful without the food's density, so the unit
+  // dropdown only ever offers the food's own group.
+  const UNIT_GROUPS = {
+    mass: { g: 1, oz: 28.3495, lbs: 453.592 },
+    volume: { ml: 1, L: 1000, 'fl oz': 29.5735 },
+    // Some FatSecret results (mainly restaurant/composite items) only give
+    // macros "per 1 serving" with no gram/ml breakdown — there's nothing to
+    // convert those to, so they get their own single-unit group.
+    count: { serving: 1 },
+  };
+  function unitGroupOf(unit) {
+    if (Object.prototype.hasOwnProperty.call(UNIT_GROUPS.mass, unit)) return 'mass';
+    if (Object.prototype.hasOwnProperty.call(UNIT_GROUPS.volume, unit)) return 'volume';
+    return 'count';
+  }
+  function convertAmount(amount, fromUnit, toUnit) {
+    const table = UNIT_GROUPS[unitGroupOf(fromUnit)];
+    if (!(toUnit in table)) return null;
+    return (amount * table[fromUnit]) / table[toUnit];
+  }
+  function formatServingAmount(size, unit) {
+    if (unit === 'serving') return `${size} ${size === 1 ? 'serving' : 'servings'}`;
+    return `${size}${unit}`;
+  }
+
+  let logCustomFood = null;
+  let logCustomScaled = null;
+  function openLogCustomModal(food) {
+    logCustomFood = food;
+    document.getElementById('ep-log-custom-title').textContent = food.name;
+    document.getElementById('ep-log-custom-base').textContent =
+      `Per ${formatServingAmount(food.servingSize, food.unit)}: ${Math.round(food.cals)} cal · ${Math.round(food.protein)}p · ${Math.round(food.carbs)}c · ${Math.round(food.fat)}f`;
+
+    const group = unitGroupOf(food.unit);
+    const unitSelect = document.getElementById('ep-log-custom-unit-select');
+    unitSelect.innerHTML = Object.keys(UNIT_GROUPS[group]).map(u => `<option value="${u}">${u}</option>`).join('');
+    unitSelect.value = food.unit;
+
+    document.getElementById('ep-log-custom-amount').value = food.servingSize;
+    updateLogCustomPreview();
+    document.getElementById('ep-log-custom-modal').classList.add('open');
+  }
+  function closeLogCustomModal() {
+    document.getElementById('ep-log-custom-modal').classList.remove('open');
+    logCustomFood = null;
+    logCustomScaled = null;
+  }
+  function updateLogCustomPreview() {
+    if (!logCustomFood) return;
+    const amount = parseFloat(document.getElementById('ep-log-custom-amount').value) || 0;
+    const unit = document.getElementById('ep-log-custom-unit-select').value;
+    const amountInFoodUnit = convertAmount(amount, unit, logCustomFood.unit);
+    const ratio = (amountInFoodUnit != null && logCustomFood.servingSize > 0) ? amountInFoodUnit / logCustomFood.servingSize : 0;
+    logCustomScaled = {
+      cals: logCustomFood.cals * ratio,
+      protein: logCustomFood.protein * ratio,
+      carbs: logCustomFood.carbs * ratio,
+      fat: logCustomFood.fat * ratio,
+    };
+    document.getElementById('ep-log-custom-preview').textContent =
+      `${Math.round(logCustomScaled.cals)} cal · ${Math.round(logCustomScaled.protein)}p · ${Math.round(logCustomScaled.carbs)}c · ${Math.round(logCustomScaled.fat)}f`;
+  }
+  document.getElementById('ep-log-custom-amount').addEventListener('input', updateLogCustomPreview);
+  document.getElementById('ep-log-custom-amount').addEventListener('change', updateLogCustomPreview);
+  document.getElementById('ep-log-custom-unit-select').addEventListener('change', updateLogCustomPreview);
+  document.getElementById('ep-log-custom-cancel').addEventListener('click', closeLogCustomModal);
+  document.getElementById('ep-log-custom-modal').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('ep-log-custom-modal')) closeLogCustomModal();
+  });
+  document.getElementById('ep-log-custom-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (!logCustomFood || !logCustomScaled || !myFoodsMealKey) return;
+    const amount = parseFloat(document.getElementById('ep-log-custom-amount').value);
+    if (isNaN(amount) || amount <= 0) return;
+    addFoodEntry({
+      name: logCustomFood.name,
+      meal: myFoodsMealKey,
+      cals: logCustomScaled.cals,
+      protein: logCustomScaled.protein,
+      carbs: logCustomScaled.carbs,
+      fat: logCustomScaled.fat,
+    });
+    closeLogCustomModal();
+    renderTotals();
+    renderMeals();
+  });
+
+  // ═══════════════════════════════════════════════════════════
+  // SEARCH FOOD — queries the FatSecret Platform API (generic, branded, AND
+  // restaurant foods — the widest coverage of any free option) through a
+  // Supabase Edge Function proxy. FatSecret's OAuth secret can't safely
+  // live in this page's JS, so the function holds it and this page only
+  // ever talks to that function. See supabase/functions/food-search/.
+  // ═══════════════════════════════════════════════════════════
+  // Points at the always-on proxy VM (see server/food-search/) — not a
+  // Supabase Edge Function or Cloudflare Worker, because FatSecret's OAuth
+  // credentials are IP-restricted and no serverless/edge platform can offer
+  // a fixed egress IP. Fill in the nip.io (or real domain) host once the VM
+  // is deployed and its IP is added to FatSecret's IP allow list.
+  const FOOD_SEARCH_URL = 'https://YOUR-IP-WITH-DASHES.nip.io';
+  const FOOD_SEARCH_APP_SECRET = '94ca97c863544faf8c50c0dbcb9470f7b1fce6ff2ed847e798466fb7a2d87d6e'; // must match FOOD_SEARCH_SHARED_SECRET in server/food-search/.env
+
+  function normalizeSearchUnit(rawUnit) {
+    const u = (rawUnit || 'g').trim().toLowerCase();
+    const map = { g: 'g', grm: 'g', gram: 'g', grams: 'g', ml: 'ml', mlt: 'ml', milliliter: 'ml', milliliters: 'ml',
+      oz: 'oz', ounce: 'oz', ounces: 'oz', lb: 'lbs', lbs: 'lbs', pound: 'lbs', pounds: 'lbs',
+      l: 'L', liter: 'L', liters: 'L', 'fl oz': 'fl oz', 'fl. oz': 'fl oz', floz: 'fl oz' };
+    return map[u] || 'g';
+  }
+
+  // FatSecret's search endpoint packs macros into a free-text description
+  // like "Per 100g - Calories: 250kcal | Fat: 10.00g | Carbs: 30.00g |
+  // Protein: 8.00g" (or "Per 1 serving - ..." for a lot of restaurant/
+  // composite items, which have no gram breakdown at all). Structured
+  // per-gram data would need a second API call (foods.get) per result —
+  // parsing the description is what keeps this to a single round trip.
+  function parseFatSecretDescription(desc) {
+    const cal = desc.match(/Calories:\s*([\d.]+)\s*kcal/i);
+    const fat = desc.match(/Fat:\s*([\d.]+)\s*g/i);
+    const carbs = desc.match(/Carbs:\s*([\d.]+)\s*g/i);
+    const protein = desc.match(/Protein:\s*([\d.]+)\s*g/i);
+    const servingMatch = desc.match(/^Per\s+([^-]+?)\s*-\s*Calories/i);
+    const servingText = servingMatch ? servingMatch[1].trim() : '1 serving';
+    const direct = servingText.match(/^([\d.]+)\s*(g|ml|oz|lbs?|l|fl\.?\s?oz)$/i);
+    return {
+      servingSize: direct ? parseFloat(direct[1]) : 1,
+      unit: direct ? normalizeSearchUnit(direct[2]) : 'serving',
+      cals: cal ? parseFloat(cal[1]) : 0,
+      fat: fat ? parseFloat(fat[1]) : 0,
+      carbs: carbs ? parseFloat(carbs[1]) : 0,
+      protein: protein ? parseFloat(protein[1]) : 0,
+    };
+  }
+
+  function normalizeFatSecretFood(food) {
+    return {
+      name: food.food_name,
+      brand: food.brand_name || (food.food_type === 'Restaurant' ? food.food_name.split(',')[0] : ''),
+      ...parseFatSecretDescription(food.food_description || ''),
+    };
+  }
+
+  async function searchFatSecret(query) {
+    const res = await fetch(`${FOOD_SEARCH_URL}?q=${encodeURIComponent(query)}`, {
+      headers: { 'x-app-secret': FOOD_SEARCH_APP_SECRET },
+    });
+    const data = await res.json();
+    if (!res.ok || data.error) throw new Error(data.error?.message || data.error || 'FatSecret request failed');
+    const raw = data.foods?.food;
+    if (!raw) return [];
+    const list = Array.isArray(raw) ? raw : [raw];
+    return list
+      .map(normalizeFatSecretFood)
+      .filter(f => f.name && (f.cals > 0 || f.protein > 0 || f.carbs > 0 || f.fat > 0));
+  }
+
+  let searchFoodMealKey = null;
+  let searchFoodMealLabel = null;
+  let searchFoodDebounce = null;
+  let searchFoodRequestId = 0;
+
+  function openSearchFoodModal(mealKey, mealLabel) {
+    searchFoodMealKey = mealKey;
+    searchFoodMealLabel = mealLabel;
+    document.getElementById('ep-search-food-input').value = '';
+    document.getElementById('ep-search-food-status').textContent = 'Search for a food, e.g. "chicken breast" or "Krispy Kreme donut"';
+    document.getElementById('ep-search-food-results').innerHTML = '';
+    document.getElementById('ep-search-food-modal').classList.add('open');
+    document.getElementById('ep-search-food-input').focus();
+  }
+  function closeSearchFoodModal() {
+    document.getElementById('ep-search-food-modal').classList.remove('open');
+  }
+
+  function renderSearchFoodResults(results) {
+    const list = document.getElementById('ep-search-food-results');
+    list.innerHTML = '';
+    if (!results.length) {
+      document.getElementById('ep-search-food-status').textContent = 'No results found.';
+      return;
+    }
+    document.getElementById('ep-search-food-status').textContent = `${results.length} result${results.length === 1 ? '' : 's'}`;
+    results.forEach(food => {
+      const row = document.createElement('button');
+      row.type = 'button';
+      row.className = 'ep-food-lib-row';
+      row.innerHTML = `
+        <div class="ep-food-lib-info">
+          <div class="ep-food-lib-name">${food.name}</div>
+          ${food.brand ? `<div class="ep-food-lib-brand">${food.brand}</div>` : ''}
+          <div class="ep-food-lib-macros">Per ${formatServingAmount(food.servingSize, food.unit)}: ${Math.round(food.cals)} cal &middot; ${Math.round(food.protein)}p &middot; ${Math.round(food.carbs)}c &middot; ${Math.round(food.fat)}f</div>
+        </div>
+      `;
+      row.addEventListener('click', () => {
+        closeSearchFoodModal();
+        try {
+          // openLogCustomModal's submit handler logs to myFoodsMealKey —
+          // reuse it here so the same "adjust amount, then add" flow applies.
+          myFoodsMealKey = searchFoodMealKey;
+          myFoodsMealLabel = searchFoodMealLabel;
+          openLogCustomModal(food);
+        } catch (err) {
+          console.error('Failed to open Log Food for search result:', err);
+        }
+      });
+      list.appendChild(row);
+    });
+  }
+
+  async function runSearchFood(query) {
+    const requestId = ++searchFoodRequestId;
+    document.getElementById('ep-search-food-status').textContent = 'Searching…';
+    document.getElementById('ep-search-food-results').innerHTML = '';
+    try {
+      const results = await searchFatSecret(query);
+      if (requestId !== searchFoodRequestId) return; // a newer search superseded this one
+      renderSearchFoodResults(results);
+    } catch (err) {
+      if (requestId !== searchFoodRequestId) return;
+      console.error('Food search failed:', err);
+      document.getElementById('ep-search-food-status').textContent = 'Search failed — check your connection and try again.';
+    }
+  }
+
+  document.getElementById('ep-search-food-input').addEventListener('input', (e) => {
+    const query = e.target.value.trim();
+    clearTimeout(searchFoodDebounce);
+    if (!query) {
+      searchFoodRequestId++;
+      document.getElementById('ep-search-food-status').textContent = 'Search for a food, e.g. "chicken breast" or "Krispy Kreme donut"';
+      document.getElementById('ep-search-food-results').innerHTML = '';
+      return;
+    }
+    searchFoodDebounce = setTimeout(() => runSearchFood(query), 450);
+  });
+  document.getElementById('ep-search-food-cancel').addEventListener('click', closeSearchFoodModal);
+  document.getElementById('ep-search-food-modal').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('ep-search-food-modal')) closeSearchFoodModal();
+  });
+
+  // ═══════════════════════════════════════════════════════════
+  // SCAN BARCODE — reads a UPC/EAN barcode via the camera (html5-qrcode,
+  // loaded above) and looks it up through Open Food Facts' barcode
+  // endpoint, which is free, keyless, and has no IP restriction (unlike
+  // the FatSecret text search above, which needs the always-on proxy).
+  // ═══════════════════════════════════════════════════════════
+  function normalizeOFFBarcodeProduct(product) {
+    const n = product.nutriments || {};
+    const servingQty = parseFloat(product.serving_quantity);
+    const hasServing = n['energy-kcal_serving'] != null;
+    return {
+      name: product.product_name || product.generic_name || 'Unknown product',
+      brand: product.brands ? product.brands.split(',')[0].trim() : '',
+      servingSize: hasServing && servingQty ? servingQty : 100,
+      unit: 'g',
+      cals: (hasServing ? n['energy-kcal_serving'] : n['energy-kcal_100g']) || 0,
+      protein: (hasServing ? n['proteins_serving'] : n['proteins_100g']) || 0,
+      carbs: (hasServing ? n['carbohydrates_serving'] : n['carbohydrates_100g']) || 0,
+      fat: (hasServing ? n['fat_serving'] : n['fat_100g']) || 0,
+    };
+  }
+
+  let scanFoodMealKey = null;
+  let scanFoodMealLabel = null;
+  let scanFoodInstance = null;
+  let scanFoodBusy = false; // guards against a lookup firing per every decoded frame in a burst
+
+  function openScanFoodModal(mealKey, mealLabel) {
+    scanFoodMealKey = mealKey;
+    scanFoodMealLabel = mealLabel;
+    scanFoodBusy = false;
+    document.getElementById('ep-scan-food-status').textContent = 'Point your camera at a barcode';
+    document.getElementById('ep-scan-food-modal').classList.add('open');
+
+    if (typeof Html5Qrcode === 'undefined') {
+      document.getElementById('ep-scan-food-status').textContent = 'Scanner failed to load — check your connection and try again.';
+      return;
+    }
+    scanFoodInstance = new Html5Qrcode('ep-scan-reader');
+    scanFoodInstance.start(
+      { facingMode: 'environment' },
+      { fps: 10, qrbox: { width: 250, height: 150 } },
+      onBarcodeDetected,
+      () => {} // per-frame "nothing decoded yet" callback — fires constantly, not an error
+    ).catch(err => {
+      document.getElementById('ep-scan-food-status').textContent = 'Camera unavailable — check permissions and try again.';
+      console.error('Scanner failed to start:', err);
+    });
+  }
+
+  function closeScanFoodModal() {
+    document.getElementById('ep-scan-food-modal').classList.remove('open');
+    if (scanFoodInstance) {
+      scanFoodInstance.stop().then(() => scanFoodInstance.clear()).catch(() => {});
+      scanFoodInstance = null;
+    }
+  }
+
+  async function onBarcodeDetected(barcode) {
+    if (scanFoodBusy) return;
+    scanFoodBusy = true;
+    document.getElementById('ep-scan-food-status').textContent = `Looking up ${barcode}…`;
+    try {
+      const res = await fetch(`https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(barcode)}.json?fields=product_name,generic_name,brands,nutriments,serving_quantity,status`);
+      const data = await res.json();
+      if (data.status !== 1 || !data.product) {
+        document.getElementById('ep-scan-food-status').textContent = `No match for barcode ${barcode} — try Search Food instead.`;
+        scanFoodBusy = false;
+        return;
+      }
+      const food = normalizeOFFBarcodeProduct(data.product);
+      closeScanFoodModal();
+      myFoodsMealKey = scanFoodMealKey;
+      myFoodsMealLabel = scanFoodMealLabel;
+      openLogCustomModal(food);
+    } catch (err) {
+      console.error('Barcode lookup failed:', err);
+      document.getElementById('ep-scan-food-status').textContent = 'Lookup failed — check your connection and try again.';
+      scanFoodBusy = false;
+    }
+  }
+
+  document.getElementById('ep-scan-food-cancel').addEventListener('click', closeScanFoodModal);
+  document.getElementById('ep-scan-food-modal').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('ep-scan-food-modal')) closeScanFoodModal();
+  });
+
+  // ═══════════════════════════════════════════════════════════
+  // PROFILE TAB — daily goals editor
+  // ═══════════════════════════════════════════════════════════
+  function renderGoalsForm() {
+    const goals = loadGoals();
+    document.getElementById('ep-goal-calories').value = goals.calories;
+    document.getElementById('ep-goal-protein').value = goals.protein;
+    document.getElementById('ep-goal-carbs').value = goals.carbs;
+    document.getElementById('ep-goal-fat').value = goals.fat;
+  }
+  ['calories', 'protein', 'carbs', 'fat'].forEach(key => {
+    document.getElementById(`ep-goal-${key}`).addEventListener('change', (e) => {
+      const val = parseFloat(e.target.value);
+      if (isNaN(val) || val <= 0) return;
+      const goals = loadGoals();
+      goals[key] = val;
+      saveGoals(goals);
+      renderTotals();
+    });
+  });
+
+  // ═══════════════════════════════════════════════════════════
+  // RECIPES TAB — full create/edit/delete for the custom food library.
+  // (Editing/deleting used to live inline in My Foods; moved here so
+  // deleting a food isn't one accidental tap away from the log flow.)
+  // ═══════════════════════════════════════════════════════════
+  function renderRecipesList() {
+    const listEl = document.getElementById('ep-recipes-list');
+    const foods = loadCustomFoods();
+    listEl.innerHTML = '';
+    if (!foods.length) {
+      listEl.innerHTML = '<div class="ep-empty-state">No custom foods yet — tap + Create Food to add one.</div>';
+      return;
+    }
+    foods.forEach(food => {
+      const row = document.createElement('button');
+      row.type = 'button';
+      row.className = 'ep-food-lib-row';
+      row.innerHTML = `
+        <div class="ep-food-lib-info">
+          <div class="ep-food-lib-name">${food.name}</div>
+          <div class="ep-food-lib-macros">Per ${formatServingAmount(food.servingSize, food.unit)}: ${Math.round(food.cals)} cal &middot; ${Math.round(food.protein)}p &middot; ${Math.round(food.carbs)}c &middot; ${Math.round(food.fat)}f</div>
+        </div>
+        <span class="ep-food-lib-edit-icon" aria-hidden="true">&#9998;</span>
+      `;
+      row.addEventListener('click', () => openCreateFoodModal(food, 'recipes'));
+      listEl.appendChild(row);
+    });
+  }
+  document.getElementById('ep-recipes-create-btn').addEventListener('click', () => openCreateFoodModal(null, 'recipes'));
+
+  // ═══════════════════════════════════════════════════════════
+  // WEIGHT TAB
+  // ═══════════════════════════════════════════════════════════
+  function renderWeightTab() {
+    const log = loadWeightLog();
+    const existing = log[dateKey(viewedDate)];
+    document.getElementById('ep-weight-input').value = existing != null ? existing : '';
+    renderWeightHistory();
+  }
+  document.getElementById('ep-weight-log-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const val = parseFloat(document.getElementById('ep-weight-input').value);
+    if (isNaN(val) || val <= 0) return;
+    const log = loadWeightLog();
+    log[dateKey(viewedDate)] = val;
+    saveWeightLog(log);
+    renderWeightHistory();
+  });
+
+  function renderWeightHistory() {
+    const log = loadWeightLog();
+    const entries = Object.keys(log)
+      .map(dateStr => ({ dateStr, weight: log[dateStr] }))
+      .sort((a, b) => a.dateStr.localeCompare(b.dateStr));
+
+    const chart = document.getElementById('ep-weight-chart');
+    const listEl = document.getElementById('ep-weight-history-list');
+
+    if (!entries.length) {
+      chart.innerHTML = '';
+      listEl.innerHTML = '<div class="ep-empty-state">No weight logged yet.</div>';
+      return;
+    }
+
+    const weights = entries.map(e => e.weight);
+    const min = Math.min(...weights);
+    const max = Math.max(...weights);
+    const range = max - min || 1;
+    const padX = 10, padY = 12;
+    const w = 300 - padX * 2, h = 110 - padY * 2;
+    const pts = entries.map((e, i) => {
+      const x = padX + (entries.length === 1 ? w / 2 : (i / (entries.length - 1)) * w);
+      const y = padY + h - ((e.weight - min) / range) * h;
+      return { x, y };
+    });
+
+    chart.innerHTML = `
+      <polyline points="${pts.map(p => `${p.x},${p.y}`).join(' ')}" fill="none" stroke="rgb(var(--c-accent))" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" />
+      ${pts.map(p => `<circle cx="${p.x}" cy="${p.y}" r="3" fill="rgb(var(--c-accent))" />`).join('')}
+    `;
+
+    listEl.innerHTML = '';
+    [...entries].reverse().forEach(({ dateStr, weight }) => {
+      const [yr, mo, day] = dateStr.split('-').map(Number);
+      const label = new Date(yr, mo - 1, day).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+      const row = document.createElement('div');
+      row.className = 'ep-weight-row';
+      row.innerHTML = `<span class="ep-weight-row-date">${label}</span><span class="ep-weight-row-val">${weight} lbs</span>`;
+      listEl.appendChild(row);
+    });
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // STATS TAB — last 7 days, averaged over days that have any logged food
+  // ═══════════════════════════════════════════════════════════
+  function renderStats() {
+    const data = loadNutrition();
+    let loggedDays = 0;
+    const totals = { cals: 0, protein: 0, carbs: 0, fat: 0 };
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(today);
+      d.setDate(d.getDate() - i);
+      const entries = data[dateKey(d)];
+      if (entries && entries.length) {
+        loggedDays++;
+        const dayTotals = sumEntries(entries);
+        totals.cals += dayTotals.cals;
+        totals.protein += dayTotals.protein;
+        totals.carbs += dayTotals.carbs;
+        totals.fat += dayTotals.fat;
+      }
+    }
+    const divisor = loggedDays || 1;
+    document.getElementById('ep-stat-cals').textContent = loggedDays ? Math.round(totals.cals / divisor) : '--';
+    document.getElementById('ep-stat-protein').textContent = loggedDays ? Math.round(totals.protein / divisor) + 'g' : '--';
+    document.getElementById('ep-stat-carbs').textContent = loggedDays ? Math.round(totals.carbs / divisor) + 'g' : '--';
+    document.getElementById('ep-stat-fat').textContent = loggedDays ? Math.round(totals.fat / divisor) + 'g' : '--';
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // NUMERIC ENTRY POPUP — same interaction as Train Hard's on-screen numpad:
+  // the input is made readonly (no OS keyboard), a pointerdown opens this
+  // popup instead, typing builds up a string, Done commits it back.
+  // ═══════════════════════════════════════════════════════════
+  (function initEpNumpad() {
+    const overlay = document.getElementById('ep-numpad');
+    const headerEl = overlay.querySelector('.tnp-header');
+    const labelEl = document.getElementById('ep-numpad-label');
+    const displayEl = document.getElementById('ep-numpad-display');
+    let activeInp = null;
+    let currentStr = '';
+
+    function updateDisplay() {
+      displayEl.textContent = currentStr === '' ? '0' : currentStr;
+      displayEl.classList.toggle('empty', currentStr === '');
+    }
+    function commitToInput() {
+      if (!activeInp) return;
+      activeInp.value = currentStr;
+      activeInp.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+
+    // Keeps whichever field is being typed into visible above the numpad
+    // panel (which covers the bottom of the screen) instead of letting it
+    // get hidden behind the keys — same idea as Train Hard's set-row scroll
+    // handling. Pads the scrollable container with the panel's own height
+    // while open so there's actually room to scroll the field into view.
+    const panelEl = overlay.querySelector('.tnp-panel');
+    let scrollRoomEl = null;
+    function getScrollContainer(inp) {
+      return inp.closest('.ep-modal-box') || inp.closest('.section');
+    }
+    function addScrollRoom(container) {
+      if (!container) return;
+      scrollRoomEl = container;
+      if (container.dataset.epOrigPadBottom === undefined) {
+        container.dataset.epOrigPadBottom = container.style.paddingBottom || '';
+      }
+      container.style.paddingBottom = (panelEl.offsetHeight + 24) + 'px';
+    }
+    function removeScrollRoom() {
+      if (!scrollRoomEl) return;
+      scrollRoomEl.style.paddingBottom = scrollRoomEl.dataset.epOrigPadBottom || '';
+      delete scrollRoomEl.dataset.epOrigPadBottom;
+      scrollRoomEl = null;
+    }
+    function scrollFieldAboveNumpad(inp) {
+      const container = getScrollContainer(inp);
+      addScrollRoom(container);
+      if (!container) return;
+      requestAnimationFrame(() => {
+        const gap = 12;
+        const overlayRect = overlay.getBoundingClientRect();
+        const panelTop = overlayRect.bottom - panelEl.offsetHeight;
+        const inpRect = inp.getBoundingClientRect();
+        const overlap = inpRect.bottom - (panelTop - gap);
+        if (overlap > 0) {
+          container.scrollBy({ top: overlap, behavior: 'smooth' });
+        }
+      });
+    }
+
+    function openNumpad(inp, label) {
+      const switchingFields = overlay.classList.contains('open') && activeInp !== inp;
+      const apply = () => {
+        activeInp = inp;
+        currentStr = inp.value || '';
+        labelEl.textContent = label;
+        updateDisplay();
+        overlay.classList.add('open');
+        scrollFieldAboveNumpad(inp);
+        if (switchingFields) {
+          requestAnimationFrame(() => headerEl.classList.remove('switching'));
+        }
+      };
+      if (switchingFields) {
+        commitToInput();
+        headerEl.classList.add('switching');
+        setTimeout(apply, 120);
+      } else {
+        apply();
+      }
+    }
+    function closeNumpad() {
+      overlay.classList.remove('open');
+      activeInp = null;
+      removeScrollRoom();
+    }
+
+    overlay.querySelectorAll('.tnp-key').forEach(key => {
+      key.addEventListener('click', () => {
+        const val = key.dataset.val;
+        if (val === 'back') {
+          currentStr = currentStr.slice(0, -1);
+        } else if (val === '.') {
+          if (!currentStr.includes('.')) currentStr += '.';
+        } else {
+          currentStr += val;
+        }
+        updateDisplay();
+        commitToInput();
+      });
+    });
+    document.getElementById('ep-numpad-done').addEventListener('click', () => {
+      commitToInput();
+      closeNumpad();
+    });
+    document.getElementById('ep-numpad-backdrop').addEventListener('click', () => {
+      commitToInput();
+      closeNumpad();
+    });
+
+    window.attachEpNumpad = function(inp, label) {
+      inp.readOnly = true;
+      inp.inputMode = 'none';
+      inp.style.cursor = 'pointer';
+      inp.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        // preventDefault above stops the browser's default focus handoff, so
+        // a text field the OS keyboard is still open for (e.g. Food Name)
+        // wouldn't otherwise blur on its own — dismiss it explicitly.
+        if (document.activeElement && document.activeElement !== inp && document.activeElement.blur) {
+          document.activeElement.blur();
+        }
+        openNumpad(inp, label);
+      });
+    };
+  })();
+
+  attachEpNumpad(document.getElementById('ep-goal-calories'), 'Calories');
+  attachEpNumpad(document.getElementById('ep-goal-protein'), 'Protein (g)');
+  attachEpNumpad(document.getElementById('ep-goal-carbs'), 'Carbs (g)');
+  attachEpNumpad(document.getElementById('ep-goal-fat'), 'Fat (g)');
+  attachEpNumpad(document.getElementById('ep-weight-input'), 'Weight (lbs)');
+  attachEpNumpad(document.getElementById('ep-food-cals'), 'Cals');
+  attachEpNumpad(document.getElementById('ep-food-protein'), 'Protein (g)');
+  attachEpNumpad(document.getElementById('ep-food-carbs'), 'Carbs (g)');
+  attachEpNumpad(document.getElementById('ep-food-fat'), 'Fat (g)');
+  attachEpNumpad(document.getElementById('ep-create-food-serving-size'), 'Serving Size');
+  attachEpNumpad(document.getElementById('ep-create-food-cals'), 'Cals');
+  attachEpNumpad(document.getElementById('ep-create-food-protein'), 'Protein (g)');
+  attachEpNumpad(document.getElementById('ep-create-food-carbs'), 'Carbs (g)');
+  attachEpNumpad(document.getElementById('ep-create-food-fat'), 'Fat (g)');
+  attachEpNumpad(document.getElementById('ep-log-custom-amount'), 'Amount');
+
+  // ═══════════════════════════════════════════════════════════
+  updateDateNav();
+  renderTotals();
+  renderMeals();
+
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  }
+</script>
+</body>
+</html>

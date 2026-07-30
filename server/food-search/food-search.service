@@ -1,0 +1,15 @@
+[Unit]
+Description=Eat Plenty food-search proxy (FatSecret)
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu/food-search
+EnvironmentFile=/home/ubuntu/food-search/.env
+ExecStart=/home/ubuntu/.deno/bin/deno run --allow-net --allow-env /home/ubuntu/food-search/main.ts
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

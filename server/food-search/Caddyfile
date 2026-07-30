@@ -1,0 +1,8 @@
+# Replace YOUR-IP-WITH-DASHES with your VM's public IP, dashes instead of
+# dots (e.g. 152.67.12.34 -> 152-67-12-34). nip.io is a free service that
+# resolves any such hostname straight to the embedded IP, so it works
+# without owning a domain — and Caddy auto-issues a real Let's Encrypt cert
+# for it since it's a genuine publicly-resolvable hostname.
+YOUR-IP-WITH-DASHES.nip.io {
+    reverse_proxy localhost:8787
+}

@@ -1910,7 +1910,7 @@
     }
     #profile-btns-right.visible { display: flex; }
     #profile-btns.visible { display: flex; }
-    #profile-menu-btn, #weekly-overview-btn, #testing-btn, #testing-cardio-btn, #exit-testing-btn, #friends-btn, #challenges-btn {
+    #profile-menu-btn, #weekly-overview-btn, #testing-btn, #testing-cardio-btn, #exit-testing-btn, #friends-btn, #challenges-btn, #eat-plenty-btn {
       background: rgba(var(--c-panel3),0.88);
       border: 1px solid rgba(var(--c-accent2),0.35);
       border-radius: 12px;
@@ -5349,6 +5349,7 @@
 <div id="profile-btns-right">
   <button id="friends-btn">Friends</button>
   <button id="challenges-btn">Challenges</button>
+  <button id="eat-plenty-btn">Eat Plenty</button>
 </div>
 
 <!-- Room Arc Overlay -->
@@ -14049,6 +14050,11 @@ document.getElementById('challenges-btn').addEventListener('click', () => {
   document.getElementById('challenges-overlay-content').style.display = signedIn ? 'block' : 'none';
   document.getElementById('challenges-overlay').classList.add('open');
   if (signedIn) refreshChallenges();
+});
+
+document.getElementById('eat-plenty-btn').addEventListener('click', () => {
+  playSound('commonButton');
+  location.href = 'eat-plenty.html';
 });
 
 document.getElementById('challenges-overlay-close-btn').addEventListener('click', () => {

@@ -10,6 +10,7 @@ const dest = path.join(root, 'www');
 
 const INCLUDE = [
   'index.html',
+  'eat-plenty.html',
   'exercises.js',
   'extended-rest-notifications.js',
   'manifest.json',

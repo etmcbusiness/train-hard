@@ -3,7 +3,7 @@
 // still preferring fresh content whenever it's actually online. Bump
 // CACHE_VERSION when the APP_SHELL list below changes, to drop stale
 // entries from old versions.
-const CACHE_VERSION = 'v2';
+const CACHE_VERSION = 'v7';
 const CACHE_NAME = `trainhard-${CACHE_VERSION}`;
 
 // The bare minimum needed for the app to boot at all with no network.
@@ -14,6 +14,7 @@ const CACHE_NAME = `trainhard-${CACHE_VERSION}`;
 const APP_SHELL = [
   './',
   './index.html',
+  './eat-plenty.html',
   './exercises.js',
   './extended-rest-notifications.js',
   './Aura/toon-outline-code.js',
