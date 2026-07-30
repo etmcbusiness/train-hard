@@ -519,17 +519,6 @@
       min-height: 220px;
     }
     #ep-scan-reader video { width: 100%; display: block; }
-    /* Only shown when the browser reports a "zoom" track capability —
-       Chrome/Android support it, iOS Safari and Firefox currently don't
-       expose camera zoom to web content at all, so this stays hidden there. */
-    #ep-scan-zoom-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-top: 10px;
-    }
-    #ep-scan-zoom-icon { font-size: 14px; flex-shrink: 0; }
-    #ep-scan-zoom-slider { flex: 1; }
     #ep-scan-food-status {
       font-size: 12px;
       color: rgb(var(--c-text4));
@@ -1370,10 +1359,6 @@
   <div class="ep-modal-box">
     <div class="ep-modal-title">Scan Barcode</div>
     <div id="ep-scan-reader"></div>
-    <div id="ep-scan-zoom-row" style="display:none;">
-      <span id="ep-scan-zoom-icon">&#128269;</span>
-      <input type="range" id="ep-scan-zoom-slider" min="1" max="1" step="0.1" value="1" />
-    </div>
     <div id="ep-scan-food-status">Point your camera at a barcode</div>
     <div class="ep-modal-close-row" id="ep-scan-food-actions" style="display:none;">
       <button class="ep-modal-cancel-btn" id="ep-scan-food-manual">Enter Manually</button>
@@ -2405,64 +2390,7 @@
     document.getElementById('ep-scan-food-actions').style.display = '';
   }
 
-  function hideZoomSlider() {
-    document.getElementById('ep-scan-zoom-row').style.display = 'none';
-  }
-  // "zoom" is a non-standard MediaTrackCapability — Chrome/Android expose
-  // it, but iOS Safari and Firefox don't give web content any camera zoom
-  // control at all (a WebKit/platform limitation, not fixable here), so
-  // the slider only appears where it can actually do something.
-  function setupZoomSlider() {
-    if (!scanFoodInstance) return;
-    let capabilities;
-    try {
-      capabilities = scanFoodInstance.getRunningTrackCapabilities();
-    } catch {
-      return;
-    }
-    if (!capabilities || !capabilities.zoom) return;
-    const { min, max, step } = capabilities.zoom;
-    const slider = document.getElementById('ep-scan-zoom-slider');
-    slider.min = min;
-    slider.max = max;
-    slider.step = step || 0.1;
-    let current = min;
-    try {
-      const settings = scanFoodInstance.getRunningTrackSettings();
-      if (settings && settings.zoom) current = settings.zoom;
-    } catch { /* use min as the starting point */ }
-    slider.value = current;
-    document.getElementById('ep-scan-zoom-row').style.display = '';
-  }
-  // Applying a zoom constraint on every 'input' tick (continuous while
-  // dragging) was flooding the camera pipeline with rapid constraint
-  // changes and freezing the stream on some Android hardware badly enough
-  // that the camera couldn't be reopened afterward. 'change' only fires
-  // once the slider is released/committed, and a pending-call guard drops
-  // this to at most one applyVideoConstraints in flight at a time.
-  let zoomApplyPending = false;
-  let zoomApplyQueuedValue = null;
-  function applyZoom(value) {
-    if (!scanFoodInstance) return;
-    if (zoomApplyPending) { zoomApplyQueuedValue = value; return; }
-    zoomApplyPending = true;
-    scanFoodInstance.applyVideoConstraints({ advanced: [{ zoom: value }] })
-      .catch(() => {})
-      .then(() => {
-        zoomApplyPending = false;
-        if (zoomApplyQueuedValue != null) {
-          const queued = zoomApplyQueuedValue;
-          zoomApplyQueuedValue = null;
-          applyZoom(queued);
-        }
-      });
-  }
-  document.getElementById('ep-scan-zoom-slider').addEventListener('change', (e) => {
-    applyZoom(parseFloat(e.target.value));
-  });
-
   function startScanner() {
-    hideZoomSlider();
     if (typeof Html5Qrcode === 'undefined') {
       document.getElementById('ep-scan-food-status').textContent = 'Scanner failed to load — check your connection and try again.';
       showScanActions();
@@ -2475,15 +2403,16 @@
         fps: 10,
         qrbox: { width: 250, height: 150 },
         // Requesting a higher native resolution gives the decoder more
-        // actual pixel detail on a small/far-away barcode, independent of
-        // the zoom slider above (which many devices/browsers don't expose).
+        // actual pixel detail on a small/far-away barcode. (A zoom slider
+        // via applyVideoConstraints was tried here too, but calling the
+        // hardware zoom constraint at all froze the camera hard enough on
+        // some Android devices that it couldn't be reopened afterward —
+        // removed rather than risk that again.)
         videoConstraints: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } },
       },
       onBarcodeDetected,
       () => {} // per-frame "nothing decoded yet" callback — fires constantly, not an error
-    ).then(() => {
-      setupZoomSlider();
-    }).catch(err => {
+    ).catch(err => {
       document.getElementById('ep-scan-food-status').textContent = 'Camera unavailable — check permissions and try again.';
       showScanActions();
       scanFoodInstance = null;
@@ -2503,7 +2432,6 @@
 
   function closeScanFoodModal() {
     document.getElementById('ep-scan-food-modal').classList.remove('open');
-    hideZoomSlider();
     if (scanFoodInstance) {
       const instance = scanFoodInstance;
       scanFoodInstance = null;
