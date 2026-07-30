@@ -525,6 +525,10 @@
       text-align: center;
       padding: 10px 0 0;
     }
+    /* .ep-modal-save-btn is normally a standalone full-width button
+       (width:100%) — override it here since this one shares a flex row
+       with Enter Manually rather than standing alone. */
+    #ep-scan-food-actions .ep-modal-save-btn { flex: 1; width: auto; margin-top: 0; }
 
     /* ── Create Food / Log Custom Food ── */
     #ep-create-food-serving-row, #ep-log-custom-amount-row {
@@ -1356,6 +1360,10 @@
     <div class="ep-modal-title">Scan Barcode</div>
     <div id="ep-scan-reader"></div>
     <div id="ep-scan-food-status">Point your camera at a barcode</div>
+    <div class="ep-modal-close-row" id="ep-scan-food-actions" style="display:none;">
+      <button class="ep-modal-cancel-btn" id="ep-scan-food-manual">Enter Manually</button>
+      <button class="ep-modal-save-btn" id="ep-scan-food-retry">Try Again</button>
+    </div>
     <div class="ep-modal-close-row">
       <button class="ep-modal-cancel-btn" id="ep-scan-food-cancel">Cancel</button>
     </div>
@@ -2369,17 +2377,23 @@
   let scanFoodMealKey = null;
   let scanFoodMealLabel = null;
   let scanFoodInstance = null;
-  let scanFoodBusy = false; // guards against a lookup firing per every decoded frame in a burst
+  // Blocks reacting to newly-decoded frames while a lookup is in flight, OR
+  // while a "not found"/error message with Try Again is being shown — the
+  // same barcode keeps re-decoding every frame it's in frame, so without
+  // this it'd spam a lookup per frame instead of waiting for the user.
+  let scanFoodBusy = false;
 
-  function openScanFoodModal(mealKey, mealLabel) {
-    scanFoodMealKey = mealKey;
-    scanFoodMealLabel = mealLabel;
-    scanFoodBusy = false;
-    document.getElementById('ep-scan-food-status').textContent = 'Point your camera at a barcode';
-    document.getElementById('ep-scan-food-modal').classList.add('open');
+  function hideScanActions() {
+    document.getElementById('ep-scan-food-actions').style.display = 'none';
+  }
+  function showScanActions() {
+    document.getElementById('ep-scan-food-actions').style.display = '';
+  }
 
+  function startScanner() {
     if (typeof Html5Qrcode === 'undefined') {
       document.getElementById('ep-scan-food-status').textContent = 'Scanner failed to load — check your connection and try again.';
+      showScanActions();
       return;
     }
     scanFoodInstance = new Html5Qrcode('ep-scan-reader');
@@ -2390,15 +2404,33 @@
       () => {} // per-frame "nothing decoded yet" callback — fires constantly, not an error
     ).catch(err => {
       document.getElementById('ep-scan-food-status').textContent = 'Camera unavailable — check permissions and try again.';
+      showScanActions();
+      scanFoodInstance = null;
       console.error('Scanner failed to start:', err);
     });
+  }
+
+  function openScanFoodModal(mealKey, mealLabel) {
+    scanFoodMealKey = mealKey;
+    scanFoodMealLabel = mealLabel;
+    scanFoodBusy = false;
+    hideScanActions();
+    document.getElementById('ep-scan-food-status').textContent = 'Point your camera at a barcode';
+    document.getElementById('ep-scan-food-modal').classList.add('open');
+    startScanner();
   }
 
   function closeScanFoodModal() {
     document.getElementById('ep-scan-food-modal').classList.remove('open');
     if (scanFoodInstance) {
-      scanFoodInstance.stop().then(() => scanFoodInstance.clear()).catch(() => {});
+      const instance = scanFoodInstance;
       scanFoodInstance = null;
+      try {
+        // .stop() throws synchronously (not a rejected promise) if the
+        // scanner never reached a running state — e.g. closed right after
+        // a failed camera start, or before init finished.
+        instance.stop().then(() => instance.clear()).catch(() => {});
+      } catch { /* already stopped/never started — nothing to clean up */ }
     }
   }
 
@@ -2410,9 +2442,9 @@
       const res = await fetch(`https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(barcode)}.json?fields=product_name,generic_name,brands,nutriments,serving_quantity,status`);
       const data = await res.json();
       if (data.status !== 1 || !data.product) {
-        document.getElementById('ep-scan-food-status').textContent = `No match for barcode ${barcode} — try Search Food instead.`;
-        scanFoodBusy = false;
-        return;
+        document.getElementById('ep-scan-food-status').textContent = `No match for barcode ${barcode}.`;
+        showScanActions();
+        return; // stays busy until the user picks Try Again or Enter Manually
       }
       const food = normalizeOFFBarcodeProduct(data.product);
       closeScanFoodModal();
@@ -2422,10 +2454,22 @@
     } catch (err) {
       console.error('Barcode lookup failed:', err);
       document.getElementById('ep-scan-food-status').textContent = 'Lookup failed — check your connection and try again.';
-      scanFoodBusy = false;
+      showScanActions();
     }
   }
 
+  document.getElementById('ep-scan-food-retry').addEventListener('click', () => {
+    hideScanActions();
+    document.getElementById('ep-scan-food-status').textContent = 'Point your camera at a barcode';
+    scanFoodBusy = false;
+    if (!scanFoodInstance) startScanner(); // camera never started (or errored out) — try again
+  });
+  document.getElementById('ep-scan-food-manual').addEventListener('click', () => {
+    closeScanFoodModal();
+    myFoodsMealKey = scanFoodMealKey;
+    myFoodsMealLabel = scanFoodMealLabel;
+    openCreateFoodModal(null, 'myfoods');
+  });
   document.getElementById('ep-scan-food-cancel').addEventListener('click', closeScanFoodModal);
   document.getElementById('ep-scan-food-modal').addEventListener('click', (e) => {
     if (e.target === document.getElementById('ep-scan-food-modal')) closeScanFoodModal();
