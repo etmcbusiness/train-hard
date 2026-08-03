@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#1D2A5E" />
-  <meta name="app-version" content="59" />
+  <meta name="app-version" content="60" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -7013,15 +7013,20 @@ async function handleFriendshipAction(id, action, username, btn) {
     // true, so just refresh quietly instead of showing a scary technical error.
     if (!data || data.length === 0) {
       // Temporary diagnostics: 0 rows matched should only happen when the row
-      // is genuinely already gone, but that's unconfirmed — log the server's
-      // actual view of who we are and what the row looks like right now so a
-      // real RLS mismatch (vs. a benign race) can be told apart next time this
-      // fires. Safe to remove once the root cause is confirmed.
+      // is genuinely already gone, but that's unconfirmed — surface the
+      // server's actual view of who we are and what the row looks like right
+      // now, on-screen (not just console) since this mostly gets hit from the
+      // installed phone app where devtools aren't reachable. Safe to remove
+      // once the root cause is confirmed.
       const [{ data: whoami }, { data: rowNow, error: rowErr }] = await Promise.all([
         supabase.rpc('debug_whoami'),
         supabase.from('friendships').select('id, requester_id, addressee_id, status').eq('id', id).maybeSingle()
       ]);
+      const debugMsg = `[debug] action=${action} id=${id} whoami=${JSON.stringify(whoami)} row=${JSON.stringify(rowNow)} rowErr=${rowErr ? rowErr.message : 'none'} cachedUid=${cloudSession && cloudSession.user.id}`;
       console.warn('handleFriendshipAction: 0 rows affected', { id, action, whoami, rowNow, rowErr, cachedUid: cloudSession && cloudSession.user.id });
+      showAcctError('friend-add-error', debugMsg);
+      if (btn) btn.disabled = false;
+      return;
     }
   } catch (err) {
     console.error('handleFriendshipAction threw:', err);
