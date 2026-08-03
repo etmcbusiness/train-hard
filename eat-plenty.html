@@ -263,8 +263,8 @@
       background: rgba(var(--c-panel2),0.88);
       border: 1px solid rgba(var(--c-accent2),0.22);
       border-radius: 14px;
-      padding: 14px;
-      margin-bottom: 14px;
+      padding: 16px;
+      margin-bottom: 16px;
     }
     .ep-card-title {
       font-size: 11px;
@@ -600,24 +600,25 @@
       color: rgb(var(--c-accent));
       margin: -10px 0 14px;
     }
-    /* ── Calendar popup ── */
-    #ep-calendar-header {
+    /* ── Calendar popup (shared by the Eat Plenty date-nav picker and the
+       Goals target-date picker — same look, different ids/date rules) ── */
+    #ep-calendar-header, #ep-goal-calendar-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
       margin-bottom: 12px;
     }
-    #ep-calendar-month-label {
+    #ep-calendar-month-label, #ep-goal-calendar-month-label {
       font-size: 14px;
       font-weight: 800;
       color: rgb(var(--c-text));
     }
-    #ep-calendar-weekdays {
+    #ep-calendar-weekdays, #ep-goal-calendar-weekdays {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
       margin-bottom: 6px;
     }
-    #ep-calendar-weekdays span {
+    #ep-calendar-weekdays span, #ep-goal-calendar-weekdays span {
       text-align: center;
       font-size: 10px;
       font-weight: 800;
@@ -625,7 +626,7 @@
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
-    #ep-calendar-grid {
+    #ep-calendar-grid, #ep-goal-calendar-grid {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
       gap: 4px;
@@ -855,19 +856,136 @@
       opacity: 0;
     }
 
-    /* ── Profile tab (daily goals) ── */
+    /* ── Profile tab (current goal + daily goals) ── */
+    .ep-goalmode-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 4px;
+    }
+    .ep-goalmode-btn {
+      flex: 1;
+      text-align: center;
+      padding: 13px 8px;
+      border-radius: 10px;
+      border: 1px solid rgba(var(--c-accent2),0.25);
+      background: rgba(var(--c-panel1),0.8);
+      color: rgb(var(--c-text3));
+      font-size: 13px;
+      font-weight: 700;
+      font-family: inherit;
+      line-height: 1.2;
+      cursor: pointer;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+    }
+    .ep-goalmode-btn.active {
+      background: rgba(var(--c-accent),0.18);
+      border-color: rgba(var(--c-accent),0.5);
+      color: rgb(var(--c-accent));
+    }
+    .ep-duration-btn {
+      flex: 1;
+      text-align: center;
+      padding: 13px 8px;
+      border-radius: 10px;
+      border: 1px solid rgba(var(--c-accent2),0.25);
+      background: rgba(var(--c-panel1),0.8);
+      color: rgb(var(--c-text3));
+      font-size: 13px;
+      font-weight: 700;
+      font-family: inherit;
+      line-height: 1.2;
+      cursor: pointer;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+    }
+    .ep-duration-btn.active {
+      background: rgba(var(--c-accent),0.18);
+      border-color: rgba(var(--c-accent),0.5);
+      color: rgb(var(--c-accent));
+    }
+    .ep-intensity-btn {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      gap: 4px;
+      padding: 12px 8px;
+      border-radius: 10px;
+      border: 1px solid rgba(var(--c-accent2),0.25);
+      background: rgba(var(--c-panel1),0.8);
+      color: rgb(var(--c-text3));
+      font-size: 13px;
+      font-weight: 700;
+      font-family: inherit;
+      line-height: 1.2;
+      cursor: pointer;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+    }
+    .ep-intensity-btn.active {
+      background: rgba(var(--c-accent),0.18);
+      border-color: rgba(var(--c-accent),0.5);
+      color: rgb(var(--c-accent));
+    }
+    .ep-intensity-sub {
+      font-size: 10px;
+      font-weight: 600;
+      opacity: 0.7;
+    }
+    .ep-card-title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .ep-card-title-row .ep-card-title { margin-bottom: 0; }
+    #ep-recalc-macros-btn {
+      background: rgba(var(--c-panel1),0.8);
+      border: 1px solid rgba(var(--c-accent2),0.25);
+      border-radius: 8px;
+      color: rgb(var(--c-text3));
+      font-size: 10.5px;
+      font-weight: 700;
+      font-family: inherit;
+      text-align: center;
+      padding: 7px 12px;
+      cursor: pointer;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+      flex-shrink: 0;
+    }
+    #ep-custom-delta-row {
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid rgba(var(--c-accent2),0.15);
+    }
     .ep-goal-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 10px;
-      padding: 10px 0;
+      padding: 12px 0;
       border-bottom: 1px solid rgba(var(--c-accent2),0.15);
     }
-    .ep-goal-row:last-child { border-bottom: none; }
+    .ep-goal-row:first-child { padding-top: 2px; }
+    .ep-goal-row:last-child { padding-bottom: 2px; border-bottom: none; }
     .ep-goal-name { font-size: 13px; font-weight: 700; color: rgb(var(--c-text)); }
+    .ep-goal-name-sub {
+      font-size: 10px;
+      font-weight: 600;
+      color: rgb(var(--c-text4));
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
     .ep-goal-input {
-      width: 90px;
+      width: 92px;
       text-align: center;
       background: rgba(var(--c-panel1),0.8);
       border: 1px solid rgba(var(--c-accent2),0.25);
@@ -876,8 +994,60 @@
       font-size: 14px;
       font-family: inherit;
       font-variant-numeric: tabular-nums;
-      padding: 8px 6px;
+      padding: 10px 8px;
       outline: none;
+    }
+    .ep-goal-input-readonly {
+      background: rgba(var(--c-panel1),0.35);
+      color: rgb(var(--c-text3));
+      cursor: default;
+    }
+    .ep-macro-warning {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(231,76,60,0.12);
+      border: 1px solid rgba(231,76,60,0.4);
+      border-radius: 10px;
+      color: #e05a4a;
+      font-size: 12px;
+      font-weight: 600;
+      line-height: 1.4;
+      padding: 10px 12px;
+      margin-top: 12px;
+    }
+    .ep-goal-date-btn {
+      min-width: 130px;
+      text-align: center;
+      background: rgba(var(--c-panel1),0.8);
+      border: 1px solid rgba(var(--c-accent2),0.25);
+      border-radius: 10px;
+      color: rgb(var(--c-text));
+      font-size: 14px;
+      font-weight: 700;
+      font-family: inherit;
+      font-variant-numeric: tabular-nums;
+      padding: 10px 8px;
+      cursor: pointer;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .ep-goal-date-btn.ep-placeholder { color: rgb(var(--c-text4)); font-weight: 600; }
+    #ep-duration-weeks-row, #ep-duration-date-row {
+      border-bottom: none;
+    }
+    /* A row's border-bottom otherwise sits flush against the note's/warning's
+       own border above it (double line) — strip it whenever one directly
+       follows. */
+    .ep-goal-row:has(+ .ep-profile-note),
+    .ep-goal-row:has(+ .ep-macro-warning) {
+      border-bottom: none;
+      padding-bottom: 2px;
+    }
+    .ep-card .ep-profile-note {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid rgba(var(--c-accent2),0.15);
     }
     .ep-profile-note {
       font-size: 11.5px;
@@ -917,16 +1087,6 @@
       outline: none;
       text-align: center;
       font-variant-numeric: tabular-nums;
-    }
-    #ep-weight-save-btn {
-      background: rgba(var(--c-accent),0.16);
-      border: 1px solid rgba(var(--c-accent),0.45);
-      border-radius: 10px;
-      color: rgb(var(--c-accent));
-      font-size: 14px;
-      font-weight: 700;
-      padding: 0 18px;
-      cursor: pointer;
     }
     #ep-weight-chart { width: 100%; height: 110px; display: block; margin-bottom: 4px; }
     .ep-weight-row {
@@ -1039,13 +1199,76 @@
     <div></div>
   </div>
 
-  <!-- Profile -->
+  <!-- Profile / Goals -->
   <div id="profile-section" class="section">
     <div class="ep-card">
-      <div class="ep-card-title">Daily Goals</div>
+      <div class="ep-card-title">Goal</div>
+      <div class="ep-goalmode-row">
+        <button class="ep-goalmode-btn" data-mode="bulk">Bulk</button>
+        <button class="ep-goalmode-btn" data-mode="cut">Cut</button>
+        <button class="ep-goalmode-btn" data-mode="maintain">Maintain</button>
+      </div>
+    </div>
+
+    <div class="ep-card" id="ep-intensity-card">
+      <div class="ep-card-title">Intensity</div>
+      <div class="ep-goalmode-row">
+        <button class="ep-intensity-btn" data-intensity="mild">Mild<span class="ep-intensity-sub" id="ep-intensity-sub-mild"></span></button>
+        <button class="ep-intensity-btn" data-intensity="aggressive">Aggressive<span class="ep-intensity-sub" id="ep-intensity-sub-aggressive"></span></button>
+        <button class="ep-intensity-btn" data-intensity="custom">Custom</button>
+      </div>
+      <div class="ep-goal-row" id="ep-custom-delta-row" style="display:none;">
+        <span class="ep-goal-name" id="ep-custom-delta-label">Calories</span>
+        <input type="number" class="ep-goal-input" id="ep-custom-delta" min="0" inputmode="numeric" />
+      </div>
+    </div>
+
+    <div class="ep-card" id="ep-duration-card">
+      <div class="ep-card-title">Duration</div>
+      <div class="ep-goalmode-row">
+        <button class="ep-duration-btn" data-duration="weeks">Number of Weeks</button>
+        <button class="ep-duration-btn" data-duration="date">Target Date</button>
+      </div>
+      <div class="ep-goal-row" id="ep-duration-weeks-row">
+        <span class="ep-goal-name">Weeks</span>
+        <input type="number" class="ep-goal-input" id="ep-duration-weeks" min="1" inputmode="numeric" placeholder="6" />
+      </div>
+      <div class="ep-goal-row" id="ep-duration-date-row" style="display:none;">
+        <span class="ep-goal-name">Target Date</span>
+        <button type="button" class="ep-goal-date-btn" id="ep-duration-date-btn">Select date</button>
+      </div>
+      <div class="ep-profile-note" id="ep-duration-note"></div>
+    </div>
+
+    <div class="ep-card">
+      <div class="ep-card-title">Weight</div>
       <div class="ep-goal-row">
-        <span class="ep-goal-name">Calories</span>
-        <input type="number" class="ep-goal-input" id="ep-goal-calories" min="0" inputmode="numeric" />
+        <span class="ep-goal-name">Starting Weight (lbs)</span>
+        <input type="number" class="ep-goal-input" id="ep-start-weight" min="0" inputmode="numeric" placeholder="Optional" />
+      </div>
+      <div class="ep-goal-row">
+        <span class="ep-goal-name">Goal Weight (lbs)</span>
+        <input type="number" class="ep-goal-input" id="ep-goal-weight" min="0" inputmode="numeric" placeholder="Optional" />
+      </div>
+    </div>
+
+    <div class="ep-card">
+      <div class="ep-card-title">Maintenance Calories</div>
+      <div class="ep-goal-row">
+        <span class="ep-goal-name">Maintenance</span>
+        <input type="number" class="ep-goal-input" id="ep-maintenance-calories" min="0" inputmode="numeric" />
+      </div>
+      <div class="ep-profile-note" id="ep-target-calories-note"></div>
+    </div>
+
+    <div class="ep-card">
+      <div class="ep-card-title-row">
+        <div class="ep-card-title">Macros</div>
+        <button id="ep-recalc-macros-btn">Recalculate</button>
+      </div>
+      <div class="ep-goal-row">
+        <span class="ep-goal-name">Calories <span class="ep-goal-name-sub">(auto)</span></span>
+        <input type="number" class="ep-goal-input ep-goal-input-readonly" id="ep-goal-calories" min="0" inputmode="numeric" readonly tabindex="-1" />
       </div>
       <div class="ep-goal-row">
         <span class="ep-goal-name">Protein (g)</span>
@@ -1059,6 +1282,8 @@
         <span class="ep-goal-name">Fat (g)</span>
         <input type="number" class="ep-goal-input" id="ep-goal-fat" min="0" inputmode="numeric" />
       </div>
+      <div class="ep-macro-warning" id="ep-macro-warning" style="display:none;"></div>
+      <div class="ep-profile-note">Calories recalculate automatically from Protein/Carbs/Fat. Protein defaults to 1g per lb of goal weight; all macros are editable.</div>
     </div>
 
     <div class="ep-profile-note">Theme is set in Train Hard's Profile &gt; Avatar screen and carries over automatically. More profile options coming soon.</div>
@@ -1139,10 +1364,9 @@
 
     <div class="ep-card">
       <div class="ep-card-title">Log Weight</div>
-      <form id="ep-weight-log-form">
-        <input type="number" id="ep-weight-input" placeholder="Weight (lbs)" min="0" step="0.1" inputmode="decimal" required />
-        <button type="submit" id="ep-weight-save-btn">Save</button>
-      </form>
+      <div id="ep-weight-log-form">
+        <input type="number" id="ep-weight-input" placeholder="Weight (lbs)" min="0" step="0.1" inputmode="decimal" />
+      </div>
     </div>
 
     <div class="ep-card">
@@ -1169,8 +1393,8 @@
   <!-- Nav (persistent, matches Train Hard's bottom nav) -->
   <nav id="nav">
     <button class="nav-btn" data-tab="profile">
-      <svg viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
-      Profile
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="5" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="1.6"/></svg>
+      Goals
     </button>
     <button class="nav-btn" data-tab="recipes">
       <svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><rect x="6.5" y="3" width="1.6" height="18" fill="rgb(var(--c-bg))"/><rect x="10" y="7" width="8" height="1.6" rx="0.8" fill="rgb(var(--c-bg))"/><rect x="10" y="11" width="8" height="1.6" rx="0.8" fill="rgb(var(--c-bg))"/><rect x="10" y="15" width="8" height="1.6" rx="0.8" fill="rgb(var(--c-bg))"/></svg>
@@ -1235,7 +1459,37 @@
   </div>
 </div>
 
+<!-- Goal target-date picker — same look as the Eat Plenty date calendar, but allows future dates -->
+<div class="ep-modal-overlay" id="ep-goal-date-modal">
+  <div class="ep-modal-box">
+    <div id="ep-goal-calendar-header">
+      <button class="ep-date-arrow" id="ep-goal-cal-prev-month">&lsaquo;</button>
+      <div id="ep-goal-calendar-month-label">Month Year</div>
+      <button class="ep-date-arrow" id="ep-goal-cal-next-month">&rsaquo;</button>
+    </div>
+    <div id="ep-goal-calendar-weekdays">
+      <span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
+    </div>
+    <div id="ep-goal-calendar-grid"></div>
+    <div class="ep-modal-close-row">
+      <button class="ep-modal-cancel-btn" id="ep-goal-date-clear">Clear</button>
+      <button class="ep-modal-cancel-btn" id="ep-goal-date-cancel">Close</button>
+    </div>
+  </div>
+</div>
+
 <!-- Add-to-meal choice modal -->
+<div class="ep-modal-overlay" id="ep-goalmode-confirm-modal">
+  <div class="ep-modal-box">
+    <div class="ep-modal-title">Change Goal?</div>
+    <div class="ep-modal-subtitle">Switch your current goal to <span id="ep-goalmode-confirm-name"></span>?</div>
+    <div class="ep-modal-close-row">
+      <button class="ep-modal-cancel-btn" id="ep-goalmode-confirm-cancel">Cancel</button>
+      <button class="ep-modal-save-btn" id="ep-goalmode-confirm-ok" style="flex:1;width:auto;margin-top:0;">Confirm</button>
+    </div>
+  </div>
+</div>
+
 <div class="ep-modal-overlay" id="ep-add-choice-modal">
   <div class="ep-modal-box">
     <div class="ep-modal-title" id="ep-add-choice-title">Add Food</div>
@@ -1475,7 +1729,14 @@
     if (tab === 'profile') renderGoalsForm();
     if (tab === 'recipes') renderRecipesList();
     if (tab === 'stats') renderStats();
-    if (tab === 'weight') renderWeightTab();
+    if (tab === 'weight') {
+      // Jump back to today, same as Eat Plenty does, so the "logged today?"
+      // check below always refers to the day the user actually just opened.
+      viewedDate = new Date(today);
+      updateDateNav();
+      renderWeightTab();
+      maybePromptWeightToday();
+    }
     if (tab === 'eatplenty') {
       // Always jump back to today when the tab is opened — whether coming
       // from another tab or tapping it again while already here.
@@ -1560,10 +1821,16 @@
   }
 
   function loadGoals() {
+    const defaults = {
+      calories: 2200, protein: 180, carbs: 250, fat: 70,
+      mode: 'maintain', intensity: 'mild', customDelta: 250,
+      maintenanceCalories: 2200, startWeight: null, goalWeight: null,
+      durationMode: 'weeks', durationWeeks: 6, targetDate: null,
+    };
     try {
-      return Object.assign({ calories: 2200, protein: 180, carbs: 250, fat: 70 }, JSON.parse(localStorage.getItem(GOALS_KEY) || '{}'));
+      return Object.assign({}, defaults, JSON.parse(localStorage.getItem(GOALS_KEY) || '{}'));
     } catch {
-      return { calories: 2200, protein: 180, carbs: 250, fat: 70 };
+      return defaults;
     }
   }
   function saveGoals(goals) {
@@ -2486,24 +2753,290 @@
   });
 
   // ═══════════════════════════════════════════════════════════
-  // PROFILE TAB — daily goals editor
+  // PROFILE / GOALS TAB — goal mode, intensity, weights, maintenance
+  // calories, and auto-computed (but editable) macros.
   // ═══════════════════════════════════════════════════════════
+  const GOAL_MODE_NAMES = { bulk: 'Bulk', cut: 'Cut', maintain: 'Maintain' };
+  const INTENSITY_DELTA = { mild: 250, aggressive: 500 };
+
+  function goalCalorieDelta(goals) {
+    if (goals.mode === 'maintain') return 0;
+    const magnitude = goals.intensity === 'custom' ? (goals.customDelta || 0) : INTENSITY_DELTA[goals.intensity];
+    return goals.mode === 'cut' ? -magnitude : magnitude;
+  }
+  function latestLoggedWeight() {
+    const log = loadWeightLog();
+    const keys = Object.keys(log).sort();
+    return keys.length ? log[keys[keys.length - 1]] : null;
+  }
+  function computeAutoMacros(goals) {
+    const target = goals.maintenanceCalories + goalCalorieDelta(goals);
+    const proteinLbs = goals.goalWeight || goals.startWeight || latestLoggedWeight() || null;
+    const protein = proteinLbs ? proteinLbs : goals.protein;
+    const fat = Math.round(target * 0.25 / 9);
+    const carbs = Math.max(0, Math.round((target - protein * 4 - fat * 9) / 4));
+    return { calories: target, protein: Math.round(protein), carbs, fat };
+  }
+  function applyAutoMacros() {
+    const goals = loadGoals();
+    Object.assign(goals, computeAutoMacros(goals));
+    saveGoals(goals);
+    renderGoalsForm();
+    renderTotals();
+  }
+  const MACRO_CAL_TOLERANCE = 25;
+  function renderMacroWarning(goals, macroCalories, target) {
+    const warnEl = document.getElementById('ep-macro-warning');
+    const diff = Math.round(macroCalories - target);
+    let msg = '';
+    if (goals.mode === 'cut' && macroCalories >= goals.maintenanceCalories) {
+      msg = `These macros total ${macroCalories} cal — that's at or above your maintenance (${Math.round(goals.maintenanceCalories)}), not a deficit.`;
+    } else if (goals.mode === 'bulk' && macroCalories <= goals.maintenanceCalories) {
+      msg = `These macros total ${macroCalories} cal — that's at or below your maintenance (${Math.round(goals.maintenanceCalories)}), not a surplus.`;
+    } else if (Math.abs(diff) > MACRO_CAL_TOLERANCE) {
+      msg = `These macros total ${macroCalories} cal, ${diff > 0 ? diff + ' over' : Math.abs(diff) + ' under'} your ${Math.round(target)} cal target.`;
+    }
+    warnEl.textContent = msg;
+    warnEl.style.display = msg ? '' : 'none';
+  }
+
   function renderGoalsForm() {
     const goals = loadGoals();
-    document.getElementById('ep-goal-calories').value = goals.calories;
+    document.querySelectorAll('.ep-goalmode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === goals.mode));
+    document.getElementById('ep-intensity-card').style.display = goals.mode === 'maintain' ? 'none' : '';
+    document.querySelectorAll('.ep-intensity-btn').forEach(b => b.classList.toggle('active', b.dataset.intensity === goals.intensity));
+    document.getElementById('ep-intensity-sub-mild').textContent = goals.mode === 'cut' ? '−250 cal' : '+250 cal';
+    document.getElementById('ep-intensity-sub-aggressive').textContent = goals.mode === 'cut' ? '−500 cal' : '+500 cal';
+    document.getElementById('ep-custom-delta-label').textContent = goals.mode === 'cut' ? 'Calories to Subtract' : 'Calories to Add';
+    document.getElementById('ep-custom-delta-row').style.display = goals.intensity === 'custom' ? '' : 'none';
+    document.getElementById('ep-custom-delta').value = goals.customDelta || '';
+
+    document.getElementById('ep-start-weight').value = goals.startWeight != null ? goals.startWeight : (latestLoggedWeight() || '');
+    document.getElementById('ep-goal-weight').value = goals.goalWeight != null ? goals.goalWeight : '';
+
+    document.getElementById('ep-maintenance-calories').value = goals.maintenanceCalories;
+    const delta = goalCalorieDelta(goals);
+    const target = goals.maintenanceCalories + delta;
+    document.getElementById('ep-target-calories-note').textContent = delta === 0
+      ? `Target: ${Math.round(target)} cal/day (maintenance)`
+      : `Target: ${Math.round(target)} cal/day (${delta > 0 ? '+' : ''}${delta})`;
+
+    const macroCalories = Math.round(goals.protein * 4 + goals.carbs * 4 + goals.fat * 9);
+    document.getElementById('ep-goal-calories').value = macroCalories;
     document.getElementById('ep-goal-protein').value = goals.protein;
     document.getElementById('ep-goal-carbs').value = goals.carbs;
     document.getElementById('ep-goal-fat').value = goals.fat;
+    renderMacroWarning(goals, macroCalories, target);
+
+    document.querySelectorAll('.ep-duration-btn').forEach(b => b.classList.toggle('active', b.dataset.duration === goals.durationMode));
+    document.getElementById('ep-duration-weeks-row').style.display = goals.durationMode === 'weeks' ? '' : 'none';
+    document.getElementById('ep-duration-date-row').style.display = goals.durationMode === 'date' ? '' : 'none';
+    document.getElementById('ep-duration-weeks').value = goals.durationWeeks || '';
+    const dateBtn = document.getElementById('ep-duration-date-btn');
+    if (goals.targetDate) {
+      dateBtn.textContent = new Date(goals.targetDate + 'T00:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+      dateBtn.classList.remove('ep-placeholder');
+    } else {
+      dateBtn.textContent = 'Select date';
+      dateBtn.classList.add('ep-placeholder');
+    }
+    const durationEnd = computeDurationEndDate(goals);
+    const durationNoteEl = document.getElementById('ep-duration-note');
+    if (goals.durationMode === 'weeks') {
+      durationNoteEl.textContent = durationEnd
+        ? `Ends ${durationEnd.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}`
+        : '';
+    } else if (!durationEnd) {
+      durationNoteEl.textContent = 'Pick a target date above.';
+    } else {
+      const days = Math.round((durationEnd - today) / 86400000);
+      durationNoteEl.textContent = days <= 0 ? 'Target date has passed.' : `${(days / 7).toFixed(1)} weeks from today`;
+    }
   }
-  ['calories', 'protein', 'carbs', 'fat'].forEach(key => {
+  function computeDurationEndDate(goals) {
+    if (goals.durationMode === 'date') {
+      return goals.targetDate ? new Date(goals.targetDate + 'T00:00:00') : null;
+    }
+    const weeks = goals.durationWeeks || 6;
+    const d = new Date(today);
+    d.setDate(d.getDate() + weeks * 7);
+    return d;
+  }
+
+  ['protein', 'carbs', 'fat'].forEach(key => {
     document.getElementById(`ep-goal-${key}`).addEventListener('change', (e) => {
       const val = parseFloat(e.target.value);
-      if (isNaN(val) || val <= 0) return;
+      if (isNaN(val) || val < 0) return;
       const goals = loadGoals();
       goals[key] = val;
+      goals.calories = Math.round(goals.protein * 4 + goals.carbs * 4 + goals.fat * 9);
       saveGoals(goals);
+      renderGoalsForm();
       renderTotals();
     });
+  });
+  document.getElementById('ep-recalc-macros-btn').addEventListener('click', applyAutoMacros);
+
+  let pendingGoalMode = null;
+  document.querySelectorAll('.ep-goalmode-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (btn.classList.contains('active')) return;
+      pendingGoalMode = btn.dataset.mode;
+      document.getElementById('ep-goalmode-confirm-name').textContent = GOAL_MODE_NAMES[pendingGoalMode];
+      document.getElementById('ep-goalmode-confirm-modal').classList.add('open');
+    });
+  });
+  function closeGoalModeConfirm() {
+    pendingGoalMode = null;
+    document.getElementById('ep-goalmode-confirm-modal').classList.remove('open');
+  }
+  document.getElementById('ep-goalmode-confirm-cancel').addEventListener('click', closeGoalModeConfirm);
+  document.getElementById('ep-goalmode-confirm-modal').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('ep-goalmode-confirm-modal')) closeGoalModeConfirm();
+  });
+  document.getElementById('ep-goalmode-confirm-ok').addEventListener('click', () => {
+    if (!pendingGoalMode) return;
+    const goals = loadGoals();
+    goals.mode = pendingGoalMode;
+    saveGoals(goals);
+    applyAutoMacros();
+    closeGoalModeConfirm();
+  });
+
+  document.querySelectorAll('.ep-intensity-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const goals = loadGoals();
+      goals.intensity = btn.dataset.intensity;
+      saveGoals(goals);
+      applyAutoMacros();
+    });
+  });
+  document.getElementById('ep-custom-delta').addEventListener('change', (e) => {
+    const val = parseFloat(e.target.value);
+    if (isNaN(val) || val < 0) return;
+    const goals = loadGoals();
+    goals.customDelta = val;
+    saveGoals(goals);
+    applyAutoMacros();
+  });
+
+  document.getElementById('ep-start-weight').addEventListener('change', (e) => {
+    const val = parseFloat(e.target.value);
+    const goals = loadGoals();
+    goals.startWeight = (e.target.value === '' || isNaN(val)) ? null : val;
+    saveGoals(goals);
+    applyAutoMacros();
+  });
+  document.getElementById('ep-goal-weight').addEventListener('change', (e) => {
+    const val = parseFloat(e.target.value);
+    const goals = loadGoals();
+    goals.goalWeight = (e.target.value === '' || isNaN(val)) ? null : val;
+    saveGoals(goals);
+    applyAutoMacros();
+  });
+  document.getElementById('ep-maintenance-calories').addEventListener('change', (e) => {
+    const val = parseFloat(e.target.value);
+    if (isNaN(val) || val <= 0) return;
+    const goals = loadGoals();
+    goals.maintenanceCalories = val;
+    saveGoals(goals);
+    applyAutoMacros();
+  });
+
+  document.querySelectorAll('.ep-duration-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const goals = loadGoals();
+      goals.durationMode = btn.dataset.duration;
+      saveGoals(goals);
+      renderGoalsForm();
+    });
+  });
+  document.getElementById('ep-duration-weeks').addEventListener('change', (e) => {
+    const val = parseFloat(e.target.value);
+    if (isNaN(val) || val <= 0) return;
+    const goals = loadGoals();
+    goals.durationWeeks = val;
+    saveGoals(goals);
+    renderGoalsForm();
+  });
+  document.getElementById('ep-duration-date-btn').addEventListener('click', openGoalDateModal);
+
+  // ═══════════════════════════════════════════════════════════
+  // GOAL TARGET-DATE PICKER — same calendar look as the Eat Plenty date-nav
+  // picker (see CALENDAR POPUP above), but unlike that one it lets you pick
+  // future dates (a target date is normally ahead of today) and only greys
+  // out days before today instead of days after it.
+  // ═══════════════════════════════════════════════════════════
+  let goalCalendarMonth = new Date();
+  function openGoalDateModal() {
+    const goals = loadGoals();
+    const base = goals.targetDate ? new Date(goals.targetDate + 'T00:00:00') : today;
+    goalCalendarMonth = new Date(base.getFullYear(), base.getMonth(), 1);
+    renderGoalCalendarGrid();
+    document.getElementById('ep-goal-date-modal').classList.add('open');
+  }
+  function closeGoalDateModal() {
+    document.getElementById('ep-goal-date-modal').classList.remove('open');
+  }
+  function renderGoalCalendarGrid() {
+    document.getElementById('ep-goal-calendar-month-label').textContent =
+      goalCalendarMonth.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+
+    const year = goalCalendarMonth.getFullYear();
+    const month = goalCalendarMonth.getMonth();
+    const firstDayOfWeek = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const goals = loadGoals();
+    const selected = goals.targetDate ? goals.targetDate : null;
+
+    const grid = document.getElementById('ep-goal-calendar-grid');
+    grid.innerHTML = '';
+    const addEmptyCell = () => {
+      const empty = document.createElement('div');
+      empty.className = 'ep-cal-day ep-cal-empty';
+      grid.appendChild(empty);
+    };
+    for (let i = 0; i < firstDayOfWeek; i++) addEmptyCell();
+    for (let day = 1; day <= daysInMonth; day++) {
+      const d = new Date(year, month, day);
+      const isPast = d.getTime() < today.getTime();
+      const cell = document.createElement('div');
+      cell.className = 'ep-cal-day';
+      if (isPast) cell.classList.add('ep-cal-future');
+      if (isSameDay(d, today)) cell.classList.add('ep-cal-today');
+      if (selected === dateKey(d)) cell.classList.add('ep-cal-selected');
+      cell.textContent = String(day);
+      if (!isPast) {
+        cell.addEventListener('click', () => {
+          const g = loadGoals();
+          g.targetDate = dateKey(d);
+          saveGoals(g);
+          renderGoalsForm();
+          closeGoalDateModal();
+        });
+      }
+      grid.appendChild(cell);
+    }
+    while (grid.children.length < 42) addEmptyCell();
+  }
+  document.getElementById('ep-goal-cal-prev-month').addEventListener('click', () => {
+    goalCalendarMonth = new Date(goalCalendarMonth.getFullYear(), goalCalendarMonth.getMonth() - 1, 1);
+    renderGoalCalendarGrid();
+  });
+  document.getElementById('ep-goal-cal-next-month').addEventListener('click', () => {
+    goalCalendarMonth = new Date(goalCalendarMonth.getFullYear(), goalCalendarMonth.getMonth() + 1, 1);
+    renderGoalCalendarGrid();
+  });
+  document.getElementById('ep-goal-date-clear').addEventListener('click', () => {
+    const g = loadGoals();
+    g.targetDate = null;
+    saveGoals(g);
+    renderGoalsForm();
+    closeGoalDateModal();
+  });
+  document.getElementById('ep-goal-date-cancel').addEventListener('click', closeGoalDateModal);
+  document.getElementById('ep-goal-date-modal').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('ep-goal-date-modal')) closeGoalDateModal();
   });
 
   // ═══════════════════════════════════════════════════════════
@@ -2545,8 +3078,15 @@
     document.getElementById('ep-weight-input').value = existing != null ? existing : '';
     renderWeightHistory();
   }
-  document.getElementById('ep-weight-log-form').addEventListener('submit', (e) => {
-    e.preventDefault();
+  // Opening the Weight tab jumps viewedDate to today (same as Eat Plenty),
+  // so this checks whether *today* specifically still needs an entry.
+  function maybePromptWeightToday() {
+    const log = loadWeightLog();
+    if (log[dateKey(today)] != null) return;
+    const inp = document.getElementById('ep-weight-input');
+    window.openEpNumpad(inp, 'Weight (lbs)');
+  }
+  document.getElementById('ep-weight-input').addEventListener('change', () => {
     const val = parseFloat(document.getElementById('ep-weight-input').value);
     if (isNaN(val) || val <= 0) return;
     const log = loadWeightLog();
@@ -2738,6 +3278,8 @@
       closeNumpad();
     });
 
+    window.openEpNumpad = openNumpad;
+
     window.attachEpNumpad = function(inp, label) {
       inp.readOnly = true;
       inp.inputMode = 'none';
@@ -2755,10 +3297,14 @@
     };
   })();
 
-  attachEpNumpad(document.getElementById('ep-goal-calories'), 'Calories');
   attachEpNumpad(document.getElementById('ep-goal-protein'), 'Protein (g)');
   attachEpNumpad(document.getElementById('ep-goal-carbs'), 'Carbs (g)');
   attachEpNumpad(document.getElementById('ep-goal-fat'), 'Fat (g)');
+  attachEpNumpad(document.getElementById('ep-goal-weight'), 'Goal Weight (lbs)');
+  attachEpNumpad(document.getElementById('ep-start-weight'), 'Starting Weight (lbs)');
+  attachEpNumpad(document.getElementById('ep-maintenance-calories'), 'Maintenance Calories');
+  attachEpNumpad(document.getElementById('ep-custom-delta'), 'Calories');
+  attachEpNumpad(document.getElementById('ep-duration-weeks'), 'Weeks');
   attachEpNumpad(document.getElementById('ep-weight-input'), 'Weight (lbs)');
   attachEpNumpad(document.getElementById('ep-food-cals'), 'Cals');
   attachEpNumpad(document.getElementById('ep-food-protein'), 'Protein (g)');
