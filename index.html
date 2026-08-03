@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#1D2A5E" />
-  <meta name="app-version" content="69" />
+  <meta name="app-version" content="70" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -6852,7 +6852,12 @@ async function refreshFriends() {
   const reqLabel = document.getElementById('friend-requests-label');
   const reqList = document.getElementById('friend-requests-list');
   reqList.innerHTML = '';
-  reqLabel.style.display = (incoming.length || outgoing.length) ? 'block' : 'none';
+  // Temporary: force this visible regardless of count, with a compact
+  // counter in the header itself (not a big blob that can push content
+  // around), to confirm whether the render loop is even producing rows —
+  // the data layer was already independently verified correct.
+  reqLabel.style.display = 'block';
+  reqLabel.textContent = `Friend Requests [debug totalRows=${rows.length} in=${incoming.length} out=${outgoing.length} acc=${accepted.length}]`;
 
   for (const r of incoming) {
     const friendId = r.requester_id === uid ? r.addressee_id : r.requester_id;
