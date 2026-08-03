@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#1D2A5E" />
-  <meta name="app-version" content="64" />
+  <meta name="app-version" content="65" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -7119,6 +7119,15 @@ document.getElementById('friend-add-btn').addEventListener('click', async () => 
     }
     flashInput(input, 'success');
     input.value = '';
+    // Temporary: confirm on-screen what actually got written, and what the
+    // very next fetch (the same query refreshFriends() runs) sees for it —
+    // if these disagree, the row exists but isn't surviving the read.
+    const insertedRow = insertData[0];
+    const { data: verifyRows, error: verifyErr } = await supabase
+      .from('friendships')
+      .select('id, requester_id, addressee_id, status')
+      .or(`requester_id.eq.${freshUser.id},addressee_id.eq.${freshUser.id}`);
+    showAcctError('friend-add-error', `[debug] inserted=${JSON.stringify(insertedRow)} freshUid=${freshUser.id} allRowsForMeNow=${JSON.stringify(verifyRows)} verifyErr=${verifyErr ? verifyErr.message : 'none'}`);
     refreshFriends();
   } catch (err) {
     console.error('friend-add-btn threw:', err);
