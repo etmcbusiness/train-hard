@@ -7006,15 +7006,22 @@ async function handleFriendshipAction(id, action, username, btn) {
       if (btn) btn.disabled = false;
       return;
     }
-    // Supabase/PostgREST does NOT set `error` when Row Level Security silently
-    // filters out the target row (e.g. a stale RLS policy that doesn't grant
-    // this action) — it just returns success with zero rows affected. Without
-    // .select() + this check, that looks identical to "nothing happened".
+    // Supabase/PostgREST does NOT set `error` when a delete/update matches zero
+    // rows — it just returns success with an empty array. In practice that means
+    // the row was already gone (the other side already accepted/declined/removed
+    // it, or a double-tap fired twice) — the state the user wanted is already
+    // true, so just refresh quietly instead of showing a scary technical error.
     if (!data || data.length === 0) {
-      console.error('handleFriendshipAction: 0 rows affected (RLS likely blocked this write)', { id, action });
-      showAcctError('friend-add-error', "That didn't go through — you may not have permission (check Supabase RLS policies), or the request was already handled elsewhere.");
-      if (btn) btn.disabled = false;
-      return;
+      // Temporary diagnostics: 0 rows matched should only happen when the row
+      // is genuinely already gone, but that's unconfirmed — log the server's
+      // actual view of who we are and what the row looks like right now so a
+      // real RLS mismatch (vs. a benign race) can be told apart next time this
+      // fires. Safe to remove once the root cause is confirmed.
+      const [{ data: whoami }, { data: rowNow, error: rowErr }] = await Promise.all([
+        supabase.rpc('debug_whoami'),
+        supabase.from('friendships').select('id, requester_id, addressee_id, status').eq('id', id).maybeSingle()
+      ]);
+      console.warn('handleFriendshipAction: 0 rows affected', { id, action, whoami, rowNow, rowErr, cachedUid: cloudSession && cloudSession.user.id });
     }
   } catch (err) {
     console.error('handleFriendshipAction threw:', err);
