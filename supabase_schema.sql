@@ -633,3 +633,68 @@ update public.challenge_messages cm
 set username = p.username
 from public.profiles p
 where p.id = cm.user_id and cm.username is distinct from p.username;
+
+
+-- ═══════════════════════════════════════════════════════════
+-- Phase 7 — Automatic state backups (2026-08-03)
+-- A client-side sync bug (fixed the same day) could make a bad `state`
+-- write overwrite good history — the reinstall flow briefly treated a
+-- freshly-empty local profile as "newer" than real cloud data and pushed
+-- the empty state up, permanently wiping the free-plan project (no PITR,
+-- no scheduled backups on that tier). This snapshots the PREVIOUS value of
+-- profiles.state on every change, before the overwrite lands, so any
+-- future bug of this shape is recoverable from here instead of being
+-- unrecoverable. Trimmed to the last 20 snapshots per user so the table
+-- can't grow unbounded.
+-- ═══════════════════════════════════════════════════════════
+
+create table if not exists public.profile_state_backups (
+  id bigint generated always as identity primary key,
+  profile_id uuid not null references auth.users(id) on delete cascade,
+  state jsonb not null,
+  history_count int,
+  saved_at timestamptz not null default now()
+);
+
+create index if not exists profile_state_backups_profile_idx
+  on public.profile_state_backups (profile_id, saved_at desc);
+
+alter table public.profile_state_backups enable row level security;
+
+drop policy if exists "Users can view their own backups" on public.profile_state_backups;
+create policy "Users can view their own backups"
+  on public.profile_state_backups for select
+  using (auth.uid() = profile_id);
+
+create or replace function public.backup_profile_state()
+returns trigger
+language plpgsql
+security definer set search_path = public
+as $$
+begin
+  if old.state is distinct from new.state then
+    insert into public.profile_state_backups (profile_id, state, history_count)
+    values (
+      old.id,
+      old.state,
+      case when jsonb_typeof(old.state->'history') = 'array'
+        then jsonb_array_length(old.state->'history') else 0 end
+    );
+
+    delete from public.profile_state_backups
+    where profile_id = old.id
+      and id not in (
+        select id from public.profile_state_backups
+        where profile_id = old.id
+        order by saved_at desc
+        limit 20
+      );
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists on_profile_state_backup on public.profiles;
+create trigger on_profile_state_backup
+  before update on public.profiles
+  for each row execute function public.backup_profile_state();

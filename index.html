@@ -4148,18 +4148,26 @@
       color: rgb(var(--c-accent-light)); background: rgba(var(--c-accent),0.15); border-radius: 6px; padding: 2px 7px; margin-left: 8px;
     }
 
-    #challenge-new-modal, #challenge-detail-modal, #challenge-friend-picker {
+    #challenge-new-modal, #challenge-detail-modal, #challenge-friend-picker, #restore-backup-modal {
       position: fixed; inset: 0; z-index: 660;
       background: rgba(var(--c-shadow),0.72);
       backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
       display: none; align-items: center; justify-content: center; padding: 20px;
     }
-    #challenge-new-modal.open, #challenge-detail-modal.open, #challenge-friend-picker.open { display: flex; }
-    #challenge-friend-picker-box {
+    #challenge-new-modal.open, #challenge-detail-modal.open, #challenge-friend-picker.open, #restore-backup-modal.open { display: flex; }
+    #challenge-friend-picker-box, #restore-backup-box {
       background: rgba(var(--c-panel2),0.98); border: 1px solid rgba(var(--c-accent2),0.3);
       border-radius: 20px; width: 100%; max-width: 360px; max-height: 75vh; overflow-y: auto;
       padding: 22px;
     }
+    .backup-row {
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+      background: rgba(var(--c-panel1),0.7); border: 1px solid rgba(var(--c-accent2),0.2);
+      border-radius: 12px; padding: 10px 12px; margin-bottom: 8px; cursor: pointer;
+    }
+    .backup-row-when { font-size: 13px; font-weight: 700; color: rgb(var(--c-text)); }
+    .backup-row-count { font-size: 11px; color: rgb(var(--c-text4)); margin-top: 2px; }
+    .backup-row-restore { font-size: 11px; font-weight: 800; color: rgb(var(--c-accent-light)); flex-shrink: 0; }
     #challenge-new-box {
       background: rgba(var(--c-panel2),0.98); border: 1px solid rgba(var(--c-accent2),0.3);
       border-radius: 20px; width: 100%; max-width: 360px; max-height: 85vh; overflow-y: auto;
@@ -4923,6 +4931,19 @@
   </div>
 </div>
 
+<!-- Restore Backup — lists the last 20 auto-saved cloud snapshots (see
+     Phase 7 in supabase_schema.sql) so a bad sync overwrite is recoverable
+     from the app itself, not just via a SQL editor. -->
+<div id="restore-backup-modal">
+  <div id="restore-backup-box">
+    <div class="challenge-modal-header">
+      <div class="challenge-modal-title">Restore Backup</div>
+      <button class="challenge-modal-close" id="restore-backup-close">✕</button>
+    </div>
+    <div id="restore-backup-list"></div>
+  </div>
+</div>
+
 <!-- Friend Picker (multi-select — used to pick who a challenge invite goes to) -->
 <div id="challenge-friend-picker">
   <div id="challenge-friend-picker-box">
@@ -5578,7 +5599,8 @@
         </div>
         <div id="notifications-debug" style="margin-top:8px; font-size:10px; color:rgb(var(--c-text4)); text-align:center; letter-spacing:0.3px;"></div>
 
-        <button id="acct-signout-btn" class="acct-signout-btn" style="margin-top:22px;">Sign Out</button>
+        <button id="acct-restore-backup-btn" class="acct-signout-btn" style="margin-top:22px;">Restore Backup</button>
+        <button id="acct-signout-btn" class="acct-signout-btn" style="margin-top:10px;">Sign Out</button>
         <div class="acct-sync-status" id="acct-email-display"></div>
         <div class="acct-sync-status" id="acct-sync-status"></div>
         <div class="acct-sync-status" id="acct-last-synced"></div>
@@ -6425,6 +6447,71 @@ async function pullCloudState(userId) {
   renderHistory();
   suppressNextCloudPush = false;
 }
+
+// Every change to profiles.state is auto-snapshotted server-side before the
+// overwrite lands (see Phase 7 in supabase_schema.sql) — this lets a user
+// self-serve recovery from a bad sync (like the 2026-08-03 reinstall bug)
+// without needing SQL editor access.
+async function openRestoreBackupModal() {
+  const list = document.getElementById('restore-backup-list');
+  list.innerHTML = '<div class="friend-empty">Loading…</div>';
+  document.getElementById('restore-backup-modal').classList.add('open');
+  if (!cloudSession) {
+    list.innerHTML = '<div class="friend-empty">Sign in to see backups</div>';
+    return;
+  }
+  const { data, error } = await supabase
+    .from('profile_state_backups')
+    .select('id, state, history_count, saved_at')
+    .eq('profile_id', cloudSession.user.id)
+    .order('saved_at', { ascending: false })
+    .limit(20);
+  if (error || !data || !data.length) {
+    list.innerHTML = '<div class="friend-empty">No backups yet — they\'re created automatically whenever your synced data changes.</div>';
+    return;
+  }
+  list.innerHTML = '';
+  for (const b of data) {
+    const row = document.createElement('div');
+    row.className = 'backup-row';
+    const count = b.history_count ?? 0;
+    row.innerHTML = `
+      <div>
+        <div class="backup-row-when">${new Date(b.saved_at).toLocaleString()}</div>
+        <div class="backup-row-count">${count} workout${count === 1 ? '' : 's'} logged</div>
+      </div>
+      <div class="backup-row-restore">Restore</div>`;
+    row.addEventListener('click', () => restoreFromBackup(b));
+    list.appendChild(row);
+  }
+}
+
+async function restoreFromBackup(backup) {
+  const ok = await customConfirm(
+    `Restore the backup from ${new Date(backup.saved_at).toLocaleString()}? This replaces your current data, locally and in the cloud, with that snapshot.`,
+    'Restore', 'Cancel'
+  );
+  if (!ok) return;
+  suppressNextCloudPush = true;
+  state = { ...defaultState(), ...backup.state };
+  localStorage.setItem('trainhard_v1', JSON.stringify(state));
+  await supabase.from('profiles').update({ state }).eq('id', cloudSession.user.id);
+  recalcStats();
+  renderExercises();
+  renderHistory();
+  suppressNextCloudPush = false;
+  document.getElementById('restore-backup-modal').classList.remove('open');
+}
+
+document.getElementById('acct-restore-backup-btn').addEventListener('click', openRestoreBackupModal);
+document.getElementById('restore-backup-close').addEventListener('click', () => {
+  document.getElementById('restore-backup-modal').classList.remove('open');
+});
+document.getElementById('restore-backup-modal').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('restore-backup-modal')) {
+    document.getElementById('restore-backup-modal').classList.remove('open');
+  }
+});
 
 async function refreshAccountView() {
   const { data: { session } } = await supabase.auth.getSession();
