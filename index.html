@@ -840,7 +840,12 @@
       justify-content: space-between;
       flex-shrink: 0;
     }
-    #hist-edit-date { font-size:15px; font-weight:700; color:rgb(var(--c-text)); }
+    #hist-edit-date {
+      font-size:14px; font-weight:700; color:rgb(var(--c-text));
+      background: rgba(var(--c-panel1),0.95); border: 1px solid rgba(var(--c-accent2),0.3);
+      border-radius: 8px; padding: 6px 10px; -webkit-appearance: none; outline: none;
+    }
+    #hist-edit-date:focus { border-color: rgb(var(--c-accent)); }
     #hist-edit-actions { display:flex; gap:10px; }
     #hist-delete-btn {
       background: rgba(192,57,43,0.12);
@@ -3957,6 +3962,16 @@
       -webkit-appearance: none; outline: none; box-sizing: border-box; font-size: 16px;
     }
     .acct-input:focus { border-color: rgb(var(--c-accent)); }
+    .acct-input.flash-success {
+      border-color: #3cb558;
+      box-shadow: 0 0 0 3px rgba(60,181,88,0.35);
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .acct-input.flash-error {
+      border-color: #e05a4a;
+      box-shadow: 0 0 0 3px rgba(224,90,74,0.3);
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
     .acct-textarea { resize: vertical; min-height: 64px; font-family: inherit; line-height: 1.4; }
     .acct-field-optional { color: rgb(var(--c-text4)); font-weight: 500; text-transform: none; letter-spacing: 0; }
     .select-row {
@@ -5729,7 +5744,7 @@
 <div id="hist-edit-modal">
   <div id="hist-edit-box">
     <div id="hist-edit-header">
-      <div id="hist-edit-date"></div>
+      <input id="hist-edit-date" type="date" />
       <div id="hist-edit-actions">
         <button id="hist-delete-btn">Delete</button>
         <button id="hist-done-btn">Done</button>
@@ -6953,6 +6968,15 @@ async function handleFriendshipAction(id, action, username, btn) {
   refreshFriends();
 }
 
+// Briefly glows an input green (success) or red (error) so a tap has an
+// unmistakable visual result even if the user doesn't look at the error text.
+function flashInput(el, kind) {
+  el.classList.remove('flash-success', 'flash-error');
+  void el.offsetWidth; // force reflow so re-adding the same class restarts the animation
+  el.classList.add(kind === 'success' ? 'flash-success' : 'flash-error');
+  setTimeout(() => el.classList.remove('flash-success', 'flash-error'), 1200);
+}
+
 document.getElementById('friend-add-btn').addEventListener('click', async () => {
   const addBtn = document.getElementById('friend-add-btn');
   if (addBtn.disabled) return; // guard against double-tap firing this twice
@@ -6962,10 +6986,12 @@ document.getElementById('friend-add-btn').addEventListener('click', async () => 
   if (!username) return;
   if (!cloudSession) {
     showAcctError('friend-add-error', 'Sign in before adding friends.');
+    flashInput(input, 'error');
     return;
   }
   if (username.toLowerCase() === document.getElementById('acct-username-display').textContent.toLowerCase()) {
     showAcctError('friend-add-error', "That's your own username.");
+    flashInput(input, 'error');
     return;
   }
   addBtn.disabled = true;
@@ -6974,10 +7000,12 @@ document.getElementById('friend-add-btn').addEventListener('click', async () => 
     if (findError) {
       console.error('find_profile_by_username failed:', findError);
       showAcctError('friend-add-error', findError.message || 'Something went wrong looking that up — try again.');
+      flashInput(input, 'error');
       return;
     }
     if (!found || !found.length) {
       showAcctError('friend-add-error', 'No user found with that username.');
+      flashInput(input, 'error');
       return;
     }
     const targetId = found[0].id;
@@ -6988,18 +7016,22 @@ document.getElementById('friend-add-btn').addEventListener('click', async () => 
     if (insertError) {
       console.error('friend request insert failed:', insertError);
       showAcctError('friend-add-error', insertError.code === '23505' ? 'You already have a request or friendship with this user.' : insertError.message);
+      flashInput(input, 'error');
       return;
     }
     if (!insertData || insertData.length === 0) {
       console.error('friend request insert: 0 rows returned (RLS likely blocked this write)');
       showAcctError('friend-add-error', "That didn't go through — you may not have permission to send this request (check Supabase RLS policies).");
+      flashInput(input, 'error');
       return;
     }
+    flashInput(input, 'success');
     input.value = '';
     refreshFriends();
   } catch (err) {
     console.error('friend-add-btn threw:', err);
     showAcctError('friend-add-error', 'Network error — check your connection and try again.');
+    flashInput(input, 'error');
   } finally {
     addBtn.disabled = false;
   }
@@ -8671,7 +8703,7 @@ let histEditData = null;
 function openHistEdit(idx) {
   histEditIdx = idx;
   histEditData = JSON.parse(JSON.stringify(state.history[idx]));
-  document.getElementById('hist-edit-date').textContent = histEditData.date;
+  document.getElementById('hist-edit-date').value = isoDateFromPRDate(histEditData.date);
   renderHistEditExercises();
   document.getElementById('hist-edit-modal').classList.add('open');
 }
@@ -8770,6 +8802,12 @@ function makeHistSetRow(exIdx, sIdx, s, isExp) {
 }
 
 document.getElementById('hist-done-btn').addEventListener('click', () => {
+  const dateInput = document.getElementById('hist-edit-date').value;
+  if (dateInput) {
+    const [yy, mm, dd] = dateInput.split('-').map(Number);
+    histEditData.date = new Date(yy, mm - 1, dd).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+  }
+
   histEditData.exercises = histEditData.exercises
     .map(ex => {
       const isExp = (state.exerciseMeta[ex.name] || {}).expType === 'exposure';
