@@ -3,7 +3,7 @@
 // still preferring fresh content whenever it's actually online. Bump
 // CACHE_VERSION when the APP_SHELL list below changes, to drop stale
 // entries from old versions.
-const CACHE_VERSION = 'v13';
+const CACHE_VERSION = 'v14';
 const CACHE_NAME = `trainhard-${CACHE_VERSION}`;
 
 // The bare minimum needed for the app to boot at all with no network.
@@ -69,7 +69,12 @@ self.addEventListener('fetch', (e) => {
     // index.html to notice an update), falling back to whatever's cached
     // when there's no connection at all.
     e.respondWith(
-      fetch(req).then(res => {
+      // cache: 'no-store' bypasses the browser's ordinary HTTP cache — a plain
+      // fetch() here would honor the host's Cache-Control headers and could
+      // silently hand back a stale index.html/JS even though this is meant to
+      // be "network-first", which is exactly how installed PWAs kept running
+      // old friend-request code after a push that "worked" in a fresh tab.
+      fetch(req, { cache: 'no-store' }).then(res => {
         const copy = res.clone();
         caches.open(CACHE_NAME).then(c => c.put(req, copy));
         return res;
