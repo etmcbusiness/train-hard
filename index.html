@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#1D2A5E" />
-  <meta name="app-version" content="66" />
+  <meta name="app-version" content="67" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -6832,12 +6832,21 @@ function unsubscribeFriendshipUpdates() {
 
 async function refreshFriends() {
   if (!cloudSession) return;
-  const uid = cloudSession.user.id;
+  // Use a freshly-fetched id, not cloudSession.user.id — matches the same
+  // fix applied to the insert/action paths, so this read can never disagree
+  // with what those writes used.
+  const { data: { user: freshUser } } = await supabase.auth.getUser();
+  const uid = freshUser.id;
   const { data: rows, error } = await supabase
     .from('friendships')
     .select('id, requester_id, addressee_id, status, requester_username, addressee_username, updated_at')
     .or(`requester_id.eq.${uid},addressee_id.eq.${uid}`);
   if (error) { console.error(error); return; }
+  // Temporary: make the raw fetch result visible on screen so a
+  // still-missing pending row can be told apart from "query returned it but
+  // rendering swallowed it" instead of guessing again.
+  console.warn('refreshFriends fetched', { uid, cachedUid: cloudSession.user.id, rows });
+  showAcctError('friend-add-error', `[debug] uid=${uid} cachedUid=${cloudSession.user.id} rowCount=${rows.length} rows=${JSON.stringify(rows)}`);
 
   const incoming = rows.filter(r => r.status === 'pending' && r.addressee_id === uid);
   const outgoing = rows.filter(r => r.status === 'pending' && r.requester_id === uid);
