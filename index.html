@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#1D2A5E" />
-  <meta name="app-version" content="65" />
+  <meta name="app-version" content="66" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -6851,23 +6851,25 @@ async function refreshFriends() {
   reqLabel.style.display = (incoming.length || outgoing.length) ? 'block' : 'none';
 
   for (const r of incoming) {
+    const friendId = r.requester_id === uid ? r.addressee_id : r.requester_id;
     const row = document.createElement('div');
     row.className = 'friend-row';
     row.innerHTML = `
       <div><div class="friend-row-name">${escapeHtml(otherUsername(r))}</div><div class="friend-row-sub">wants to be friends</div></div>
       <div class="friend-row-actions">
-        <button class="friend-row-btn friend-row-btn-accept" data-id="${r.id}" data-action="accept">Accept</button>
-        <button class="friend-row-btn friend-row-btn-decline" data-id="${r.id}" data-action="decline">Decline</button>
+        <button class="friend-row-btn friend-row-btn-accept" data-friend-id="${friendId}" data-action="accept">Accept</button>
+        <button class="friend-row-btn friend-row-btn-decline" data-friend-id="${friendId}" data-action="decline">Decline</button>
       </div>`;
     reqList.appendChild(row);
   }
   for (const r of outgoing) {
+    const friendId = r.requester_id === uid ? r.addressee_id : r.requester_id;
     const row = document.createElement('div');
     row.className = 'friend-row';
     row.innerHTML = `
       <div><div class="friend-row-name">${escapeHtml(otherUsername(r))}</div><div class="friend-row-sub">request sent</div></div>
       <div class="friend-row-actions">
-        <button class="friend-row-btn friend-row-btn-decline" data-id="${r.id}" data-action="cancel">Cancel</button>
+        <button class="friend-row-btn friend-row-btn-decline" data-friend-id="${friendId}" data-action="cancel">Cancel</button>
       </div>`;
     reqList.appendChild(row);
   }
@@ -6921,7 +6923,7 @@ async function refreshFriends() {
   reqList.querySelectorAll('button[data-action]').forEach(btn => {
     btn.addEventListener('click', () => {
       if (btn.disabled) return; // guard against double-tap firing the mutation twice
-      handleFriendshipAction(btn.dataset.id, btn.dataset.action, null, btn);
+      handleFriendshipAction(btn.dataset.friendId, btn.dataset.action, null, btn);
     });
   });
   friendsList.querySelectorAll('.friend-row-edit-btn').forEach(btn => {
@@ -6961,9 +6963,9 @@ document.getElementById('friend-edit-nickname-btn').addEventListener('click', as
 
 document.getElementById('friend-edit-remove-btn').addEventListener('click', async () => {
   if (!friendEditContext) return;
-  const { friendshipId, username } = friendEditContext;
+  const { friendId, username } = friendEditContext;
   closeFriendEditMenu();
-  await handleFriendshipAction(friendshipId, 'remove', username);
+  await handleFriendshipAction(friendId, 'remove', username);
 });
 
 document.getElementById('friend-edit-cancel-btn').addEventListener('click', closeFriendEditMenu);
@@ -6986,19 +6988,32 @@ function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
 }
 
-async function handleFriendshipAction(id, action, username, btn) {
+// `friendId` is the OTHER person's user id — never a cached friendships row
+// id. Every prior version of this function took a friendship row id captured
+// at render time, and that id going stale (row already acted on, or a race
+// with a realtime refresh) was the actual recurring bug: `.eq('id', id)`
+// would match 0 rows and nothing would happen, with no way to tell "already
+// handled" apart from "genuinely can't do this." Resolving the pair by the
+// two user ids fresh, every time, removes that failure mode entirely — there
+// is no stale id to go bad.
+async function handleFriendshipAction(friendId, action, username, btn) {
   if (btn) btn.disabled = true; // block a second tap while the request is in flight
   showAcctError('friend-add-error', '');
   try {
-    let error, data;
-    if (action === 'accept') {
-      ({ error, data } = await supabase.from('friendships').update({ status: 'accepted' }).eq('id', id).select());
-    } else if (action === 'remove') {
+    if (action === 'remove') {
       const ok = await customConfirm(`Remove ${username || 'this friend'}? You'll need to send a new request to become friends again.`, 'Remove', 'Cancel');
       if (!ok) { if (btn) btn.disabled = false; return; }
-      ({ error, data } = await supabase.from('friendships').delete().eq('id', id).select());
-    } else if (action === 'decline' || action === 'cancel') {
-      ({ error, data } = await supabase.from('friendships').delete().eq('id', id).select());
+    }
+    const { data: { user } } = await supabase.auth.getUser();
+    const pairFilter = `and(requester_id.eq.${user.id},addressee_id.eq.${friendId}),and(requester_id.eq.${friendId},addressee_id.eq.${user.id})`;
+
+    let error, data;
+    if (action === 'accept') {
+      ({ error, data } = await supabase.from('friendships').update({ status: 'accepted' }).or(pairFilter).select());
+    } else {
+      // remove / decline / cancel are all just "delete whatever row exists
+      // between us" — there is nothing status-specific about any of them.
+      ({ error, data } = await supabase.from('friendships').delete().or(pairFilter).select());
     }
     if (error) {
       console.error('handleFriendshipAction failed:', error);
@@ -7006,31 +7021,9 @@ async function handleFriendshipAction(id, action, username, btn) {
       if (btn) btn.disabled = false;
       return;
     }
-    // Supabase/PostgREST does NOT set `error` when a delete/update matches zero
-    // rows — it just returns success with an empty array. In practice that means
-    // the row was already gone (the other side already accepted/declined/removed
-    // it, or a double-tap fired twice) — the state the user wanted is already
-    // true, so just refresh quietly instead of showing a scary technical error.
     if (!data || data.length === 0) {
-      // Temporary diagnostics: 0 rows matched should only happen when the row
-      // is genuinely already gone, but that's unconfirmed — surface the
-      // server's actual view of who we are and what the row looks like right
-      // now, on-screen (not just console) since this mostly gets hit from the
-      // installed phone app where devtools aren't reachable. Safe to remove
-      // once the root cause is confirmed.
-      const [{ data: whoami }, { data: rowNow, error: rowErr }] = await Promise.all([
-        supabase.rpc('debug_whoami'),
-        supabase.from('friendships').select('id, requester_id, addressee_id, status').eq('id', id).maybeSingle()
-      ]);
-      const debugMsg = `[debug] action=${action} id=${id} whoami=${JSON.stringify(whoami)} row=${JSON.stringify(rowNow)} rowErr=${rowErr ? rowErr.message : 'none'} cachedUid=${cloudSession && cloudSession.user.id}`;
-      console.warn('handleFriendshipAction: 0 rows affected', { id, action, whoami, rowNow, rowErr, cachedUid: cloudSession && cloudSession.user.id });
-      showAcctError('friend-add-error', debugMsg);
-      if (btn) btn.disabled = false;
-      // Fall through to refreshFriends() below instead of returning — a 0-row
-      // result almost always means this row is already gone from under us,
-      // and skipping the refresh here is exactly what left stale "ghost"
-      // Cancel/Accept buttons stuck on screen pointing at rows that no
-      // longer (or never validly) existed.
+      console.warn('handleFriendshipAction: 0 rows affected for this pair', { friendId, action, uid: user.id });
+      showAcctError('friend-add-error', "That didn't go through — the request may have already been handled. Refreshing.");
     }
   } catch (err) {
     console.error('handleFriendshipAction threw:', err);
@@ -7100,11 +7093,7 @@ document.getElementById('friend-add-btn').addEventListener('click', async () => 
         // for) — but the outgoing/incoming lists aren't showing it, so dump
         // its actual state to find out whether it's stuck 'accepted' (already
         // friends, just not rendering) or a genuinely orphaned pending row.
-        const { data: existing, error: existingErr } = await supabase
-          .from('friendships')
-          .select('id, requester_id, addressee_id, status')
-          .or(`and(requester_id.eq.${cloudSession.user.id},addressee_id.eq.${targetId}),and(requester_id.eq.${targetId},addressee_id.eq.${cloudSession.user.id})`);
-        showAcctError('friend-add-error', `Already have a request/friendship with this user. [debug existing=${JSON.stringify(existing)} err=${existingErr ? existingErr.message : 'none'}]`);
+        showAcctError('friend-add-error', 'You already have a request or friendship with this user.');
       } else {
         showAcctError('friend-add-error', insertError.message);
       }
@@ -7119,15 +7108,6 @@ document.getElementById('friend-add-btn').addEventListener('click', async () => 
     }
     flashInput(input, 'success');
     input.value = '';
-    // Temporary: confirm on-screen what actually got written, and what the
-    // very next fetch (the same query refreshFriends() runs) sees for it —
-    // if these disagree, the row exists but isn't surviving the read.
-    const insertedRow = insertData[0];
-    const { data: verifyRows, error: verifyErr } = await supabase
-      .from('friendships')
-      .select('id, requester_id, addressee_id, status')
-      .or(`requester_id.eq.${freshUser.id},addressee_id.eq.${freshUser.id}`);
-    showAcctError('friend-add-error', `[debug] inserted=${JSON.stringify(insertedRow)} freshUid=${freshUser.id} allRowsForMeNow=${JSON.stringify(verifyRows)} verifyErr=${verifyErr ? verifyErr.message : 'none'}`);
     refreshFriends();
   } catch (err) {
     console.error('friend-add-btn threw:', err);
