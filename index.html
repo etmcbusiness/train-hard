@@ -10,7 +10,8 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Train Hard" />
   <link rel="manifest" href="manifest.json" />
-  <link rel="apple-touch-icon" href="assets/icons/icon.svg" />
+  <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/icons/icon-192.png" />
   <title>Train Hard</title>
   <script>
     (function() {
@@ -14267,8 +14268,8 @@ function notifyRestComplete() {
   if (!notificationsEnabled || Notification.permission !== 'granted' || !document.hidden) return;
   const opts = {
     body: 'Tap to get back to your workout.',
-    icon: './assets/icons/icon.svg',
-    badge: './assets/icons/icon.svg',
+    icon: './assets/icons/icon-192.png',
+    badge: './assets/icons/icon-192.png',
     tag: 'rest-timer',
     renotify: true,
     vibrate: [200, 100, 200],
