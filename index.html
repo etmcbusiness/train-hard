@@ -6954,29 +6954,55 @@ async function handleFriendshipAction(id, action, username, btn) {
 }
 
 document.getElementById('friend-add-btn').addEventListener('click', async () => {
+  const addBtn = document.getElementById('friend-add-btn');
+  if (addBtn.disabled) return; // guard against double-tap firing this twice
   showAcctError('friend-add-error', '');
   const input = document.getElementById('friend-search-input');
   const username = input.value.trim();
   if (!username) return;
+  if (!cloudSession) {
+    showAcctError('friend-add-error', 'Sign in before adding friends.');
+    return;
+  }
   if (username.toLowerCase() === document.getElementById('acct-username-display').textContent.toLowerCase()) {
     showAcctError('friend-add-error', "That's your own username.");
     return;
   }
-  const { data: found, error: findError } = await supabase.rpc('find_profile_by_username', { search: username });
-  if (findError || !found || !found.length) {
-    showAcctError('friend-add-error', 'No user found with that username.');
-    return;
+  addBtn.disabled = true;
+  try {
+    const { data: found, error: findError } = await supabase.rpc('find_profile_by_username', { search: username });
+    if (findError) {
+      console.error('find_profile_by_username failed:', findError);
+      showAcctError('friend-add-error', findError.message || 'Something went wrong looking that up — try again.');
+      return;
+    }
+    if (!found || !found.length) {
+      showAcctError('friend-add-error', 'No user found with that username.');
+      return;
+    }
+    const targetId = found[0].id;
+    const { error: insertError, data: insertData } = await supabase
+      .from('friendships')
+      .insert({ requester_id: cloudSession.user.id, addressee_id: targetId })
+      .select();
+    if (insertError) {
+      console.error('friend request insert failed:', insertError);
+      showAcctError('friend-add-error', insertError.code === '23505' ? 'You already have a request or friendship with this user.' : insertError.message);
+      return;
+    }
+    if (!insertData || insertData.length === 0) {
+      console.error('friend request insert: 0 rows returned (RLS likely blocked this write)');
+      showAcctError('friend-add-error', "That didn't go through — you may not have permission to send this request (check Supabase RLS policies).");
+      return;
+    }
+    input.value = '';
+    refreshFriends();
+  } catch (err) {
+    console.error('friend-add-btn threw:', err);
+    showAcctError('friend-add-error', 'Network error — check your connection and try again.');
+  } finally {
+    addBtn.disabled = false;
   }
-  const targetId = found[0].id;
-  const { error: insertError } = await supabase
-    .from('friendships')
-    .insert({ requester_id: cloudSession.user.id, addressee_id: targetId });
-  if (insertError) {
-    showAcctError('friend-add-error', insertError.code === '23505' ? 'You already have a request or friendship with this user.' : insertError.message);
-    return;
-  }
-  input.value = '';
-  refreshFriends();
 });
 
 // ── Friend detail (read-only muscle levels) ──
