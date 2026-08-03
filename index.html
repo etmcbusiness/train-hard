@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#1D2A5E" />
-  <meta name="app-version" content="60" />
+  <meta name="app-version" content="61" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -14847,7 +14847,20 @@ document.getElementById('catchup-level-btn').addEventListener('click', () => wee
 document.getElementById('catchup-oldest-btn').addEventListener('click', () => weeklyCatchupToggle(2));
 
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('./sw.js').catch(() => {});
+  navigator.serviceWorker.register('./sw.js').then(reg => {
+    // Registering alone does NOT force the browser to re-check sw.js for
+    // changes — on an installed/home-screen PWA that gets "resumed" rather
+    // than freshly navigated, the browser's own update heuristic can go a
+    // long time without ever re-fetching sw.js, so a push can sit invisible
+    // to already-installed users indefinitely. Explicitly call update() on
+    // every open, and again whenever the app comes back to the foreground,
+    // so a newer sw.js (and thus newer cached index.html) is always found
+    // as soon as possible instead of waiting on the browser to notice.
+    reg.update().catch(() => {});
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') reg.update().catch(() => {});
+    });
+  }).catch(() => {});
   let swRefreshing = false;
   navigator.serviceWorker.addEventListener('controllerchange', () => {
     if (swRefreshing) return;
