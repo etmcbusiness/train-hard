@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#1D2A5E" />
-  <meta name="app-version" content="68" />
+  <meta name="app-version" content="69" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -7009,15 +7009,26 @@ async function handleFriendshipAction(friendId, action, username, btn) {
       if (!ok) { if (btn) btn.disabled = false; return; }
     }
     const { data: { user } } = await supabase.auth.getUser();
-    const pairFilter = `and(requester_id.eq.${user.id},addressee_id.eq.${friendId}),and(requester_id.eq.${friendId},addressee_id.eq.${user.id})`;
 
     let error, data;
     if (action === 'accept') {
-      ({ error, data } = await supabase.from('friendships').update({ status: 'accepted' }).or(pairFilter).select());
+      // Only the addressee can accept (RLS enforces it), and an "Accept"
+      // button only ever renders for an incoming request — so the direction
+      // is always known, no need to search both ways.
+      ({ error, data } = await supabase.from('friendships').update({ status: 'accepted' }).eq('requester_id', friendId).eq('addressee_id', user.id).select());
     } else {
       // remove / decline / cancel are all just "delete whatever row exists
-      // between us" — there is nothing status-specific about any of them.
-      ({ error, data } = await supabase.from('friendships').delete().or(pairFilter).select());
+      // between us." Direction can genuinely be either way (a "remove" on an
+      // accepted friend doesn't know who originally sent it), so try one
+      // direction and fall back to the other rather than relying on a
+      // combined .or(and(...),and(...)) filter string, which is fragile to
+      // parse correctly server-side for exact two-column pair matches like
+      // this — plain chained .eq() calls are the same pattern already used
+      // everywhere else in this file for two-column lookups.
+      ({ error, data } = await supabase.from('friendships').delete().eq('requester_id', user.id).eq('addressee_id', friendId).select());
+      if (!error && (!data || data.length === 0)) {
+        ({ error, data } = await supabase.from('friendships').delete().eq('requester_id', friendId).eq('addressee_id', user.id).select());
+      }
     }
     if (error) {
       console.error('handleFriendshipAction failed:', error);
