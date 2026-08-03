@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#1D2A5E" />
-  <meta name="app-version" content="70" />
+  <meta name="app-version" content="71" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -7042,8 +7042,17 @@ async function handleFriendshipAction(friendId, action, username, btn) {
       return;
     }
     if (!data || data.length === 0) {
-      console.warn('handleFriendshipAction: 0 rows affected for this pair', { friendId, action, uid: user.id });
-      showAcctError('friend-add-error', "That didn't go through — the request may have already been handled. Refreshing.");
+      // Temporary: both directions failed to match — dump exactly what
+      // friendId this button carried vs. what rows actually exist for this
+      // user right now, to see whether friendId itself is the problem
+      // (wrong/undefined) or the delete itself isn't matching a real row.
+      const { data: myRows } = await supabase
+        .from('friendships')
+        .select('id, requester_id, addressee_id, status')
+        .or(`requester_id.eq.${user.id},addressee_id.eq.${user.id}`);
+      console.warn('handleFriendshipAction: 0 rows affected for this pair', { friendId, action, uid: user.id, myRows });
+      showAcctError('friend-add-error', `[debug] friendId=${friendId} uid=${user.id} myRows=${JSON.stringify(myRows)}`);
+      if (btn) btn.disabled = false;
     }
   } catch (err) {
     console.error('handleFriendshipAction threw:', err);
@@ -14930,6 +14939,64 @@ document.addEventListener('visibilitychange', () => {
 setInterval(checkForRealAppUpdate, 5 * 60 * 1000);
 
 // ═══════════════════════════════════════════════════════════
+// Shared numpad key-lock: the panel slides up over ~0.25s (translateY(100%)
+// -> 0), but the overlay's pointer-events flip to "all" immediately. A tap
+// made while the panel is still mid-slide gets hit-tested against a key's
+// CURRENT (not-yet-settled) position, landing a row off from where the
+// digit visually is (e.g. tapping "8" registers "5").
+//
+// On top of the panel's own slide, opening a numpad right after a native
+// keyboard was up (e.g. Cardio's Distance/Weight stepper fields use a real
+// OS keyboard, then the Duration field opens this custom numpad) means the
+// visual viewport keeps resizing as iOS/Android collapses that keyboard —
+// often well past the panel's 0.25s transform transition. Any tap before
+// BOTH the panel's own animation AND the keyboard-collapse resize have
+// settled can still land on the wrong key. So: wait for the panel's
+// transitionend (or a fallback timer, for reduced-motion), then keep
+// pushing the unlock out for as long as visualViewport keeps firing resize
+// events, capped by a hard safety-net timeout.
+function lockNumpadKeysUntilSettled(panel, keys) {
+  keys.forEach(k => k.style.pointerEvents = 'none');
+  let baseSettled = false;
+  let unlocked = false;
+  let quietTimer = null;
+  let vvAttached = false;
+
+  function finalUnlock() {
+    if (unlocked) return;
+    unlocked = true;
+    keys.forEach(k => k.style.pointerEvents = '');
+    panel.removeEventListener('transitionend', onTransitionEnd);
+    if (vvAttached && window.visualViewport) window.visualViewport.removeEventListener('resize', onViewportResize);
+    clearTimeout(quietTimer);
+    clearTimeout(hardTimer);
+  }
+
+  function armQuietWindow() {
+    clearTimeout(quietTimer);
+    quietTimer = setTimeout(finalUnlock, 150);
+  }
+
+  function onBaseSettled() {
+    if (baseSettled) return;
+    baseSettled = true;
+    panel.removeEventListener('transitionend', onTransitionEnd);
+    if (window.visualViewport) {
+      vvAttached = true;
+      window.visualViewport.addEventListener('resize', onViewportResize);
+    }
+    armQuietWindow();
+  }
+
+  function onTransitionEnd(e) { if (e.target === panel && e.propertyName === 'transform') onBaseSettled(); }
+  function onViewportResize() { armQuietWindow(); } // keyboard still collapsing — push the unlock back out
+
+  panel.addEventListener('transitionend', onTransitionEnd);
+  setTimeout(onBaseSettled, 300); // fallback if transitionend never fires (e.g. reduced-motion)
+  var hardTimer = setTimeout(finalUnlock, 900); // absolute safety net so keys never stay locked forever
+}
+
+// ═══════════════════════════════════════════════════════════
 // TRAIN NUMPAD POPUP
 // ═══════════════════════════════════════════════════════════
 
@@ -14972,26 +15039,8 @@ setInterval(checkForRealAppUpdate, 5 * 60 * 1000);
     lockKeysUntilSettled();
   }
 
-  // The panel slides up over 0.25s (translateY(100%) -> 0), but the overlay's
-  // pointer-events flip to "all" immediately when .open is added. A tap made
-  // while the panel is still mid-slide gets hit-tested against the key's
-  // CURRENT (not-yet-settled) position, so it can land a row off from where
-  // the digit visually is — this is the "have to press the button underneath"
-  // misalignment. Block key taps until the slide-up transition finishes.
   function lockKeysUntilSettled() {
-    const panel = overlay.querySelector('.tnp-panel');
-    const keys = overlay.querySelectorAll('.tnp-key');
-    keys.forEach(k => k.style.pointerEvents = 'none');
-    let done = false;
-    function unlock() {
-      if (done) return;
-      done = true;
-      keys.forEach(k => k.style.pointerEvents = '');
-      panel.removeEventListener('transitionend', onEnd);
-    }
-    function onEnd(e) { if (e.target === panel && e.propertyName === 'transform') unlock(); }
-    panel.addEventListener('transitionend', onEnd);
-    setTimeout(unlock, 300); // fallback if transitionend never fires (e.g. reduced-motion)
+    lockNumpadKeysUntilSettled(overlay.querySelector('.tnp-panel'), overlay.querySelectorAll('.tnp-key'));
   }
 
   // Keeps the set row being typed into visible above the numpad panel (which
@@ -15261,22 +15310,8 @@ function attachTrainNumpad(inp, pairInp, checkBtn, field) {
     lockRnpKeysUntilSettled();
   };
 
-  // Same slide-up-animation vs. immediate-pointer-events mismatch as the
-  // train numpad — block key taps until the panel finishes sliding into place.
   function lockRnpKeysUntilSettled() {
-    const panel = document.getElementById('rnp-panel');
-    const keys = numpad.querySelectorAll('.rnp-key');
-    keys.forEach(k => k.style.pointerEvents = 'none');
-    let done = false;
-    function unlock() {
-      if (done) return;
-      done = true;
-      keys.forEach(k => k.style.pointerEvents = '');
-      panel.removeEventListener('transitionend', onEnd);
-    }
-    function onEnd(e) { if (e.target === panel && e.propertyName === 'transform') unlock(); }
-    panel.addEventListener('transitionend', onEnd);
-    setTimeout(unlock, 300);
+    lockNumpadKeysUntilSettled(document.getElementById('rnp-panel'), numpad.querySelectorAll('.rnp-key'));
   }
 
   function closeNumpad() {
