@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#1D2A5E" />
-  <meta name="app-version" content="63" />
+  <meta name="app-version" content="64" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -7026,7 +7026,11 @@ async function handleFriendshipAction(id, action, username, btn) {
       console.warn('handleFriendshipAction: 0 rows affected', { id, action, whoami, rowNow, rowErr, cachedUid: cloudSession && cloudSession.user.id });
       showAcctError('friend-add-error', debugMsg);
       if (btn) btn.disabled = false;
-      return;
+      // Fall through to refreshFriends() below instead of returning — a 0-row
+      // result almost always means this row is already gone from under us,
+      // and skipping the refresh here is exactly what left stale "ghost"
+      // Cancel/Accept buttons stuck on screen pointing at rows that no
+      // longer (or never validly) existed.
     }
   } catch (err) {
     console.error('handleFriendshipAction threw:', err);
@@ -7078,9 +7082,16 @@ document.getElementById('friend-add-btn').addEventListener('click', async () => 
       return;
     }
     const targetId = found[0].id;
+    // Use a freshly-fetched user id here, not cloudSession.user.id — a cached
+    // session variable has previously caused rows to be written with a
+    // slightly-stale requester_id on other tables (challenges.creator_id hit
+    // this same issue), which is invisible to both sides under RLS SELECT
+    // afterward yet still blocks the unique (low_id, high_id) constraint for
+    // this pair forever. getUser() confirms the actual current session id.
+    const { data: { user: freshUser } } = await supabase.auth.getUser();
     const { error: insertError, data: insertData } = await supabase
       .from('friendships')
-      .insert({ requester_id: cloudSession.user.id, addressee_id: targetId })
+      .insert({ requester_id: freshUser.id, addressee_id: targetId })
       .select();
     if (insertError) {
       console.error('friend request insert failed:', insertError);
