@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#1D2A5E" />
-  <meta name="app-version" content="62" />
+  <meta name="app-version" content="63" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -7084,7 +7084,19 @@ document.getElementById('friend-add-btn').addEventListener('click', async () => 
       .select();
     if (insertError) {
       console.error('friend request insert failed:', insertError);
-      showAcctError('friend-add-error', insertError.code === '23505' ? 'You already have a request or friendship with this user.' : insertError.message);
+      if (insertError.code === '23505') {
+        // A row for this pair already exists (that's what the unique index is
+        // for) — but the outgoing/incoming lists aren't showing it, so dump
+        // its actual state to find out whether it's stuck 'accepted' (already
+        // friends, just not rendering) or a genuinely orphaned pending row.
+        const { data: existing, error: existingErr } = await supabase
+          .from('friendships')
+          .select('id, requester_id, addressee_id, status')
+          .or(`and(requester_id.eq.${cloudSession.user.id},addressee_id.eq.${targetId}),and(requester_id.eq.${targetId},addressee_id.eq.${cloudSession.user.id})`);
+        showAcctError('friend-add-error', `Already have a request/friendship with this user. [debug existing=${JSON.stringify(existing)} err=${existingErr ? existingErr.message : 'none'}]`);
+      } else {
+        showAcctError('friend-add-error', insertError.message);
+      }
       flashInput(input, 'error');
       return;
     }
