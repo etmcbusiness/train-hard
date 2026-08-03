@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#1D2A5E" />
-  <meta name="app-version" content="72" />
+  <meta name="app-version" content="73" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -5922,7 +5922,19 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.110.8';
 // ═══════════════════════════════════════════════════════════
 const SUPABASE_URL = 'https://wuboizuqyucvioexgkwh.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_r5VhU8EDB5N8F0rV8SpGMQ_Gms-6tkT';
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+// Force every Supabase API call (reads included) to bypass the browser's
+// HTTP cache — supabase-js's default fetch() doesn't set this, and iOS
+// WKWebView (the engine behind this installed home-screen PWA) is known to
+// cache fetch() GETs more aggressively than desktop browsers. This produced
+// a genuinely reproduced bug: an identical friendships query run twice
+// within milliseconds of each other returned two different row counts for
+// the same signed-in user, with the correct answer only showing up on the
+// second call — classic stale-cache-serving-a-GET symptom, not a
+// permissions or query-logic problem (auth.uid() was independently
+// confirmed correct via debug_whoami() on both calls).
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
+  global: { fetch: (url, options) => fetch(url, { ...options, cache: 'no-store' }) }
+});
 let cloudSession = null;      // current Supabase auth session, or null when signed out
 let friendshipsChannel = null; // Realtime subscription for live friend request/accept updates
 let challengesChannel = null;  // Realtime subscription for live challenge invite/join updates
@@ -6842,16 +6854,6 @@ async function refreshFriends() {
     .select('id, requester_id, addressee_id, status, requester_username, addressee_username, updated_at')
     .or(`requester_id.eq.${uid},addressee_id.eq.${uid}`);
   if (error) { console.error(error); return; }
-  // Temporary: a duplicate-key error on insert proved a row exists server
-  // side while this same query sees 0 rows for it — meaning the DATABASE's
-  // own view of auth.uid() (evaluated inside the RLS policy) may disagree
-  // with what getUser() told the client. debug_whoami() runs server-side
-  // under RLS and reports exactly what the DB believes auth.uid() is, so
-  // comparing it to `uid` here proves or rules out a token/session mismatch
-  // at the PostgREST layer specifically (separate from anything client JS
-  // can see).
-  const { data: whoami } = await supabase.rpc('debug_whoami');
-  window.__lastFriendsDebug = { uid, whoami, rows };
 
   const incoming = rows.filter(r => r.status === 'pending' && r.addressee_id === uid);
   const outgoing = rows.filter(r => r.status === 'pending' && r.requester_id === uid);
@@ -6862,12 +6864,7 @@ async function refreshFriends() {
   const reqLabel = document.getElementById('friend-requests-label');
   const reqList = document.getElementById('friend-requests-list');
   reqList.innerHTML = '';
-  // Temporary: force this visible regardless of count, with a compact
-  // counter in the header itself (not a big blob that can push content
-  // around), to confirm whether the render loop is even producing rows —
-  // the data layer was already independently verified correct.
-  reqLabel.style.display = 'block';
-  reqLabel.textContent = `Friend Requests [debug rows=${rows.length} in=${incoming.length} out=${outgoing.length} acc=${accepted.length} uid=${uid.slice(0,8)} whoami=${whoami && whoami[0] ? whoami[0].uid.slice(0,8) : 'NONE'}]`;
+  reqLabel.style.display = (incoming.length || outgoing.length) ? 'block' : 'none';
 
   for (const r of incoming) {
     const friendId = r.requester_id === uid ? r.addressee_id : r.requester_id;
@@ -7052,17 +7049,10 @@ async function handleFriendshipAction(friendId, action, username, btn) {
       return;
     }
     if (!data || data.length === 0) {
-      // Temporary: both directions failed to match — dump exactly what
-      // friendId this button carried vs. what rows actually exist for this
-      // user right now, to see whether friendId itself is the problem
-      // (wrong/undefined) or the delete itself isn't matching a real row.
-      const { data: myRows } = await supabase
-        .from('friendships')
-        .select('id, requester_id, addressee_id, status')
-        .or(`requester_id.eq.${user.id},addressee_id.eq.${user.id}`);
-      console.warn('handleFriendshipAction: 0 rows affected for this pair', { friendId, action, uid: user.id, myRows });
-      showAcctError('friend-add-error', `[debug] friendId=${friendId} uid=${user.id} myRows=${JSON.stringify(myRows)}`);
-      if (btn) btn.disabled = false;
+      // A 0-row result here almost always means the request was already
+      // handled from the other side (or a double-tap) — the state the user
+      // wanted is already true, so just refresh quietly.
+      console.warn('handleFriendshipAction: 0 rows affected for this pair', { friendId, action, uid: user.id });
     }
   } catch (err) {
     console.error('handleFriendshipAction threw:', err);
