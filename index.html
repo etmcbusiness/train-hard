@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#1D2A5E" />
-  <meta name="app-version" content="61" />
+  <meta name="app-version" content="62" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -14848,14 +14848,6 @@ document.getElementById('catchup-oldest-btn').addEventListener('click', () => we
 
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./sw.js').then(reg => {
-    // Registering alone does NOT force the browser to re-check sw.js for
-    // changes — on an installed/home-screen PWA that gets "resumed" rather
-    // than freshly navigated, the browser's own update heuristic can go a
-    // long time without ever re-fetching sw.js, so a push can sit invisible
-    // to already-installed users indefinitely. Explicitly call update() on
-    // every open, and again whenever the app comes back to the foreground,
-    // so a newer sw.js (and thus newer cached index.html) is always found
-    // as soon as possible instead of waiting on the browser to notice.
     reg.update().catch(() => {});
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'visible') reg.update().catch(() => {});
@@ -14868,6 +14860,42 @@ if ('serviceWorker' in navigator) {
     window.location.reload(true);
   });
 }
+
+// Belt-and-suspenders update check that doesn't depend on service-worker
+// update semantics at all (those proved unreliable on an installed
+// home-screen PWA — force-quitting and reopening repeatedly still didn't
+// pick up a fix that a plain browser tab got instantly). This fetches the
+// live index.html directly with a unique cache-busting query string, so no
+// cache layer (browser HTTP cache, CDN, or the service worker's own
+// CacheStorage) can hand back a stale copy — a new query string is always
+// a cache miss everywhere. If the server's real app-version differs from
+// what's currently loaded, wipe the service worker + all its caches
+// entirely and hard-reload, instead of trusting the SW to notice on its own.
+async function checkForRealAppUpdate() {
+  try {
+    const res = await fetch('./index.html?_cachebust=' + Date.now(), { cache: 'no-store' });
+    const text = await res.text();
+    const m = text.match(/name="app-version"\s+content="(\d+)"/);
+    const liveVersion = m && m[1];
+    const currentVersion = document.querySelector('meta[name="app-version"]').content;
+    if (liveVersion && liveVersion !== currentVersion) {
+      if ('serviceWorker' in navigator) {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(regs.map(r => r.unregister()));
+      }
+      if (window.caches) {
+        const keys = await caches.keys();
+        await Promise.all(keys.map(k => caches.delete(k)));
+      }
+      window.location.reload();
+    }
+  } catch (err) { /* offline or a network hiccup — just try again next check */ }
+}
+checkForRealAppUpdate();
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') checkForRealAppUpdate();
+});
+setInterval(checkForRealAppUpdate, 5 * 60 * 1000);
 
 // ═══════════════════════════════════════════════════════════
 // TRAIN NUMPAD POPUP
