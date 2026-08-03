@@ -3,7 +3,7 @@
 // still preferring fresh content whenever it's actually online. Bump
 // CACHE_VERSION when the APP_SHELL list below changes, to drop stale
 // entries from old versions.
-const CACHE_VERSION = 'v28';
+const CACHE_VERSION = 'v29';
 const CACHE_NAME = `trainhard-${CACHE_VERSION}`;
 
 // The bare minimum needed for the app to boot at all with no network.
