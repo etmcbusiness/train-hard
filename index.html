@@ -6401,7 +6401,8 @@ async function pullCloudState(userId) {
   try { localState = localRaw ? JSON.parse(localRaw) : null; } catch { localState = null; }
   const localLu = (localState && localState._lu) || 0;
   const cloudLu = (data.state && data.state._lu) || 0;
-  if (localState && localLu > cloudLu) {
+  const localHasRealData = !!(localState && Array.isArray(localState.history) && localState.history.length > 0);
+  if (localHasRealData && localLu > cloudLu) {
     state = { ...defaultState(), ...localState };
     await supabase.from('profiles').update({ state }).eq('id', userId);
     recordSyncSuccess();
@@ -6560,10 +6561,17 @@ document.getElementById('avatar-username-edit-btn').addEventListener('click', as
         return;
       }
     }
-    const { error } = await supabase.from('profiles').update({ username: next }).eq('id', cloudSession.user.id);
+    const { error, data } = await supabase.from('profiles').update({ username: next }).eq('id', cloudSession.user.id).select();
     if (error) {
       console.error('username update failed:', error);
       showAcctError('avatar-username-error', error.code === '23505' ? 'That username is already taken.' : error.message);
+      return;
+    }
+    // See handleFriendshipAction for why this check exists: RLS can silently
+    // filter an UPDATE to 0 rows without ever setting `error`.
+    if (!data || data.length === 0) {
+      console.error('username update: 0 rows affected (RLS likely blocked this write)', { userId: cloudSession.user.id });
+      showAcctError('avatar-username-error', "That didn't go through — you may not have permission (check Supabase RLS policies) or your session may have expired. Try signing out and back in.");
       return;
     }
     document.getElementById('acct-username-display').textContent = next;
@@ -6823,19 +6831,29 @@ async function handleFriendshipAction(id, action, username, btn) {
   if (btn) btn.disabled = true; // block a second tap while the request is in flight
   showAcctError('friend-add-error', '');
   try {
-    let error;
+    let error, data;
     if (action === 'accept') {
-      ({ error } = await supabase.from('friendships').update({ status: 'accepted' }).eq('id', id));
+      ({ error, data } = await supabase.from('friendships').update({ status: 'accepted' }).eq('id', id).select());
     } else if (action === 'remove') {
       const ok = await customConfirm(`Remove ${username || 'this friend'}? You'll need to send a new request to become friends again.`, 'Remove', 'Cancel');
       if (!ok) { if (btn) btn.disabled = false; return; }
-      ({ error } = await supabase.from('friendships').delete().eq('id', id));
+      ({ error, data } = await supabase.from('friendships').delete().eq('id', id).select());
     } else if (action === 'decline' || action === 'cancel') {
-      ({ error } = await supabase.from('friendships').delete().eq('id', id));
+      ({ error, data } = await supabase.from('friendships').delete().eq('id', id).select());
     }
     if (error) {
       console.error('handleFriendshipAction failed:', error);
       showAcctError('friend-add-error', error.message || 'Something went wrong — try again.');
+      if (btn) btn.disabled = false;
+      return;
+    }
+    // Supabase/PostgREST does NOT set `error` when Row Level Security silently
+    // filters out the target row (e.g. a stale RLS policy that doesn't grant
+    // this action) — it just returns success with zero rows affected. Without
+    // .select() + this check, that looks identical to "nothing happened".
+    if (!data || data.length === 0) {
+      console.error('handleFriendshipAction: 0 rows affected (RLS likely blocked this write)', { id, action });
+      showAcctError('friend-add-error', "That didn't go through — you may not have permission (check Supabase RLS policies), or the request was already handled elsewhere.");
       if (btn) btn.disabled = false;
       return;
     }
