@@ -3,7 +3,7 @@
 // still preferring fresh content whenever it's actually online. Bump
 // CACHE_VERSION when the APP_SHELL list below changes, to drop stale
 // entries from old versions.
-const CACHE_VERSION = 'v31';
+const CACHE_VERSION = 'v32';
 const CACHE_NAME = `trainhard-${CACHE_VERSION}`;
 
 // The bare minimum needed for the app to boot at all with no network.
@@ -63,14 +63,12 @@ self.addEventListener('notificationclick', (e) => {
 // response forever, regardless of any cache:'no-store' set on the fetch()
 // call itself — a service worker intercepts the request before that option
 // is ever consulted. Live user/account data must always hit the network.
-const SUPABASE_HOST = 'wuboizuqyucvioexgkwh.supabase.co';
-
 self.addEventListener('fetch', (e) => {
   const req = e.request;
   if (req.method !== 'GET') return;
 
   const url = new URL(req.url);
-  if (url.hostname === SUPABASE_HOST || url.hostname.endsWith('.supabase.co')) return;
+  if (url.hostname.endsWith('.supabase.co')) return;
 
   const isNavigation = req.mode === 'navigate';
   const isCoreScript = url.origin === self.location.origin && /\.(html|js)$/.test(url.pathname);

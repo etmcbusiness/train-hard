@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#1D2A5E" />
-  <meta name="app-version" content="76" />
+  <meta name="app-version" content="77" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -5922,16 +5922,13 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.110.8';
 // ═══════════════════════════════════════════════════════════
 const SUPABASE_URL = 'https://wuboizuqyucvioexgkwh.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_r5VhU8EDB5N8F0rV8SpGMQ_Gms-6tkT';
-// Force every Supabase API call (reads included) to bypass the browser's
-// HTTP cache — supabase-js's default fetch() doesn't set this, and iOS
-// WKWebView (the engine behind this installed home-screen PWA) is known to
-// cache fetch() GETs more aggressively than desktop browsers. This produced
-// a genuinely reproduced bug: an identical friendships query run twice
-// within milliseconds of each other returned two different row counts for
-// the same signed-in user, with the correct answer only showing up on the
-// second call — classic stale-cache-serving-a-GET symptom, not a
-// permissions or query-logic problem (auth.uid() was independently
-// confirmed correct via debug_whoami() on both calls).
+// Force every Supabase API call to bypass the browser's ordinary HTTP
+// cache — belt-and-suspenders alongside sw.js explicitly passing all
+// *.supabase.co requests straight through (the service worker's own
+// cache-first fallback for "everything else" was the actual cause of a
+// nasty bug where friend-request reads went stale/invisible: it treated
+// Supabase SELECT calls, being plain GETs to a different origin, the same
+// as a static asset, and served the same cached response forever).
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
   global: { fetch: (url, options) => fetch(url, { ...options, cache: 'no-store' }) }
 });
@@ -7049,10 +7046,12 @@ async function handleFriendshipAction(friendId, action, username, btn) {
       // remove / decline / cancel are all just "delete whatever row exists
       // between us." Direction can genuinely be either way (a "remove" on an
       // accepted friend doesn't know who originally sent it), so issue both
-      // — deleting a row that doesn't exist in a given direction is a no-op,
-      // not an error, so it's safe to just always attempt both.
-      const r1 = await supabase.from('friendships').delete().eq('requester_id', user.id).eq('addressee_id', friendId);
-      const r2 = await supabase.from('friendships').delete().eq('requester_id', friendId).eq('addressee_id', user.id);
+      // in parallel — deleting a row that doesn't exist in a given direction
+      // is a no-op, not an error, so it's safe to always attempt both.
+      const [r1, r2] = await Promise.all([
+        supabase.from('friendships').delete().eq('requester_id', user.id).eq('addressee_id', friendId),
+        supabase.from('friendships').delete().eq('requester_id', friendId).eq('addressee_id', user.id)
+      ]);
       error = r1.error || r2.error;
     }
     if (error) {
