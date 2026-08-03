@@ -3,7 +3,7 @@
 // still preferring fresh content whenever it's actually online. Bump
 // CACHE_VERSION when the APP_SHELL list below changes, to drop stale
 // entries from old versions.
-const CACHE_VERSION = 'v11';
+const CACHE_VERSION = 'v12';
 const CACHE_NAME = `trainhard-${CACHE_VERSION}`;
 
 // The bare minimum needed for the app to boot at all with no network.
@@ -20,7 +20,9 @@ const APP_SHELL = [
   './Aura/toon-outline-code.js',
   './Aura/toon-outline-apply.js',
   './manifest.json',
-  './assets/icons/icon.svg',
+  './assets/icons/icon-192.png',
+  './assets/icons/icon-512.png',
+  './assets/icons/apple-touch-icon.png',
 ];
 
 self.addEventListener('install', (e) => {
