@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#1D2A5E" />
-  <meta name="app-version" content="71" />
+  <meta name="app-version" content="72" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -6842,6 +6842,16 @@ async function refreshFriends() {
     .select('id, requester_id, addressee_id, status, requester_username, addressee_username, updated_at')
     .or(`requester_id.eq.${uid},addressee_id.eq.${uid}`);
   if (error) { console.error(error); return; }
+  // Temporary: a duplicate-key error on insert proved a row exists server
+  // side while this same query sees 0 rows for it — meaning the DATABASE's
+  // own view of auth.uid() (evaluated inside the RLS policy) may disagree
+  // with what getUser() told the client. debug_whoami() runs server-side
+  // under RLS and reports exactly what the DB believes auth.uid() is, so
+  // comparing it to `uid` here proves or rules out a token/session mismatch
+  // at the PostgREST layer specifically (separate from anything client JS
+  // can see).
+  const { data: whoami } = await supabase.rpc('debug_whoami');
+  window.__lastFriendsDebug = { uid, whoami, rows };
 
   const incoming = rows.filter(r => r.status === 'pending' && r.addressee_id === uid);
   const outgoing = rows.filter(r => r.status === 'pending' && r.requester_id === uid);
@@ -6857,7 +6867,7 @@ async function refreshFriends() {
   // around), to confirm whether the render loop is even producing rows —
   // the data layer was already independently verified correct.
   reqLabel.style.display = 'block';
-  reqLabel.textContent = `Friend Requests [debug totalRows=${rows.length} in=${incoming.length} out=${outgoing.length} acc=${accepted.length}]`;
+  reqLabel.textContent = `Friend Requests [debug rows=${rows.length} in=${incoming.length} out=${outgoing.length} acc=${accepted.length} uid=${uid.slice(0,8)} whoami=${whoami && whoami[0] ? whoami[0].uid.slice(0,8) : 'NONE'}]`;
 
   for (const r of incoming) {
     const friendId = r.requester_id === uid ? r.addressee_id : r.requester_id;
