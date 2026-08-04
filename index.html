@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#1D2A5E" />
-  <meta name="app-version" content="77" />
+  <meta name="app-version" content="84" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -4059,6 +4059,8 @@
     }
     .friend-row-name { font-size: 14px; font-weight: 700; color: rgb(var(--c-text)); }
     .friend-row-name.clickable { cursor: pointer; touch-action: manipulation; }
+    .friend-row-clickable { cursor: pointer; touch-action: manipulation; }
+    .friend-row-clickable:active { background: rgba(var(--c-panel1),0.5); }
     .friend-row-selectable { cursor: pointer; touch-action: manipulation; }
     .friend-row-selectable.selected { border-color: rgb(var(--c-accent)); background: rgba(var(--c-accent),0.14); }
     .friend-row-check {
@@ -4106,12 +4108,30 @@
     .friend-level-dot { width: 54px; height: 54px; border-radius: 50%; margin-bottom: 14px; }
     .friend-level-num { font-size: 22px; font-weight: 800; }
     .friend-level-badge { font-size: 13px; color: rgb(var(--c-text3)); margin-top: 4px; letter-spacing: 0.3px; }
+    .friend-detail-stats { display: flex; gap: 10px; margin-bottom: 18px; }
+    .friend-detail-stat-box {
+      flex: 1; text-align: center; padding: 10px 6px; border-radius: 10px;
+      background: rgba(var(--c-text), 0.05);
+    }
+    .friend-detail-stat-num { font-size: 17px; font-weight: 800; color: rgb(var(--c-text)); }
+    .friend-detail-stat-label { font-size: 10.5px; color: rgb(var(--c-text4)); margin-top: 2px; }
+    .friend-detail-section-title { font-size: 12px; font-weight: 700; color: rgb(var(--c-text4)); text-transform: uppercase; letter-spacing: 0.4px; margin: 4px 0 8px; }
+    .friend-detail-challenge-row {
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+      padding: 10px 12px; border-radius: 10px; background: rgba(var(--c-text), 0.05); margin-bottom: 8px; cursor: pointer;
+    }
+    .friend-detail-challenge-row:active { background: rgba(var(--c-text), 0.09); }
+    .friend-detail-challenge-title { font-size: 13px; font-weight: 700; color: rgb(var(--c-text)); }
+    .friend-detail-challenge-sub { font-size: 11px; color: rgb(var(--c-text4)); margin-top: 2px; }
+    .friend-detail-highlight-box { padding: 12px 14px; border-radius: 10px; background: rgba(var(--c-text), 0.05); margin-bottom: 14px; }
+    .friend-detail-highlight-name { font-size: 13px; font-weight: 700; color: rgb(var(--c-text)); }
+    .friend-detail-highlight-value { font-size: 12px; font-weight: 700; color: rgb(var(--c-accent-light)); margin-top: 3px; }
     .friend-row-level { display: flex; align-items: center; gap: 6px; margin-top: 3px; }
     .friend-row-level-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
     .friend-row-level-text { font-size: 11px; font-weight: 700; }
     .friend-row-edit-btn {
       background: rgba(var(--c-panel3),0.85); border: 1px solid rgba(var(--c-accent2),0.3);
-      border-radius: 8px; color: rgb(var(--c-text2)); font-size: 14px; width: 32px; height: 32px;
+      border-radius: 8px; color: rgb(var(--c-text2)); font-size: 20px; width: 40px; height: 40px;
       cursor: pointer; touch-action: manipulation; flex-shrink: 0;
       display: flex; align-items: center; justify-content: center;
     }
@@ -5048,6 +5068,7 @@
     <div id="challenge-participants-list"></div>
 
     <button id="challenge-cancel-btn" class="acct-signout-btn" style="display:none;margin-bottom:14px;">Cancel Challenge</button>
+    <button id="challenge-leave-btn" class="acct-signout-btn" style="display:none;margin-bottom:14px;">Leave Challenge</button>
     <div id="challenge-chat-log"></div>
     <div id="challenge-chat-input-row">
       <input id="challenge-chat-input" class="acct-input" type="text" placeholder="Message…" autocomplete="off" />
@@ -5936,6 +5957,7 @@ let cloudSession = null;      // current Supabase auth session, or null when sig
 let friendshipsChannel = null; // Realtime subscription for live friend request/accept updates
 let challengesChannel = null;  // Realtime subscription for live challenge invite/join updates
 let challengeMessagesChannel = null; // Realtime subscription for the currently-open challenge's chat
+let ownProfileChannel = null;  // Realtime subscription so a second signed-in device (e.g. a "live view") picks up workouts logged elsewhere without needing a reload
 let currentChallengeId = null; // challenge shown in #challenge-detail-modal, or null
 let challengeNewFriends = [];     // [{ id, username }, ...] chosen in the New Challenge modal
 let challengeNewExercise = null;  // { name, muscle } chosen in step 2 of the New Challenge modal
@@ -6292,6 +6314,10 @@ function growthLevelForPct(pct) {
   return 1;
 }
 const HAIR_COLORS  = { 1: '#1A1A1A', 2: '#F5C518', 3: '#E8305A', 4: '#3A8FD4', 5: '#C44BB0' };
+// Level 1's true hair color (#1A1A1A) is near-black, which reads fine as a
+// small dot but is illegible as text/labels against this app's dark panels.
+// This lighter stand-in is used anywhere HAIR_COLORS is applied to text.
+const HAIR_TEXT_COLORS = { ...HAIR_COLORS, 1: '#9A9A9A' };
 const STATIC_WHITE  = ['Boots','Shorts'];
 const HAIR_OPTIONS = {
   1: { hair: '#1A1A1A', static: '#9B5FC0' },
@@ -6434,12 +6460,26 @@ function queueCloudPush() {
 
 async function doCloudPush() {
   cloudSyncTimer = null;
-  const { error } = await supabase
+  const { error, data } = await supabase
     .from('profiles')
     .update({ state })
-    .eq('id', cloudSession.user.id);
-  if (!error) recordSyncSuccess();
-  setSyncStatus(error ? 'Sync failed — will retry on next change' : 'Synced just now');
+    .eq('id', cloudSession.user.id)
+    .select();
+  // RLS can silently filter an UPDATE to 0 rows without ever setting `error`
+  // (same failure mode as handleFriendshipAction/username updates below) —
+  // e.g. an expired/stale session makes auth.uid() no longer match this row.
+  // Without checking `data`, this looked like a successful sync ("Synced
+  // just now") while the workout never actually reached the cloud, so other
+  // signed-in devices never saw it.
+  const ok = !error && data && data.length > 0;
+  if (ok) {
+    recordSyncSuccess();
+  } else if (!error) {
+    console.error('cloud push: 0 rows affected (RLS likely blocked this write, or session expired)', { userId: cloudSession.user.id });
+  } else {
+    console.error('cloud push failed:', error);
+  }
+  setSyncStatus(ok ? 'Synced just now' : 'Sync failed — will retry on next change');
 }
 
 // Pushes right now instead of waiting out the debounce — used after
@@ -6662,6 +6702,7 @@ document.getElementById('acct-login-btn').addEventListener('click', async () => 
   await pullCloudState(data.session.user.id);
   subscribeFriendshipUpdates();
   subscribeChallengeUpdates();
+  subscribeOwnProfileUpdates(data.session.user.id);
   await refreshAccountView();
 });
 
@@ -6697,6 +6738,7 @@ document.getElementById('acct-signup-btn').addEventListener('click', async () =>
   await pullCloudState(data.session.user.id);
   subscribeFriendshipUpdates();
   subscribeChallengeUpdates();
+  subscribeOwnProfileUpdates(data.session.user.id);
   await refreshAccountView();
 });
 
@@ -6789,6 +6831,7 @@ document.getElementById('signout-confirm-btn').addEventListener('click', async (
   cloudSession = null;
   unsubscribeFriendshipUpdates();
   unsubscribeChallengeUpdates();
+  unsubscribeOwnProfileUpdates();
   if (challengeMessagesChannel) { supabase.removeChannel(challengeMessagesChannel); challengeMessagesChannel = null; }
   document.getElementById('challenge-detail-modal').classList.remove('open');
   currentChallengeId = null;
@@ -6811,6 +6854,7 @@ supabase.auth.getSession().then(async ({ data: { session } }) => {
   pullCloudState(session.user.id);
   subscribeFriendshipUpdates();
   subscribeChallengeUpdates();
+  subscribeOwnProfileUpdates(session.user.id);
   await refreshAccountView();
 });
 
@@ -6836,6 +6880,28 @@ function unsubscribeFriendshipUpdates() {
   if (friendshipsChannel) {
     supabase.removeChannel(friendshipsChannel);
     friendshipsChannel = null;
+  }
+}
+
+// Without this, a second signed-in device (e.g. a "live view" left open on a
+// phone) only ever sees a fresh workout logged on another device after its
+// own reload/re-login, since pullCloudState() otherwise only runs at sign-in
+// and on page load. Subscribing to updates on our own profiles row lets it
+// pull the moment the other device's debounced push lands.
+function subscribeOwnProfileUpdates(userId) {
+  if (ownProfileChannel) return;
+  ownProfileChannel = supabase
+    .channel('own-profile-changes')
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `id=eq.${userId}` }, () => {
+      pullCloudState(userId);
+    })
+    .subscribe();
+}
+
+function unsubscribeOwnProfileUpdates() {
+  if (ownProfileChannel) {
+    supabase.removeChannel(ownProfileChannel);
+    ownProfileChannel = null;
   }
 }
 
@@ -6919,16 +6985,18 @@ async function refreshFriends() {
     const lv = computeFriendHairLevel(statesById[friendId] || {});
     const lvColor = HAIR_COLORS[lv];
     const row = document.createElement('div');
-    row.className = 'friend-row';
+    row.className = 'friend-row friend-row-clickable';
+    row.dataset.friendId = friendId;
+    row.dataset.friendUsername = escapeHtml(username);
     row.innerHTML = `
       <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;">
         <div class="friend-row-avatar-slot"></div>
         <div style="min-width:0;">
-          <div class="friend-row-name clickable" data-friend-id="${friendId}" data-friend-username="${escapeHtml(username)}">${displayName}</div>
+          <div class="friend-row-name">${displayName}</div>
           <div class="friend-row-sub">${friendsSinceLabel(r.updated_at)}</div>
           <div class="friend-row-level">
             <div class="friend-row-level-dot" style="background:${lvColor};"></div>
-            <div class="friend-row-level-text" style="color:${lvColor};">Level ${lv}</div>
+            <div class="friend-row-level-text" style="color:${HAIR_TEXT_COLORS[lv]};">Level ${lv}</div>
           </div>
         </div>
       </div>
@@ -6949,10 +7017,16 @@ async function refreshFriends() {
     });
   });
   friendsList.querySelectorAll('.friend-row-edit-btn').forEach(btn => {
-    btn.addEventListener('click', () => openFriendEditMenu(btn.dataset.id, btn.dataset.friendId, btn.dataset.username, btn.dataset.nickname));
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openFriendEditMenu(btn.dataset.id, btn.dataset.friendId, btn.dataset.username, btn.dataset.nickname);
+    });
   });
-  friendsList.querySelectorAll('.friend-row-name.clickable').forEach(el => {
-    el.addEventListener('click', () => openFriendDetail(el.dataset.friendId, el.dataset.friendUsername));
+  friendsList.querySelectorAll('.friend-row-clickable').forEach(row => {
+    row.addEventListener('click', (e) => {
+      if (e.target.closest('.friend-row-edit-btn')) return;
+      openFriendDetail(row.dataset.friendId, row.dataset.friendUsername);
+    });
   });
 }
 
@@ -7165,6 +7239,77 @@ function computeFriendHairLevel(friendState) {
 
 const HAIR_LEVEL_BADGES = { 1: 'Base Form', 2: 'Super Saiyan', 3: 'Super Saiyan God', 4: 'Super Saiyan Blue', 5: 'Ultra Ego' };
 
+// Finds the exercise with the biggest this-week E1RM gain over its
+// pre-this-week best, for an arbitrary friend state (mirrors the E1RM logic
+// in computeChallengeProgress, but compares against the calendar week
+// instead of a challenge start date).
+function computeFriendWeeklyImprovement(friendState) {
+  const monday = getMondayStr();
+  const byExercise = {};
+  for (const w of (friendState.history || [])) {
+    if (!w.date || !w.exercises) continue;
+    const thisWeek = isThisWeek(w.date, monday);
+    for (const ex of w.exercises) {
+      if (!ex.sets || !ex.sets.length) continue;
+      let bestSet = 0;
+      for (const s of ex.sets) {
+        const weight = parseFloat(s.weight) || 0;
+        const reps = parseInt(s.reps) || 0;
+        if (weight <= 0 || reps <= 0) continue;
+        bestSet = Math.max(bestSet, estimate1RM(weight, reps));
+      }
+      if (bestSet <= 0) continue;
+      if (!byExercise[ex.name]) byExercise[ex.name] = { before: 0, thisWeek: 0 };
+      const entry = byExercise[ex.name];
+      if (thisWeek) entry.thisWeek = Math.max(entry.thisWeek, bestSet);
+      else entry.before = Math.max(entry.before, bestSet);
+    }
+  }
+  let best = null;
+  for (const [name, v] of Object.entries(byExercise)) {
+    if (!v.thisWeek || !v.before) continue;
+    const pct = ((v.thisWeek - v.before) / v.before) * 100;
+    if (pct <= 0) continue;
+    if (!best || pct > best.pct) best = { name, pct };
+  }
+  return best;
+}
+
+// Mirrors getWellnessWeeklyDuration, but against an arbitrary friend state
+// instead of the global `state` (a friend's live/in-progress session isn't
+// visible to us, so there's no getCardioLiveSessionDuration equivalent here).
+function getFriendWeeklyCardioSecs(friendState) {
+  const monday = getMondayStr();
+  let secs = 0;
+  for (const w of (friendState.history || [])) {
+    if (!w.date || !isThisWeek(w.date, monday)) continue;
+    for (const ex of w.exercises) {
+      if (ex.muscle !== 'Cardio') continue;
+      for (const s of ex.sets) secs += (s.duration || 0);
+    }
+  }
+  return secs;
+}
+
+// Mirrors getMuscleLastTrainedInfo's date-only-to-hours approximation
+// (no time-of-day is stored on a history entry, so "hours ago" is measured
+// from midnight of the workout's date to now).
+function fmtFriendLastWorkout(friendState) {
+  let latestMs = null;
+  for (const w of (friendState.history || [])) {
+    if (!w.date) continue;
+    const d = _parseDateStr(w.date);
+    if (!d) continue;
+    if (latestMs === null || d.getTime() > latestMs) latestMs = d.getTime();
+  }
+  if (latestMs === null) return 'Never';
+  const hoursAgo = Math.floor((Date.now() - latestMs) / 3600000);
+  if (hoursAgo < 24) return hoursAgo <= 0 ? 'Today' : `${hoursAgo}h ago`;
+  const daysAgo = Math.floor(hoursAgo / 24);
+  if (daysAgo < 14) return `${daysAgo}d ago`;
+  return `${Math.floor(daysAgo / 7)}w ago`;
+}
+
 async function openFriendDetail(friendId, username) {
   document.getElementById('friend-detail-name').textContent = username;
   setLbAvatar(document.getElementById('friend-detail-avatar'), null, username);
@@ -7185,12 +7330,88 @@ async function openFriendDetail(friendId, username) {
   const friendState = profile.state || {};
   const lv = computeFriendHairLevel(friendState);
   const color = HAIR_COLORS[lv];
+  const lastWorkoutLabel = fmtFriendLastWorkout(friendState);
+  const workoutCount = (friendState.history || []).length;
+  const weeklyImprovement = computeFriendWeeklyImprovement(friendState);
+  const weeklyCardioMin = Math.round(getFriendWeeklyCardioSecs(friendState) / 60);
+
+  // Shared challenges: challenges I'm a participant in where this friend is
+  // also a participant. Scoped through my own challenge_participants rows
+  // first so the RLS check on the friend's rows (which only allows reading
+  // participants of a challenge I'm part of) is satisfied.
+  const { data: { user } } = await supabase.auth.getUser();
+  let sharedChallenges = [];
+  if (user) {
+    const { data: myParts } = await supabase.from('challenge_participants').select('challenge_id').eq('user_id', user.id);
+    const myChallengeIds = (myParts || []).map(p => p.challenge_id);
+    if (myChallengeIds.length) {
+      const { data: friendParts } = await supabase.from('challenge_participants').select('challenge_id')
+        .eq('user_id', friendId).in('challenge_id', myChallengeIds);
+      const sharedIds = [...new Set((friendParts || []).map(p => p.challenge_id))];
+      if (sharedIds.length) {
+        const { data: chs } = await supabase.from('challenges').select('*, challenge_participants(*)').in('id', sharedIds);
+        sharedChallenges = chs || [];
+      }
+    }
+  }
+
+  const challengesHtml = sharedChallenges.length ? sharedChallenges.map(c => {
+    const end = new Date(c.start_date + 'T00:00:00');
+    end.setDate(end.getDate() + c.duration_weeks * 7);
+    let badge;
+    if (new Date() > end) badge = 'Completed';
+    else if (c.challenge_participants.some(p => p.status !== 'joined')) badge = 'Pending';
+    else badge = 'Active';
+    return `
+      <div class="friend-detail-challenge-row" data-challenge-id="${c.id}">
+        <div>
+          <div class="friend-detail-challenge-title">${escapeHtml(c.title)}</div>
+          <div class="friend-detail-challenge-sub">${c.duration_weeks} weeks · started ${c.start_date}</div>
+        </div>
+        <div class="challenge-row-badge">${badge}</div>
+      </div>`;
+  }).join('') : '<div class="friend-empty">No shared challenges yet.</div>';
+
+  const improvementHtml = weeklyImprovement
+    ? `<div class="friend-detail-highlight-box">
+        <div class="friend-detail-highlight-name">${escapeHtml(exerciseLabelWithCategory(weeklyImprovement.name, friendState.exerciseMeta))}</div>
+        <div class="friend-detail-highlight-value">${weeklyImprovement.pct.toFixed(0)}% Increase</div>
+      </div>`
+    : `<div class="friend-detail-highlight-box"><div class="friend-empty" style="padding:0;">No improvement logged this week yet.</div></div>`;
+
+  const cardioHtml = `<div class="friend-detail-highlight-box">
+      <div class="friend-detail-highlight-name">${weeklyCardioMin > 0 ? `${weeklyCardioMin} Minutes of Cardio` : 'No cardio logged this week yet'}</div>
+    </div>`;
+
   body.innerHTML = `
     <div class="friend-level-display">
       <div class="friend-level-dot" style="background:${color};box-shadow:0 0 16px ${color};"></div>
-      <div class="friend-level-num" style="color:${color};">Level ${lv}</div>
+      <div class="friend-level-num" style="color:${HAIR_TEXT_COLORS[lv]};">Level ${lv}</div>
       <div class="friend-level-badge">${HAIR_LEVEL_BADGES[lv]}</div>
-    </div>`;
+    </div>
+    <div class="friend-detail-stats">
+      <div class="friend-detail-stat-box">
+        <div class="friend-detail-stat-num">${lastWorkoutLabel}</div>
+        <div class="friend-detail-stat-label">Last Workout</div>
+      </div>
+      <div class="friend-detail-stat-box">
+        <div class="friend-detail-stat-num">${workoutCount}</div>
+        <div class="friend-detail-stat-label">Total Workouts</div>
+      </div>
+    </div>
+    <div class="friend-detail-section-title">Most Improvement</div>
+    ${improvementHtml}
+    <div class="friend-detail-section-title">Cardio</div>
+    ${cardioHtml}
+    <div class="friend-detail-section-title">Challenges Together</div>
+    ${challengesHtml}`;
+
+  body.querySelectorAll('.friend-detail-challenge-row').forEach(row => {
+    row.addEventListener('click', () => {
+      document.getElementById('friend-detail-modal').classList.remove('open');
+      openChallengeDetail(row.dataset.challengeId);
+    });
+  });
 }
 
 document.getElementById('friend-detail-close').addEventListener('click', () => {
@@ -7608,6 +7829,7 @@ async function renderChallengeDetail() {
   const chatLog = document.getElementById('challenge-chat-log');
   const chatRow = document.getElementById('challenge-chat-input-row');
   const cancelBtn = document.getElementById('challenge-cancel-btn');
+  const leaveBtn = document.getElementById('challenge-leave-btn');
 
   if (error || !c) {
     document.getElementById('challenge-detail-title').textContent = 'Challenge';
@@ -7617,13 +7839,17 @@ async function renderChallengeDetail() {
     chatLog.style.display = 'none';
     chatRow.style.display = 'none';
     cancelBtn.style.display = 'none';
+    leaveBtn.style.display = 'none';
     document.getElementById('challenge-leader-card').style.display = 'none';
     partList.style.display = 'block';
     partList.innerHTML = '<div class="friend-empty">Could not load this challenge.</div>';
     return;
   }
 
-  cancelBtn.style.display = (c.creator_id === uid) ? 'block' : 'none';
+  const isCreatorForButtons = c.creator_id === uid;
+  cancelBtn.style.display = isCreatorForButtons ? 'block' : 'none';
+  const myParticipant = c.challenge_participants.find(p => p.user_id === uid);
+  leaveBtn.style.display = (!isCreatorForButtons && myParticipant && myParticipant.status === 'joined') ? 'block' : 'none';
 
   document.getElementById('challenge-detail-title').textContent = c.title;
   const typeEl = document.getElementById('challenge-detail-type');
@@ -7910,6 +8136,20 @@ document.getElementById('challenge-cancel-btn').addEventListener('click', async 
   refreshChallenges();
 });
 
+document.getElementById('challenge-leave-btn').addEventListener('click', async () => {
+  const ok = await customConfirm('Leave this challenge? You can be re-invited later, but your progress in it will be lost.', 'Leave Challenge', 'Go Back');
+  if (!ok) return;
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
+  const { error } = await supabase.from('challenge_participants').delete()
+    .eq('challenge_id', currentChallengeId).eq('user_id', user.id);
+  if (error) { console.error('Leave challenge failed:', error); return; }
+  document.getElementById('challenge-detail-modal').classList.remove('open');
+  if (challengeMessagesChannel) { supabase.removeChannel(challengeMessagesChannel); challengeMessagesChannel = null; }
+  currentChallengeId = null;
+  refreshChallenges();
+});
+
 async function renderChallengeChat() {
   const { data: msgs } = await supabase
     .from('challenge_messages')
@@ -7973,7 +8213,12 @@ recalcAllPRs();
 recalcAllRepPRs();
 recalcAllExposurePRs();
 applyPROverrides();
-save();
+// Not save(): this just re-persists locally-recomputed derived values
+// (PRs) on every page load, not a real edit. save() stamps state._lu to
+// "now", which would make pullCloudState() below think this device's
+// stale copy is newer than whatever another device already pushed to the
+// cloud — and push this stale copy up, overwriting the cloud with it.
+localStorage.setItem('trainhard_v1', JSON.stringify(state));
 
 // ═══════════════════════════════════════════════════════════
 // 3D

@@ -698,3 +698,10 @@ drop trigger if exists on_profile_state_backup on public.profiles;
 create trigger on_profile_state_backup
   before update on public.profiles
   for each row execute function public.backup_profile_state();
+
+-- Phase 8: let a second signed-in device (e.g. a "live view" left open on
+-- another phone) pick up a freshly-logged workout without a reload. The
+-- client subscribes to postgres_changes on its own profiles row; without
+-- this the table was never added to the realtime publication, so those
+-- UPDATE events silently never arrived.
+alter publication supabase_realtime add table public.profiles;
