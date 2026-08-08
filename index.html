@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#1D2A5E" />
-  <meta name="app-version" content="86" />
+  <meta name="app-version" content="87" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -6567,6 +6567,14 @@ function getMondayStr() {
 // ═══════════════════════════════════════════════════════════
 const UPDATE_LOG = [
   {
+    version: '87',
+    date: 'Aug 8, 2026',
+    title: 'Sync Reliability Fix',
+    bullets: [
+      'Fixed a bug where a finished workout could sometimes silently disappear from both the app and the cloud, especially if you logged sets in quick succession. Two sync operations could occasionally race each other and one would overwrite the other\'s data before it saved.',
+    ]
+  },
+  {
     version: '86',
     date: 'Aug 8, 2026',
     title: 'Default Exercises, Stretching, and Update History',
@@ -7152,7 +7160,26 @@ function renderLastSyncedTime() {
 // Pull the cloud profile down and make it the local state. Called right
 // after sign-in — the cloud copy (if any) wins over whatever is in
 // localStorage on this device.
-async function pullCloudState(userId) {
+// pullCloudState() can legitimately be re-entered by its own realtime echo
+// (a push from this device fires the own-profile-changes subscription, which
+// calls pullCloudState again) — see subscribeOwnProfileUpdates(). With no
+// lock, two overlapping calls could race: each fetches its own snapshot of
+// the cloud row and later does a full `state = {...}` replacement, so
+// whichever call's await chain happens to resolve last wins and silently
+// clobbers the other's result (including localStorage) even if it was
+// looking at staler data. Serializing calls through a single in-flight
+// promise closes that window — a call that arrives while one is already
+// running just waits for it and reuses its outcome instead of racing it.
+let pullCloudStateInFlight = null;
+function pullCloudState(userId) {
+  if (pullCloudStateInFlight) return pullCloudStateInFlight;
+  pullCloudStateInFlight = pullCloudStateImpl(userId).finally(() => {
+    pullCloudStateInFlight = null;
+  });
+  return pullCloudStateInFlight;
+}
+
+async function pullCloudStateImpl(userId) {
   const { data, error } = await supabase
     .from('profiles')
     .select('username, state')
@@ -7179,11 +7206,17 @@ async function pullCloudState(userId) {
     // pullCloudState swaps `state` in directly, bypassing loadState()'s
     // migrations entirely, so it has to run them itself too.
     applyDefaultExerciseMigrations(state);
+    // Suppress recalcStats()'s save() from queuing a redundant follow-up
+    // push below: the update() two lines up already put this exact state on
+    // the cloud, so a second queued push would just re-trigger the realtime
+    // subscription for no reason (see the matching guard in the branch below).
+    suppressNextCloudPush = true;
     await supabase.from('profiles').update({ state }).eq('id', userId);
     recordSyncSuccess();
     recalcStats();
     renderExercises();
     renderHistory();
+    suppressNextCloudPush = false;
     return;
   }
   suppressNextCloudPush = true;
@@ -8854,7 +8887,9 @@ recalcAllPRs();
 recalcAllRepPRs();
 recalcAllExposurePRs();
 applyPROverrides();
-checkForUpdatePopup();
+// checkForUpdatePopup() is called later, once the loading screen has
+// actually dismissed (see dismissLoadingScreen callers below) — calling it
+// here fired it while the loading screen was still covering the app.
 // Not save(): this just re-persists locally-recomputed derived values
 // (PRs) on every page load, not a real edit. save() stamps state._lu to
 // "now", which would make pullCloudState() below think this device's
@@ -9317,6 +9352,11 @@ function loadModel(idx, onReady) {
         if (profileNameEl1) profileNameEl1.textContent = state.userName;
         renderFocusStats();
         checkAndRestoreSession();
+        // Match dismissLoadingScreen's own fade-out timing (see its
+        // setTimeout(...,1000)) so the popup never appears until the
+        // loading screen has actually fully faded away, not while it's
+        // still crossfading into the app underneath.
+        setTimeout(checkForUpdatePopup, 1000);
       });
     });
 }
@@ -9353,6 +9393,11 @@ loadModel(0, (entry) => {
     if (profileNameEl2) profileNameEl2.textContent = state.userName;
     renderFocusStats();
     checkAndRestoreSession();
+    // Match dismissLoadingScreen's own fade-out timing (see its
+    // setTimeout(...,1000)) so the popup never appears until the loading
+    // screen has actually fully faded away, not while it's still
+    // crossfading into the app underneath.
+    setTimeout(checkForUpdatePopup, 1000);
   });
 });
 
