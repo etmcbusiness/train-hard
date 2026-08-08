@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#1D2A5E" />
-  <meta name="app-version" content="87" />
+  <meta name="app-version" content="88" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -6566,6 +6566,15 @@ function getMondayStr() {
 // project's CLAUDE.md for the required pre-push changelog-confirmation step.
 // ═══════════════════════════════════════════════════════════
 const UPDATE_LOG = [
+  {
+    version: '88',
+    date: 'Aug 8, 2026',
+    title: 'Personal Record Fixes',
+    bullets: [
+      'Fixed a bug where personal records at 0lbs (bodyweight exercises tracked by reps only) weren\'t showing up in your per-rep PR table.',
+      'Hitting a rep count now correctly counts as a PR for every lower rep count too — e.g. if you hit 50lbs for 5 reps, that now also counts as your PR for 3 and 4 reps (not just the exact 5-rep bucket), matching how strength actually works.',
+    ]
+  },
   {
     version: '87',
     date: 'Aug 8, 2026',
@@ -14231,10 +14240,17 @@ function updateRepPR(exName, weight, reps, date) {
   if (!state.repPRs) state.repPRs = {};
   if (!state.repPRs[exName]) state.repPRs[exName] = {};
   const pr = state.repPRs[exName];
-  if (reps >= 1 && reps <= 12) {
-    const cur = pr[reps];
-    const curW = cur && typeof cur === 'object' ? cur.weight : (cur || 0);
-    if (weight > 0 && weight > curW) pr[reps] = { weight, date: date || '' };
+  // Hitting N reps at a given weight also proves every lower rep count could be
+  // done at that weight (or better), so ratchet the weight down across 1..N —
+  // e.g. 50lb x 5 becomes the PR for 3RM/4RM/5RM too, not just the exact bucket.
+  // weight is allowed to be 0 so bodyweight-only (reps-for-time) exercises still PR.
+  if (reps >= 1) {
+    const upper = Math.min(reps, 12);
+    for (let r = 1; r <= upper; r++) {
+      const cur = pr[r];
+      const curW = cur && typeof cur === 'object' ? cur.weight : (cur || 0);
+      if (!cur || weight > curW) pr[r] = { weight, date: date || '' };
+    }
   }
   if (reps >= 1) {
     if (!pr.max || reps > pr.max.reps || (reps === pr.max.reps && weight > pr.max.weight)) {
@@ -14440,8 +14456,8 @@ function renderFocusStats() {
       const d = entry && typeof entry === 'object' ? fmtPRDate(entry.date) : '—';
       rows += `<div class="focus-rep-row">
         <span class="focus-rep-label">${r}${r===1?'RM':'RM'}</span>
-        <span class="focus-rep-val">${w ? w + ' lbs' : '—'}</span>
-        <span class="focus-rep-date">${w ? d : '—'}</span>
+        <span class="focus-rep-val">${entry ? w + ' lbs' : '—'}</span>
+        <span class="focus-rep-date">${entry ? d : '—'}</span>
       </div>`;
     }
     const mx = pr.max;
