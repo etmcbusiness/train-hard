@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#1D2A5E" />
-  <meta name="app-version" content="88" />
+  <meta name="app-version" content="89" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -3384,6 +3384,15 @@
       text-align: center; color: rgb(var(--c-text4)); font-size: 14px; padding: 30px 10px; line-height: 1.6;
     }
 
+    /* ── Profile Menu: condensed layout so it fits without scrolling ── */
+    #profile-menu-overlay .profile-overlay-body { padding: 10px 16px 12px; }
+    #profile-menu-overlay .avatar-section-label { margin-bottom: 8px; }
+    #profile-menu-overlay .acct-signout-btn { padding: 10px; }
+    #profile-menu-overlay .acct-field { margin-bottom: 10px; }
+    #profile-menu-overlay #profile-identity-row { margin-top: 6px; margin-bottom: 4px; }
+    .profile-btn-row { display: flex; gap: 10px; }
+    .profile-btn-row .acct-signout-btn { flex: 1; margin-top: 0; min-width: 0; }
+
     /* ── Restore Default Exercises ── */
     #restore-defaults-actions { display: flex; gap: 10px; margin-top: 8px; flex-shrink: 0; }
     #restore-defaults-confirm-btn {
@@ -3442,10 +3451,19 @@
     }
 
     /* ── Update History ── */
-    .update-entry { margin-bottom: 22px; }
-    .update-entry:last-child { margin-bottom: 4px; }
-    .update-entry-date { font-size: 11px; color: rgb(var(--c-text4)); letter-spacing: 0.3px; margin-bottom: 2px; }
-    .update-entry-title { font-size: 15px; font-weight: 800; color: rgb(var(--c-text)); margin-bottom: 8px; }
+    .update-entry { margin-bottom: 10px; border-bottom: 1px solid rgba(var(--c-accent2),0.15); padding-bottom: 10px; }
+    .update-entry:last-child { margin-bottom: 4px; border-bottom: none; }
+    .update-entry-summary {
+      font-size: 12px; font-weight: 700; color: rgb(var(--c-text3)); letter-spacing: 0.3px;
+      cursor: pointer; list-style: none; padding: 4px 0;
+    }
+    .update-entry-summary::-webkit-details-marker { display: none; }
+    .update-entry-summary::before {
+      content: '▸'; display: inline-block; margin-right: 6px; font-size: 10px;
+      transition: transform 0.15s ease; color: rgb(var(--c-text4));
+    }
+    .update-entry[open] > .update-entry-summary::before { transform: rotate(90deg); }
+    .update-entry-title { font-size: 15px; font-weight: 800; color: rgb(var(--c-text)); margin: 8px 0 8px; }
     .update-entry-bullets { margin: 0; padding-left: 18px; }
     .update-entry-bullets li { font-size: 13px; color: rgb(var(--c-text2)); line-height: 1.5; margin-bottom: 5px; }
 
@@ -3515,7 +3533,7 @@
     }
     #weekly-overview-body {
       overflow-y: auto;
-      padding: 8px 10px;
+      padding: 10px 12px 14px;
     }
     #weekly-overview-close-btn {
       background: rgba(var(--c-panel3),0.7);
@@ -3535,7 +3553,7 @@
       color: rgb(var(--c-text4));
       text-transform: uppercase;
       letter-spacing: 1.5px;
-      padding: 6px 2px 3px;
+      padding: 16px 2px 7px;
     }
     .wo-group-header:first-child { padding-top: 2px; }
     .wo-placeholder {
@@ -3562,17 +3580,17 @@
     .wo-grid {
       display: grid;
       grid-template-columns: 1fr 1fr 1fr;
-      gap: 4px;
-      margin-bottom: 2px;
+      gap: 8px;
+      margin-bottom: 4px;
     }
     .wo-row {
       background: rgba(var(--c-panel1),0.8);
       border: 1px solid rgba(var(--c-accent2),0.15);
       border-radius: 8px;
-      padding: 6px 8px;
+      padding: 8px 9px;
       display: flex;
       flex-direction: column;
-      gap: 2px;
+      gap: 3px;
     }
     .wo-row-top {
       display: flex;
@@ -4154,7 +4172,24 @@
       border: 1px solid rgba(var(--c-accent2),0.3); background: rgba(var(--c-panel1),0.6);
       color: rgb(var(--c-text2)); font-size: 14px; font-weight: 600; cursor: pointer; touch-action: manipulation;
     }
-    .acct-sync-status { font-size: 11px; color: rgb(var(--c-text4)); text-align: center; margin-top: 10px; letter-spacing: 0.3px; }
+    #acct-sync-card {
+      margin-top: 12px; display: flex; flex-direction: column; gap: 6px;
+      background: rgba(var(--c-panel3),0.5); border: 1px solid rgba(var(--c-accent2),0.2);
+      border-radius: 12px; padding: 10px 14px;
+    }
+    #acct-sync-email-row {
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      font-size: 12px; font-weight: 600; color: rgb(var(--c-text2));
+    }
+    #acct-sync-email-icon { font-size: 11px; color: rgb(var(--c-text4)); }
+    #acct-sync-status-row {
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      font-size: 11px; color: rgb(var(--c-text4)); letter-spacing: 0.3px;
+    }
+    #acct-sync-dot { width: 7px; height: 7px; border-radius: 50%; background: #3cb558; flex-shrink: 0; }
+    #acct-sync-dot.syncing { background: #d9a53c; }
+    #acct-sync-dot.error { background: #e05a4a; }
+    #acct-last-synced { font-size: 10px; color: rgb(var(--c-text4)); text-align: center; letter-spacing: 0.3px; }
 
     .acct-section-label {
       font-size: 12px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase;
@@ -5781,24 +5816,34 @@
         <div class="acct-error" id="avatar-pfp-error"></div>
         <div class="acct-error" id="avatar-username-error"></div>
 
-        <div class="avatar-section-label" style="margin-top:22px;">Alerts</div>
+        <div class="avatar-section-label" style="margin-top:14px;">Alerts</div>
         <div id="avatar-notification-options">
           <button class="avatar-inspiration-btn" id="notifications-toggle-btn">Notifications: Off</button>
         </div>
-        <div id="notifications-debug" style="margin-top:8px; font-size:10px; color:rgb(var(--c-text4)); text-align:center; letter-spacing:0.3px;"></div>
+        <div id="notifications-debug" style="margin-top:6px; font-size:10px; color:rgb(var(--c-text4)); text-align:center; letter-spacing:0.3px;"></div>
 
-        <button id="acct-restore-backup-btn" class="acct-signout-btn" style="margin-top:22px;">Restore Backup</button>
-        <button id="acct-signout-btn" class="acct-signout-btn" style="margin-top:10px;">Sign Out</button>
-        <div class="acct-sync-status" id="acct-email-display"></div>
-        <div class="acct-sync-status" id="acct-sync-status"></div>
-        <div class="acct-sync-status" id="acct-last-synced"></div>
+        <div class="profile-btn-row" style="margin-top:14px;">
+          <button id="acct-restore-backup-btn" class="acct-signout-btn">Restore Backup</button>
+          <button id="acct-signout-btn" class="acct-signout-btn">Sign Out</button>
+        </div>
+        <div id="acct-sync-card">
+          <div id="acct-sync-email-row">
+            <span id="acct-sync-email-icon">✉</span>
+            <span id="acct-email-display"></span>
+          </div>
+          <div id="acct-sync-status-row">
+            <span id="acct-sync-dot"></span>
+            <span id="acct-sync-status"></span>
+          </div>
+          <div id="acct-last-synced"></div>
+        </div>
       </div>
 
-      <div class="avatar-section-label" style="margin-top:22px;">Exercises</div>
-      <button id="restore-defaults-btn" class="acct-signout-btn">Restore Default Exercises</button>
-
-      <div class="avatar-section-label" style="margin-top:22px;">About</div>
-      <button id="update-history-btn" class="acct-signout-btn">Update History</button>
+      <div class="avatar-section-label" style="margin-top:14px;">More</div>
+      <div class="profile-btn-row">
+        <button id="restore-defaults-btn" class="acct-signout-btn">Restore Default Exercises</button>
+        <button id="update-history-btn" class="acct-signout-btn">Update History</button>
+      </div>
     </div>
   </div>
   <button id="profile-menu-close-btn" class="profile-overlay-close-btn">Done</button>
@@ -5871,7 +5916,7 @@
 <div id="update-toast">
   <div id="update-toast-box">
     <div id="update-toast-title">New Update</div>
-    <div id="update-toast-sub">Something changed — see what's new.</div>
+    <div id="update-toast-sub">Train Harder with the newest updates!</div>
     <div id="update-toast-actions">
       <button id="update-toast-ignore">Ignore</button>
       <button id="update-toast-check">Check it Out</button>
@@ -6567,6 +6612,14 @@ function getMondayStr() {
 // ═══════════════════════════════════════════════════════════
 const UPDATE_LOG = [
   {
+    version: '89',
+    date: 'Aug 8, 2026',
+    title: 'Tweaks',
+    bullets: [
+      'Made some tweaks, nothing major!',
+    ]
+  },
+  {
     version: '88',
     date: 'Aug 8, 2026',
     title: 'Personal Record Fixes',
@@ -7147,6 +7200,11 @@ window.addEventListener('pagehide', () => {
 function setSyncStatus(text) {
   const el = document.getElementById('acct-sync-status');
   if (el) el.textContent = text;
+  const dot = document.getElementById('acct-sync-dot');
+  if (dot) {
+    dot.classList.toggle('error', /failed/i.test(text));
+    dot.classList.toggle('syncing', /syncing/i.test(text));
+  }
 }
 
 // Tracks the last confirmed successful sync (push or pull) so the account
@@ -15882,6 +15940,11 @@ function buildWeeklyOverview() {
     list.appendChild(grid);
   }
 
+  const wellnessHeader = document.createElement('div');
+  wellnessHeader.className = 'wo-group-header';
+  wellnessHeader.textContent = 'Wellness';
+  list.appendChild(wellnessHeader);
+
   for (const pair of WO_EXTRA_PAIRS) {
     const row = document.createElement('div');
     row.className = 'wo-extra-row';
@@ -16042,25 +16105,25 @@ function checkForUpdatePopup() {
   document.getElementById('update-toast').classList.add('open');
 }
 
-function renderUpdateHistory() {
+function renderUpdateHistory(openLatest) {
   const list = document.getElementById('update-history-list');
-  list.innerHTML = UPDATE_LOG.map(entry => `
-    <div class="update-entry">
-      <div class="update-entry-date">${entry.date}</div>
+  list.innerHTML = UPDATE_LOG.map((entry, i) => `
+    <details class="update-entry"${openLatest && i === 0 ? ' open' : ''}>
+      <summary class="update-entry-summary">Update: ${entry.date}</summary>
       <div class="update-entry-title">${entry.title}</div>
       <ul class="update-entry-bullets">${entry.bullets.map(b => `<li>${b}</li>`).join('')}</ul>
-    </div>
+    </details>
   `).join('');
 }
 
-function openUpdateHistory() {
-  renderUpdateHistory();
+function openUpdateHistory(openLatest) {
+  renderUpdateHistory(openLatest);
   document.getElementById('update-history-overlay').classList.add('open');
 }
 
 document.getElementById('update-history-btn').addEventListener('click', () => {
   playSound('commonButton');
-  openUpdateHistory();
+  openUpdateHistory(false);
 });
 
 document.getElementById('update-toast-ignore').addEventListener('click', () => {
@@ -16070,7 +16133,7 @@ document.getElementById('update-toast-ignore').addEventListener('click', () => {
 document.getElementById('update-toast-check').addEventListener('click', () => {
   playSound('commonButton');
   document.getElementById('update-toast').classList.remove('open');
-  openUpdateHistory();
+  openUpdateHistory(true);
 });
 // Click-out-to-dismiss: the toast's own backdrop wrapper (#update-toast)
 // covers the full screen but only the box inside it is visually opaque —
