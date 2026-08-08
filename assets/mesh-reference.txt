@@ -10,7 +10,7 @@ The INDEX_TO_PART map (index.html line ~3484) translates index → label.
 ────────────────────────────────────────────────────────────────
 INDEX   LABEL           TYPE        NOTES
 ────────────────────────────────────────────────────────────────
-0       Shorts          Static      White/emissive, no muscle tracking
+0       Glutes          Muscle      Tracks "Glutes" workout sets
 1       Chest           Muscle      Tracks "Chest" workout sets
 2       Hair            Dynamic     Color driven by overall hair level (see Hair Levels below)
 3       Shoulders       Muscle      Tracks "Shoulders" workout sets
@@ -75,8 +75,8 @@ HairStatic (index 6) blends: lerp(#9B5FC0, hairLevelColor, 0.5)
   At Hair Level 1 it stays solid #9B5FC0 (no blend).
 
 
-ALL 15 TRACKED MUSCLES (in MUSCLES array order)
+ALL 16 TRACKED MUSCLES (in MUSCLES array order)
 ────────────────────────────────────────────────
 Mid Back, Lats, Upper Back, Biceps, Triceps, Forearms,
 Quads, Hamstrings, Calves, Chest, Abs, Obliques,
-Shoulders, Neck, Traps
+Shoulders, Neck, Traps, Glutes

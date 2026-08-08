@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#1D2A5E" />
-  <meta name="app-version" content="84" />
+  <meta name="app-version" content="86" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -431,6 +431,11 @@
     .ex-item-name { font-size: 14px; color: rgb(var(--c-text)); }
     .ex-item-cat { font-size: 11px; color: rgb(var(--c-text3)); margin-top: 2px; }
     .ex-item-last { font-size: 11px; color: #3a7a5a; margin-top: 1px; }
+    /* Same green as .ex-item-last, reused inline (not a block) for the
+       last-worked portion of .picker-item-sub in the training Add Exercise
+       picker, so it matches the Exercises tab instead of the generic
+       muscle-name gray. */
+    .ex-item-last-inline { color: #3a7a5a; }
     .ex-edit-btn {
       background: rgba(var(--c-panel4),0.6);
       border: 1px solid rgba(var(--c-accent2),0.35);
@@ -1353,6 +1358,21 @@
     }
     .exposure-timer-btn.running-bg .exposure-timer-btn-time { color: #e06030; }
     .exposure-timer-btn.running-bg .exposure-timer-btn-label { color: #e06030; }
+    .exposure-timer-cell { display: flex; align-items: stretch; gap: 4px; width: 100%; }
+    .exposure-timer-cell .exposure-timer-btn { flex: 1; }
+    .exposure-manual-btn {
+      flex: 0 0 48px;
+      width: 48px;
+      height: 50px;
+      background: rgba(var(--c-panel1),0.95);
+      border: 1px solid rgba(var(--c-accent2),0.3);
+      border-radius: 12px;
+      color: rgb(var(--c-accent-light));
+      font-size: 14px;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+    .exposure-manual-btn:active { background: rgba(var(--c-accent),0.18); }
     @keyframes exposure-running-pulse {
       0%, 100% { box-shadow: 0 0 0 rgba(224,96,48,0); }
       50% { box-shadow: 0 0 10px rgba(224,96,48,0.35); }
@@ -1959,7 +1979,7 @@
     }
     #profile-btns-right.visible { display: flex; }
     #profile-btns.visible { display: flex; }
-    #profile-menu-btn, #weekly-overview-btn, #testing-btn, #testing-cardio-btn, #exit-testing-btn, #friends-btn, #challenges-btn, #eat-plenty-btn {
+    #profile-menu-btn, #weekly-overview-btn, #testing-btn, #testing-cardio-btn, #testing-update-popup-btn, #exit-testing-btn, #friends-btn, #challenges-btn, #eat-plenty-btn {
       background: rgba(var(--c-panel3),0.88);
       border: 1px solid rgba(var(--c-accent2),0.35);
       border-radius: 12px;
@@ -1978,6 +1998,16 @@
       display: flex;
       align-items: center;
       justify-content: center;
+    }
+    /* Longer label than the other profile buttons — let it wrap to 2 lines
+       instead of clipping or forcing every other button wider. */
+    #testing-update-popup-btn {
+      white-space: normal;
+      height: auto;
+      min-height: 36px;
+      line-height: 1.25;
+      text-align: center;
+      padding: 7px 10px;
     }
 
     /* ── Focus Exercise Picker ── */
@@ -3354,6 +3384,71 @@
       text-align: center; color: rgb(var(--c-text4)); font-size: 14px; padding: 30px 10px; line-height: 1.6;
     }
 
+    /* ── Restore Default Exercises ── */
+    #restore-defaults-actions { display: flex; gap: 10px; margin-top: 8px; flex-shrink: 0; }
+    #restore-defaults-confirm-btn {
+      background: rgba(var(--c-accent),0.85); border: 1px solid rgb(var(--c-accent));
+      border-radius: 12px; color: rgb(var(--c-text)); font-size: 12px; font-weight: 700;
+      padding: 8px 20px; cursor: pointer;
+    }
+    #restore-defaults-confirm-btn:disabled { opacity: 0.4; cursor: default; }
+    .restore-ex-row {
+      display: flex; align-items: center; gap: 10px;
+      background: rgba(var(--c-panel1),0.85); border: 1px solid rgba(var(--c-accent2),0.25);
+      border-radius: 12px; padding: 10px 12px; margin-bottom: 8px; cursor: pointer;
+    }
+    .restore-ex-row.selected { border-color: rgb(var(--c-accent)); background: rgba(var(--c-accent),0.15); }
+    .restore-ex-check {
+      width: 20px; height: 20px; border-radius: 6px; flex-shrink: 0;
+      border: 1px solid rgba(var(--c-accent2),0.4); display: flex; align-items: center; justify-content: center;
+      font-size: 13px; color: transparent;
+    }
+    .restore-ex-row.selected .restore-ex-check { background: rgb(var(--c-accent)); color: rgb(var(--c-panel1)); border-color: rgb(var(--c-accent)); }
+    .restore-ex-name { font-size: 14px; font-weight: 600; color: rgb(var(--c-text)); }
+    .restore-ex-sub { font-size: 11px; color: rgb(var(--c-text3)); margin-top: 1px; }
+
+    /* ── New Update Toast ── */
+    #update-toast {
+      position: fixed; inset: 0; z-index: 900;
+      display: none; align-items: center; justify-content: center;
+      padding: 16px 32px;
+      background: rgba(var(--c-shadow),0.35);
+      backdrop-filter: blur(2px);
+      -webkit-backdrop-filter: blur(2px);
+    }
+    #update-toast.open { display: flex; }
+    #update-toast-box {
+      width: 100%; max-width: 400px;
+      background: rgba(var(--c-panel2),0.98); border: 1px solid rgba(var(--c-accent),0.4);
+      border-radius: 16px; padding: 16px 18px;
+      box-shadow: 0 8px 28px rgba(var(--c-shadow),0.5);
+      animation: update-toast-in 0.25s cubic-bezier(0.25,0.46,0.45,0.94);
+    }
+    @keyframes update-toast-in {
+      from { transform: scale(0.94); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    #update-toast-title { font-size: 15px; font-weight: 800; color: rgb(var(--c-text)); }
+    #update-toast-sub { font-size: 12px; color: rgb(var(--c-text3)); margin-top: 3px; }
+    #update-toast-actions { display: flex; gap: 10px; margin-top: 14px; }
+    #update-toast-actions button {
+      flex: 1; padding: 10px; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer;
+    }
+    #update-toast-ignore {
+      background: rgba(var(--c-panel1),0.6); border: 1px solid rgba(var(--c-accent2),0.3); color: rgb(var(--c-text2));
+    }
+    #update-toast-check {
+      background: rgba(var(--c-accent),0.85); border: 1px solid rgb(var(--c-accent)); color: rgb(var(--c-text));
+    }
+
+    /* ── Update History ── */
+    .update-entry { margin-bottom: 22px; }
+    .update-entry:last-child { margin-bottom: 4px; }
+    .update-entry-date { font-size: 11px; color: rgb(var(--c-text4)); letter-spacing: 0.3px; margin-bottom: 2px; }
+    .update-entry-title { font-size: 15px; font-weight: 800; color: rgb(var(--c-text)); margin-bottom: 8px; }
+    .update-entry-bullets { margin: 0; padding-left: 18px; }
+    .update-entry-bullets li { font-size: 13px; color: rgb(var(--c-text2)); line-height: 1.5; margin-bottom: 5px; }
+
     #weekly-overview-overlay {
       position: fixed;
       inset: 0;
@@ -3554,6 +3649,19 @@
       white-space: nowrap;
     }
 
+    /* ── Default Exercise Badge ── */
+    /* A white/outline star (☆) marks exercises this app seeded for every
+       user, distinct from the filled accent ★ used for Track Exercises/PRs
+       elsewhere — so a default exercise is identifiable at a glance (e.g.
+       before deleting it, or spotting it as a duplicate of one the user
+       made themselves). */
+    .default-ex-badge {
+      display: inline-block;
+      margin-left: 4px;
+      color: rgb(var(--c-text4));
+      font-size: 12px;
+      vertical-align: middle;
+    }
 
     /* ── Train Numpad Popup ── */
     #train-numpad {
@@ -5444,6 +5552,7 @@
   <button id="weekly-overview-btn">Weekly Overview</button>
   <button id="testing-btn" style="margin-top:20px;display:none;">Testing: Muscles</button>
   <button id="testing-cardio-btn" style="display:none;">Testing: Cardio</button>
+  <button id="testing-update-popup-btn" style="display:none;">Testing: Update Popup</button>
   <button id="exit-testing-btn" style="display:none;">Exit Testing</button>
 </div>
 
@@ -5684,6 +5793,12 @@
         <div class="acct-sync-status" id="acct-sync-status"></div>
         <div class="acct-sync-status" id="acct-last-synced"></div>
       </div>
+
+      <div class="avatar-section-label" style="margin-top:22px;">Exercises</div>
+      <button id="restore-defaults-btn" class="acct-signout-btn">Restore Default Exercises</button>
+
+      <div class="avatar-section-label" style="margin-top:22px;">About</div>
+      <button id="update-history-btn" class="acct-signout-btn">Update History</button>
     </div>
   </div>
   <button id="profile-menu-close-btn" class="profile-overlay-close-btn">Done</button>
@@ -5732,6 +5847,49 @@
     </div>
   </div>
   <button id="weekly-overview-close-btn">Done</button>
+</div>
+
+<!-- Restore Default Exercises Overlay (Profile tab) -->
+<div id="restore-defaults-overlay" class="profile-overlay">
+  <div class="profile-overlay-inner">
+    <div class="profile-overlay-header">
+      <span class="profile-overlay-title">Restore Default Exercises</span>
+    </div>
+    <div class="profile-overlay-body">
+      <div class="acct-section-label" style="margin-top:0;">Select exercises to add back to your account</div>
+      <div id="restore-defaults-empty" style="display:none;color:rgb(var(--c-text3));font-size:13px;padding:20px 4px;">No deleted default exercises to restore.</div>
+      <div id="restore-defaults-list"></div>
+    </div>
+  </div>
+  <div id="restore-defaults-actions">
+    <button id="restore-defaults-confirm-btn">Restore Selected</button>
+    <button id="restore-defaults-close-btn" class="profile-overlay-close-btn">Done</button>
+  </div>
+</div>
+
+<!-- New Update Toast -->
+<div id="update-toast">
+  <div id="update-toast-box">
+    <div id="update-toast-title">New Update</div>
+    <div id="update-toast-sub">Something changed — see what's new.</div>
+    <div id="update-toast-actions">
+      <button id="update-toast-ignore">Ignore</button>
+      <button id="update-toast-check">Check it Out</button>
+    </div>
+  </div>
+</div>
+
+<!-- Update History Overlay -->
+<div id="update-history-overlay" class="profile-overlay">
+  <div class="profile-overlay-inner">
+    <div class="profile-overlay-header">
+      <span class="profile-overlay-title">Update History</span>
+    </div>
+    <div class="profile-overlay-body">
+      <div id="update-history-list"></div>
+    </div>
+  </div>
+  <button id="update-history-close-btn" class="profile-overlay-close-btn">Done</button>
 </div>
 
 <!-- Rest Edit Modal (in-workout only) -->
@@ -5915,6 +6073,11 @@
       // Native range sliders drag their thumb via the same touch pipeline —
       // preventDefault here swallows that gesture too, on any slider in the app.
       if (el.tagName === 'INPUT' && el.type === 'range') return;
+      // History cards' swipe-to-reveal-actions gesture (attachHistSwipe) drives
+      // its own touchmove/preventDefault — this handler preventDefault-ing the
+      // very first (still-ambiguous-direction) touchmove event before that
+      // logic decides horizontal-vs-vertical snaps the card back closed.
+      if (el.classList && el.classList.contains('hist-swipe-wrapper')) return;
       el = el.parentElement;
     }
     e.preventDefault();
@@ -6196,9 +6359,17 @@ const SOUND_HANDLED_BUTTON_SELECTORS = [
   '.nav-btn',            // menuButton
   '#room-btn',           // commonButton (explicit)
   '#weekly-overview-btn',// commonButton (explicit)
+  '#restore-defaults-btn',        // commonButton (explicit)
+  '#restore-defaults-confirm-btn',// commonButton (explicit)
+  '#restore-defaults-close-btn',  // delete (explicit)
+  '#update-toast-ignore',         // delete (explicit)
+  '#update-toast-check',          // commonButton (explicit)
+  '#update-history-btn',          // commonButton (explicit)
+  '#update-history-close-btn',    // delete (explicit)
   '#avatar-btn',         // commonButton (explicit)
   '#testing-btn',        // levelUp (explicit, no commonButton)
   '#testing-cardio-btn', // levelUp (explicit, no commonButton)
+  '#testing-update-popup-btn', // commonButton (explicit)
   '#exit-testing-btn',   // commonButton (explicit)
   '#room-close-btn',     // roomSelect
   '#add-ex-main',        // commonButton (explicit)
@@ -6250,11 +6421,11 @@ document.addEventListener('click', (e) => {
 // DATA
 // ═══════════════════════════════════════════════════════════
 
-const MUSCLES = ['Mid Back','Lats','Upper Back','Biceps','Triceps','Forearms','Quads','Hamstrings','Calves','Chest','Abs','Obliques','Shoulders','Neck','Traps'];
+const MUSCLES = ['Mid Back','Lats','Upper Back','Biceps','Triceps','Forearms','Quads','Hamstrings','Calves','Chest','Abs','Obliques','Shoulders','Neck','Traps','Glutes'];
 
 const MUSCLE_GROUPS = [
   { label: 'Upper Body', muscles: ['Chest','Shoulders','Traps','Mid Back','Lats','Upper Back','Biceps','Triceps','Forearms','Abs','Obliques','Neck'] },
-  { label: 'Lower Body', muscles: ['Quads','Hamstrings','Calves'] },
+  { label: 'Lower Body', muscles: ['Quads','Hamstrings','Glutes','Calves'] },
 ];
 
 // Untracked wellness categories shown as paired header-only sections in the Weekly Overview.
@@ -6268,9 +6439,35 @@ const EXPOSURE_SUBTYPES = {
   'Heat Exposure': true,
   'Cold Exposure': true,
 };
+// A "Stretching" category (picked alongside a real body part — see
+// categoryOptionsFor) and Cardio's "Duration" category both reuse the same
+// running stopwatch timer as Heat/Cold Exposure, just without a temp field
+// (exerciseMeta.noTemp). Reuses expType 'exposure' under the hood.
+//
+// exerciseNoTemp() is the single source of truth for "does this exposure-type
+// exercise skip the temp field" — it hard-excludes EXPOSURE_SUBTYPES muscles
+// (Heat/Cold Exposure) no matter what exerciseMeta says, so a bug in how
+// noTemp gets set on some other exercise can never hide Heat/Cold's temp
+// field. Always read noTemp through this helper, never exerciseMeta directly.
+function exerciseNoTemp(exName, muscle) {
+  if (EXPOSURE_SUBTYPES[muscle]) return false;
+  return !!(state.exerciseMeta[exName] || {}).noTemp;
+}
+
+// Exercises this app seeds into every user's library by default (see
+// defaultState()) are flagged exerciseMeta.isDefault — marked with a small
+// white/outline star (☆) wherever the exercise name is shown, so it reads
+// as distinct from the filled accent ★ used for Track Exercises/PRs. Purely
+// a visual identifier; the user can still delete these like any exercise.
+function isDefaultExercise(exName) {
+  return !!(state.exerciseMeta[exName] || {}).isDefault;
+}
+function defaultExBadge(exName) {
+  return isDefaultExercise(exName) ? '<span class="default-ex-badge" title="Default exercise">☆</span>' : '';
+}
 
 const INDEX_TO_PART = {
-  0:  'Shorts',
+  0:  'Glutes',
   1:  'Chest',
   2:  'Hair',
   3:  'Shoulders',
@@ -6318,7 +6515,7 @@ const HAIR_COLORS  = { 1: '#1A1A1A', 2: '#F5C518', 3: '#E8305A', 4: '#3A8FD4', 5
 // small dot but is illegible as text/labels against this app's dark panels.
 // This lighter stand-in is used anywhere HAIR_COLORS is applied to text.
 const HAIR_TEXT_COLORS = { ...HAIR_COLORS, 1: '#9A9A9A' };
-const STATIC_WHITE  = ['Boots','Shorts'];
+const STATIC_WHITE  = ['Boots'];
 const HAIR_OPTIONS = {
   1: { hair: '#1A1A1A', static: '#9B5FC0' },
   2: { hair: '#1A1A1A', static: '#1A1A1A' },
@@ -6363,6 +6560,403 @@ function getMondayStr() {
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
 
+// ═══════════════════════════════════════════════════════════
+// UPDATE HISTORY — one entry per push, newest first (unshift new ones onto
+// the front, don't append). Whoever is pushing supplies this list — see the
+// project's CLAUDE.md for the required pre-push changelog-confirmation step.
+// ═══════════════════════════════════════════════════════════
+const UPDATE_LOG = [
+  {
+    version: '86',
+    date: 'Aug 8, 2026',
+    title: 'Default Exercises, Stretching, and Update History',
+    bullets: [
+      'Added a default exercise library (71 exercises) that appears automatically for every user, marked with a ☆ badge — freely deletable, and restorable later from Profile > Restore Default Exercises.',
+      'Editing a default exercise keeps your changes as your own, and makes the original available to restore again if you want it back.',
+      'New Stretching category: pick any body part, then "Stretching" as the category, for duration-based stretches with a built-in stopwatch timer.',
+      'Cardio\'s "Duration" category now also uses the same stopwatch timer.',
+      'Added an Update History popup — see what\'s new after each update, or check it anytime from Profile > Update History.',
+      'Just better app stuff...',
+    ]
+  },
+];
+
+// ═══════════════════════════════════════════════════════════
+// DEFAULT EXERCISES — seeded into every user's library once (see
+// seedDefaultExercises()). Reference/editable copy: default-exercises.md
+// in the repo root. Users can freely delete any of these; a small ☆ badge
+// (see isDefaultExercise()/defaultExBadge()) marks them in the UI so a
+// deleted one never gets silently re-added and a duplicate is easy to spot.
+//
+// Fields: name, muscle (storage bucket — a real muscle, 'Cardio', 'Heat
+// Exposure', 'Cold Exposure', or 'Stretching'), category (weight-training
+// category, a Cardio field-kind category, or 'Stretching' — omit for
+// Heat/Cold Exposure), pulleys (Cable Machine only), targetBodyPart
+// (Stretching only — the muscle group the stretch targets).
+const DEFAULT_EXERCISES = [
+  // Chest
+  { name: 'Bench Press', muscle: 'Chest', category: 'Barbell' },
+  { name: 'Incline Bench Press', muscle: 'Chest', category: 'Barbell' },
+  { name: 'Bench Press', muscle: 'Chest', category: 'Dumbbell' },
+  { name: 'Incline Bench Press', muscle: 'Chest', category: 'Dumbbell' },
+  { name: 'Cable Fly', muscle: 'Chest', category: 'Cable Machine', pulleys: 3 },
+  // Shoulders
+  { name: 'Seated Overhead Press', muscle: 'Shoulders', category: 'Barbell' },
+  { name: 'Standing Overhead Press', muscle: 'Shoulders', category: 'Barbell' },
+  { name: 'Seated Overhead Press', muscle: 'Shoulders', category: 'Dumbbell' },
+  { name: 'Lateral Raise', muscle: 'Shoulders', category: 'Dumbbell' },
+  { name: 'Lateral Raise', muscle: 'Shoulders', category: 'Cable Machine', pulleys: 3 },
+  // Traps
+  { name: 'Shrugs', muscle: 'Traps', category: 'Dumbbell' },
+  { name: 'Shrugs Single', muscle: 'Traps', category: 'Dumbbell' },
+  { name: 'Shrugs', muscle: 'Traps', category: 'Barbell' },
+  // Mid Back
+  { name: 'Bent Over Row', muscle: 'Mid Back', category: 'Barbell' },
+  { name: 'Cable Row', muscle: 'Mid Back', category: 'Cable Machine', pulleys: 3 },
+  // Lats
+  { name: 'Pull Ups', muscle: 'Lats', category: 'Weighted Body Weight' },
+  { name: 'Wide Grip Pull Ups', muscle: 'Lats', category: 'Weighted Body Weight' },
+  { name: 'Lat Pull Down', muscle: 'Lats', category: 'Cable Machine', pulleys: 3 },
+  { name: 'Lat Pull', muscle: 'Lats', category: 'Cable Machine', pulleys: 3 },
+  // Upper Back
+  { name: 'Face Pulls (Rope)', muscle: 'Upper Back', category: 'Cable Machine', pulleys: 3 },
+  { name: 'Reverse Flys', muscle: 'Upper Back', category: 'Dumbbell' },
+  // Biceps
+  { name: 'Bicep Curl', muscle: 'Biceps', category: 'Barbell' },
+  { name: 'Bicep Curl', muscle: 'Biceps', category: 'Dumbbell' },
+  { name: 'Preacher Curl', muscle: 'Biceps', category: 'Dumbbell' },
+  { name: 'Cable Curl', muscle: 'Biceps', category: 'Cable Machine', pulleys: 3 },
+  { name: 'Hammer Curl', muscle: 'Biceps', category: 'Dumbbell' },
+  // Triceps
+  { name: 'Overhead Extension', muscle: 'Triceps', category: 'Barbell' },
+  { name: 'Overhead Extension', muscle: 'Triceps', category: 'Dumbbell' },
+  { name: 'Overhead Extension', muscle: 'Triceps', category: 'Cable Machine', pulleys: 3 },
+  { name: 'Tricep Push Down (Rope)', muscle: 'Triceps', category: 'Cable Machine', pulleys: 3 },
+  { name: 'Tricep Push Down (Straight Bar)', muscle: 'Triceps', category: 'Cable Machine', pulleys: 3 },
+  // Forearms
+  { name: 'Forearm Curl', muscle: 'Forearms', category: 'Barbell' },
+  { name: 'Reverse Forearm Curl', muscle: 'Forearms', category: 'Barbell' },
+  { name: 'Forearm Curl', muscle: 'Forearms', category: 'Cable Machine', pulleys: 3 },
+  { name: 'Reverse Forearm Curl', muscle: 'Forearms', category: 'Cable Machine', pulleys: 3 },
+  // Abs
+  { name: 'Cable Crunch', muscle: 'Abs', category: 'Cable Machine', pulleys: 3 },
+  { name: 'Lying Leg Raise', muscle: 'Abs', category: 'Weighted Body Weight' },
+  { name: 'Hanging Leg Raise', muscle: 'Abs', category: 'Weighted Body Weight' },
+  { name: 'Hanging Knee Raise', muscle: 'Abs', category: 'Weighted Body Weight' },
+  // Obliques
+  { name: 'Side Cable Crunch', muscle: 'Obliques', category: 'Cable Machine', pulleys: 3 },
+  { name: 'Cable Twist', muscle: 'Obliques', category: 'Cable Machine', pulleys: 3 },
+  // Neck (weighted)
+  { name: 'Neck Curl', muscle: 'Neck', category: 'Weighted Body Weight' },
+  { name: 'Lateral Neck Flexion', muscle: 'Neck', category: 'Weighted Body Weight' },
+  { name: 'Reverse Neck Curl', muscle: 'Neck', category: 'Weighted Body Weight' },
+  // Neck (stretches)
+  { name: 'Neck Rotations', muscle: 'Stretching', category: 'Stretching', targetBodyPart: 'Neck' },
+  { name: 'Neck Curl Stretch', muscle: 'Stretching', category: 'Stretching', targetBodyPart: 'Neck' },
+  { name: 'Reverse Neck Curl Stretch', muscle: 'Stretching', category: 'Stretching', targetBodyPart: 'Neck' },
+  { name: 'Lateral Neck Flexion Stretch', muscle: 'Stretching', category: 'Stretching', targetBodyPart: 'Neck' },
+  // Quads
+  { name: 'Leg Extensions', muscle: 'Quads', category: 'Cable Machine', pulleys: 3 },
+  { name: 'Leg Extensions Single', muscle: 'Quads', category: 'Cable Machine', pulleys: 3 },
+  { name: 'Squat', muscle: 'Quads', category: 'Barbell' },
+  // Hamstrings (weighted)
+  { name: 'Lying Leg Curl', muscle: 'Hamstrings', category: 'Cable Machine', pulleys: 3 },
+  { name: 'Sitting Leg Curl', muscle: 'Hamstrings', category: 'Cable Machine', pulleys: 3 },
+  { name: 'Straight Leg Deadlift', muscle: 'Hamstrings', category: 'Barbell' },
+  { name: 'Straight Leg Deadlift', muscle: 'Hamstrings', category: 'Dumbbell' },
+  // Hamstrings (stretches)
+  { name: 'Standing Toe Touch', muscle: 'Stretching', category: 'Stretching', targetBodyPart: 'Hamstrings' },
+  { name: 'Seated Toe Touch', muscle: 'Stretching', category: 'Stretching', targetBodyPart: 'Hamstrings' },
+  { name: 'Seated Toe Touch Single', muscle: 'Stretching', category: 'Stretching', targetBodyPart: 'Hamstrings' },
+  // Calves
+  { name: 'Seated Calf Raise', muscle: 'Calves', category: 'Plate Loaded Machine' },
+  { name: 'Standing Calf Raise', muscle: 'Calves', category: 'Plate Loaded Machine' },
+  // Glutes
+  { name: 'Hip Thrust', muscle: 'Glutes', category: 'Plate Loaded Machine' },
+  { name: 'Hip Thrust', muscle: 'Glutes', category: 'Barbell' },
+  { name: 'Step Ups', muscle: 'Glutes', category: 'Dumbbell' },
+  // Cardio
+  { name: 'Walking', muscle: 'Cardio', category: 'Weighted + Distance' },
+  { name: 'Running', muscle: 'Cardio', category: 'Distance' },
+  { name: 'Assault Bike', muscle: 'Cardio', category: 'Distance' },
+  // Heat Exposure
+  { name: 'Infrared Sauna', muscle: 'Heat Exposure' },
+  { name: 'Steam Sauna', muscle: 'Heat Exposure' },
+  { name: 'Traditional Sauna', muscle: 'Heat Exposure' },
+  // Cold Exposure
+  { name: 'Cold Shower', muscle: 'Cold Exposure' },
+  { name: 'Cold Plunge', muscle: 'Cold Exposure' },
+];
+
+// Builds the stored key for a DEFAULT_EXERCISES entry, given the display
+// name to use (usually de.name, but see the "(Default)" disambiguation
+// below) — mirrors the storedName conventions used by the new-exercise-save
+// handler (Cable Machine bakes pulley count in, Stretching keeps a bare
+// name, everything else suffixes " - Category").
+function defaultExStoredName(name, de) {
+  if (de.category === 'Cable Machine') return de.pulleys ? `${name} (${de.pulleys}P)` : name;
+  if (de.category && de.category !== 'Stretching') return `${name} - ${de.category}`;
+  return name;
+}
+
+// One-time full wipe-and-reseed of default exercises, run exactly once (see
+// s.defaultExercisesResetV1) to clear out any corruption left by earlier
+// bugs in this feature (orphaned exerciseMeta, misflagged user exercises,
+// duplicate/disambiguated twins) — removes every currently-flagged default
+// exercise completely (including workout history logged against it, PRs,
+// cable pulley data — a full delete, same as the manual delete flow) and
+// resets the seeded-log so seedDefaultExercises (below) re-adds all of
+// DEFAULT_EXERCISES fresh right after this runs.
+function resetAllDefaultExercises(s) {
+  const toRemove = new Set(
+    Object.keys(s.exerciseMeta || {}).filter(name => s.exerciseMeta[name] && s.exerciseMeta[name].isDefault)
+  );
+  if (!toRemove.size) { s.seededDefaultExercises = {}; return false; }
+
+  for (const muscle of Object.keys(s.exercises || {})) {
+    s.exercises[muscle] = s.exercises[muscle].filter(name => !toRemove.has(name));
+  }
+  for (const name of toRemove) {
+    delete s.exerciseMeta[name];
+    delete s.prs[name];
+    delete s.repPRs[name];
+    if (s.cablePulleys) delete s.cablePulleys[name];
+    if (s.exposurePRs) delete s.exposurePRs[name];
+  }
+  for (const w of (s.history || [])) {
+    w.exercises = (w.exercises || []).filter(e => !toRemove.has(e.name));
+  }
+  s.history = (s.history || []).filter(w => w.exercises.length > 0);
+
+  s.weeklySets = Object.fromEntries(MUSCLES.map(m => [m, 0]));
+  const monday = getMondayStr();
+  for (const w of s.history) {
+    if (w.date && isThisWeek(w.date, monday)) {
+      for (const ex of w.exercises) {
+        if (s.weeklySets[ex.muscle] !== undefined && !(s.exerciseMeta[ex.name] || {}).noTemp) {
+          s.weeklySets[ex.muscle] += ex.sets.length;
+        }
+      }
+    }
+  }
+
+  s.seededDefaultExercises = {};
+  return true;
+}
+
+// One-time repair for two bugs in earlier versions of this feature:
+//
+// 1) seedDefaultExercises() used to stamp isDefault:true directly onto a
+//    user's own pre-existing exercise whenever it happened to share a
+//    default's exact name + category + muscle, instead of keeping the two
+//    separate.
+// 2) the exercise-delete flow used to leave exerciseMeta (and its isDefault
+//    flag) behind as an orphan after removing an exercise from the list —
+//    so deleting a default you'd actually used (logged history against)
+//    left a dangling isDefault:true with no exercise attached.
+//
+// Both cases look identical from exerciseMeta alone (isDefault:true + real
+// history under that name), so the deciding signal is whether the exercise
+// is STILL actually present in state.exercises[muscle] right now:
+//   - present  → case 1: it's the user's own exercise, wrongly flagged.
+//     Un-flag it and clear its seeded-log entry so the real default gets
+//     (re-)added as its own separate exercise right after this runs.
+//   - absent   → case 2: the user deliberately deleted this default. Just
+//     strip the stray isDefault flag for hygiene — do NOT clear the
+//     seeded-log entry, or seedDefaultExercises would silently re-add it,
+//     undoing the user's deletion.
+function repairMisflaggedDefaultExercises(s) {
+  const usedNames = new Set();
+  for (const w of (s.history || [])) {
+    for (const ex of (w.exercises || [])) usedNames.add(ex.name);
+  }
+  for (const n of Object.keys(s.prs || {})) usedNames.add(n);
+  for (const n of Object.keys(s.repPRs || {})) usedNames.add(n);
+  try {
+    for (const n of Object.keys(JSON.parse(localStorage.getItem('trainhard_pr_overrides') || '{}'))) usedNames.add(n);
+  } catch {}
+  if (!s.seededDefaultExercises) s.seededDefaultExercises = {};
+  let changed = false;
+  for (const de of DEFAULT_EXERCISES) {
+    const plainName = defaultExStoredName(de.name, de);
+    const meta = s.exerciseMeta[plainName];
+    if (!meta || !meta.isDefault) continue;
+    if (!usedNames.has(plainName)) continue;
+    const stillPresent = (s.exercises[de.muscle] || []).includes(plainName);
+    delete meta.isDefault;
+    changed = true;
+    if (stillPresent) {
+      const key = `${de.name}|${de.muscle}|${de.category || ''}`;
+      delete s.seededDefaultExercises[key];
+    }
+  }
+  return changed;
+}
+
+// One-time cleanup for an earlier version of seedDefaultExercises() that
+// disambiguated a colliding default with a visible " (Default)" suffix
+// instead of an invisible zero-width space — renames any exercise still
+// carrying that old visible suffix over to the new invisible form, touching
+// every place an exercise is keyed by name (mirrors the Edit-exercise
+// rename logic: the exercises list, PRs, cablePulleys, exerciseMeta,
+// history, and focus slots).
+function renameLegacyVisibleDefaultSuffix(s) {
+  let changed = false;
+  for (const de of DEFAULT_EXERCISES) {
+    const oldName = defaultExStoredName(`${de.name} (Default)`, de);
+    if (!s.exerciseMeta[oldName] || !s.exerciseMeta[oldName].isDefault) continue;
+    const newName = defaultExStoredName(`${de.name}​`, de);
+    if (s.exerciseMeta[newName]) continue; // shouldn't happen, but never clobber
+    changed = true;
+
+    const idx = (s.exercises[de.muscle] || []).indexOf(oldName);
+    if (idx !== -1) s.exercises[de.muscle][idx] = newName;
+    if (s.prs[oldName]) { s.prs[newName] = s.prs[oldName]; delete s.prs[oldName]; }
+    if (s.repPRs[oldName]) { s.repPRs[newName] = s.repPRs[oldName]; delete s.repPRs[oldName]; }
+    if (s.cablePulleys[oldName] !== undefined) { s.cablePulleys[newName] = s.cablePulleys[oldName]; delete s.cablePulleys[oldName]; }
+    s.exerciseMeta[newName] = s.exerciseMeta[oldName];
+    delete s.exerciseMeta[oldName];
+    for (const w of (s.history || [])) {
+      for (const ex of (w.exercises || [])) {
+        if (ex.name === oldName) ex.name = newName;
+      }
+    }
+    try {
+      const focus = JSON.parse(localStorage.getItem('trainhard_focus') || '[null,null,null]');
+      const fi = focus.indexOf(oldName);
+      if (fi !== -1) { focus[fi] = newName; localStorage.setItem('trainhard_focus', JSON.stringify(focus)); }
+    } catch {}
+  }
+  return changed;
+}
+
+// Adds every DEFAULT_EXERCISES entry to this state exactly once, ever (see
+// s.seededDefaultExercises, a permanent seeded-log keyed independently of
+// whether the exercise is still present — so a user deleting a default
+// exercise stays deleted, it's never silently re-added on a future visit).
+//
+// Defaults always get added as their own separate exercise, even if a user
+// already has one under the exact same name + category + muscle — their
+// exercise is never touched, overwritten, or merged with the default. If
+// that would mean two entries with an identical stored name (which the
+// rest of the app can't represent — exercise identity IS the stored name
+// string), the default's copy gets an invisible trailing zero-width space
+// appended to disambiguate (see the "collides" branch below) — it never
+// shows up in the UI, only the ☆ default badge does.
+// Actually writes one DEFAULT_EXERCISES entry into state — shared by
+// seedDefaultExercises (first-time, automatic) and the Restore Default
+// Exercises overlay (manual, for a default the user deleted). Does not
+// touch s.seededDefaultExercises itself; callers own that.
+function addDefaultExerciseEntry(s, de) {
+  let storedName = defaultExStoredName(de.name, de);
+  const collides = (s.exercises[de.muscle] || []).includes(storedName) || !!s.exerciseMeta[storedName];
+  // A trailing zero-width space keeps the stored key distinct (so this is
+  // genuinely its own separate exercise — own history/PRs/meta) without
+  // changing how the name looks anywhere in the UI; the ☆ default badge
+  // is what actually distinguishes it from the user's identical-looking one.
+  if (collides) storedName = defaultExStoredName(`${de.name}​`, de);
+
+  if (!s.exercises[de.muscle]) s.exercises[de.muscle] = [];
+  if (!s.exercises[de.muscle].includes(storedName)) s.exercises[de.muscle].push(storedName);
+  if (!s.exerciseMeta[storedName]) s.exerciseMeta[storedName] = {};
+  const meta = s.exerciseMeta[storedName];
+  meta.restTime = 90;
+  meta.isDefault = true;
+
+  if (de.category === 'Cable Machine') {
+    meta.category = 'Cable Machine';
+    if (de.pulleys) s.cablePulleys[storedName] = de.pulleys;
+  } else if (de.category === 'Stretching') {
+    meta.category = 'Stretching';
+    meta.expType = 'exposure';
+    meta.noTemp = true;
+    meta.targetBodyPart = de.targetBodyPart;
+  } else if (de.muscle === 'Heat Exposure' || de.muscle === 'Cold Exposure') {
+    meta.expType = 'exposure';
+  } else if (de.muscle === 'Cardio') {
+    // Mirrors FIELD_KIND_CATEGORIES (defined later in the file, after
+    // loadState() already runs at boot — inlined here to avoid a
+    // temporal-dead-zone reference).
+    const CARDIO_FIELD_KIND = { 'Duration': 'duration', 'Duration + Weight': 'durationWeight', 'Distance': 'distance', 'Weighted + Distance': 'weightedDistance' };
+    if (CARDIO_FIELD_KIND[de.category]) meta.fieldKind = CARDIO_FIELD_KIND[de.category];
+  }
+  return storedName;
+}
+
+function seedDefaultExercises(s) {
+  if (!s.seededDefaultExercises) s.seededDefaultExercises = {};
+  let changed = false;
+  for (const de of DEFAULT_EXERCISES) {
+    const key = `${de.name}|${de.muscle}|${de.category || ''}`;
+    if (s.seededDefaultExercises[key]) continue;
+    s.seededDefaultExercises[key] = true;
+    addDefaultExerciseEntry(s, de);
+    changed = true;
+  }
+  return changed;
+}
+
+// Runs the full default-exercise pipeline (one-time wipe-and-reseed repair,
+// misflagged-exercise repair, legacy-suffix rename, then seed anything
+// missing) on whatever state object is about to become the live `state`.
+// Called from every place a full state object gets assigned wholesale —
+// not just loadState()'s local-storage path, but also pullCloudState()
+// (signing into/switching to an account pulls its cloud row in directly,
+// which used to skip this pipeline entirely — an account that had never
+// run it locally first would show zero default exercises after sign-in).
+//
+// Returns whether anything actually changed, so callers that pull cloud
+// data know whether they need to push a correction back up — pushing
+// unconditionally on every pull would re-trigger the very "profile row
+// updated" realtime subscription that calls pullCloudState in the first
+// place, looping forever (this was a real bug: it turned a normally
+// self-terminating pull→push→pull settle into an infinite one, which could
+// race a genuine in-flight edit and appear to silently revert it).
+function applyDefaultExerciseMigrations(s) {
+  let changed = false;
+  if (!s.defaultExercisesResetV1) {
+    resetAllDefaultExercises(s);
+    s.defaultExercisesResetV1 = true;
+    changed = true; // flag itself flipping is a change that needs persisting
+  }
+  if (repairMisflaggedDefaultExercises(s)) changed = true;
+  if (renameLegacyVisibleDefaultSuffix(s)) changed = true;
+  if (seedDefaultExercises(s)) changed = true;
+  return changed;
+}
+
+// A default is "currently present" if either its plain or zero-width-
+// disambiguated stored name is BOTH still in state.exercises[muscle] AND
+// still flagged isDefault — used by the Restore Default Exercises overlay
+// to find ones to offer back. Requires both conditions, not just one:
+//   - array presence alone isn't enough — an older version of the delete
+//     flow left exerciseMeta (and its isDefault flag) behind as an orphan
+//     after removing an exercise, which would look "present" from meta
+//     alone even though it's actually gone.
+//   - isDefault alone isn't enough either — editing a default exercise
+//     (see edit-save-btn) strips its isDefault flag but keeps the edited
+//     exercise in place under the same name, so array presence must also
+//     be checked or the now-customized exercise would still count as "the
+//     default", hiding it from Restore even though the original is gone.
+function findCurrentDefaultExerciseName(s, de) {
+  const list = s.exercises[de.muscle] || [];
+  const plain = defaultExStoredName(de.name, de);
+  if (list.includes(plain) && s.exerciseMeta[plain] && s.exerciseMeta[plain].isDefault) return plain;
+  const disamb = defaultExStoredName(`${de.name}​`, de);
+  if (list.includes(disamb) && s.exerciseMeta[disamb] && s.exerciseMeta[disamb].isDefault) return disamb;
+  return null;
+}
+
+// Default exercises the user has deleted at some point (seeded before, not
+// present now) — what the Restore Default Exercises overlay offers back.
+function getDeletedDefaultExercises() {
+  return DEFAULT_EXERCISES.filter(de => {
+    const key = `${de.name}|${de.muscle}|${de.category || ''}`;
+    if (!state.seededDefaultExercises || !state.seededDefaultExercises[key]) return false;
+    return !findCurrentDefaultExerciseName(state, de);
+  });
+}
+
 function defaultState() {
   return {
     userName: 'Athlete',
@@ -6382,7 +6976,12 @@ function defaultState() {
 function loadState() {
   try {
     const raw = localStorage.getItem('trainhard_v1');
-    if (!raw) return defaultState();
+    if (!raw) {
+      const s = defaultState();
+      s.defaultExercisesResetV1 = true;
+      seedDefaultExercises(s);
+      return s;
+    }
     const s = { ...defaultState(), ...JSON.parse(raw) };
     if ('Hands' in s.weeklySets) {
       s.weeklySets['Forearms'] = (s.weeklySets['Forearms'] || 0) + s.weeklySets['Hands'];
@@ -6395,6 +6994,8 @@ function loadState() {
     if (s.exercises && !('Traps' in s.exercises)) s.exercises['Traps'] = [];
     if (!('Obliques' in s.weeklySets)) s.weeklySets['Obliques'] = 0;
     if (s.exercises && !('Obliques' in s.exercises)) s.exercises['Obliques'] = [];
+    if (!('Glutes' in s.weeklySets)) s.weeklySets['Glutes'] = 0;
+    if (s.exercises && !('Glutes' in s.exercises)) s.exercises['Glutes'] = [];
     if (s.exercises) {
       for (const cat of WELLNESS_CATEGORIES) {
         if (!(cat in s.exercises)) s.exercises[cat] = [];
@@ -6422,6 +7023,19 @@ function loadState() {
       if (!s.exerciseMeta[ex]) s.exerciseMeta[ex] = {};
       if (!s.exerciseMeta[ex].category) s.exerciseMeta[ex].category = 'Cable Machine';
     }
+    // Migrate pre-stopwatch Cardio "Duration" exercises (fieldKind:'duration',
+    // tap-to-enter time only) onto the same no-temp running-timer engine new
+    // ones get — fieldKind 'duration' uniquely identifies that exact category
+    // (Duration + Weight/Distance/Weighted + Distance use other fieldKinds).
+    for (const exName of (s.exercises['Cardio'] || [])) {
+      const meta = s.exerciseMeta[exName];
+      if (meta && meta.fieldKind === 'duration' && meta.expType !== 'exposure') {
+        meta.expType = 'exposure';
+        meta.noTemp = true;
+        delete meta.fieldKind;
+      }
+    }
+    applyDefaultExerciseMigrations(s);
     // Always recompute from history so the model reflects workouts on every load
     s.lastReset = getMondayStr();
     s.weeklySets = Object.fromEntries(MUSCLES.map(m => [m, 0]));
@@ -6429,12 +7043,24 @@ function loadState() {
     for (const w of (s.history || [])) {
       if (w.date && isThisWeek(w.date, monday)) {
         for (const ex of (w.exercises || [])) {
-          if (s.weeklySets[ex.muscle] !== undefined) {
+          // Stretching-tagged exercises (a real body part + the "Stretching"
+          // category — see exerciseNoTemp) log duration, not working sets, and
+          // never count toward that muscle's weekly sets/level.
+          if (s.weeklySets[ex.muscle] !== undefined && !(s.exerciseMeta[ex.name] || {}).noTemp) {
             s.weeklySets[ex.muscle] += ex.sets.length;
           }
         }
       }
     }
+    // Persist immediately, not just in memory — migrations above (e.g.
+    // applyDefaultExerciseMigrations()) set one-time flags like
+    // defaultExercisesResetV1 that must survive a reload even before the
+    // user's next real save(). Without this, reloading again before doing
+    // anything else would re-read the un-flagged localStorage copy and
+    // silently re-run the one-time wipe-and-reseed, undoing any exercise
+    // deletions made in between.
+    s._lu = Date.now();
+    localStorage.setItem('trainhard_v1', JSON.stringify(s));
     return s;
   } catch { return defaultState(); }
 }
@@ -6547,6 +7173,12 @@ async function pullCloudState(userId) {
   const localHasRealData = !!(localState && Array.isArray(localState.history) && localState.history.length > 0);
   if (localHasRealData && localLu > cloudLu) {
     state = { ...defaultState(), ...localState };
+    // This account's cloud row may never have run the default-exercise
+    // pipeline before (e.g. it was created/synced before this feature
+    // existed, or on a device that skipped straight to a cloud pull) —
+    // pullCloudState swaps `state` in directly, bypassing loadState()'s
+    // migrations entirely, so it has to run them itself too.
+    applyDefaultExerciseMigrations(state);
     await supabase.from('profiles').update({ state }).eq('id', userId);
     recordSyncSuccess();
     recalcStats();
@@ -6557,8 +7189,16 @@ async function pullCloudState(userId) {
   suppressNextCloudPush = true;
   if (data.state && Object.keys(data.state).length > 0) {
     state = { ...defaultState(), ...data.state };
+    // Only push back if the migrations actually changed something — pushing
+    // unconditionally on every pull would re-trigger the realtime
+    // subscription that calls pullCloudState, looping forever (see
+    // applyDefaultExerciseMigrations's doc comment).
+    if (applyDefaultExerciseMigrations(state)) {
+      await supabase.from('profiles').update({ state }).eq('id', userId);
+    }
   } else {
     // First login on any device: seed the cloud with whatever's local.
+    applyDefaultExerciseMigrations(state);
     await supabase.from('profiles').update({ state }).eq('id', userId);
   }
   localStorage.setItem('trainhard_v1', JSON.stringify(state));
@@ -6669,6 +7309,7 @@ function updateTestingButtonsVisibility(username) {
   const isTestingAccount = (username || '').toLowerCase() === TESTING_ACCOUNT_USERNAME;
   document.getElementById('testing-btn').style.display = isTestingAccount ? '' : 'none';
   document.getElementById('testing-cardio-btn').style.display = isTestingAccount ? '' : 'none';
+  document.getElementById('testing-update-popup-btn').style.display = isTestingAccount ? '' : 'none';
   if (!isTestingAccount) {
     document.getElementById('exit-testing-btn').style.display = 'none';
     testingLevelOverride = null;
@@ -8213,6 +8854,7 @@ recalcAllPRs();
 recalcAllRepPRs();
 recalcAllExposurePRs();
 applyPROverrides();
+checkForUpdatePopup();
 // Not save(): this just re-persists locally-recomputed derived values
 // (PRs) on every page load, not a real edit. save() stamps state._lu to
 // "now", which would make pullCloudState() below think this device's
@@ -8410,7 +9052,7 @@ if (MUSCLES.includes(part)) {
       if (!targetMap['Hair']) targetMap['Hair'] = [];
       targetMap['Hair'].push(mesh);
       setAll(m => { m.map = null; m.color.set(loadHairOption().hair); });
-    } else if (part === 'Boots' || part === 'Shorts' || part === 'Face') {
+    } else if (part === 'Boots' || part === 'Face') {
       setAll(m => { m.map = null; m.color.set(0xffffff); m.emissive.set(0xffffff); m.emissiveIntensity = 0.4; });
     }
   });
@@ -8910,7 +9552,7 @@ function renderHistory() {
       <div class="card-sub" style="margin-bottom:12px;">${fmtTime(w.duration)} &nbsp;·&nbsp; ${w.exercises.length} exercises &nbsp;·&nbsp; ${totalSets} sets</div>
       ${w.exercises.map(e => {
         const { displayName: _hdn, pulleyCount: _hpc } = parseCableExName(e.name);
-        const badge = _hpc ? `<span class="cable-pulley-badge">${_hpc}P</span>` : '';
+        const badge = (_hpc ? `<span class="cable-pulley-badge">${_hpc}P</span>` : '') + defaultExBadge(e.name);
         const cat = (state.exerciseMeta[e.name] || {}).category;
         const catTag = cat ? `<span class="hist-ex-cat">${cat}</span>` : '';
         return `<div class="hist-ex"><span>${_hdn}${badge}${catTag}</span><span style="color:rgb(var(--c-text4))">${e.sets.length} sets</span></div>`;
@@ -9030,7 +9672,7 @@ function recalcStats() {
   for (const w of state.history) {
     if (w.date && isThisWeek(w.date, monday)) {
       for (const ex of w.exercises) {
-        if (state.weeklySets[ex.muscle] !== undefined) {
+        if (state.weeklySets[ex.muscle] !== undefined && !(state.exerciseMeta[ex.name] || {}).noTemp) {
           state.weeklySets[ex.muscle] += ex.sets.length;
         }
       }
@@ -9071,18 +9713,19 @@ function renderHistEditExercises() {
   container.innerHTML = '';
   histEditData.exercises.forEach((ex, exIdx) => {
     const isExp = (state.exerciseMeta[ex.name] || {}).expType === 'exposure';
+    const noTemp = isExp && exerciseNoTemp(ex.name, ex.muscle);
     const block = document.createElement('div');
     block.className = 'hedit-ex';
     block.innerHTML = `
       <div class="hedit-ex-top">
         <div>
-          <div class="hedit-ex-name">${parseCableExName(ex.name).displayName}</div>
+          <div class="hedit-ex-name">${parseCableExName(ex.name).displayName}${defaultExBadge(ex.name)}</div>
           <div class="hedit-ex-muscle">${ex.muscle}</div>
         </div>
         <button class="hedit-remove-ex" data-ex="${exIdx}">×</button>
       </div>
       <div class="hedit-col-heads">${isExp
-        ? '<span>Set</span><span>°F</span><span>Sec</span><span></span>'
+        ? (noTemp ? '<span>Set</span><span></span><span>Sec</span><span></span>' : '<span>Set</span><span>°F</span><span>Sec</span><span></span>')
         : '<span>Set</span><span>lbs</span><span>Reps</span><span></span>'}</div>
       <div class="hedit-sets"></div>
       <button class="hedit-add-set" data-ex="${exIdx}">+ Add Set</button>
@@ -9090,7 +9733,7 @@ function renderHistEditExercises() {
 
     const setsEl = block.querySelector('.hedit-sets');
     ex.sets.forEach((s, sIdx) => {
-      setsEl.appendChild(makeHistSetRow(exIdx, sIdx, s, isExp));
+      setsEl.appendChild(makeHistSetRow(exIdx, sIdx, s, isExp, noTemp));
     });
 
     block.querySelector('.hedit-remove-ex').addEventListener('click', () => {
@@ -9103,7 +9746,7 @@ function renderHistEditExercises() {
       const sets = histEditData.exercises[exIdx].sets;
       const prevSet = sets[sets.length - 1];
       const prevTemp = (prevSet && prevSet.temp !== '' && prevSet.temp != null) ? prevSet.temp : 100;
-      sets.push(isExp ? { temp: prevTemp, duration: 0, done: true } : { weight: '', reps: '', done: true });
+      sets.push(isExp ? { temp: noTemp ? '' : prevTemp, duration: 0, done: true } : { weight: '', reps: '', done: true });
       renderHistEditExercises();
     });
 
@@ -9111,7 +9754,7 @@ function renderHistEditExercises() {
   });
 }
 
-function makeHistSetRow(exIdx, sIdx, s, isExp) {
+function makeHistSetRow(exIdx, sIdx, s, isExp, noTemp) {
   const row = document.createElement('div');
   row.className = 'hedit-set-row';
 
@@ -9121,9 +9764,11 @@ function makeHistSetRow(exIdx, sIdx, s, isExp) {
 
   let aWrap, bWrap;
   if (isExp) {
-    ({ wrap: aWrap } = makeStepper(s.temp, 5, -300, val => {
-      histEditData.exercises[exIdx].sets[sIdx].temp = val;
-    }, 300));
+    if (!noTemp) {
+      ({ wrap: aWrap } = makeStepper(s.temp, 5, -300, val => {
+        histEditData.exercises[exIdx].sets[sIdx].temp = val;
+      }, 300));
+    }
     ({ wrap: bWrap } = makeStepper(s.duration, 15, 0, val => {
       histEditData.exercises[exIdx].sets[sIdx].duration = val;
     }));
@@ -9147,7 +9792,7 @@ function makeHistSetRow(exIdx, sIdx, s, isExp) {
   });
 
   row.appendChild(numEl);
-  row.appendChild(aWrap);
+  row.appendChild(aWrap || document.createElement('span'));
   row.appendChild(bWrap);
   row.appendChild(removeBtn);
 
@@ -9163,9 +9808,10 @@ document.getElementById('hist-done-btn').addEventListener('click', () => {
   histEditData.exercises = histEditData.exercises
     .map(ex => {
       const isExp = (state.exerciseMeta[ex.name] || {}).expType === 'exposure';
+      const noTemp = isExp && exerciseNoTemp(ex.name, ex.muscle);
       return {
         ...ex,
-        sets: ex.sets.filter(s => isExp ? ((s.temp !== '' && s.temp != null) || s.duration) : (s.weight !== '' || s.reps !== ''))
+        sets: ex.sets.filter(s => isExp ? (noTemp ? !!s.duration : ((s.temp !== '' && s.temp != null) || s.duration)) : (s.weight !== '' || s.reps !== ''))
       };
     })
     .filter(ex => ex.sets.length > 0);
@@ -9315,12 +9961,21 @@ function renderExPopup() {
 
   const list = document.getElementById('ex-popup-list');
   list.innerHTML = '';
-  exList.forEach((ex, i) => {
+  // Most recently performed first — never-done exercises sort to the end.
+  // Keeps each exercise's real index into state.exercises[muscle] (openEdit
+  // needs that, not its position in this sorted display) alongside it.
+  const sortedList = exList
+    .map((ex, i) => [ex, i])
+    .sort((a, b) => lastWorkedTime(b[0]) - lastWorkedTime(a[0]));
+  sortedList.forEach(([ex, i]) => {
     const item = document.createElement('div');
     item.className = 'ex-item';
     const { displayName: _pdn, pulleyCount: _ppc } = parseCableExName(ex);
-    const badge = _ppc ? ` <span class="cable-pulley-badge">${_ppc}P</span>` : '';
-    const cat = (state.exerciseMeta[ex] || {}).category;
+    const badge = (_ppc ? ` <span class="cable-pulley-badge">${_ppc}P</span>` : '') + defaultExBadge(ex);
+    const meta = state.exerciseMeta[ex] || {};
+    // Inside the Stretching list every item's category is already "Stretching"
+    // (that's redundant here) — show which muscle it targets instead.
+    const cat = meta.category === 'Stretching' ? meta.targetBodyPart : meta.category;
     const catLine = cat ? `<div class="ex-item-cat">${cat}</div>` : '';
     const lw = fmtLastWorked(getLastWorked(ex));
     const lastLine = lw ? `<div class="ex-item-last">${lw}</div>` : '';
@@ -9350,6 +10005,7 @@ function renderExPopup() {
 function openExDetail(exName, muscle, readOnly = false) {
   const isWellness = WELLNESS_CATEGORIES.includes(muscle);
   const isExposure = (state.exerciseMeta[exName] || {}).expType === 'exposure';
+  const noTemp = isExposure && exerciseNoTemp(exName, muscle);
   const lv = getLevel(muscle);
   const dotColor = LEVEL_COLORS[lv];
   const { displayName: _edn, pulleyCount: pc } = parseCableExName(exName);
@@ -9358,10 +10014,19 @@ function openExDetail(exName, muscle, readOnly = false) {
   document.getElementById('ex-detail-dot').style.cssText = isWellness
     ? 'display:none;'
     : `background:${dotColor};box-shadow:0 0 8px ${dotColor};`;
-  document.getElementById('ex-detail-name').textContent = _edn;
+  const detailNameEl = document.getElementById('ex-detail-name');
+  detailNameEl.textContent = _edn;
+  if (isDefaultExercise(exName)) {
+    const star = document.createElement('span');
+    star.className = 'default-ex-badge';
+    star.title = 'Default exercise';
+    star.textContent = '☆';
+    detailNameEl.appendChild(star);
+  }
   const _lw = fmtLastWorked(getLastWorked(exName));
+  const _tbp = (state.exerciseMeta[exName] || {}).targetBodyPart;
   document.getElementById('ex-detail-sub').textContent =
-    muscle + (pc ? ` · ${pc} pulley${pc > 1 ? 's' : ''}` : '') + (_lw ? ` · ${_lw}` : '');
+    muscle + (_tbp ? ` · ${_tbp}` : '') + (pc ? ` · ${pc} pulley${pc > 1 ? 's' : ''}` : '') + (_lw ? ` · ${_lw}` : '');
 
   // From Stats > Exercise Stats: no renaming/category/pulley editing, only
   // manual correction of the PR values shown below (see the grid rows further down).
@@ -9392,20 +10057,21 @@ function openExDetail(exName, muscle, readOnly = false) {
       head.innerHTML = '<span>Record</span><span>Value</span>';
       grid.appendChild(head);
 
-      [
-        ['Highest Temp', `${epr.maxTemp}°F`],
+      (noTemp ? [] : [['Highest Temp', `${epr.maxTemp}°F`]]).concat([
         ['Highest Duration', fmtRestSecs(epr.maxDuration)],
-      ].forEach(([label, val]) => {
+      ]).forEach(([label, val]) => {
         const row = document.createElement('div');
         row.className = 'exd-pr-row exd-exposure-pr-row';
         row.innerHTML = `<span class="exd-pr-label">${label}</span><span class="exd-pr-val">${val}</span>`;
         grid.appendChild(row);
       });
 
-      const comboRow = document.createElement('div');
-      comboRow.className = 'exd-pr-row exd-exposure-pr-row exd-pr-max';
-      comboRow.innerHTML = `<span class="exd-pr-label">Temp @ Duration</span><span class="exd-pr-val">${epr.comboTemp}°F × ${fmtRestSecs(epr.comboDuration)}</span>`;
-      grid.appendChild(comboRow);
+      if (!noTemp) {
+        const comboRow = document.createElement('div');
+        comboRow.className = 'exd-pr-row exd-exposure-pr-row exd-pr-max';
+        comboRow.innerHTML = `<span class="exd-pr-label">Temp @ Duration</span><span class="exd-pr-val">${epr.comboTemp}°F × ${fmtRestSecs(epr.comboDuration)}</span>`;
+        grid.appendChild(comboRow);
+      }
 
       body.appendChild(grid);
     }
@@ -9475,7 +10141,7 @@ function openExDetail(exName, muscle, readOnly = false) {
         const row = document.createElement('div');
         row.className = 'exd-manual-pr-row';
         const valLabel = isExposure
-          ? `${entry.temp}°F × ${fmtRestSecs(entry.duration)}`
+          ? (noTemp ? fmtRestSecs(entry.duration) : `${entry.temp}°F × ${fmtRestSecs(entry.duration)}`)
           : `${entry.weight} lbs × ${entry.reps}`;
         row.innerHTML = `
           <span class="exd-manual-pr-label">${valLabel}</span>
@@ -9501,7 +10167,7 @@ function openExDetail(exName, muscle, readOnly = false) {
   const entries = [];
   for (const w of state.history) {
     const ex = w.exercises.find(e => e.name === exName);
-    if (ex) entries.push({ date: w.date, sets: ex.sets.filter(s => isExposure ? (s.temp || s.duration) : (s.weight || s.reps)) });
+    if (ex) entries.push({ date: w.date, sets: ex.sets.filter(s => isExposure ? (noTemp ? s.duration : (s.temp || s.duration)) : (s.weight || s.reps)) });
   }
   entries.reverse();
 
@@ -9522,8 +10188,12 @@ function openExDetail(exName, muscle, readOnly = false) {
     entry.sets.forEach((s, i) => {
       const row = document.createElement('div');
       row.className = 'exd-set-row';
-      const val1 = isExposure ? (s.temp ? `${s.temp}°F` : '—') : (s.weight ? `${s.weight} lbs` : '—');
-      const val2 = isExposure ? (s.duration ? fmtRestSecs(s.duration) : '—') : (s.reps ? `${s.reps} reps` : '—');
+      const val1 = isExposure
+        ? (noTemp ? (s.duration ? fmtRestSecs(s.duration) : '—') : (s.temp ? `${s.temp}°F` : '—'))
+        : (s.weight ? `${s.weight} lbs` : '—');
+      const val2 = isExposure
+        ? (noTemp ? '' : (s.duration ? fmtRestSecs(s.duration) : '—'))
+        : (s.reps ? `${s.reps} reps` : '—');
       row.innerHTML = `<span class="exd-set-num">${i + 1}</span><span class="exd-set-val">${val1}</span><span class="exd-set-val">${val2}</span>`;
       card.appendChild(row);
     });
@@ -9662,12 +10332,13 @@ document.getElementById('pr-edit-date').addEventListener('click', function() {
 });
 
 function openPREditModal(exName, muscle, isExposure, editIndex = null) {
-  prEditCtx = { exName, muscle, isExposure, editIndex };
+  const noTemp = isExposure && exerciseNoTemp(exName, muscle);
+  prEditCtx = { exName, muscle, isExposure, noTemp, editIndex };
   const { displayName } = parseCableExName(exName);
   document.getElementById('pr-edit-title').textContent = editIndex == null ? `Log PR — ${displayName}` : `Edit PR — ${displayName}`;
   document.getElementById('pr-edit-field-weight').style.display = isExposure ? 'none' : '';
   document.getElementById('pr-edit-field-reps').style.display = isExposure ? 'none' : '';
-  document.getElementById('pr-edit-field-temp').style.display = isExposure ? '' : 'none';
+  document.getElementById('pr-edit-field-temp').style.display = (isExposure && !noTemp) ? '' : 'none';
   document.getElementById('pr-edit-field-duration').style.display = isExposure ? '' : 'none';
 
   let entry = null;
@@ -9700,7 +10371,7 @@ document.getElementById('pr-edit-modal').addEventListener('click', (e) => {
 
 document.getElementById('pr-edit-save').addEventListener('click', () => {
   if (!prEditCtx) return;
-  const { exName, muscle, isExposure, editIndex } = prEditCtx;
+  const { exName, muscle, isExposure, noTemp, editIndex } = prEditCtx;
 
   const dateInput = document.getElementById('pr-edit-date').dataset.iso;
   if (!dateInput) { alert('Pick a date.'); return; }
@@ -9710,9 +10381,9 @@ document.getElementById('pr-edit-save').addEventListener('click', () => {
   ov[exName] = ov[exName] || {};
 
   if (isExposure) {
-    const temp = parseFloat(document.getElementById('pr-edit-temp').value);
+    const temp = noTemp ? 0 : parseFloat(document.getElementById('pr-edit-temp').value);
     const duration = parseDurationInput(document.getElementById('pr-edit-duration').value);
-    if (isNaN(temp) || duration == null) { alert('Enter a valid temp and duration.'); return; }
+    if ((!noTemp && isNaN(temp)) || duration == null) { alert(noTemp ? 'Enter a valid duration.' : 'Enter a valid temp and duration.'); return; }
     ov[exName].exposureEntries = ov[exName].exposureEntries || [];
     if (editIndex != null) ov[exName].exposureEntries[editIndex] = { temp, duration, date: dateStr };
     else ov[exName].exposureEntries.push({ temp, duration, date: dateStr });
@@ -9843,9 +10514,12 @@ function renderChestChart(muscle) {
     const d = _parseDateStr(w.date);
     if (!d) continue;
     const muscleExs = w.exercises.filter(ex => ex.muscle === muscle && ex.sets);
+    // Stretching-tagged exercises (a real body part + the "Stretching"
+    // category) log duration, not working sets — exclude them here too so
+    // they never inflate a muscle's weekly-sets chart.
     const muscleTotal = isDuration
       ? muscleExs.reduce((sum, ex) => sum + ex.sets.reduce((s, set) => s + (set.duration || 0), 0), 0)
-      : muscleExs.reduce((sum, ex) => sum + ex.sets.length, 0);
+      : muscleExs.reduce((sum, ex) => sum + (exerciseNoTemp(ex.name, muscle) ? 0 : ex.sets.length), 0);
     if (muscleTotal === 0) continue;
 
     const weekStart = new Date(d);
@@ -10456,6 +11130,7 @@ document.getElementById('edit-save-btn').addEventListener('click', () => {
   }
 
   const { muscle: oldMuscle, idx } = editCtx;
+  let wasDefault = false;
 
   if (idx === -1) {
     // Adding new exercise
@@ -10463,6 +11138,7 @@ document.getElementById('edit-save-btn').addEventListener('click', () => {
     state.exercises[editMuscle].push(storedName);
   } else {
     const oldName = state.exercises[oldMuscle][idx];
+    wasDefault = isDefaultExercise(oldName);
 
     if (oldName !== storedName || oldMuscle !== editMuscle) {
       state.exercises[oldMuscle].splice(idx, 1);
@@ -10507,6 +11183,13 @@ document.getElementById('edit-save-btn').addEventListener('click', () => {
     delete state.cablePulleys[storedName];
   }
 
+  // Editing a default exercise forks it into a user-owned one: it loses the
+  // ☆ badge and the original default becomes offerable again from Restore
+  // Default Exercises (see findCurrentDefaultExerciseName, which requires
+  // isDefault to still be set, not just array presence) — but the edited
+  // exercise itself, with your changes, stays right where it is.
+  if (wasDefault) delete state.exerciseMeta[storedName].isDefault;
+
   save();
   renderExercises();
   exPopupMuscle = editMuscle;
@@ -10536,6 +11219,11 @@ document.getElementById('ex-delete-yes').addEventListener('click', () => {
   delete state.prs[exName];
   delete state.repPRs[exName];
   if (state.cablePulleys) delete state.cablePulleys[exName];
+  if (state.exposurePRs) delete state.exposurePRs[exName];
+  // Also drop exerciseMeta — leaving it behind orphaned a deleted exercise's
+  // isDefault flag, which made the Restore Default Exercises overlay think
+  // a deleted default was still present and never offer it back.
+  delete state.exerciseMeta[exName];
 
   // Strip from all history entries
   for (const w of state.history) {
@@ -10549,7 +11237,7 @@ document.getElementById('ex-delete-yes').addEventListener('click', () => {
   for (const w of state.history) {
     if (w.date && isThisWeek(w.date, monday)) {
       for (const ex of w.exercises) {
-        if (state.weeklySets[ex.muscle] !== undefined) {
+        if (state.weeklySets[ex.muscle] !== undefined && !(state.exerciseMeta[ex.name] || {}).noTemp) {
           state.weeklySets[ex.muscle] += ex.sets.length;
         }
       }
@@ -11128,7 +11816,7 @@ function showWorkoutSummary(exercises, durationSecs, prsBefore) {
     row.className = 'summary-row';
     row.innerHTML = `
       <div class="summary-row-left">
-        <div class="summary-row-exname">${parseCableExName(ex.name).displayName}</div>
+        <div class="summary-row-exname">${parseCableExName(ex.name).displayName}${defaultExBadge(ex.name)}</div>
         <div class="summary-row-sets">${setCount} set${setCount !== 1 ? 's' : ''}</div>
       </div>
       <div class="summary-row-right">
@@ -11306,13 +11994,15 @@ function addTplExerciseBlock(name, muscle) {
   block.className = 'train-ex';
 
   const { displayName: _tdn, pulleyCount: _tpc } = parseCableExName(name);
-  const pulleyBadge = _tpc ? `<span class="cable-pulley-badge">${_tpc}P</span>` : '';
+  const pulleyBadge = (_tpc ? `<span class="cable-pulley-badge">${_tpc}P</span>` : '') + defaultExBadge(name);
   const cat = (state.exerciseMeta[name] || {}).category;
   const nameLabel = cat ? `${_tdn} - ${cat}` : _tdn;
+  const targetBodyPart = (state.exerciseMeta[name] || {}).targetBodyPart;
+  const muscleLabel = targetBodyPart ? `${muscle} · ${targetBodyPart}` : muscle;
 
   const top = document.createElement('div');
   top.className = 'train-ex-top';
-  top.innerHTML = `<div><div class="train-ex-name">${nameLabel}${pulleyBadge}</div><div class="train-ex-muscle">${muscle}</div></div>`;
+  top.innerHTML = `<div><div class="train-ex-name">${nameLabel}${pulleyBadge}</div><div class="train-ex-muscle">${muscleLabel}</div></div>`;
   const removeBtn = document.createElement('button');
   removeBtn.className = 'remove-ex';
   removeBtn.type = 'button';
@@ -11440,6 +12130,7 @@ function addExerciseBlock(name, muscle, initialSets) {
   playSound('exerciseSelect');
   const idx = session.length;
   const isExposure = (state.exerciseMeta[name] || {}).expType === 'exposure';
+  const noTemp = isExposure && exerciseNoTemp(name, muscle);
   const fieldKind = isExposure ? null : getExerciseFieldKind(name);
   const shape = fieldKind && FIELD_KIND_SHAPES[fieldKind];
   const preSets = initialSets && initialSets.length
@@ -11453,16 +12144,18 @@ function addExerciseBlock(name, muscle, initialSets) {
           })
         : initialSets.map(s => ({ weight: s.weight || '', reps: s.reps || '', done: s.done || false })))
     : [];
-  session.push({ name, muscle, sets: preSets, expType: isExposure ? 'exposure' : null, fieldKind: shape ? fieldKind : null });
+  session.push({ name, muscle, sets: preSets, expType: isExposure ? 'exposure' : null, noTemp, fieldKind: shape ? fieldKind : null });
 
   const block = document.createElement('div');
   block.className = 'train-ex';
   block.dataset.sessionIdx = idx;
 
   const { displayName: _adn, pulleyCount: _apc } = parseCableExName(name);
-  const pulleyBadge = _apc ? `<span class="cable-pulley-badge">${_apc}P</span>` : '';
+  const pulleyBadge = (_apc ? `<span class="cable-pulley-badge">${_apc}P</span>` : '') + defaultExBadge(name);
   const cat = (state.exerciseMeta[name] || {}).category;
   const nameLabel = cat ? `${_adn} - ${cat}` : _adn;
+  const targetBodyPart = (state.exerciseMeta[name] || {}).targetBodyPart;
+  const muscleLabel = targetBodyPart ? `${muscle} · ${targetBodyPart}` : muscle;
 
   const top = document.createElement('div');
   top.className = 'train-ex-top';
@@ -11477,7 +12170,7 @@ function addExerciseBlock(name, muscle, initialSets) {
   nameDiv.style.cursor = 'pointer';
   nameDiv.innerHTML = `
     <div class="train-ex-name">${nameLabel}${pulleyBadge}</div>
-    <div class="train-ex-muscle">${muscle}</div>
+    <div class="train-ex-muscle">${muscleLabel}</div>
     <div class="train-ex-sets"></div>
   `;
   nameDiv.addEventListener('click', () => openExDetail(name, muscle));
@@ -11501,7 +12194,11 @@ function addExerciseBlock(name, muscle, initialSets) {
   prEl.className = 'train-ex-pr';
   if (isExposure) {
     const epr = (state.exposurePRs || {})[name];
-    prEl.innerHTML = epr ? `PR: <span>${epr.comboTemp}°F × ${fmtRestSecs(epr.comboDuration)}</span>` : '';
+    prEl.innerHTML = epr
+      ? (noTemp
+          ? `PR: <span>${fmtRestSecs(epr.comboDuration)}</span>`
+          : `PR: <span>${epr.comboTemp}°F × ${fmtRestSecs(epr.comboDuration)}</span>`)
+      : '';
   } else if (shape) {
     prEl.innerHTML = '';
   } else {
@@ -11516,7 +12213,7 @@ function addExerciseBlock(name, muscle, initialSets) {
   const cols = document.createElement('div');
   if (isExposure) {
     cols.className = 'set-cols exposure-set-cols';
-    cols.innerHTML = '<span>Set</span><span>Temp and Duration</span><span></span><span></span>';
+    cols.innerHTML = `<span>Set</span><span>${noTemp ? 'Duration' : 'Temp and Duration'}</span><span></span><span></span>`;
   } else if (shape) {
     // Time only gets bumped to its own row below when there isn't room for
     // it alongside the other field(s) — i.e. only for the 3-field shape.
@@ -12046,7 +12743,8 @@ function renderFieldSets(exIdx, block, kind) {
   }
 }
 
-function fmtExposureBtnValue(temp, duration) {
+function fmtExposureBtnValue(temp, duration, noTemp) {
+  if (noTemp) return fmtRestSecs(duration || 0);
   const t = (temp !== '' && temp != null) ? `${temp}°F` : '—';
   return `${t} · ${fmtRestSecs(duration || 0)}`;
 }
@@ -12098,8 +12796,8 @@ function renderExposureSets(exIdx, block) {
     timerBtn.type = 'button';
     timerBtn.className = 'exposure-timer-btn' + (isRunningThis ? ' running-bg' : '');
     timerBtn.innerHTML =
-      `<span class="exposure-timer-btn-time">${fmtExposureBtnValue(ex.sets[setIdx].temp, displayDuration)}</span>` +
-      `<span class="exposure-timer-btn-label">Temp and Duration</span>`;
+      `<span class="exposure-timer-btn-time">${fmtExposureBtnValue(ex.sets[setIdx].temp, displayDuration, ex.noTemp)}</span>` +
+      `<span class="exposure-timer-btn-label">${ex.noTemp ? 'Duration' : 'Temp and Duration'}</span>`;
 
     const checkBtn = document.createElement('button');
     checkBtn.className = 'set-check';
@@ -12136,8 +12834,32 @@ function renderExposureSets(exIdx, block) {
         exIdx, setIdx,
         temp: ex.sets[setIdx].temp,
         duration: ex.sets[setIdx].duration,
+        noTemp: ex.noTemp,
       });
     });
+
+    // Fallback for anyone timing this with a real stopwatch/watch instead of
+    // the in-app one — type the duration in directly rather than running it.
+    const manualBtn = document.createElement('button');
+    manualBtn.type = 'button';
+    manualBtn.className = 'exposure-manual-btn';
+    manualBtn.title = 'Enter time manually';
+    manualBtn.textContent = '✎';
+    manualBtn.addEventListener('click', () => {
+      touchActivity();
+      playSound('commonButton');
+      if (exposureTimerState && exposureTimerState.exIdx === exIdx && exposureTimerState.setIdx === setIdx) {
+        forceStopExposureTimer();
+      }
+      openRestNumpad(ex.sets[setIdx].duration || 0, secs => {
+        commitExposureDuration(exIdx, setIdx, secs);
+      }, { min: 0, max: 86400, label: 'DURATION', fmt: fmtRestSecs });
+    });
+
+    const timerCell = document.createElement('div');
+    timerCell.className = 'exposure-timer-cell';
+    timerCell.appendChild(timerBtn);
+    timerCell.appendChild(manualBtn);
 
     const delBtn = document.createElement('button');
     delBtn.className = 'set-delete';
@@ -12161,7 +12883,7 @@ function renderExposureSets(exIdx, block) {
     });
 
     row.appendChild(numEl);
-    row.appendChild(timerBtn);
+    row.appendChild(timerCell);
     row.appendChild(checkBtn);
     row.appendChild(delBtn);
     container.appendChild(row);
@@ -12187,7 +12909,7 @@ function addSet(exIdx, block) {
         prevDuration = last.duration || 0;
       }
     }
-    ex.sets.push({ temp: prevTemp, duration: prevDuration, done: false });
+    ex.sets.push(ex.noTemp ? { temp: '', duration: prevDuration, done: false } : { temp: prevTemp, duration: prevDuration, done: false });
   } else if (ex.fieldKind && FIELD_KIND_SHAPES[ex.fieldKind]) {
     const shape = FIELD_KIND_SHAPES[ex.fieldKind];
     const prevSet = ex.sets[ex.sets.length - 1];
@@ -12218,7 +12940,7 @@ let exposureTimerLastTarget = 300;
 // live state (Stop button, ticking display) instead of resetting anything.
 // Opening on a different set while one is running stops & commits that one
 // first — only one exposure timer can run at a time.
-function openExposureTimerModal({ exIdx, setIdx, temp, duration }) {
+function openExposureTimerModal({ exIdx, setIdx, temp, duration, noTemp }) {
   const resuming = exposureTimerState && exposureTimerState.running &&
     exposureTimerState.exIdx === exIdx && exposureTimerState.setIdx === setIdx;
 
@@ -12227,6 +12949,8 @@ function openExposureTimerModal({ exIdx, setIdx, temp, duration }) {
   }
 
   const toggleBtn = document.getElementById('exposure-timer-toggle');
+  document.getElementById('exposure-timer-temp-label-row').style.display = noTemp ? 'none' : '';
+  document.getElementById('exposure-temp-wheel-wrap').style.display = noTemp ? 'none' : '';
 
   if (resuming) {
     document.getElementById('exposure-timer-modal').classList.add('open');
@@ -12290,7 +13014,7 @@ function commitExposureDuration(exIdx, setIdx, elapsed) {
   const els = getExposureRowEls(exIdx, setIdx);
   if (els) {
     els.timerBtn.classList.remove('running-bg');
-    els.timeEl.textContent = fmtExposureBtnValue(ex.sets[setIdx].temp, elapsed);
+    els.timeEl.textContent = fmtExposureBtnValue(ex.sets[setIdx].temp, elapsed, ex.noTemp);
   }
   if (!ex.sets[setIdx].done) {
     ex.sets[setIdx].done = true;
@@ -12338,7 +13062,7 @@ function commitExposureWheelField(field) {
     const val = getExposureWheelValue('temp');
     ex.sets[setIdx].temp = val;
     const els = getExposureRowEls(exIdx, setIdx);
-    if (els) els.timeEl.textContent = fmtExposureBtnValue(val, ex.sets[setIdx].duration);
+    if (els) els.timeEl.textContent = fmtExposureBtnValue(val, ex.sets[setIdx].duration, ex.noTemp);
     saveActiveSession();
   } else {
     readExposureTargetFieldsToSecs();
@@ -12677,7 +13401,7 @@ function tickExposureTimer() {
     if (ex && ex.sets[st.setIdx]) {
       ex.sets[st.setIdx].duration = elapsedSecs;
       const els = getExposureRowEls(st.exIdx, st.setIdx);
-      if (els) els.timeEl.textContent = fmtExposureBtnValue(ex.sets[st.setIdx].temp, elapsedSecs);
+      if (els) els.timeEl.textContent = fmtExposureBtnValue(ex.sets[st.setIdx].temp, elapsedSecs, ex.noTemp);
     }
   }
   const fraction = st.targetSecs > 0 ? elapsedMs / (st.targetSecs * 1000) : 0;
@@ -12931,7 +13655,8 @@ function openPickerExPopup(muscle) {
   const isCardio = muscle === 'Cardio';
   const lv = isCardio ? getCardioLevel() : getLevel(muscle);
   const dotColor = LEVEL_COLORS[lv];
-  const exList = state.exercises[muscle] || [];
+  // Most recently performed first — never-done exercises sort to the end.
+  const exList = [...(state.exercises[muscle] || [])].sort((a, b) => lastWorkedTime(b) - lastWorkedTime(a));
 
   document.getElementById('picker-ex-dot').style.cssText = (isWellness && !isCardio)
     ? 'display:none;'
@@ -12950,9 +13675,9 @@ function openPickerExPopup(muscle) {
     const { displayName: _kdn, pulleyCount: pc } = parseCableExName(ex);
     const cat = (state.exerciseMeta[ex] || {}).category;
     const label = cat ? `${_kdn} - ${cat}` : _kdn;
-    const mainText = pc ? `${label} <span class="cable-pulley-badge">${pc}P</span>` : label;
+    const mainText = (pc ? `${label} <span class="cable-pulley-badge">${pc}P</span>` : label) + defaultExBadge(ex);
     const _plw = fmtLastWorked(getLastWorked(ex));
-    const lastSub = _plw ? ` · ${_plw}` : '';
+    const lastSub = _plw ? ` · <span class="ex-item-last-inline">${_plw}</span>` : '';
     item.innerHTML = `${mainText}<div class="picker-item-sub">${muscle}${lastSub}</div>`;
     item.addEventListener('click', () => {
       document.getElementById('picker-ex-popup').classList.remove('open');
@@ -13611,6 +14336,13 @@ function getLastWorked(exName) {
   return null;
 }
 
+// Sort key for "most recently performed first" exercise lists — never-done
+// exercises sort to the very end.
+function lastWorkedTime(exName) {
+  const d = getLastWorked(exName);
+  return d ? new Date(d).getTime() : -Infinity;
+}
+
 function fmtLastWorked(dateStr) {
   if (!dateStr) return null;
   const d = new Date(dateStr);
@@ -13674,7 +14406,7 @@ function renderFocusStats() {
       <span class="focus-rep-date" style="color:rgb(var(--c-accent));">${mx ? fmtPRDate(mx.date) : '—'}</span>
     </div>`;
 
-    card.innerHTML = `<div class="focus-card-name">${parseCableExName(exName).displayName}</div>${rows}`;
+    card.innerHTML = `<div class="focus-card-name">${parseCableExName(exName).displayName}${defaultExBadge(exName)}</div>${rows}`;
     panel.appendChild(card);
   });
   panel.classList.add('visible');
@@ -13746,7 +14478,7 @@ function renderFocusPickerList(query, muscleFilter) {
     exs.forEach(ex => {
       const item = document.createElement('div');
       item.className = 'fp-item';
-      item.innerHTML = `<span class="fp-item-name">${ex}</span><span class="fp-item-muscle">${muscle}</span>`;
+      item.innerHTML = `<span class="fp-item-name">${ex}${defaultExBadge(ex)}</span><span class="fp-item-muscle">${muscle}</span>`;
       item.addEventListener('click', () => {
         const f = loadFocus();
         f[focusPickerSlot] = ex;
@@ -13829,9 +14561,14 @@ function fieldGridClassSuffix(fieldCount, kind) {
 
 // Heat/Cold Exposure keep the existing Temp+Duration timer flow regardless of
 // category (see EXPOSURE_SUBTYPES) — a category tag there is purely cosmetic.
+// "Stretching" is a category available on any real body part (not a body
+// part/wellness selection itself) — picking it, or picking Cardio's "Duration"
+// category, routes the exercise through the same no-temp timer as Heat/Cold
+// Exposure (see the new-ex-save handler and exerciseNoTemp()).
 function categoryOptionsFor(bodyPart) {
   if (EXPOSURE_SUBTYPES[bodyPart]) return ['Duration'];
   if (bodyPart === 'Cardio') return ['Duration', 'Duration + Weight', 'Distance', 'Weighted + Distance'];
+  if (MUSCLES.includes(bodyPart)) return ['Stretching', ...NEX_CATEGORIES];
   return NEX_CATEGORIES;
 }
 
@@ -13848,7 +14585,9 @@ function updateNexRestDisplay() {
 function renderNexSuggestions() {}
 
 function openNewExModal(preselectedMuscle) {
-  nexBodyPart = preselectedMuscle || null;
+  // "Stretching" is no longer a selectable body part (see categoryOptionsFor) —
+  // ignore a stale preselect from the old Wellness > Stretching "+" entry point.
+  nexBodyPart = (preselectedMuscle && preselectedMuscle !== 'Stretching') ? preselectedMuscle : null;
   nexCategory = null;
   nexRestSecs = 90;
   document.getElementById('nex-name').value = '';
@@ -13885,7 +14624,9 @@ function openNewExModal(preselectedMuscle) {
       chip.addEventListener('click', () => selectBodyPart(m, chip));
       bpWrap.appendChild(chip);
     });
-    [...WELLNESS_CATEGORIES, 'Other'].forEach(m => {
+    // "Stretching" isn't offered here — it's a category on a real body part
+    // now (see categoryOptionsFor), not its own body part/wellness bucket.
+    [...WELLNESS_CATEGORIES.filter(w => w !== 'Stretching'), 'Other'].forEach(m => {
       const chip = document.createElement('div');
       chip.className = 'nex-chip';
       chip.textContent = m;
@@ -13905,13 +14646,16 @@ function openNewExModal(preselectedMuscle) {
 }
 
 function renderNexCategoryChips() {
-  const isExposure = !!EXPOSURE_SUBTYPES[nexBodyPart];
+  // Nothing to categorize until a body part is picked — showing the full
+  // category list (including "Stretching") before that just adds noise and
+  // makes the modal taller than it needs to be.
+  const hideCategory = !nexBodyPart || !!EXPOSURE_SUBTYPES[nexBodyPart];
   const catLabel = document.getElementById('nex-category-label');
   const catWrap = document.getElementById('nex-category');
-  catLabel.style.display = isExposure ? 'none' : '';
-  catWrap.style.display = isExposure ? 'none' : '';
+  catLabel.style.display = hideCategory ? 'none' : '';
+  catWrap.style.display = hideCategory ? 'none' : '';
   catWrap.innerHTML = '';
-  if (isExposure) return;
+  if (hideCategory) { nexCategory = null; return; }
 
   const options = categoryOptionsFor(nexBodyPart);
   if (!options.includes(nexCategory)) nexCategory = null;
@@ -13969,10 +14713,21 @@ document.getElementById('new-ex-save').addEventListener('click', () => {
   const name = document.getElementById('nex-name').value.trim();
   if (!name) { alert('Please enter a name.'); return; }
 
-  const isExposure = !!EXPOSURE_SUBTYPES[nexBodyPart];
-  if (!isExposure && !nexBodyPart) { alert('Please select a body part.'); return; }
+  const isHeatCold = !!EXPOSURE_SUBTYPES[nexBodyPart];
+  // "Stretching" (any real body part) and Cardio's "Duration" category both
+  // reuse the no-temp version of the Heat/Cold stopwatch timer.
+  const isStretchCategory = MUSCLES.includes(nexBodyPart) && nexCategory === 'Stretching';
+  const isCardioDurationTimer = nexBodyPart === 'Cardio' && nexCategory === 'Duration';
+  const isNoTempTimer = isStretchCategory || isCardioDurationTimer;
+  const isExposure = isHeatCold || isNoTempTimer;
+  if (!isHeatCold && !nexBodyPart) { alert('Please select a body part.'); return; }
 
-  const muscle = (MUSCLES.includes(nexBodyPart) || WELLNESS_CATEGORIES.includes(nexBodyPart)) ? nexBodyPart : (MUSCLES[0]);
+  // Stretching-category exercises live under the "Stretching" wellness bucket
+  // only (not also under the body part you picked to get here) — the body
+  // part chip is just how you reach the "Stretching" category option.
+  const muscle = isStretchCategory
+    ? 'Stretching'
+    : (MUSCLES.includes(nexBodyPart) || WELLNESS_CATEGORIES.includes(nexBodyPart)) ? nexBodyPart : (MUSCLES[0]);
 
   const fromPicker = nexFromPicker;
   const isTpl = nexTplMode;
@@ -13985,14 +14740,26 @@ document.getElementById('new-ex-save').addEventListener('click', () => {
     return;
   }
 
-  const storedName = nexCategory ? `${name} - ${nexCategory}` : name;
+  // Stretching stays out of the exercise name (matches the Heat/Cold Exposure
+  // convention of keeping category out of the stored name) — it's recorded in
+  // exerciseMeta.category below instead, same as Cable Machine exercises.
+  const storedName = (nexCategory && nexCategory !== 'Stretching') ? `${name} - ${nexCategory}` : name;
 
   if (!state.exercises[muscle]) state.exercises[muscle] = [];
   state.exercises[muscle].push(storedName);
   if (!state.exerciseMeta[storedName]) state.exerciseMeta[storedName] = {};
   state.exerciseMeta[storedName].restTime = nexRestSecs;
   if (isExposure) state.exerciseMeta[storedName].expType = 'exposure';
-  if (FIELD_KIND_CATEGORIES[nexCategory]) state.exerciseMeta[storedName].fieldKind = FIELD_KIND_CATEGORIES[nexCategory];
+  if (isNoTempTimer) state.exerciseMeta[storedName].noTemp = true;
+  if (isStretchCategory) {
+    state.exerciseMeta[storedName].category = 'Stretching';
+    // The body part chip you tapped to reach the "Stretching" category isn't
+    // where the exercise is stored (it lives under "Stretching" only, see
+    // `muscle` above) — but it's still worth remembering which muscle group
+    // this stretch targets, so save it purely for display.
+    state.exerciseMeta[storedName].targetBodyPart = nexBodyPart;
+  }
+  if (FIELD_KIND_CATEGORIES[nexCategory] && !isCardioDurationTimer) state.exerciseMeta[storedName].fieldKind = FIELD_KIND_CATEGORIES[nexCategory];
   save();
   renderExercises();
   closeNewExModal();
@@ -14686,6 +15453,11 @@ document.getElementById('testing-cardio-btn').addEventListener('click', () => {
   updateModel();
 });
 
+document.getElementById('testing-update-popup-btn').addEventListener('click', () => {
+  playSound('commonButton');
+  document.getElementById('update-toast').classList.add('open');
+});
+
 document.getElementById('exit-testing-btn').addEventListener('click', () => {
   playSound('commonButton');
   testingLevelOverride = null;
@@ -15103,6 +15875,158 @@ document.getElementById('weekly-overview-close-btn').addEventListener('click', (
 document.getElementById('weekly-overview-overlay').addEventListener('click', (e) => {
   if (e.target === document.getElementById('weekly-overview-overlay')) {
     document.getElementById('weekly-overview-overlay').classList.remove('open');
+  }
+});
+
+// ═══════════════════════════════════════════════════════════
+// RESTORE DEFAULT EXERCISES
+// ═══════════════════════════════════════════════════════════
+
+let restoreDefaultsSelected = new Set();
+
+function renderRestoreDefaultsList() {
+  const list = document.getElementById('restore-defaults-list');
+  const empty = document.getElementById('restore-defaults-empty');
+  const confirmBtn = document.getElementById('restore-defaults-confirm-btn');
+  list.innerHTML = '';
+
+  const deleted = getDeletedDefaultExercises();
+  empty.style.display = deleted.length ? 'none' : '';
+
+  deleted.forEach(de => {
+    const key = `${de.name}|${de.muscle}|${de.category || ''}`;
+    const row = document.createElement('div');
+    row.className = 'restore-ex-row' + (restoreDefaultsSelected.has(key) ? ' selected' : '');
+    const sub = de.category && de.category !== 'Stretching'
+      ? `${de.muscle} · ${de.category}`
+      : de.targetBodyPart
+      ? `${de.muscle} · ${de.targetBodyPart}`
+      : de.muscle;
+    row.innerHTML = `
+      <div class="restore-ex-check">${restoreDefaultsSelected.has(key) ? '✓' : ''}</div>
+      <div>
+        <div class="restore-ex-name">${de.name}</div>
+        <div class="restore-ex-sub">${sub}</div>
+      </div>
+    `;
+    row.addEventListener('click', () => {
+      playSound('commonButton');
+      const checkEl = row.querySelector('.restore-ex-check');
+      if (restoreDefaultsSelected.has(key)) {
+        restoreDefaultsSelected.delete(key);
+        checkEl.textContent = '';
+      } else {
+        restoreDefaultsSelected.add(key);
+        checkEl.textContent = '✓';
+      }
+      row.classList.toggle('selected');
+    });
+    list.appendChild(row);
+  });
+
+  confirmBtn.disabled = deleted.length === 0;
+}
+
+document.getElementById('restore-defaults-btn').addEventListener('click', () => {
+  playSound('commonButton');
+  restoreDefaultsSelected = new Set();
+  renderRestoreDefaultsList();
+  document.getElementById('restore-defaults-overlay').classList.add('open');
+});
+
+document.getElementById('restore-defaults-close-btn').addEventListener('click', () => {
+  playSound('delete');
+  document.getElementById('restore-defaults-overlay').classList.remove('open');
+});
+document.getElementById('restore-defaults-overlay').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('restore-defaults-overlay')) {
+    document.getElementById('restore-defaults-overlay').classList.remove('open');
+  }
+});
+
+document.getElementById('restore-defaults-confirm-btn').addEventListener('click', () => {
+  if (!restoreDefaultsSelected.size) return;
+  playSound('commonButton');
+  for (const de of DEFAULT_EXERCISES) {
+    const key = `${de.name}|${de.muscle}|${de.category || ''}`;
+    if (restoreDefaultsSelected.has(key)) addDefaultExerciseEntry(state, de);
+  }
+  restoreDefaultsSelected = new Set();
+  save();
+  renderExercises();
+  renderRestoreDefaultsList();
+});
+
+// ═══════════════════════════════════════════════════════════
+// UPDATE HISTORY POPUP
+// ═══════════════════════════════════════════════════════════
+
+// Shows the "New Update" toast once per version bump — never twice for the
+// same version, and never on a genuinely brand new install (no existing
+// trainhard_v1 state at all — nothing to have missed). An EXISTING user
+// who simply hasn't seen this feature before (trainhard_seen_update never
+// set, but they do have real state) still gets the popup — that's not a
+// fresh install, it's someone catching up on real history they missed.
+function checkForUpdatePopup() {
+  if (!UPDATE_LOG.length) return;
+  const latest = UPDATE_LOG[0].version;
+  const seen = localStorage.getItem('trainhard_seen_update');
+  const isFreshInstall = !localStorage.getItem('trainhard_v1');
+  if (seen === null && isFreshInstall) {
+    localStorage.setItem('trainhard_seen_update', latest);
+    return;
+  }
+  if (seen === latest) return;
+  localStorage.setItem('trainhard_seen_update', latest);
+  document.getElementById('update-toast').classList.add('open');
+}
+
+function renderUpdateHistory() {
+  const list = document.getElementById('update-history-list');
+  list.innerHTML = UPDATE_LOG.map(entry => `
+    <div class="update-entry">
+      <div class="update-entry-date">${entry.date}</div>
+      <div class="update-entry-title">${entry.title}</div>
+      <ul class="update-entry-bullets">${entry.bullets.map(b => `<li>${b}</li>`).join('')}</ul>
+    </div>
+  `).join('');
+}
+
+function openUpdateHistory() {
+  renderUpdateHistory();
+  document.getElementById('update-history-overlay').classList.add('open');
+}
+
+document.getElementById('update-history-btn').addEventListener('click', () => {
+  playSound('commonButton');
+  openUpdateHistory();
+});
+
+document.getElementById('update-toast-ignore').addEventListener('click', () => {
+  playSound('delete');
+  document.getElementById('update-toast').classList.remove('open');
+});
+document.getElementById('update-toast-check').addEventListener('click', () => {
+  playSound('commonButton');
+  document.getElementById('update-toast').classList.remove('open');
+  openUpdateHistory();
+});
+// Click-out-to-dismiss: the toast's own backdrop wrapper (#update-toast)
+// covers the full screen but only the box inside it is visually opaque —
+// a tap anywhere outside the box (i.e. directly on the wrapper) closes it.
+document.getElementById('update-toast').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('update-toast')) {
+    document.getElementById('update-toast').classList.remove('open');
+  }
+});
+
+document.getElementById('update-history-close-btn').addEventListener('click', () => {
+  playSound('delete');
+  document.getElementById('update-history-overlay').classList.remove('open');
+});
+document.getElementById('update-history-overlay').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('update-history-overlay')) {
+    document.getElementById('update-history-overlay').classList.remove('open');
   }
 });
 
