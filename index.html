@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#000000" />
-  <meta name="app-version" content="95" />
+  <meta name="app-version" content="96" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -6344,7 +6344,10 @@
     var nav = document.getElementById('nav');
     var dbg = document.createElement('div');
     dbg.id = 'debug-measure';
-    dbg.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:red;color:#fff;font-size:10px;padding:3px 6px;pointer-events:none;word-break:break-all;';
+    dbg.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:999999;background:#ff0000;color:#fff;' +
+      'font-size:17px;font-weight:800;line-height:1.5;padding:8px 10px;' +
+      'padding-top:calc(env(safe-area-inset-top,0px) + 8px);pointer-events:none;white-space:pre-wrap;' +
+      'font-family:monospace;';
     document.body.appendChild(dbg);
     function updateNavVisibility() {
       var openEls = Array.prototype.filter.call(document.querySelectorAll('.open'), function(el) {
@@ -6355,12 +6358,16 @@
         var ov = openEls[0];
         var ovRect = ov.getBoundingClientRect();
         var navRect = nav.getBoundingClientRect();
-        dbg.textContent = 'ov=' + ov.id + ' ovBottom=' + Math.round(ovRect.bottom) +
-          ' navTop=' + Math.round(navRect.top) + ' navBottom=' + Math.round(navRect.bottom) +
-          ' winH=' + window.innerHeight + ' navVis=' + getComputedStyle(nav).visibility +
-          ' navBG=' + getComputedStyle(nav).backgroundColor;
+        dbg.textContent =
+          'ov: ' + ov.id + '\n' +
+          'ovBottom: ' + Math.round(ovRect.bottom) + '\n' +
+          'navTop: ' + Math.round(navRect.top) + '\n' +
+          'navBottom: ' + Math.round(navRect.bottom) + '\n' +
+          'winH: ' + window.innerHeight + '\n' +
+          'navVis: ' + getComputedStyle(nav).visibility + '\n' +
+          'navBG: ' + getComputedStyle(nav).backgroundColor;
       } else {
-        dbg.textContent = '';
+        dbg.textContent = '(no menu open)';
       }
     }
     new MutationObserver(updateNavVisibility).observe(document.body, {
@@ -6855,6 +6862,14 @@ function getMondayStr() {
 // project's CLAUDE.md for the required pre-push changelog-confirmation step.
 // ═══════════════════════════════════════════════════════════
 const UPDATE_LOG = [
+  {
+    version: '96',
+    date: 'Aug 9, 2026',
+    title: 'Debug Build',
+    bullets: [
+      'Internal diagnostic build only — no user-facing changes. Made the debug readout larger and moved it below the notch so it\'s actually readable.',
+    ]
+  },
   {
     version: '95',
     date: 'Aug 9, 2026',
