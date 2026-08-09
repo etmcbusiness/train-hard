@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#000000" />
-  <meta name="app-version" content="94" />
+  <meta name="app-version" content="95" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -318,9 +318,7 @@
       pointer-events: all;
     }
     body.menu-open #nav {
-      background: rgb(var(--c-shadow));
-      border-top-color: transparent;
-      box-shadow: none;
+      visibility: hidden !important;
       pointer-events: none;
     }
 
@@ -6343,11 +6341,27 @@
     // bottom of the screen so the nav bar stays visible and usable underneath
     // them — they are not full-screen modals and must not trigger menu-open.
     var NAV_VISIBLE_WHILE_OPEN = { 'train-modal': true, 'picker': true, 'tpl-builder': true };
+    var nav = document.getElementById('nav');
+    var dbg = document.createElement('div');
+    dbg.id = 'debug-measure';
+    dbg.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:red;color:#fff;font-size:10px;padding:3px 6px;pointer-events:none;word-break:break-all;';
+    document.body.appendChild(dbg);
     function updateNavVisibility() {
-      var anyModalOpen = Array.prototype.some.call(document.querySelectorAll('.open'), function(el) {
+      var openEls = Array.prototype.filter.call(document.querySelectorAll('.open'), function(el) {
         return !el.classList.contains('stats-subview') && !NAV_VISIBLE_WHILE_OPEN[el.id];
       });
-      document.body.classList.toggle('menu-open', anyModalOpen);
+      document.body.classList.toggle('menu-open', openEls.length > 0);
+      if (openEls.length) {
+        var ov = openEls[0];
+        var ovRect = ov.getBoundingClientRect();
+        var navRect = nav.getBoundingClientRect();
+        dbg.textContent = 'ov=' + ov.id + ' ovBottom=' + Math.round(ovRect.bottom) +
+          ' navTop=' + Math.round(navRect.top) + ' navBottom=' + Math.round(navRect.bottom) +
+          ' winH=' + window.innerHeight + ' navVis=' + getComputedStyle(nav).visibility +
+          ' navBG=' + getComputedStyle(nav).backgroundColor;
+      } else {
+        dbg.textContent = '';
+      }
     }
     new MutationObserver(updateNavVisibility).observe(document.body, {
       attributes: true, attributeFilter: ['class'], subtree: true
@@ -6841,6 +6855,14 @@ function getMondayStr() {
 // project's CLAUDE.md for the required pre-push changelog-confirmation step.
 // ═══════════════════════════════════════════════════════════
 const UPDATE_LOG = [
+  {
+    version: '95',
+    date: 'Aug 9, 2026',
+    title: 'Debug Build',
+    bullets: [
+      'Internal diagnostic build only — no user-facing changes. Makes the nav bar fully invisible (not just recolored) while a menu is open, and prints the exact measured pixel boundaries on screen to find the real cause.',
+    ]
+  },
   {
     version: '94',
     date: 'Aug 9, 2026',
