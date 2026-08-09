@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#000000" />
-  <meta name="app-version" content="93" />
+  <meta name="app-version" content="94" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -318,18 +318,10 @@
       pointer-events: all;
     }
     body.menu-open #nav {
-      background: #ff00ff !important;
-      outline: 6px solid #00ff00 !important;
+      background: rgb(var(--c-shadow));
       border-top-color: transparent;
       box-shadow: none;
       pointer-events: none;
-    }
-    /* TEMPORARY DIAGNOSTIC: shows the true rendered edge of each overlay so we
-       can see whether it's actually reaching the bottom of the screen. Remove
-       once the nav-bar-bleed bug is confirmed fixed. */
-    #goals-overlay.open, #avatar-overlay.open, #override-overlay.open,
-    #weekly-overview-overlay.open, .profile-overlay.open {
-      box-shadow: inset 0 0 0 6px lime !important;
     }
 
     .nav-btn {
@@ -6347,16 +6339,15 @@
   // `.stats-subview` is excluded: it reuses the same `.open` class for switching
   // between inline views inside the Stats tab, not for a full-screen overlay.
   (function() {
-    var dbg = document.createElement('div');
-    dbg.id = 'debug-openlist';
-    dbg.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:red;color:#fff;font-size:11px;padding:3px 6px;pointer-events:none;word-break:break-all;';
-    document.body.appendChild(dbg);
+    // These three (.open-toggled) elements deliberately stop 70px short of the
+    // bottom of the screen so the nav bar stays visible and usable underneath
+    // them — they are not full-screen modals and must not trigger menu-open.
+    var NAV_VISIBLE_WHILE_OPEN = { 'train-modal': true, 'picker': true, 'tpl-builder': true };
     function updateNavVisibility() {
-      var openEls = Array.prototype.filter.call(document.querySelectorAll('.open'), function(el) {
-        return !el.classList.contains('stats-subview');
+      var anyModalOpen = Array.prototype.some.call(document.querySelectorAll('.open'), function(el) {
+        return !el.classList.contains('stats-subview') && !NAV_VISIBLE_WHILE_OPEN[el.id];
       });
-      dbg.textContent = openEls.length ? ('OPEN: ' + openEls.map(function(el) { return el.id || el.className; }).join(', ')) : '';
-      document.body.classList.toggle('menu-open', openEls.length > 0);
+      document.body.classList.toggle('menu-open', anyModalOpen);
     }
     new MutationObserver(updateNavVisibility).observe(document.body, {
       attributes: true, attributeFilter: ['class'], subtree: true
@@ -6850,6 +6841,15 @@ function getMondayStr() {
 // project's CLAUDE.md for the required pre-push changelog-confirmation step.
 // ═══════════════════════════════════════════════════════════
 const UPDATE_LOG = [
+  {
+    version: '94',
+    date: 'Aug 9, 2026',
+    title: 'Menu Bar Fix',
+    bullets: [
+      'Fixed a bug where opening menus (Friends, Challenges, Profile, Avatar, Goals, Weekly Overview) left a visible bar at the bottom of the screen where the tab icons normally sit — it\'s now fully covered by the menu background with no seam or color mismatch.',
+      'Fixed a side effect from that same fix: the tab bar was becoming unusable (greyed out and untappable) while a workout was in progress — the active workout screen is supposed to leave it visible and usable, and now does again.',
+    ]
+  },
   {
     version: '93',
     date: 'Aug 9, 2026',
