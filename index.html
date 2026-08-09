@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#000000" />
-  <meta name="app-version" content="96" />
+  <meta name="app-version" content="97" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -53,7 +53,7 @@
       --c-panel2: 33,46,100;
       --c-panel3: 31,44,97;
       --c-panel4: 42,58,118;
-      --c-shadow: 27,32,66;
+      --c-shadow: 29,42,94;
       --c-accent: 232,168,33;
       --c-accent-dark: 180,120,20;
       --c-accent2: 200,178,106;
@@ -72,7 +72,7 @@
       --c-panel2: 5,12,40;
       --c-panel3: 4,10,32;
       --c-panel4: 14,28,70;
-      --c-shadow: 0,0,8;
+      --c-shadow: 3,7,24;
       --c-accent: 74,144,217;
       --c-accent-dark: 44,106,173;
       --c-accent2: 50,100,200;
@@ -91,7 +91,7 @@
       --c-panel2: 28,28,33;
       --c-panel3: 26,26,31;
       --c-panel4: 36,36,42;
-      --c-shadow: 12,12,15;
+      --c-shadow: 20,20,24;
       --c-accent: 230,230,235;
       --c-accent-dark: 170,170,178;
       --c-accent2: 170,170,178;
@@ -110,7 +110,7 @@
       --c-panel2: 24,24,24;
       --c-panel3: 20,20,20;
       --c-panel4: 40,40,40;
-      --c-shadow: 4,4,4;
+      --c-shadow: 8,8,8;
       --c-accent: 255,255,255;
       --c-accent-dark: 180,180,180;
       --c-accent2: 140,140,140;
@@ -129,7 +129,7 @@
       --c-panel2: 40,28,31;
       --c-panel3: 36,25,28;
       --c-panel4: 52,38,42;
-      --c-shadow: 30,20,23;
+      --c-shadow: 26,18,20;
       --c-accent: 211,31,43;
       --c-accent-dark: 209,18,31;
       --c-accent2: 125,130,140;
@@ -148,7 +148,7 @@
       --c-panel2: 38,44,76;
       --c-panel3: 34,40,70;
       --c-panel4: 54,60,98;
-      --c-shadow: 16,20,40;
+      --c-shadow: 22,31,61;
       --c-accent: 244,123,32;
       --c-accent-dark: 194,42,42;
       --c-accent2: 90,120,220;
@@ -167,7 +167,7 @@
       --c-panel2: 40,32,62;
       --c-panel3: 36,29,56;
       --c-panel4: 54,44,82;
-      --c-shadow: 33,26,54;
+      --c-shadow: 27,21,48;
       --c-accent: 181,142,222;
       --c-accent-dark: 74,91,143;
       --c-accent2: 61,107,216;
@@ -186,7 +186,7 @@
       --c-panel2: 33,50,36;
       --c-panel3: 30,45,33;
       --c-panel4: 46,64,48;
-      --c-shadow: 22,36,25;
+      --c-shadow: 15,28,18;
       --c-accent: 201,232,100;
       --c-accent-dark: 26,122,42;
       --c-accent2: 62,122,62;
@@ -205,7 +205,7 @@
       --c-panel2: 46,33,58;
       --c-panel3: 43,30,54;
       --c-panel4: 56,40,70;
-      --c-shadow: 36,24,48;
+      --c-shadow: 28,18,38;
       --c-accent: 138,47,216;
       --c-accent-dark: 90,30,150;
       --c-accent2: 216,31,42;
@@ -6332,8 +6332,10 @@
   // The app has dozens of full-screen modals/overlays, all following the same
   // convention of toggling an `.open` class (see every classList.add/remove('open')
   // call). The bottom nav bar sits at a lower z-index than all of them, so while
-  // a modal is open the CSS above (body.menu-open #nav) recolors the bar to match
-  // the modal background and strips its border/glow, so no seam shows through.
+  // a modal is open the CSS above (body.menu-open #nav) hides the bar outright.
+  // `--c-bg`/`--c-shadow` are also kept identical per theme (see the :root
+  // blocks above) so nothing can visually seam even if this class fails to
+  // apply for some reason.
   // `.stats-subview` is excluded: it reuses the same `.open` class for switching
   // between inline views inside the Stats tab, not for a full-screen overlay.
   (function() {
@@ -6341,34 +6343,11 @@
     // bottom of the screen so the nav bar stays visible and usable underneath
     // them — they are not full-screen modals and must not trigger menu-open.
     var NAV_VISIBLE_WHILE_OPEN = { 'train-modal': true, 'picker': true, 'tpl-builder': true };
-    var nav = document.getElementById('nav');
-    var dbg = document.createElement('div');
-    dbg.id = 'debug-measure';
-    dbg.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:999999;background:#ff0000;color:#fff;' +
-      'font-size:17px;font-weight:800;line-height:1.5;padding:8px 10px;' +
-      'padding-top:calc(env(safe-area-inset-top,0px) + 8px);pointer-events:none;white-space:pre-wrap;' +
-      'font-family:monospace;';
-    document.body.appendChild(dbg);
     function updateNavVisibility() {
-      var openEls = Array.prototype.filter.call(document.querySelectorAll('.open'), function(el) {
+      var anyModalOpen = Array.prototype.some.call(document.querySelectorAll('.open'), function(el) {
         return !el.classList.contains('stats-subview') && !NAV_VISIBLE_WHILE_OPEN[el.id];
       });
-      document.body.classList.toggle('menu-open', openEls.length > 0);
-      if (openEls.length) {
-        var ov = openEls[0];
-        var ovRect = ov.getBoundingClientRect();
-        var navRect = nav.getBoundingClientRect();
-        dbg.textContent =
-          'ov: ' + ov.id + '\n' +
-          'ovBottom: ' + Math.round(ovRect.bottom) + '\n' +
-          'navTop: ' + Math.round(navRect.top) + '\n' +
-          'navBottom: ' + Math.round(navRect.bottom) + '\n' +
-          'winH: ' + window.innerHeight + '\n' +
-          'navVis: ' + getComputedStyle(nav).visibility + '\n' +
-          'navBG: ' + getComputedStyle(nav).backgroundColor;
-      } else {
-        dbg.textContent = '(no menu open)';
-      }
+      document.body.classList.toggle('menu-open', anyModalOpen);
     }
     new MutationObserver(updateNavVisibility).observe(document.body, {
       attributes: true, attributeFilter: ['class'], subtree: true
@@ -6862,6 +6841,15 @@ function getMondayStr() {
 // project's CLAUDE.md for the required pre-push changelog-confirmation step.
 // ═══════════════════════════════════════════════════════════
 const UPDATE_LOG = [
+  {
+    version: '97',
+    date: 'Aug 9, 2026',
+    title: 'Menu Bar Fix, Take 2',
+    bullets: [
+      'Removed the internal debug banner from the last couple of builds.',
+      'Made the bottom bar and every popup menu\'s background use the exact same color in every theme, so there\'s no visible seam between them regardless of which menu is open.',
+    ]
+  },
   {
     version: '96',
     date: 'Aug 9, 2026',
