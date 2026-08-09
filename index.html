@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <meta name="theme-color" content="#1D2A5E" />
-  <meta name="app-version" content="89" />
+  <meta name="theme-color" content="#000000" />
+  <meta name="app-version" content="90" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -225,6 +225,7 @@
       background-repeat: no-repeat;
       height: 100%;
       overflow: hidden;
+      overscroll-behavior: none;
     }
 
     /* Force portrait: rotate the whole page back upright when the device is turned sideways.
@@ -315,6 +316,12 @@
       padding-bottom: 0;
       z-index: 300;
       pointer-events: all;
+    }
+    body.menu-open #nav {
+      background: rgb(var(--c-shadow));
+      border-top-color: transparent;
+      box-shadow: none;
+      pointer-events: none;
     }
 
     .nav-btn {
@@ -2121,9 +2128,7 @@
       position: fixed;
       inset: 0;
       z-index: 450;
-      background: rgba(var(--c-shadow),0.82);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
+      background: rgb(var(--c-shadow));
       display: none;
       flex-direction: column;
       align-items: center;
@@ -2131,6 +2136,7 @@
       padding: calc(env(safe-area-inset-top) + 24px) 16px calc(env(safe-area-inset-bottom) + 24px);
       box-sizing: border-box;
       overflow-y: auto;
+      overscroll-behavior: none;
       pointer-events: all;
     }
     #goals-overlay.open { display: flex; }
@@ -2260,9 +2266,7 @@
       position: fixed;
       inset: 0;
       z-index: 450;
-      background: rgba(var(--c-shadow),0.82);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
+      background: rgb(var(--c-shadow));
       display: none;
       flex-direction: column;
       align-items: center;
@@ -2270,6 +2274,7 @@
       padding: calc(env(safe-area-inset-top) + 24px) 16px calc(env(safe-area-inset-bottom) + 24px);
       box-sizing: border-box;
       overflow-y: auto;
+      overscroll-behavior: none;
       pointer-events: all;
     }
     #avatar-overlay.open { display: flex; }
@@ -2425,9 +2430,7 @@
       position: fixed;
       inset: 0;
       z-index: 460;
-      background: rgba(var(--c-shadow),0.88);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
+      background: rgb(var(--c-shadow));
       display: none;
       flex-direction: column;
       align-items: center;
@@ -2435,6 +2438,7 @@
       padding: calc(env(safe-area-inset-top) + 24px) 16px calc(env(safe-area-inset-bottom) + 24px);
       box-sizing: border-box;
       overflow-y: auto;
+      overscroll-behavior: none;
       pointer-events: all;
     }
     #override-overlay.open { display: flex; }
@@ -3353,11 +3357,10 @@
     /* ── Reusable full-screen profile overlay (Friends, Challenges) ── */
     .profile-overlay {
       position: fixed; inset: 0; z-index: 460;
-      background: rgba(var(--c-shadow),0.88);
-      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      background: rgb(var(--c-shadow));
       display: none; flex-direction: column; align-items: center; justify-content: flex-start;
       padding: calc(env(safe-area-inset-top) + 24px) 16px calc(env(safe-area-inset-bottom) + 24px);
-      box-sizing: border-box; overflow-y: auto; pointer-events: all;
+      box-sizing: border-box; overflow-y: auto; overscroll-behavior: none; pointer-events: all;
     }
     .profile-overlay.open { display: flex; }
     .profile-overlay-inner {
@@ -3471,9 +3474,7 @@
       position: fixed;
       inset: 0;
       z-index: 460;
-      background: rgba(var(--c-shadow),0.88);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
+      background: rgb(var(--c-shadow));
       display: none;
       flex-direction: column;
       align-items: center;
@@ -3481,6 +3482,7 @@
       padding: calc(env(safe-area-inset-top) + 24px) 16px calc(env(safe-area-inset-bottom) + 24px);
       box-sizing: border-box;
       overflow-y: auto;
+      overscroll-behavior: none;
       pointer-events: all;
     }
     #weekly-overview-overlay.open { display: flex; }
@@ -6128,6 +6130,27 @@
     e.preventDefault();
   }, { passive: false });
 </script>
+<script>
+  // The app has dozens of full-screen modals/overlays, all following the same
+  // convention of toggling an `.open` class (see every classList.add/remove('open')
+  // call). The bottom nav bar sits at a lower z-index than all of them, so while
+  // a modal is open the CSS above (body.menu-open #nav) recolors the bar to match
+  // the modal background and strips its border/glow, so no seam shows through.
+  // `.stats-subview` is excluded: it reuses the same `.open` class for switching
+  // between inline views inside the Stats tab, not for a full-screen overlay.
+  (function() {
+    function updateNavVisibility() {
+      var anyModalOpen = Array.prototype.some.call(document.querySelectorAll('.open'), function(el) {
+        return !el.classList.contains('stats-subview');
+      });
+      document.body.classList.toggle('menu-open', anyModalOpen);
+    }
+    new MutationObserver(updateNavVisibility).observe(document.body, {
+      attributes: true, attributeFilter: ['class'], subtree: true
+    });
+    updateNavVisibility();
+  })();
+</script>
 <script type="importmap">
 {
   "imports": {
@@ -6611,6 +6634,14 @@ function getMondayStr() {
 // project's CLAUDE.md for the required pre-push changelog-confirmation step.
 // ═══════════════════════════════════════════════════════════
 const UPDATE_LOG = [
+  {
+    version: '90',
+    date: 'Aug 9, 2026',
+    title: 'Menu Bar Fix',
+    bullets: [
+      'Fixed a bug where opening menus (Friends, Challenges, Profile, Avatar, Goals, Weekly Overview) left a visible bar at the bottom of the screen where the tab icons normally sit — it\'s now fully covered by the menu background with no seam or color mismatch.',
+    ]
+  },
   {
     version: '89',
     date: 'Aug 8, 2026',
