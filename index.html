@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#000000" />
-  <meta name="app-version" content="91" />
+  <meta name="app-version" content="92" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -318,10 +318,18 @@
       pointer-events: all;
     }
     body.menu-open #nav {
-      background: rgb(var(--c-shadow));
+      background: #ff00ff !important;
+      outline: 6px solid #00ff00 !important;
       border-top-color: transparent;
       box-shadow: none;
       pointer-events: none;
+    }
+    /* TEMPORARY DIAGNOSTIC: shows the true rendered edge of each overlay so we
+       can see whether it's actually reaching the bottom of the screen. Remove
+       once the nav-bar-bleed bug is confirmed fixed. */
+    #goals-overlay.open, #avatar-overlay.open, #override-overlay.open,
+    #weekly-overview-overlay.open, .profile-overlay.open {
+      box-shadow: inset 0 0 0 6px lime !important;
     }
 
     .nav-btn {
@@ -6837,6 +6845,14 @@ function getMondayStr() {
 // project's CLAUDE.md for the required pre-push changelog-confirmation step.
 // ═══════════════════════════════════════════════════════════
 const UPDATE_LOG = [
+  {
+    version: '92',
+    date: 'Aug 9, 2026',
+    title: 'Debug Build',
+    bullets: [
+      'Internal diagnostic build only — no user-facing changes. Temporarily highlights the bottom bar and menu edges to track down a display glitch.',
+    ]
+  },
   {
     version: '91',
     date: 'Aug 9, 2026',
