@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#000000" />
-  <meta name="app-version" content="90" />
+  <meta name="app-version" content="91" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -859,6 +859,7 @@
     }
     .cal-field-btn:focus, .cal-field-btn:hover { border-color: rgb(var(--c-accent)); }
     #pr-edit-date.cal-field-btn { width: 100%; box-sizing: border-box; }
+    .meas-date-btn.cal-field-btn { width: 100%; box-sizing: border-box; margin-bottom: 8px; }
 
     /* ── Custom Calendar Picker ── */
     #cal-picker-modal {
@@ -2240,6 +2241,174 @@
       text-transform: uppercase;
       letter-spacing: 1px;
       margin-bottom: 6px;
+    }
+    /* ── Body Measurements Overlay ── */
+    #measurements-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 450;
+      background: rgba(var(--c-shadow),0.82);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: calc(env(safe-area-inset-top) + 24px) 16px calc(env(safe-area-inset-bottom) + 24px);
+      box-sizing: border-box;
+      overflow-y: auto;
+      pointer-events: all;
+    }
+    #measurements-overlay.open { display: flex; }
+    #measurements-inner {
+      background: rgba(var(--c-panel1),0.97);
+      border: 1px solid rgba(var(--c-accent2),0.25);
+      border-radius: 20px;
+      width: 100%;
+      max-width: 480px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    #measurements-header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px 16px 0;
+      flex-shrink: 0;
+    }
+    #measurements-title {
+      font-size: 13px;
+      font-weight: 800;
+      color: rgb(var(--c-text));
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+    #measurements-close-btn {
+      background: rgba(var(--c-panel3),0.7);
+      border: 1px solid rgba(var(--c-accent2),0.35);
+      border-radius: 12px;
+      color: rgb(var(--c-text2));
+      font-size: 13px;
+      font-weight: 600;
+      padding: 10px 40px;
+      cursor: pointer;
+      margin-top: 14px;
+      flex-shrink: 0;
+    }
+    #measurements-body {
+      overflow-y: auto;
+      padding: 14px 14px 14px;
+    }
+    #measurements-list { display: flex; flex-direction: column; }
+
+    /* ── Body Measurements Detail Popup (mirrors #chest-popup) ── */
+    #meas-detail-popup {
+      position: fixed;
+      inset: 0;
+      z-index: 460;
+      background: rgba(var(--c-shadow),0.65);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    #meas-detail-popup.open { display: flex; }
+    #meas-detail-box {
+      background: rgba(var(--c-panel2),0.97);
+      border: 1px solid rgba(var(--c-accent2),0.3);
+      border-radius: 20px;
+      width: 100%;
+      max-width: 420px;
+      max-height: calc(var(--rvh) * 85);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    #meas-detail-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 18px 14px;
+      border-bottom: 1px solid rgba(var(--c-accent3),0.2);
+      flex-shrink: 0;
+    }
+    #meas-detail-title { font-size: 18px; font-weight: 800; color: rgb(var(--c-text)); }
+    #meas-detail-close {
+      background: rgba(var(--c-panel4),0.7);
+      border: 1px solid rgba(var(--c-accent2),0.3);
+      border-radius: 50%;
+      color: rgb(var(--c-text2));
+      font-size: 14px;
+      width: 32px; height: 32px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    #meas-detail-body { flex: 1; overflow-y: auto; padding: 18px; }
+    .meas-side-block { margin-bottom: 24px; }
+    .meas-side-block:last-child { margin-bottom: 0; }
+    .meas-side-label {
+      font-size: 11px;
+      font-weight: 800;
+      color: rgb(var(--c-text4));
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+    .meas-entry-row { display: flex; gap: 8px; margin-bottom: 16px; }
+    .meas-entry-input {
+      flex: 1;
+      min-width: 0;
+      background: rgba(var(--c-panel1),0.95);
+      border: 1px solid rgba(var(--c-accent2),0.3);
+      border-radius: 10px;
+      color: rgb(var(--c-text));
+      font-size: 16px;
+      padding: 11px 14px;
+      -webkit-appearance: none;
+      outline: none;
+      box-sizing: border-box;
+    }
+    .meas-entry-input:focus { border-color: rgb(var(--c-accent)); }
+    .meas-entry-add {
+      background: linear-gradient(135deg, rgb(var(--c-accent)), rgb(var(--c-accent-dark)));
+      border: none;
+      border-radius: 10px;
+      color: rgb(var(--c-text));
+      font-size: 13px;
+      font-weight: 800;
+      padding: 0 18px;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .meas-history-list { display: flex; flex-direction: column; gap: 6px; margin-top: 14px; }
+    .meas-history-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 9px 12px;
+      background: rgba(var(--c-panel1),0.5);
+      border: 1px solid rgba(var(--c-accent3),0.15);
+      border-radius: 10px;
+    }
+    .meas-history-date { font-size: 12px; color: rgb(var(--c-text2)); }
+    .meas-history-right { display: flex; align-items: center; gap: 10px; }
+    .meas-history-val { font-size: 13px; font-weight: 700; color: rgb(var(--c-text)); }
+    .meas-history-delete {
+      background: rgba(224,90,74,0.12);
+      border: 1px solid rgba(224,90,74,0.35);
+      border-radius: 8px;
+      color: #e05a4a;
+      font-size: 11px;
+      width: 24px; height: 24px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
     }
     /* ── Avatar Overlay ── */
     #avatar-btn {
@@ -4983,6 +5152,7 @@
       <div id="stats-menu-center">
         <div id="stats-menu-box">
           <button id="stats-menu-goals" class="stats-menu-btn stats-menu-btn-primary">Personalized Goals</button>
+          <button id="stats-menu-measurements" class="stats-menu-btn">Body Measurements</button>
           <button id="stats-menu-exercises" class="stats-menu-btn">Exercise Stats</button>
           <button id="stats-menu-weekly-goals" class="stats-menu-btn">Weekly Goals</button>
           <button id="stats-menu-data" class="stats-menu-btn">Data Management</button>
@@ -5657,6 +5827,36 @@
     </div>
   </div>
   <button id="goals-close-btn">Done</button>
+</div>
+
+<!-- Body Measurements Overlay -->
+<div id="measurements-overlay">
+  <div id="measurements-inner">
+    <div id="measurements-header">
+      <span id="measurements-title">Body Measurements</span>
+    </div>
+    <div id="measurements-body">
+      <div class="goal-card">
+        <div class="goal-card-title">Track Your Progress</div>
+        <div style="font-size:12px;color:rgb(var(--c-text2));line-height:1.55;margin-top:6px;">
+          Tap a body part to log a new measurement in inches and see your history and growth over time.
+        </div>
+      </div>
+      <div id="measurements-list"></div>
+    </div>
+  </div>
+  <button id="measurements-close-btn">Done</button>
+</div>
+
+<!-- Body Measurements Detail Popup -->
+<div id="meas-detail-popup">
+  <div id="meas-detail-box">
+    <div id="meas-detail-header">
+      <div id="meas-detail-title">Neck</div>
+      <button id="meas-detail-close">✕</button>
+    </div>
+    <div id="meas-detail-body"></div>
+  </div>
 </div>
 
 <!-- Set Overrides Popup -->
@@ -6463,6 +6663,7 @@ const SOUND_HANDLED_BUTTON_SELECTORS = [
   '#new-ex-close', '#new-ex-cancel', '#rest-edit-cancel', '#pulley-close',
   '#ex-popup-close', '#ex-detail-close', '#cancel-btn', '#template-picker-close',
   '#tpl-cancel-btn', '#focus-picker-close', '#avatar-close-btn', '#goals-close-btn',
+  '#measurements-close-btn', '#meas-detail-close',
   '#override-close-btn', '#weekly-overview-close-btn', '#custom-prompt-cancel',
   '#pr-edit-close', '#profile-menu-close-btn',
   '#friends-overlay-close-btn',  // delete
@@ -6476,6 +6677,8 @@ const SOUND_HANDLED_BUTTON_SELECTORS = [
   '#challenges-btn',             // commonButton (explicit)
   '#prestart-start',             // sessionStart (via openTrain())
   '.exposure-timer-btn',         // commonButton (explicit)
+  '.meas-entry-add',             // commonButton (explicit)
+  '.meas-history-delete',        // delete (explicit)
 ];
 
 document.addEventListener('click', (e) => {
@@ -6634,6 +6837,19 @@ function getMondayStr() {
 // project's CLAUDE.md for the required pre-push changelog-confirmation step.
 // ═══════════════════════════════════════════════════════════
 const UPDATE_LOG = [
+  {
+    version: '91',
+    date: 'Aug 9, 2026',
+    title: 'Body Measurements',
+    bullets: [
+      'Added a new "Body Measurements" button under Personalized Goals in the Stats tab.',
+      'Tap a body part (Neck, Shoulders, Chest, Biceps, Forearms, Waist, Abs, Thighs, Calves) to log a new measurement in inches — Biceps, Forearms, Thighs, and Calves track Left and Right separately.',
+      'Pick any date for an entry (not just today), so you can backfill past measurements.',
+      'Each body part shows its full measurement history with a growth chart — bars are color-coded (black → yellow → pink → blue → purple) based on percent change since your last measurement, matching the same growth-level system used for tracked exercises.',
+      'Deleting a logged measurement now asks for confirmation first.',
+      'Your measurements sync to your account automatically, same as workouts and goals.',
+    ]
+  },
   {
     version: '90',
     date: 'Aug 9, 2026',
@@ -7070,8 +7286,22 @@ function defaultState() {
     exposurePRs: {},
     cablePulleys: {},
     exerciseMeta: {},
-    goals: {}
+    goals: {},
+    measurements: {},
+    measurementHistory: {}
   };
+}
+
+// measurementHistory briefly shipped as an array of dated snapshots before
+// settling on this per-body-part shape. JSON.stringify silently drops
+// non-index properties set on an array, so any array left over from that
+// earlier shape must be reset — otherwise every new measurement "saves" in
+// memory but vanishes on the next save/reload without ever erroring. Called
+// from both loadState() and pullCloudStateImpl(), since the latter swaps
+// `state` in directly and bypasses loadState()'s migrations entirely.
+function fixMeasurementHistoryShape(s) {
+  if (!s.measurements) s.measurements = {};
+  if (!s.measurementHistory || Array.isArray(s.measurementHistory)) s.measurementHistory = {};
 }
 
 function loadState() {
@@ -7111,6 +7341,7 @@ function loadState() {
       try { s.goals = JSON.parse(localStorage.getItem('trainhard_goals') || '{}'); }
       catch { s.goals = {}; }
     }
+    fixMeasurementHistoryShape(s);
     // Remove auto-generated placeholder exercises (e.g. "Chest Exercise")
     if (s.exercises) {
       for (const m of MUSCLES) {
@@ -7304,6 +7535,7 @@ async function pullCloudStateImpl(userId) {
     // pullCloudState swaps `state` in directly, bypassing loadState()'s
     // migrations entirely, so it has to run them itself too.
     applyDefaultExerciseMigrations(state);
+    fixMeasurementHistoryShape(state);
     // Suppress recalcStats()'s save() from queuing a redundant follow-up
     // push below: the update() two lines up already put this exact state on
     // the cloud, so a second queued push would just re-trigger the realtime
@@ -7320,11 +7552,13 @@ async function pullCloudStateImpl(userId) {
   suppressNextCloudPush = true;
   if (data.state && Object.keys(data.state).length > 0) {
     state = { ...defaultState(), ...data.state };
+    const hadBadMeasurementHistory = Array.isArray(state.measurementHistory);
+    fixMeasurementHistoryShape(state);
     // Only push back if the migrations actually changed something — pushing
     // unconditionally on every pull would re-trigger the realtime
     // subscription that calls pullCloudState, looping forever (see
     // applyDefaultExerciseMigrations's doc comment).
-    if (applyDefaultExerciseMigrations(state)) {
+    if (applyDefaultExerciseMigrations(state) || hadBadMeasurementHistory) {
       await supabase.from('profiles').update({ state }).eq('id', userId);
     }
   } else {
@@ -7685,7 +7919,7 @@ async function refreshFriends() {
     const uid0 = freshUser.id;
     ({ data: rows, error } = await supabase
       .from('friendships')
-      .select('id, requester_id, addressee_id, status, requester_username, addressee_username, updated_at')
+      .select('id, requester_id, addressee_id, status, requester_username, addressee_username, accepted_at, updated_at')
       .or(`requester_id.eq.${uid0},addressee_id.eq.${uid0}`));
   } catch (err) {
     console.error('refreshFriends threw:', err);
@@ -7765,7 +7999,7 @@ async function refreshFriends() {
         <div class="friend-row-avatar-slot"></div>
         <div style="min-width:0;">
           <div class="friend-row-name">${displayName}</div>
-          <div class="friend-row-sub">${friendsSinceLabel(r.updated_at)}</div>
+          <div class="friend-row-sub">${friendsSinceLabel(r.accepted_at || r.updated_at)}</div>
           <div class="friend-row-level">
             <div class="friend-row-level-dot" style="background:${lvColor};"></div>
             <div class="friend-row-level-text" style="color:${HAIR_TEXT_COLORS[lv]};">Level ${lv}</div>
@@ -7841,12 +8075,14 @@ document.getElementById('friend-edit-menu').addEventListener('click', (e) => {
   if (e.target === document.getElementById('friend-edit-menu')) closeFriendEditMenu();
 });
 
-// Friendships don't have a dedicated "accepted at" column — `updated_at` is
-// set by set_updated_at() on every UPDATE, and the only UPDATE a friendship
-// row ever gets is the accept action, so it doubles as the accept timestamp.
-function friendsSinceLabel(updatedAt) {
-  if (!updatedAt) return '';
-  const days = Math.floor((Date.now() - new Date(updatedAt).getTime()) / 86400000);
+// `accepted_at` is stamped once by the on_friendship_accepted trigger on the
+// pending -> accepted transition and never touched again — unlike
+// `updated_at`, which also gets bumped by unrelated updates (e.g. either
+// side renaming re-syncs the denormalized username columns). Rows accepted
+// before that column existed fall back to `updated_at` via the caller.
+function friendsSinceLabel(acceptedAt) {
+  if (!acceptedAt) return '';
+  const days = Math.floor((Date.now() - new Date(acceptedAt).getTime()) / 86400000);
   if (days <= 0) return 'Friends since today';
   if (days === 1) return 'Friends for 1 day';
   return `Friends for ${days} days`;
@@ -15025,6 +15261,254 @@ function saveGoals(goals) {
   save();
 }
 
+// ═══════════════════════════════════════════════════════════
+// BODY MEASUREMENTS
+// ═══════════════════════════════════════════════════════════
+
+// Ordered top-to-bottom by body position; entries with sides:true track
+// Left/Right separately (limbs), others a single value.
+const MEASUREMENT_FIELDS = [
+  { key: 'Neck', sides: false },
+  { key: 'Shoulders', sides: false },
+  { key: 'Chest', sides: false },
+  { key: 'Biceps', sides: true },
+  { key: 'Forearms', sides: true },
+  { key: 'Waist', sides: false },
+  { key: 'Abs', sides: false },
+  { key: 'Thighs', sides: true },
+  { key: 'Calves', sides: true }
+];
+
+function loadMeasurements() {
+  return state.measurements || {};
+}
+
+// state.measurementHistory[key] is an array of {date, value} entries (or,
+// for sides:true fields, {L: [...], R: [...]}) — one entry per calendar day,
+// sorted ascending. Cloud-synced automatically since it just lives on
+// `state`, like everything else pushed by doCloudPush().
+function getMeasHistory(key, side) {
+  const entry = (state.measurementHistory || {})[key];
+  if (!entry) return [];
+  return side ? (entry[side] || []) : (Array.isArray(entry) ? entry : []);
+}
+
+// `date` (ISO yyyy-mm-dd) lets an entry be logged for any day, not just
+// today — e.g. backfilling a measurement taken earlier. Because entries can
+// land out of chronological order, the "current" value shown in the list
+// (state.measurements) is always recomputed from whichever entry is
+// actually latest by date, not just whichever was added most recently.
+function addMeasurementEntry(key, side, value, date) {
+  if (!state.measurementHistory) state.measurementHistory = {};
+  if (!state.measurements) state.measurements = {};
+  const entryDate = date || new Date().toISOString().slice(0, 10);
+
+  let arr;
+  if (side) {
+    if (!state.measurementHistory[key] || Array.isArray(state.measurementHistory[key])) state.measurementHistory[key] = {};
+    if (!state.measurementHistory[key][side]) state.measurementHistory[key][side] = [];
+    arr = state.measurementHistory[key][side];
+  } else {
+    if (!Array.isArray(state.measurementHistory[key])) state.measurementHistory[key] = [];
+    arr = state.measurementHistory[key];
+  }
+
+  const existing = arr.find(e => e.date === entryDate);
+  if (existing) existing.value = value;
+  else arr.push({ date: entryDate, value });
+  arr.sort((a, b) => a.date.localeCompare(b.date));
+
+  const latest = arr[arr.length - 1].value;
+  if (side) {
+    if (!state.measurements[key]) state.measurements[key] = {};
+    state.measurements[key][side] = latest;
+  } else {
+    state.measurements[key] = latest;
+  }
+  save();
+}
+
+function deleteMeasurementEntry(key, side, date) {
+  const arr = getMeasHistory(key, side);
+  const idx = arr.findIndex(e => e.date === date);
+  if (idx === -1) return;
+  arr.splice(idx, 1);
+  const latest = arr[arr.length - 1];
+  if (side) {
+    if (latest) state.measurements[key][side] = latest.value;
+    else if (state.measurements[key]) delete state.measurements[key][side];
+  } else {
+    if (latest) state.measurements[key] = latest.value;
+    else delete state.measurements[key];
+  }
+  save();
+}
+
+function fmtMeasDate(iso) {
+  const [yy, mm, dd] = iso.split('-').map(Number);
+  return new Date(yy, mm - 1, dd).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+function buildMeasurementsList() {
+  const list = document.getElementById('measurements-list');
+  list.innerHTML = '';
+
+  for (const field of MEASUREMENT_FIELDS) {
+    const group = document.createElement('div');
+    group.className = 'muscle-group';
+    group.innerHTML = `
+      <div class="muscle-header">
+        <div class="muscle-left">
+          <div class="muscle-name">${field.key}</div>
+        </div>
+        <span class="chevron">›</span>
+      </div>
+    `;
+    group.querySelector('.muscle-header').addEventListener('click', () => {
+      playSound('commonButton');
+      openMeasDetail(field.key);
+    });
+    list.appendChild(group);
+  }
+}
+
+// Which body part's detail popup is currently open.
+let measDetailKey = null;
+
+function openMeasDetail(key) {
+  measDetailKey = key;
+  document.getElementById('meas-detail-title').textContent = key;
+  renderMeasDetailBody();
+  document.getElementById('meas-detail-popup').classList.add('open');
+}
+
+function renderMeasDetailBody() {
+  const key = measDetailKey;
+  const field = MEASUREMENT_FIELDS.find(f => f.key === key);
+  const body = document.getElementById('meas-detail-body');
+  body.innerHTML = buildGrowthLevelLegend();
+  if (field.sides) {
+    body.appendChild(buildMeasSideBlock(key, 'L', 'Left'));
+    body.appendChild(buildMeasSideBlock(key, 'R', 'Right'));
+  } else {
+    body.appendChild(buildMeasSideBlock(key, null, null));
+  }
+}
+
+// Reuses the .chest-ex-chart-* bar-chart classes and the same Level 1-5
+// growth-color system as the per-exercise progress charts elsewhere in
+// Stats (see EX_BAR_COLORS/growthLevelForPct) — an increase over the
+// previous entry lights the bar up on the same color scale a PR does;
+// a flat or decreased entry falls back to Level 1 (black), same convention
+// as a flat/down training week, so it's immediately clear whether a body
+// part has actually grown since it was last measured.
+function buildMeasChartHtml(entries) {
+  if (!entries.length) {
+    return `<div class="chest-ex-chart-empty">No measurements logged yet</div>`;
+  }
+  const maxVal = Math.max(...entries.map(e => e.value));
+  let lastVal = null;
+  const bars = entries.map(e => {
+    const heightPct = maxVal > 0 ? Math.max(6, Math.round((e.value / maxVal) * 100)) : 6;
+
+    let growthHtml, barLevel;
+    if (lastVal === null) {
+      growthHtml = `<div class="chest-ex-bar-growth flat">start</div>`;
+      barLevel = 1;
+    } else {
+      const pct = lastVal > 0 ? Math.round(((e.value - lastVal) / lastVal) * 100) : (e.value > 0 ? 100 : 0);
+      const cls = pct > 0 ? 'up' : (pct < 0 ? 'down' : 'flat');
+      const sign = pct > 0 ? '+' : '';
+      growthHtml = `<div class="chest-ex-bar-growth ${cls}">${sign}${pct}%</div>`;
+      barLevel = pct <= 0 ? 1 : growthLevelForPct(pct);
+    }
+    lastVal = e.value;
+
+    const barColor = EX_BAR_COLORS[barLevel];
+    const barColorDim = EX_BAR_COLORS_DIM[barLevel];
+    const barGlow = EX_BAR_GLOW[barLevel];
+
+    return `
+      <div class="chest-ex-bar-col" style="flex:0 0 64px;height:100%;">
+        <div class="chest-ex-bar-val">${e.value}"</div>
+        ${growthHtml}
+        <div class="chest-ex-bar-track" style="flex:1;">
+          <div class="chest-ex-bar" style="height:${heightPct}%;background:linear-gradient(180deg, ${barColor}, ${barColorDim});box-shadow:0 0 10px ${barGlow};"></div>
+        </div>
+        <div class="chest-ex-bar-label">${fmtMeasDate(e.date)}</div>
+      </div>
+    `;
+  }).join('');
+  return `<div class="chest-ex-chart">${bars}</div>`;
+}
+
+function buildMeasSideBlock(key, side, sideLabel) {
+  const block = document.createElement('div');
+  block.className = 'meas-side-block';
+
+  const entries = getMeasHistory(key, side);
+  const todayIso = isoFromDate(new Date());
+
+  block.innerHTML = `
+    ${sideLabel ? `<div class="meas-side-label">${sideLabel}</div>` : ''}
+    <div class="meas-entry-row">
+      <button type="button" class="meas-date-btn cal-field-btn" data-iso="${todayIso}">${fmtCalBtnLabel(todayIso)}</button>
+    </div>
+    <div class="meas-entry-row">
+      <input type="number" inputmode="decimal" step="0.1" min="0" class="meas-entry-input" placeholder="Enter inches">
+      <button class="meas-entry-add">Add</button>
+    </div>
+    ${buildMeasChartHtml(entries)}
+    <div class="meas-history-list">
+      ${entries.slice().reverse().map(e => `
+        <div class="meas-history-row">
+          <div class="meas-history-date">${fmtMeasDate(e.date)}</div>
+          <div class="meas-history-right">
+            <div class="meas-history-val">${e.value}"</div>
+            <button class="meas-history-delete" data-date="${e.date}">✕</button>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+
+  const input = block.querySelector('.meas-entry-input');
+  const addBtn = block.querySelector('.meas-entry-add');
+  const dateBtn = block.querySelector('.meas-date-btn');
+
+  dateBtn.addEventListener('click', () => {
+    openCalendarPicker(dateBtn.dataset.iso, (iso) => {
+      dateBtn.dataset.iso = iso;
+      dateBtn.textContent = fmtCalBtnLabel(iso);
+    });
+  });
+
+  const submit = () => {
+    const num = parseFloat(input.value);
+    if (isNaN(num) || num < 0) return;
+    playSound('commonButton');
+    addMeasurementEntry(key, side, Math.round(num * 10) / 10, dateBtn.dataset.iso);
+    renderMeasDetailBody();
+  };
+
+  addBtn.addEventListener('click', submit);
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); submit(); }
+  });
+
+  block.querySelectorAll('.meas-history-delete').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const ok = await customConfirm(`Delete the ${fmtMeasDate(btn.dataset.date)} measurement?`, 'Delete', 'Cancel');
+      if (!ok) return;
+      playSound('delete');
+      deleteMeasurementEntry(key, side, btn.dataset.date);
+      renderMeasDetailBody();
+    });
+  });
+
+  return block;
+}
+
 function buildGoalsList() {
   const goals = loadGoals();
   const list = document.getElementById('goals-list');
@@ -15862,6 +16346,29 @@ document.getElementById('goals-close-btn').addEventListener('click', () => {
   playSound('delete');
   document.getElementById('goals-overlay').classList.remove('open');
 });
+document.getElementById('measurements-close-btn').addEventListener('click', () => {
+  playSound('delete');
+  document.getElementById('measurements-overlay').classList.remove('open');
+});
+document.getElementById('measurements-overlay').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('measurements-overlay')) {
+    document.getElementById('measurements-overlay').classList.remove('open');
+  }
+});
+document.getElementById('stats-menu-measurements').addEventListener('click', () => {
+  buildMeasurementsList();
+  document.getElementById('measurements-overlay').classList.add('open');
+});
+document.getElementById('meas-detail-close').addEventListener('click', () => {
+  playSound('delete');
+  document.getElementById('meas-detail-popup').classList.remove('open');
+});
+document.getElementById('meas-detail-popup').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('meas-detail-popup')) {
+    document.getElementById('meas-detail-popup').classList.remove('open');
+  }
+});
+
 document.getElementById('goals-overlay').addEventListener('click', (e) => {
   if (e.target === document.getElementById('goals-overlay')) {
     document.getElementById('goals-overlay').classList.remove('open');

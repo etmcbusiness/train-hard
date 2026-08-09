@@ -705,3 +705,46 @@ create trigger on_profile_state_backup
 -- this the table was never added to the realtime publication, so those
 -- UPDATE events silently never arrived.
 alter publication supabase_realtime add table public.profiles;
+
+-- ═══════════════════════════════════════════════════════════
+-- Fix: "Friends for 1 day" never advancing (2026-08-09)
+-- friendsSinceLabel() was reading friendships.updated_at as a stand-in for
+-- "when this friendship was accepted." That worked at first, but updated_at
+-- is bumped by *any* UPDATE on the row via on_friendships_updated — including
+-- the sync_username_on_change trigger (Phase 6) rewriting requester_username
+-- / addressee_username whenever either side renames. Every rename silently
+-- reset the clock back to "today" for that friendship. accepted_at is a
+-- dedicated column, stamped once by its own trigger only on the
+-- pending -> accepted transition, so nothing else can bump it.
+-- ═══════════════════════════════════════════════════════════
+
+alter table public.friendships add column if not exists accepted_at timestamptz;
+
+-- Backfill from created_at (request-sent time), not updated_at — updated_at
+-- is exactly the value this whole fix exists because of: already-corrupted
+-- by rename-triggered resets for any friendship that's ever had either side
+-- rename. created_at is set once at insert and nothing ever touches it again,
+-- so "when the request was sent" is a far more trustworthy stand-in for "when
+-- it was accepted" than a timestamp that's been silently drifting. Re-runnable:
+-- always overwrites, so a first pass that used the old (wrong) updated_at
+-- backfill gets corrected too.
+update public.friendships
+set accepted_at = created_at
+where status = 'accepted';
+
+create or replace function public.set_friendship_accepted_at()
+returns trigger
+language plpgsql
+as $$
+begin
+  if new.status = 'accepted' and (old.status is distinct from 'accepted') then
+    new.accepted_at = now();
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists on_friendship_accepted on public.friendships;
+create trigger on_friendship_accepted
+  before update on public.friendships
+  for each row execute function public.set_friendship_accepted_at();
