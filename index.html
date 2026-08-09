@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#000000" />
-  <meta name="app-version" content="92" />
+  <meta name="app-version" content="93" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -6347,11 +6347,16 @@
   // `.stats-subview` is excluded: it reuses the same `.open` class for switching
   // between inline views inside the Stats tab, not for a full-screen overlay.
   (function() {
+    var dbg = document.createElement('div');
+    dbg.id = 'debug-openlist';
+    dbg.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:red;color:#fff;font-size:11px;padding:3px 6px;pointer-events:none;word-break:break-all;';
+    document.body.appendChild(dbg);
     function updateNavVisibility() {
-      var anyModalOpen = Array.prototype.some.call(document.querySelectorAll('.open'), function(el) {
+      var openEls = Array.prototype.filter.call(document.querySelectorAll('.open'), function(el) {
         return !el.classList.contains('stats-subview');
       });
-      document.body.classList.toggle('menu-open', anyModalOpen);
+      dbg.textContent = openEls.length ? ('OPEN: ' + openEls.map(function(el) { return el.id || el.className; }).join(', ')) : '';
+      document.body.classList.toggle('menu-open', openEls.length > 0);
     }
     new MutationObserver(updateNavVisibility).observe(document.body, {
       attributes: true, attributeFilter: ['class'], subtree: true
@@ -6845,6 +6850,14 @@ function getMondayStr() {
 // project's CLAUDE.md for the required pre-push changelog-confirmation step.
 // ═══════════════════════════════════════════════════════════
 const UPDATE_LOG = [
+  {
+    version: '93',
+    date: 'Aug 9, 2026',
+    title: 'Debug Build',
+    bullets: [
+      'Internal diagnostic build only — no user-facing changes. Adds an on-screen label naming the exact element that\'s incorrectly triggering a bug.',
+    ]
+  },
   {
     version: '92',
     date: 'Aug 9, 2026',
