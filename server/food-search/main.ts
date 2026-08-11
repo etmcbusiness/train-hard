@@ -60,22 +60,29 @@ Deno.serve({ port: PORT }, async (req) => {
   try {
     const url = new URL(req.url);
     const query = url.searchParams.get('q');
-    if (!query) {
-      return new Response(JSON.stringify({ error: 'Missing q parameter' }), {
+    const foodId = url.searchParams.get('food_id');
+    if (!query && !foodId) {
+      return new Response(JSON.stringify({ error: 'Missing q or food_id parameter' }), {
         status: 400,
         headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
       });
     }
 
     const token = await getAccessToken();
-    const searchUrl = `https://platform.fatsecret.com/rest/foods/search/v1?search_expression=${encodeURIComponent(query)}&max_results=50&format=json`;
-    const searchRes = await fetch(searchUrl, {
+    // food_id lookups fetch full per-serving detail (including the metric
+    // gram/ml equivalent for household servings like "1 stick") — used by
+    // the app to convert a label serving to grams, which the plain search
+    // endpoint's free-text description can't provide.
+    const detailUrl = foodId
+      ? `https://platform.fatsecret.com/rest/food/v4?food_id=${encodeURIComponent(foodId)}&format=json`
+      : `https://platform.fatsecret.com/rest/foods/search/v1?search_expression=${encodeURIComponent(query)}&max_results=50&format=json`;
+    const upstreamRes = await fetch(detailUrl, {
       headers: { 'Authorization': `Bearer ${token}` },
     });
-    const data = await searchRes.json();
+    const data = await upstreamRes.json();
 
     return new Response(JSON.stringify(data), {
-      status: searchRes.ok ? 200 : searchRes.status,
+      status: upstreamRes.ok ? 200 : upstreamRes.status,
       headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
     });
   } catch (err) {

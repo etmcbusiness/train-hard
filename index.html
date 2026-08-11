@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#000000" />
-  <meta name="app-version" content="101" />
+  <meta name="app-version" content="102" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -6890,6 +6890,17 @@ function getMondayStr() {
 // project's CLAUDE.md for the required pre-push changelog-confirmation step.
 // ═══════════════════════════════════════════════════════════
 const UPDATE_LOG = [
+  {
+    version: '102',
+    date: 'Aug 11, 2026',
+    title: 'Eat Plenty: Serving Size Fixes',
+    bullets: [
+      'Fixed a bug in the food-logging serving-size adjuster where switching units (g/oz/lbs) didn\'t convert the number — it left the digits unchanged and reinterpreted them in the new unit, wildly inflating or deflating the calorie/macro preview (e.g. 14g switching to oz stayed "14", now meaning ~28x more food). Switching units now correctly converts the amount.',
+      'Foods with a real label serving like "1 stick" or "2 slices" now show that actual wording in the serving-size adjuster instead of being flattened to a generic "1 serving".',
+      'Search results with a label serving can now also be switched to grams/oz/lbs, converting correctly (requires a backend redeploy to fully activate).',
+      'Barcode-scanned foods that list a label serving on the package (e.g. "1 stick (28g)") now offer that as a bonus unit option alongside grams/oz/lbs.',
+    ]
+  },
   {
     version: '101',
     date: 'Aug 11, 2026',

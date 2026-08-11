@@ -2401,23 +2401,65 @@
   const UNIT_GROUPS = {
     mass: { g: 1, oz: 28.3495, lbs: 453.592 },
     volume: { ml: 1, L: 1000, 'fl oz': 29.5735 },
-    // Some FatSecret results (mainly restaurant/composite items) only give
-    // macros "per 1 serving" with no gram/ml breakdown — there's nothing to
-    // convert those to, so they get their own single-unit group.
-    count: { serving: 1 },
   };
+  function isMassUnit(unit) { return Object.prototype.hasOwnProperty.call(UNIT_GROUPS.mass, unit); }
+  function isVolumeUnit(unit) { return Object.prototype.hasOwnProperty.call(UNIT_GROUPS.volume, unit); }
   function unitGroupOf(unit) {
-    if (Object.prototype.hasOwnProperty.call(UNIT_GROUPS.mass, unit)) return 'mass';
-    if (Object.prototype.hasOwnProperty.call(UNIT_GROUPS.volume, unit)) return 'volume';
-    return 'count';
+    if (isMassUnit(unit)) return 'mass';
+    if (isVolumeUnit(unit)) return 'volume';
+    // A "label" unit is the food's own wording off the package/menu (e.g.
+    // "stick", "piece", or a generic "serving" for composite/restaurant
+    // items with no gram breakdown at all) — there's no fixed conversion
+    // table for these, only whatever gram equivalent (if any) was looked
+    // up for this specific food via food.gramsPerUnit.
+    return 'label';
   }
-  function convertAmount(amount, fromUnit, toUnit) {
-    const table = UNIT_GROUPS[unitGroupOf(fromUnit)];
-    if (!(toUnit in table)) return null;
-    return (amount * table[fromUnit]) / table[toUnit];
+  // The unit options the picker should offer for a given food: its own
+  // mass/volume group, or — for a label unit — that label plus grams/oz/lbs
+  // if a gram equivalent was resolved (via the food.get detail lookup),
+  // otherwise just the label unit on its own (nothing to convert to/from).
+  function unitOptionsFor(food) {
+    const group = unitGroupOf(food.unit);
+    if (group === 'label') {
+      if (food.gramsPerUnit && food.gramsPerUnit[food.unit] > 0) {
+        return [food.unit, ...Object.keys(UNIT_GROUPS.mass)];
+      }
+      return [food.unit];
+    }
+    const base = Object.keys(UNIT_GROUPS[group]);
+    // A mass-based food (e.g. barcode scans, which always normalize to
+    // grams) can still carry a bonus label unit from the package — "1
+    // stick" alongside g/oz/lbs — when its gram equivalent is known.
+    const extra = (group === 'mass' && food.gramsPerUnit)
+      ? Object.keys(food.gramsPerUnit).filter(u => !base.includes(u)) : [];
+    return [...base, ...extra];
+  }
+  function convertAmount(amount, fromUnit, toUnit, food) {
+    if (fromUnit === toUnit) return amount;
+    if (isMassUnit(fromUnit) && isMassUnit(toUnit)) {
+      return (amount * UNIT_GROUPS.mass[fromUnit]) / UNIT_GROUPS.mass[toUnit];
+    }
+    if (isVolumeUnit(fromUnit) && isVolumeUnit(toUnit)) {
+      return (amount * UNIT_GROUPS.volume[fromUnit]) / UNIT_GROUPS.volume[toUnit];
+    }
+    // Bridge a label unit (e.g. "stick") through its known gram equivalent
+    // so it can convert to/from mass units too.
+    const bridge = food && food.gramsPerUnit;
+    if (!bridge) return null;
+    let grams = null;
+    if (isMassUnit(fromUnit)) grams = amount * UNIT_GROUPS.mass[fromUnit];
+    else if (bridge[fromUnit] > 0) grams = amount * bridge[fromUnit];
+    if (grams == null) return null;
+    if (isMassUnit(toUnit)) return grams / UNIT_GROUPS.mass[toUnit];
+    if (bridge[toUnit] > 0) return grams / bridge[toUnit];
+    return null;
   }
   function formatServingAmount(size, unit) {
-    if (unit === 'serving') return `${size} ${size === 1 ? 'serving' : 'servings'}`;
+    // Label units come from FatSecret/OFF's own wording, which already
+    // bakes in correct plurality for the count it shipped with (e.g. "2
+    // regular slices") — appending our own "s" on top would double it up,
+    // so label units are shown verbatim rather than pluralized here.
+    if (unitGroupOf(unit) === 'label') return `${size} ${unit}`;
     return `${size}${unit}`;
   }
 
@@ -2431,6 +2473,54 @@
   // normal add-to-meal flow).
   let logCustomEditIndex = null;
   let logCustomEditMealKey = null;
+  // Tracks the unit the amount field is currently expressed in, so switching
+  // the dropdown can convert the number instead of just relabeling it (e.g.
+  // "14" g -> "0.5" oz, not leaving "14" behind now meaning 14oz).
+  let logCustomPrevUnit = null;
+  function refreshLogCustomUnitOptions(food) {
+    const unitSelect = document.getElementById('ep-log-custom-unit-select');
+    const current = unitSelect.value;
+    unitSelect.innerHTML = unitOptionsFor(food).map(u => `<option value="${u}">${u}</option>`).join('');
+    if ([...unitSelect.options].some(o => o.value === current)) unitSelect.value = current;
+  }
+  // A FatSecret result whose serving is a household label (e.g. "1 stick")
+  // has no gram breakdown in the search response — only a second call to
+  // food.get (via the food_id proxy route) returns each serving's metric
+  // gram/ml equivalent. Resolved lazily (only for label-unit foods, only
+  // once) so plain g/oz/lbs items never pay for the extra round trip.
+  async function resolveFatSecretGramsPerUnit(food) {
+    if (!food.foodId || food.gramsPerUnit || unitGroupOf(food.unit) !== 'label') return;
+    try {
+      const res = await fetch(`${FOOD_SEARCH_URL}?food_id=${encodeURIComponent(food.foodId)}`, {
+        headers: { 'x-app-secret': FOOD_SEARCH_APP_SECRET },
+      });
+      const data = await res.json();
+      if (!res.ok || data.error) return;
+      const raw = data.food?.servings?.serving;
+      const list = Array.isArray(raw) ? raw : (raw ? [raw] : []);
+      // Foods often have several servings (100g, 1 stick, 1 package, ...) —
+      // match the one whose wording lines up with what we parsed from the
+      // search result, so the gram equivalent lines up with the macros
+      // already shown rather than some other serving on the same food.
+      const wanted = `${food.servingSize} ${food.unit}`.toLowerCase();
+      const match = list.find(s => (s.serving_description || '').trim().toLowerCase().replace(/s$/, '') === wanted.replace(/s$/, ''))
+        || list.find(s => (s.measurement_description || '').trim().toLowerCase() === food.unit);
+      if (!match) return;
+      const metricAmount = parseFloat(match.metric_serving_amount);
+      const numUnits = parseFloat(match.number_of_units) || food.servingSize;
+      const metricUnit = (match.metric_serving_unit || '').trim().toLowerCase();
+      if (!metricAmount || !numUnits || metricUnit !== 'g') return;
+      food.gramsPerUnit = { [food.unit]: metricAmount / numUnits };
+      // Only refresh the picker if this is still the food being adjusted —
+      // the user may have already closed the modal or opened a different food.
+      if (logCustomFood === food) {
+        refreshLogCustomUnitOptions(food);
+        updateLogCustomPreview();
+      }
+    } catch (err) {
+      console.error('Failed to resolve gram equivalent for', food.name, err);
+    }
+  }
   function openLogCustomModal(food, opts) {
     opts = opts || {};
     logCustomFood = food;
@@ -2439,15 +2529,16 @@
     document.getElementById('ep-log-custom-base').textContent =
       `Per ${formatServingAmount(food.servingSize, food.unit)}: ${Math.round(food.cals)} cal · ${Math.round(food.protein)}p · ${Math.round(food.carbs)}c · ${Math.round(food.fat)}f`;
 
-    const group = unitGroupOf(food.unit);
     const unitSelect = document.getElementById('ep-log-custom-unit-select');
-    unitSelect.innerHTML = Object.keys(UNIT_GROUPS[group]).map(u => `<option value="${u}">${u}</option>`).join('');
+    unitSelect.innerHTML = unitOptionsFor(food).map(u => `<option value="${u}">${u}</option>`).join('');
     unitSelect.value = opts.unit || food.unit;
+    logCustomPrevUnit = unitSelect.value;
 
     document.getElementById('ep-log-custom-amount').value = opts.amount != null ? opts.amount : food.servingSize;
     document.querySelector('#ep-log-custom-form .ep-modal-save-btn').textContent = logCustomEditIndex != null ? 'Save' : 'Add';
     updateLogCustomPreview();
     document.getElementById('ep-log-custom-modal').classList.add('open');
+    resolveFatSecretGramsPerUnit(food);
   }
   // Reopens the serving-size adjuster for an already-logged entry that has
   // baseFood data (i.e. it was originally logged from Search/Scan/My
@@ -2468,7 +2559,7 @@
     if (!logCustomFood) return;
     const amount = parseFloat(document.getElementById('ep-log-custom-amount').value) || 0;
     const unit = document.getElementById('ep-log-custom-unit-select').value;
-    const amountInFoodUnit = convertAmount(amount, unit, logCustomFood.unit);
+    const amountInFoodUnit = convertAmount(amount, unit, logCustomFood.unit, logCustomFood);
     const ratio = (amountInFoodUnit != null && logCustomFood.servingSize > 0) ? amountInFoodUnit / logCustomFood.servingSize : 0;
     logCustomScaled = {
       cals: logCustomFood.cals * ratio,
@@ -2479,9 +2570,23 @@
     document.getElementById('ep-log-custom-preview').textContent =
       `${Math.round(logCustomScaled.cals)} cal · ${Math.round(logCustomScaled.protein)}p · ${Math.round(logCustomScaled.carbs)}c · ${Math.round(logCustomScaled.fat)}f`;
   }
+  // Switching units re-expresses the current number in the new unit (e.g.
+  // 14g -> 0.49oz) instead of leaving the digits unchanged and silently
+  // reinterpreting them, which used to inflate/deflate the macro preview.
+  function handleLogCustomUnitChange() {
+    const amountInput = document.getElementById('ep-log-custom-amount');
+    const newUnit = document.getElementById('ep-log-custom-unit-select').value;
+    const amount = parseFloat(amountInput.value);
+    if (!isNaN(amount) && logCustomFood && logCustomPrevUnit && newUnit !== logCustomPrevUnit) {
+      const converted = convertAmount(amount, logCustomPrevUnit, newUnit, logCustomFood);
+      if (converted != null) amountInput.value = Math.round(converted * 100) / 100;
+    }
+    logCustomPrevUnit = newUnit;
+    updateLogCustomPreview();
+  }
   document.getElementById('ep-log-custom-amount').addEventListener('input', updateLogCustomPreview);
   document.getElementById('ep-log-custom-amount').addEventListener('change', updateLogCustomPreview);
-  document.getElementById('ep-log-custom-unit-select').addEventListener('change', updateLogCustomPreview);
+  document.getElementById('ep-log-custom-unit-select').addEventListener('change', handleLogCustomUnitChange);
   document.getElementById('ep-log-custom-cancel').addEventListener('click', closeLogCustomModal);
   document.getElementById('ep-log-custom-modal').addEventListener('click', (e) => {
     if (e.target === document.getElementById('ep-log-custom-modal')) closeLogCustomModal();
@@ -2507,6 +2612,7 @@
       baseFood: {
         name: logCustomFood.name, servingSize: logCustomFood.servingSize, unit: logCustomFood.unit,
         cals: logCustomFood.cals, protein: logCustomFood.protein, carbs: logCustomFood.carbs, fat: logCustomFood.fat,
+        foodId: logCustomFood.foodId, gramsPerUnit: logCustomFood.gramsPerUnit,
       },
     };
     if (logCustomEditIndex != null) {
@@ -2556,9 +2662,16 @@
     const servingMatch = desc.match(/^Per\s+([^-]+?)\s*-\s*Calories/i);
     const servingText = servingMatch ? servingMatch[1].trim() : '1 serving';
     const direct = servingText.match(/^([\d.]+)\s*(g|ml|oz|lbs?|l|fl\.?\s?oz)$/i);
+    // Not a bare mass/volume amount — usually a label/household serving
+    // like "1 stick" or "2 pieces". Keep the food's actual wording (unit)
+    // instead of collapsing it to a generic "serving", so the adjuster
+    // shows what's really on the package. Falls back to "1 serving" only
+    // when the description has no leading count at all (composite/
+    // restaurant items with no per-unit breakdown).
+    const label = !direct && servingText.match(/^([\d.]+)\s*(.+)$/);
     return {
-      servingSize: direct ? parseFloat(direct[1]) : 1,
-      unit: direct ? normalizeSearchUnit(direct[2]) : 'serving',
+      servingSize: direct ? parseFloat(direct[1]) : (label ? parseFloat(label[1]) : 1),
+      unit: direct ? normalizeSearchUnit(direct[2]) : (label ? label[2].trim().toLowerCase() : 'serving'),
       cals: cal ? parseFloat(cal[1]) : 0,
       fat: fat ? parseFloat(fat[1]) : 0,
       carbs: carbs ? parseFloat(carbs[1]) : 0,
@@ -2570,6 +2683,7 @@
     return {
       name: food.food_name,
       brand: food.brand_name || (food.food_type === 'Restaurant' ? food.food_name.split(',')[0] : ''),
+      foodId: food.food_id,
       ...parseFatSecretDescription(food.food_description || ''),
     };
   }
@@ -2678,10 +2792,24 @@
   // endpoint, which is free, keyless, and has no IP restriction (unlike
   // the FatSecret text search above, which needs the always-on proxy).
   // ═══════════════════════════════════════════════════════════
+  // Open Food Facts' free-text serving_size (e.g. "1 stick (28 g)", "2 tbsp
+  // (30g)") names the label unit alongside its gram equivalent — parsed so
+  // that unit can be offered as a bonus option next to g/oz/lbs, the same
+  // way a FatSecret label serving does.
+  function parseOFFServingLabel(text) {
+    const m = (text || '').match(/^([\d.]+)\s*([a-zA-Z][a-zA-Z .]*?)\s*\(([\d.]+)\s*(?:g|ml)\)/i);
+    if (!m) return null;
+    const amount = parseFloat(m[1]);
+    const unit = m[2].trim().toLowerCase();
+    const grams = parseFloat(m[3]);
+    if (!amount || !grams || !unit || unit === 'g' || unit === 'ml') return null;
+    return { [unit]: grams / amount };
+  }
   function normalizeOFFBarcodeProduct(product) {
     const n = product.nutriments || {};
     const servingQty = parseFloat(product.serving_quantity);
     const hasServing = n['energy-kcal_serving'] != null;
+    const gramsPerUnit = parseOFFServingLabel(product.serving_size);
     return {
       name: product.product_name || product.generic_name || 'Unknown product',
       brand: product.brands ? product.brands.split(',')[0].trim() : '',
@@ -2691,6 +2819,7 @@
       protein: (hasServing ? n['proteins_serving'] : n['proteins_100g']) || 0,
       carbs: (hasServing ? n['carbohydrates_serving'] : n['carbohydrates_100g']) || 0,
       fat: (hasServing ? n['fat_serving'] : n['fat_100g']) || 0,
+      ...(gramsPerUnit ? { gramsPerUnit } : {}),
     };
   }
 
@@ -2769,7 +2898,7 @@
     scanFoodBusy = true;
     document.getElementById('ep-scan-food-status').textContent = `Looking up ${barcode}…`;
     try {
-      const res = await fetch(`https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(barcode)}.json?fields=product_name,generic_name,brands,nutriments,serving_quantity,status`);
+      const res = await fetch(`https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(barcode)}.json?fields=product_name,generic_name,brands,nutriments,serving_quantity,serving_size,status`);
       const data = await res.json();
       if (data.status !== 1 || !data.product) {
         document.getElementById('ep-scan-food-status').textContent = `No match for barcode ${barcode}.`;
