@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#000000" />
-  <meta name="app-version" content="98" />
+  <meta name="app-version" content="99" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -6842,6 +6842,14 @@ function getMondayStr() {
 // ═══════════════════════════════════════════════════════════
 const UPDATE_LOG = [
   {
+    version: '99',
+    date: 'Aug 11, 2026',
+    title: 'Auto-Fill New Sets',
+    bullets: [
+      'Adding a new set now carries over the weight and reps from the set before it, instead of starting blank — matching how editing an existing set already fills in the ones below it.',
+    ]
+  },
+  {
     version: '98',
     date: 'Aug 11, 2026',
     title: 'Eat Plenty: Food Search Live + Serving Size Editing',
@@ -13362,7 +13370,12 @@ function addSet(exIdx, block) {
     shape.fields.forEach(f => { newSet[f.key] = prevSet ? (prevSet[f.key] ?? '') : ''; });
     ex.sets.push(newSet);
   } else {
-    ex.sets.push({ weight: '', reps: '', done: false });
+    const prevSet = ex.sets[ex.sets.length - 1];
+    ex.sets.push({
+      weight: prevSet ? (prevSet.weight ?? '') : '',
+      reps: prevSet ? (prevSet.reps ?? '') : '',
+      done: false
+    });
   }
   renderSets(exIdx, block);
   saveActiveSession();
@@ -15341,6 +15354,7 @@ const MEASUREMENT_FIELDS = [
   { key: 'Forearms', sides: true },
   { key: 'Waist', sides: false },
   { key: 'Abs', sides: false },
+  { key: 'Glutes', sides: false },
   { key: 'Thighs', sides: true },
   { key: 'Calves', sides: true }
 ];
