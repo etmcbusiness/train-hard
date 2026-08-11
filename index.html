@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#000000" />
-  <meta name="app-version" content="102" />
+  <meta name="app-version" content="103" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -6891,6 +6891,14 @@ function getMondayStr() {
 // ═══════════════════════════════════════════════════════════
 const UPDATE_LOG = [
   {
+    version: '103',
+    date: 'Aug 11, 2026',
+    title: 'Friend Activity Fix',
+    bullets: [
+      'Fixed a bug where a friend\'s "last worked out" time was often way overstated (e.g. showing "16h ago" or "1d ago" for a workout that happened an hour or two earlier). New workouts now record the exact time they were completed instead of just the date.',
+    ]
+  },
+  {
     version: '102',
     date: 'Aug 11, 2026',
     title: 'Eat Plenty: Serving Size Fixes',
@@ -8452,16 +8460,15 @@ function getFriendWeeklyCardioSecs(friendState) {
   return secs;
 }
 
-// Mirrors getMuscleLastTrainedInfo's date-only-to-hours approximation
-// (no time-of-day is stored on a history entry, so "hours ago" is measured
-// from midnight of the workout's date to now).
+// Uses the real completedAt timestamp when present; older history entries
+// (logged before completedAt existed) fall back to midnight of the
+// workout's date, which only approximates "hours ago".
 function fmtFriendLastWorkout(friendState) {
   let latestMs = null;
   for (const w of (friendState.history || [])) {
-    if (!w.date) continue;
-    const d = _parseDateStr(w.date);
-    if (!d) continue;
-    if (latestMs === null || d.getTime() > latestMs) latestMs = d.getTime();
+    const ms = _workoutTimestampMs(w);
+    if (ms === null) continue;
+    if (latestMs === null || ms > latestMs) latestMs = ms;
   }
   if (latestMs === null) return 'Never';
   const hoursAgo = Math.floor((Date.now() - latestMs) / 3600000);
@@ -12279,7 +12286,7 @@ document.getElementById('finish-btn').addEventListener('click', () => {
   clearInterval(timerInterval);
 
   const date = new Date().toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric', year:'numeric' });
-  const entry = { date, duration: timerSecs, exercises: validExercises };
+  const entry = { date, completedAt: Date.now(), duration: timerSecs, exercises: validExercises };
 
   const prsBefore = {};
   for (const ex of validExercises) {
@@ -16625,18 +16632,28 @@ function _parseDateStr(str) {
   return new Date(parseInt(m[3]), _MONTH_IDX[m[1]], parseInt(m[2]));
 }
 
+// Prefers the real completedAt timestamp saved with a workout; falls back
+// to midnight of the workout's date for older entries that predate it
+// (that fallback only approximates "hours ago", which is why same-day
+// workouts used to look far more stale than they actually were).
+function _workoutTimestampMs(w) {
+  if (typeof w.completedAt === 'number') return w.completedAt;
+  const d = _parseDateStr(w.date);
+  return d ? d.getTime() : null;
+}
+
 function getMuscleLastTrainedInfo(muscle) {
-  let latestDay = null;
+  let latestMs = null;
   for (const w of state.history) {
     if (!w.exercises || !w.date) continue;
     if (!w.exercises.some(ex => ex.muscle === muscle && ex.sets && ex.sets.length > 0)) continue;
-    const d = _parseDateStr(w.date);
-    if (!d) continue;
-    if (latestDay === null || d.getTime() > latestDay.getTime()) latestDay = d;
+    const ms = _workoutTimestampMs(w);
+    if (ms === null) continue;
+    if (latestMs === null || ms > latestMs) latestMs = ms;
   }
-  if (!latestDay) return null;
-  const hoursAgo = Math.floor((Date.now() - latestDay.getTime()) / 3600000);
-  return { hoursAgo, date: latestDay };
+  if (latestMs === null) return null;
+  const hoursAgo = Math.floor((Date.now() - latestMs) / 3600000);
+  return { hoursAgo, date: new Date(latestMs) };
 }
 
 function fmtMuscleLastTrained(info) {
