@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#000000" />
-  <meta name="app-version" content="100" />
+  <meta name="app-version" content="101" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -4218,9 +4218,22 @@
     .tpl-item-info:active { opacity: 0.75; }
     .tpl-name { font-size: 15px; font-weight: 700; color: rgb(var(--c-text)); margin-bottom: 4px; }
     .tpl-exercises { font-size: 12px; color: rgb(var(--c-text3)); line-height: 1.6; }
+    .tpl-item-actions { display: flex; align-items: center; gap: 2px; flex-shrink: 0; }
+    .tpl-edit {
+      background: rgba(var(--c-accent-light),0.08); border: none; border-radius: 10px;
+      color: rgba(var(--c-accent-light),0.8);
+      font-size: 18px; cursor: pointer;
+      min-width: 44px; min-height: 44px;
+      display: flex; align-items: center; justify-content: center;
+      touch-action: manipulation; flex-shrink: 0; line-height: 1;
+    }
+    .tpl-edit:active { color: rgb(var(--c-accent-light)); background: rgba(var(--c-accent-light),0.18); }
     .tpl-delete {
-      background: none; border: none; color: rgba(192,57,43,0.4);
-      font-size: 20px; cursor: pointer; padding: 2px 4px;
+      background: rgba(192,57,43,0.08); border: none; border-radius: 10px;
+      color: rgba(192,57,43,0.65);
+      font-size: 20px; cursor: pointer;
+      min-width: 44px; min-height: 44px;
+      display: flex; align-items: center; justify-content: center;
       touch-action: manipulation; flex-shrink: 0; line-height: 1;
     }
     .tpl-delete:active { color: #e05a4a; }
@@ -6877,6 +6890,15 @@ function getMondayStr() {
 // project's CLAUDE.md for the required pre-push changelog-confirmation step.
 // ═══════════════════════════════════════════════════════════
 const UPDATE_LOG = [
+  {
+    version: '101',
+    date: 'Aug 11, 2026',
+    title: 'Editable Workout Templates',
+    bullets: [
+      "Templates can now be edited, not just used or deleted — tap the new pencil icon on any saved template to open it back up, change its exercises/sets, rename it, and save your changes in place.",
+      'Made the edit and delete buttons on templates bigger and easier to tap.',
+    ]
+  },
   {
     version: '100',
     date: 'Aug 11, 2026',
@@ -12440,6 +12462,18 @@ function renderTemplatePicker() {
       closeTemplatePicker();
       openTrainWithTemplate(tpl);
     });
+    const actions = document.createElement('div');
+    actions.className = 'tpl-item-actions';
+
+    const edit = document.createElement('button');
+    edit.className = 'tpl-edit';
+    edit.textContent = '✎';
+    edit.addEventListener('click', (e) => {
+      e.stopPropagation();
+      closeTemplatePicker();
+      openTplBuilder(tpl);
+    });
+
     const del = document.createElement('button');
     del.className = 'tpl-delete';
     del.textContent = '✕';
@@ -12453,8 +12487,10 @@ function renderTemplatePicker() {
       saveTemplates(updated);
       renderTemplatePicker();
     });
+    actions.appendChild(edit);
+    actions.appendChild(del);
     item.appendChild(info);
-    item.appendChild(del);
+    item.appendChild(actions);
     list.appendChild(item);
   });
 }
@@ -12484,18 +12520,25 @@ document.getElementById('tpl-new-btn').addEventListener('click', () => {
 
 const tplSession = [];
 let nexTplMode = false;
+let editingTplId = null;
 
-function openTplBuilder() {
+function openTplBuilder(tpl) {
   tplSession.length = 0;
   document.getElementById('tpl-exercises').innerHTML = '';
+  editingTplId = tpl ? tpl.id : null;
+  document.getElementById('tpl-title').textContent = tpl ? 'Edit Template' : 'New Template';
   document.getElementById('tpl-builder').classList.add('open');
+  if (tpl) {
+    tpl.exercises.forEach(ex => addTplExerciseBlock(ex.name, ex.muscle, ex.sets));
+  }
 }
 
 function closeTplBuilder() {
   document.getElementById('tpl-builder').classList.remove('open');
+  editingTplId = null;
 }
 
-function addTplExerciseBlock(name, muscle) {
+function addTplExerciseBlock(name, muscle, initialSets) {
   const idx = tplSession.length;
   tplSession.push({ name, muscle, sets: [] });
 
@@ -12538,7 +12581,12 @@ function addTplExerciseBlock(name, muscle) {
   block.appendChild(addSetBtn);
 
   document.getElementById('tpl-exercises').appendChild(block);
-  addTplSet(idx, block);
+  if (initialSets && initialSets.length) {
+    tplSession[idx].sets = initialSets.map(s => ({ weight: s.weight || '', reps: s.reps || '' }));
+    renderTplSets(idx, block);
+  } else {
+    addTplSet(idx, block);
+  }
 }
 
 function addTplSet(exIdx, block) {
@@ -12612,14 +12660,20 @@ document.getElementById('tpl-builder').addEventListener('click', async (e) => {
 document.getElementById('tpl-save-btn').addEventListener('click', async () => {
   const validEx = tplSession.filter(Boolean);
   if (!validEx.length) { alert('Add at least one exercise.'); return; }
-  const name = await customPrompt('Name this template:', 'e.g. Push Day');
+  const tpls = loadTemplates();
+  const existing = editingTplId ? tpls.find(t => t.id === editingTplId) : null;
+  const name = await customPrompt('Name this template:', 'e.g. Push Day', existing ? existing.name : '');
   if (!name) return;
   const tplExercises = validEx.map(ex => ({
     name: ex.name, muscle: ex.muscle,
     sets: ex.sets.map(s => ({ weight: s.weight, reps: s.reps }))
   }));
-  const tpls = loadTemplates();
-  tpls.push({ id: Date.now().toString(), name, exercises: tplExercises });
+  if (existing) {
+    existing.name = name;
+    existing.exercises = tplExercises;
+  } else {
+    tpls.push({ id: Date.now().toString(), name, exercises: tplExercises });
+  }
   saveTemplates(tpls);
   closeTplBuilder();
   openTemplatePicker();
