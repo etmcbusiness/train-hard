@@ -2059,16 +2059,26 @@
         items.forEach(({ entry, idx }) => {
           const row = document.createElement('div');
           row.className = 'ep-log-row';
+          const servingLabel = entry.baseFood ? `${formatServingAmount(entry.amount, entry.unit)} &middot; ` : '';
           row.innerHTML = `
             <div class="ep-log-info">
               <div class="ep-log-name">${entry.name}</div>
-              <div class="ep-log-macros">${Math.round(entry.cals || 0)} cal &middot; ${Math.round(entry.protein || 0)}p &middot; ${Math.round(entry.carbs || 0)}c &middot; ${Math.round(entry.fat || 0)}f</div>
+              <div class="ep-log-macros">${servingLabel}${Math.round(entry.cals || 0)} cal &middot; ${Math.round(entry.protein || 0)}p &middot; ${Math.round(entry.carbs || 0)}c &middot; ${Math.round(entry.fat || 0)}f</div>
             </div>
             <button class="ep-log-delete">&times;</button>
           `;
           // Tap the entry itself to edit it; the × stays a dedicated delete.
+          // A food with a defined serving (Search/Scan/My Foods) reopens the
+          // serving-size adjuster so the amount can change and macros
+          // rescale — its per-food macros aren't hand-editable. A bare
+          // Quick Add has no such definition, so it keeps the raw macro
+          // editor since there's nothing to scale from.
           row.querySelector('.ep-log-info').addEventListener('click', () => {
-            openFoodModal(section.key, section.label, entry, idx);
+            if (entry.baseFood) {
+              openEditLoggedFoodModal(entry, idx);
+            } else {
+              openFoodModal(section.key, section.label, entry, idx);
+            }
           });
           row.querySelector('.ep-log-delete').addEventListener('click', () => {
             removeFoodEntry(idx);
@@ -2274,11 +2284,17 @@
           </div>
         `;
         row.addEventListener('click', () => {
-          // Open the Add Food form pre-filled with this food's last-logged
-          // macros so the amount can be adjusted before it's actually added,
-          // rather than re-adding blind.
           closeMyFoodsModal();
-          openFoodModal(myFoodsMealKey, myFoodsMealLabel, entry);
+          if (entry.baseFood) {
+            // Re-log through the serving-size adjuster so the amount can be
+            // changed and macros rescale, same as the original log.
+            openLogCustomModal(entry.baseFood, { amount: entry.amount, unit: entry.unit });
+          } else {
+            // No serving definition (a bare Quick Add) — fall back to the
+            // raw macro form, pre-filled with its last-logged macros so the
+            // amount can be adjusted before it's actually added.
+            openFoodModal(myFoodsMealKey, myFoodsMealLabel, entry);
+          }
         });
         recentList.appendChild(row);
       });
@@ -2407,8 +2423,18 @@
 
   let logCustomFood = null;
   let logCustomScaled = null;
-  function openLogCustomModal(food) {
+  // Set only when this modal is adjusting the serving size of an
+  // already-logged entry (tapped from the meal log) rather than logging a
+  // fresh one — routes the submit handler to updateFoodEntry instead of
+  // addFoodEntry, and remembers which meal the entry actually belongs to
+  // (myFoodsMealKey isn't reliable here since we didn't come through the
+  // normal add-to-meal flow).
+  let logCustomEditIndex = null;
+  let logCustomEditMealKey = null;
+  function openLogCustomModal(food, opts) {
+    opts = opts || {};
     logCustomFood = food;
+    logCustomEditIndex = (typeof opts.editIndex === 'number') ? opts.editIndex : null;
     document.getElementById('ep-log-custom-title').textContent = food.name;
     document.getElementById('ep-log-custom-base').textContent =
       `Per ${formatServingAmount(food.servingSize, food.unit)}: ${Math.round(food.cals)} cal · ${Math.round(food.protein)}p · ${Math.round(food.carbs)}c · ${Math.round(food.fat)}f`;
@@ -2416,16 +2442,27 @@
     const group = unitGroupOf(food.unit);
     const unitSelect = document.getElementById('ep-log-custom-unit-select');
     unitSelect.innerHTML = Object.keys(UNIT_GROUPS[group]).map(u => `<option value="${u}">${u}</option>`).join('');
-    unitSelect.value = food.unit;
+    unitSelect.value = opts.unit || food.unit;
 
-    document.getElementById('ep-log-custom-amount').value = food.servingSize;
+    document.getElementById('ep-log-custom-amount').value = opts.amount != null ? opts.amount : food.servingSize;
+    document.querySelector('#ep-log-custom-form .ep-modal-save-btn').textContent = logCustomEditIndex != null ? 'Save' : 'Add';
     updateLogCustomPreview();
     document.getElementById('ep-log-custom-modal').classList.add('open');
+  }
+  // Reopens the serving-size adjuster for an already-logged entry that has
+  // baseFood data (i.e. it was originally logged from Search/Scan/My
+  // Foods, not Quick Add) — lets the amount be changed and macros rescale,
+  // instead of hand-editing already-fixed-per-food macro numbers.
+  function openEditLoggedFoodModal(entry, idx) {
+    logCustomEditMealKey = entry.meal;
+    openLogCustomModal(entry.baseFood, { amount: entry.amount, unit: entry.unit, editIndex: idx });
   }
   function closeLogCustomModal() {
     document.getElementById('ep-log-custom-modal').classList.remove('open');
     logCustomFood = null;
     logCustomScaled = null;
+    logCustomEditIndex = null;
+    logCustomEditMealKey = null;
   }
   function updateLogCustomPreview() {
     if (!logCustomFood) return;
@@ -2451,17 +2488,32 @@
   });
   document.getElementById('ep-log-custom-form').addEventListener('submit', (e) => {
     e.preventDefault();
-    if (!logCustomFood || !logCustomScaled || !myFoodsMealKey) return;
+    const meal = logCustomEditIndex != null ? logCustomEditMealKey : myFoodsMealKey;
+    if (!logCustomFood || !logCustomScaled || !meal) return;
     const amount = parseFloat(document.getElementById('ep-log-custom-amount').value);
+    const unit = document.getElementById('ep-log-custom-unit-select').value;
     if (isNaN(amount) || amount <= 0) return;
-    addFoodEntry({
+    const entry = {
       name: logCustomFood.name,
-      meal: myFoodsMealKey,
+      meal,
       cals: logCustomScaled.cals,
       protein: logCustomScaled.protein,
       carbs: logCustomScaled.carbs,
       fat: logCustomScaled.fat,
-    });
+      amount, unit,
+      // The food's per-defined-serving macros, kept so re-opening this
+      // entry later can scale from the same base instead of only ever
+      // exposing the already-computed totals for hand-editing.
+      baseFood: {
+        name: logCustomFood.name, servingSize: logCustomFood.servingSize, unit: logCustomFood.unit,
+        cals: logCustomFood.cals, protein: logCustomFood.protein, carbs: logCustomFood.carbs, fat: logCustomFood.fat,
+      },
+    };
+    if (logCustomEditIndex != null) {
+      updateFoodEntry(logCustomEditIndex, entry);
+    } else {
+      addFoodEntry(entry);
+    }
     closeLogCustomModal();
     renderTotals();
     renderMeals();
@@ -2479,8 +2531,8 @@
   // credentials are IP-restricted and no serverless/edge platform can offer
   // a fixed egress IP. Fill in the nip.io (or real domain) host once the VM
   // is deployed and its IP is added to FatSecret's IP allow list.
-  const FOOD_SEARCH_URL = 'https://YOUR-IP-WITH-DASHES.nip.io';
-  const FOOD_SEARCH_APP_SECRET = '94ca97c863544faf8c50c0dbcb9470f7b1fce6ff2ed847e798466fb7a2d87d6e'; // must match FOOD_SEARCH_SHARED_SECRET in server/food-search/.env
+  const FOOD_SEARCH_URL = 'https://146-190-219-177.nip.io';
+  const FOOD_SEARCH_APP_SECRET = 'c0503526ff2e556867ab110d946977c1502eaeedd55a46d5fe9fd65c643ac63a'; // must match FOOD_SEARCH_SHARED_SECRET in server/food-search/.env
 
   function normalizeSearchUnit(rawUnit) {
     const u = (rawUnit || 'g').trim().toLowerCase();
@@ -2613,7 +2665,7 @@
       document.getElementById('ep-search-food-results').innerHTML = '';
       return;
     }
-    searchFoodDebounce = setTimeout(() => runSearchFood(query), 450);
+    searchFoodDebounce = setTimeout(() => runSearchFood(query), 200);
   });
   document.getElementById('ep-search-food-cancel').addEventListener('click', closeSearchFoodModal);
   document.getElementById('ep-search-food-modal').addEventListener('click', (e) => {
