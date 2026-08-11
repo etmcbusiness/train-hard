@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#000000" />
-  <meta name="app-version" content="99" />
+  <meta name="app-version" content="100" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -736,6 +736,7 @@
     .hist-ex { font-size: 13px; color: rgb(var(--c-text2)); padding: 4px 0; display:flex; justify-content:space-between; align-items:center; }
     .hist-ex span { color: rgb(var(--c-text3)); }
     .hist-ex-cat { display:inline-block; margin-left:6px; font-size:10px; font-weight:600; color:rgb(var(--c-text3)); background:rgba(var(--c-accent2),0.15); border:1px solid rgba(var(--c-accent2),0.25); border-radius:5px; padding:1px 5px; vertical-align:middle; }
+    .hist-ex-note { font-size: 11.5px; color: rgb(var(--c-text4)); padding: 0 0 4px; font-style: italic; }
     .hist-card-edit {
       margin-top: 12px;
       background: rgba(var(--c-accent),0.08);
@@ -944,6 +945,23 @@
     .hedit-ex-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
     .hedit-ex-name { font-size:15px; font-weight:700; color:rgb(var(--c-accent)); }
     .hedit-ex-muscle { font-size:11px; color:rgb(var(--c-text3)); margin-top:2px; }
+    .hedit-ex-note { margin-bottom: 10px; }
+    .hedit-ex-note textarea {
+      width: 100%;
+      resize: none;
+      overflow: hidden;
+      background: rgba(var(--c-accent2),0.08);
+      border: 1px solid rgba(var(--c-accent2),0.18);
+      border-radius: 10px;
+      padding: 7px 10px;
+      font-size: 12.5px;
+      font-family: inherit;
+      line-height: 1.4;
+      color: rgb(var(--c-text2));
+      min-height: 30px;
+    }
+    .hedit-ex-note textarea::placeholder { color: rgb(var(--c-text4)); }
+    .hedit-ex-note textarea:focus { border-color: rgba(var(--c-accent-light),0.5); }
     .hedit-remove-ex { background:rgba(192,57,43,0.1); border:1px solid rgba(192,57,43,0.4); color:#e05a4a; border-radius:8px; font-size:16px; cursor:pointer; line-height:1; padding:4px 10px; }
     .hedit-col-heads { display:grid; grid-template-columns:32px 1fr 1fr 36px; gap:8px; font-size:11px; color:rgb(var(--c-text3)); margin-bottom:6px; padding:0 2px; text-align:center; letter-spacing:0.3px; }
     .hedit-set-row { display:grid; grid-template-columns:32px 1fr 1fr 36px; gap:8px; margin-bottom:8px; align-items:center; }
@@ -1418,6 +1436,24 @@
     }
     .train-ex-pr span { color: rgb(var(--c-text2)); font-weight: 600; }
     .train-ex-pr-ago { margin-left: 6px; color: rgb(var(--c-text4)); font-weight: 400; opacity: 0.55; }
+    body.reordering-exercises .train-ex-note { display: none; }
+    .train-ex-note { margin-bottom: 10px; }
+    .train-ex-note textarea {
+      width: 100%;
+      resize: none;
+      overflow: hidden;
+      background: rgba(var(--c-accent2),0.08);
+      border: 1px solid rgba(var(--c-accent2),0.18);
+      border-radius: 10px;
+      padding: 7px 10px;
+      font-size: 12.5px;
+      font-family: inherit;
+      line-height: 1.4;
+      color: rgb(var(--c-text2));
+      min-height: 30px;
+    }
+    .train-ex-note textarea::placeholder { color: rgb(var(--c-text4)); }
+    .train-ex-note textarea:focus { border-color: rgba(var(--c-accent-light),0.5); }
     .set-num {
       font-size: 13px;
       font-weight: 800;
@@ -6842,6 +6878,16 @@ function getMondayStr() {
 // ═══════════════════════════════════════════════════════════
 const UPDATE_LOG = [
   {
+    version: '100',
+    date: 'Aug 11, 2026',
+    title: 'Exercise Notes',
+    bullets: [
+      'Added a notes field to each exercise in the training tab — jot down cues, form tips, or reminders that stick with that exercise every time you train it.',
+      'Notes carry over automatically to future workouts and can be edited anytime.',
+      "Whatever a note says at the end of a workout is saved into that workout's history, so you can look back and see exactly what you noted at the time — visible both in the history list and when editing a past workout.",
+    ]
+  },
+  {
     version: '99',
     date: 'Aug 11, 2026',
     title: 'Auto-Fill New Sets',
@@ -10008,7 +10054,8 @@ function renderHistory() {
         const badge = (_hpc ? `<span class="cable-pulley-badge">${_hpc}P</span>` : '') + defaultExBadge(e.name);
         const cat = (state.exerciseMeta[e.name] || {}).category;
         const catTag = cat ? `<span class="hist-ex-cat">${cat}</span>` : '';
-        return `<div class="hist-ex"><span>${_hdn}${badge}${catTag}</span><span style="color:rgb(var(--c-text4))">${e.sets.length} sets</span></div>`;
+        const noteLine = e.note ? `<div class="hist-ex-note">${escapeHtml(e.note)}</div>` : '';
+        return `<div class="hist-ex"><span>${_hdn}${badge}${catTag}</span><span style="color:rgb(var(--c-text4))">${e.sets.length} sets</span></div>${noteLine}`;
       }).join('')}
     `;
 
@@ -10177,6 +10224,7 @@ function renderHistEditExercises() {
         </div>
         <button class="hedit-remove-ex" data-ex="${exIdx}">×</button>
       </div>
+      <div class="hedit-ex-note"><textarea rows="1" placeholder="Add a note for this exercise…" maxlength="500">${escapeHtml(ex.note || '')}</textarea></div>
       <div class="hedit-col-heads">${isExp
         ? (noTemp ? '<span>Set</span><span></span><span>Sec</span><span></span>' : '<span>Set</span><span>°F</span><span>Sec</span><span></span>')
         : '<span>Set</span><span>lbs</span><span>Reps</span><span></span>'}</div>
@@ -10188,6 +10236,14 @@ function renderHistEditExercises() {
     ex.sets.forEach((s, sIdx) => {
       setsEl.appendChild(makeHistSetRow(exIdx, sIdx, s, isExp, noTemp));
     });
+
+    const noteInput = block.querySelector('.hedit-ex-note textarea');
+    const resizeHistNote = () => { noteInput.style.height = 'auto'; noteInput.style.height = noteInput.scrollHeight + 'px'; };
+    noteInput.addEventListener('input', () => {
+      resizeHistNote();
+      histEditData.exercises[exIdx].note = noteInput.value;
+    });
+    resizeHistNote();
 
     block.querySelector('.hedit-remove-ex').addEventListener('click', () => {
       playSound('delete');
@@ -11896,7 +11952,7 @@ function checkAndRestoreSession() {
     }
   }, 60 * 1000);
   for (const ex of data.session) {
-    addExerciseBlock(ex.name, ex.muscle, ex.sets);
+    addExerciseBlock(ex.name, ex.muscle, ex.sets, ex.note);
   }
 }
 
@@ -12578,7 +12634,7 @@ document.getElementById('tpl-add-ex').addEventListener('click', () => {
   picker.classList.add('open');
 });
 
-function addExerciseBlock(name, muscle, initialSets) {
+function addExerciseBlock(name, muscle, initialSets, noteOverride) {
   touchActivity();
   playSound('exerciseSelect');
   const idx = session.length;
@@ -12597,7 +12653,8 @@ function addExerciseBlock(name, muscle, initialSets) {
           })
         : initialSets.map(s => ({ weight: s.weight || '', reps: s.reps || '', done: s.done || false })))
     : [];
-  session.push({ name, muscle, sets: preSets, expType: isExposure ? 'exposure' : null, noTemp, fieldKind: shape ? fieldKind : null });
+  const savedNote = noteOverride != null ? noteOverride : ((state.exerciseMeta[name] || {}).note || '');
+  session.push({ name, muscle, sets: preSets, expType: isExposure ? 'exposure' : null, noTemp, fieldKind: shape ? fieldKind : null, note: savedNote });
 
   const block = document.createElement('div');
   block.className = 'train-ex';
@@ -12642,6 +12699,26 @@ function addExerciseBlock(name, muscle, initialSets) {
     saveActiveSession();
   });
   top.appendChild(removeBtn);
+
+  const noteEl = document.createElement('div');
+  noteEl.className = 'train-ex-note';
+  const noteInput = document.createElement('textarea');
+  noteInput.rows = 1;
+  noteInput.placeholder = 'Add a note for this exercise…';
+  noteInput.value = savedNote;
+  noteInput.maxLength = 500;
+  const resizeNoteInput = () => { noteInput.style.height = 'auto'; noteInput.style.height = noteInput.scrollHeight + 'px'; };
+  noteInput.addEventListener('input', () => {
+    resizeNoteInput();
+    const val = noteInput.value;
+    const curIdx = parseInt(block.dataset.sessionIdx);
+    if (session[curIdx]) session[curIdx].note = val;
+    if (!state.exerciseMeta[name]) state.exerciseMeta[name] = {};
+    state.exerciseMeta[name].note = val;
+    saveActiveSession();
+  });
+  noteInput.addEventListener('blur', save);
+  noteEl.appendChild(noteInput);
 
   const prEl = document.createElement('div');
   prEl.className = 'train-ex-pr';
@@ -12689,6 +12766,7 @@ function addExerciseBlock(name, muscle, initialSets) {
   addSetBtn.addEventListener('click', () => { touchActivity(); addSet(parseInt(block.dataset.sessionIdx), block); });
 
   block.appendChild(top);
+  block.appendChild(noteEl);
   block.appendChild(prEl);
   if (!isExposure && !shape) block.appendChild(curPrEl);
   block.appendChild(cols);
@@ -12696,6 +12774,7 @@ function addExerciseBlock(name, muscle, initialSets) {
   block.appendChild(addSetBtn);
 
   document.getElementById('train-exercises').appendChild(block);
+  resizeNoteInput();
   const setsEl = block.querySelector('.train-ex-sets');
   if (setsEl) {
     if (muscle === 'Cardio') setsEl.innerHTML = buildCardioSetsLine();
