@@ -1908,15 +1908,23 @@
   // ═══════════════════════════════════════════════════════════
   const SUPABASE_URL = 'https://wuboizuqyucvioexgkwh.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_r5VhU8EDB5N8F0rV8SpGMQ_Gms-6tkT';
-  // The Supabase UMD script (loaded via a <script src> tag near the top of
-  // the file) can fail to load — flaky network, an ad/script blocker, a CDN
-  // hiccup — in which case window.supabase never gets set. Cloud sync is a
-  // nice-to-have layered on top of a fully-functional local-only app, so a
-  // missing/failed CDN load must never take down the rest of Eat Plenty;
-  // `supabase` degrades to null and initCloudSync() below no-ops instead of
-  // throwing (which, unguarded, previously killed this entire script partway
-  // through and left the app stuck on the loading screen).
-  const supabase = window.supabase
+  // Named `sb`, not `supabase` — the UMD script above creates a *global*
+  // `var supabase` (classic script, not a module, so it lands in the same
+  // global scope as this one), and `const`/`let` can't redeclare a name a
+  // `var` already holds in that shared scope even across separate <script>
+  // tags. Naming this `const supabase` threw "Identifier 'supabase' has
+  // already been declared" — a SyntaxError, which fails at parse time and
+  // took the ENTIRE script down before a single line of it ran, unguarded
+  // window.supabase check or not. (index.html doesn't hit this because its
+  // script is type="module" — module scope never collides with a sibling
+  // classic script's globals.)
+  //
+  // window.supabase itself can still be missing if the CDN script failed to
+  // load (flaky network, an ad/script blocker) — cloud sync is a nice-to-have
+  // layered on top of a fully-functional local-only app, so that case
+  // degrades `sb` to null and initCloudSync() below no-ops instead of
+  // throwing, rather than taking the rest of Eat Plenty down with it.
+  const sb = window.supabase
     ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
         global: { fetch: (url, options) => fetch(url, { ...options, cache: 'no-store' }) }
       })
@@ -1977,7 +1985,7 @@
   async function doCloudPush() {
     cloudSyncTimer = null;
     const payload = buildCloudPayload();
-    const { error, data } = await supabase
+    const { error, data } = await sb
       .from('nutrition_data')
       .upsert({ id: cloudSession.user.id, state: payload }, { onConflict: 'id' })
       .select();
@@ -2023,7 +2031,7 @@
   }
 
   async function pullCloudStateImpl(userId) {
-    const { data, error } = await supabase
+    const { data, error } = await sb
       .from('nutrition_data')
       .select('state')
       .eq('id', userId)
@@ -2088,8 +2096,8 @@
   // calls or errors, when nobody's signed in — the common case for anyone
   // who hasn't touched Train Hard's Profile screen.
   function initCloudSync() {
-    if (!supabase) { console.error('Supabase failed to load — Eat Plenty will stay local-only this session.'); return; }
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    if (!sb) { console.error('Supabase failed to load — Eat Plenty will stay local-only this session.'); return; }
+    sb.auth.getSession().then(({ data: { session } }) => {
       cloudSession = session || null;
       renderSyncUI();
       if (cloudSession) pullCloudState(cloudSession.user.id);
