@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#000000" />
-  <meta name="app-version" content="106" />
+  <meta name="app-version" content="107" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -1011,6 +1011,11 @@
       border-bottom: 1px solid rgba(var(--c-accent3),0.25);
       flex-shrink: 0;
     }
+    #train-header-center {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
     #cancel-btn {
       background: none;
       border: none;
@@ -1040,6 +1045,23 @@
       box-shadow: 0 4px 16px rgba(192,41,42,0.4);
       letter-spacing: 0.3px;
     }
+    #rest-start-btn {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      background: rgba(60,181,88,0.10);
+      border: 1.5px solid rgba(60,181,88,0.35);
+      color: #3cb558;
+      cursor: pointer;
+      touch-action: manipulation;
+      transition: background 0.1s;
+    }
+    #rest-start-btn:active { background: rgba(60,181,88,0.25); }
+    #rest-start-btn svg { width: 18px; height: 18px; flex-shrink: 0; }
 
     #train-body {
       flex: 1;
@@ -2525,21 +2547,31 @@
     #profile-photo-label { width: 92px; flex-shrink: 0; text-align: center; }
     #profile-username-label { flex: 1; }
     #profile-identity-content { display: flex; align-items: center; gap: 16px; }
+    /* Shared by every circular photo (profile, friends, challenges, training
+       room) — a real <img>, not a CSS background-image; see setLbAvatar's
+       comment for why. border-radius:inherit so it always matches whatever
+       shape (circle or otherwise) its own container declares. */
+    .lb-avatar-img { width: 100%; height: 100%; object-fit: cover; border-radius: inherit; display: block; }
     #avatar-pfp-preview-wrap { position: relative; flex-shrink: 0; cursor: pointer; touch-action: manipulation; }
     #avatar-pfp-preview {
       width: 92px; height: 92px; border-radius: 50%;
-      background-color: rgba(var(--c-panel3),0.8);
-      background-position: center; background-size: cover; background-repeat: no-repeat;
+      overflow: hidden;
+      background-color: rgb(var(--c-panel3));
       border: 2px solid rgba(var(--c-accent),0.5);
       display: flex; align-items: center; justify-content: center;
       color: rgb(var(--c-text3)); font-size: 34px; font-weight: 800;
+      /* See .room-node's identical comment — same iOS Safari flat-seam fix. */
+      -webkit-mask-image: -webkit-radial-gradient(circle, #fff 100%, #000 100%);
     }
     #avatar-pfp-edit-badge {
       position: absolute; bottom: -2px; right: -2px; width: 28px; height: 28px; border-radius: 50%;
       background: linear-gradient(135deg, rgb(var(--c-accent)), rgb(var(--c-accent-dark)));
       border: 2px solid rgb(var(--c-panel2)); color: #fff; font-size: 13px; padding: 0;
       display: flex; align-items: center; justify-content: center; cursor: pointer; touch-action: manipulation;
-      z-index: 1;
+      /* Above 6: the Shape Aura system bumps #avatar-pfp-preview itself to
+         z-index:6 (so it can sit above the aura canvas when active) — this
+         needs to stay above that or it reads as tucked behind the photo. */
+      z-index: 7;
     }
     #profile-identity-info { flex: 1; min-width: 0; }
     #avatar-username-row {
@@ -2555,6 +2587,28 @@
       display: flex; align-items: center; justify-content: center;
     }
     #avatar-pfp-remove-btn { color: #e05a4a; }
+    #friends-self-header {
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
+      margin-bottom: 20px;
+    }
+    #friends-self-username { font-size: 17px; font-weight: 800; color: rgb(var(--c-text)); }
+    #friends-self-row { display: flex; align-items: center; gap: 18px; }
+    #friends-self-avatar {
+      width: 76px; height: 76px; border-radius: 50%;
+      overflow: hidden;
+      background-color: rgb(var(--c-panel3));
+      border: 2px solid rgba(var(--c-accent),0.5);
+      display: flex; align-items: center; justify-content: center;
+      color: rgb(var(--c-text3)); font-size: 26px; font-weight: 800;
+      -webkit-mask-image: -webkit-radial-gradient(circle, #fff 100%, #000 100%);
+    }
+    .friends-self-stat { text-align: center; min-width: 46px; }
+    .friends-self-stat-num { font-size: 21px; font-weight: 800; color: rgb(var(--c-text)); }
+    .friends-self-stat-label {
+      font-size: 10.5px; font-weight: 700; color: rgb(var(--c-text4));
+      margin-top: 2px; text-transform: uppercase; letter-spacing: 0.4px;
+    }
+    #friends-self-count { font-size: 12.5px; font-weight: 600; color: rgb(var(--c-text3)); }
     #avatar-hair-options,
     #avatar-ui-options,
     #avatar-sound-options,
@@ -2878,7 +2932,8 @@
     .room-node {
       position: fixed;
       border-radius: 50%;
-      background: rgba(var(--c-panel1),0.9) center/cover no-repeat;
+      background-color: rgba(var(--c-panel1),0.9);
+      overflow: hidden;
       border: 3px solid rgba(var(--c-accent),0.25);
       transform: translate(-50%, -50%);
       cursor: pointer;
@@ -2889,6 +2944,13 @@
       -webkit-touch-callout: none;
       user-select: none;
       -webkit-user-select: none;
+      /* iOS Safari can show faint flat seams at the top/bottom/left/right of a
+         border-radius:50% element when it's also transformed (translate here,
+         for centering) — its GPU compositor rasterizes the rounded clip in
+         tiles that line up with those axis points. Forcing the mask-image
+         rendering path instead avoids it; harmless no-op on browsers without
+         the bug. */
+      -webkit-mask-image: -webkit-radial-gradient(circle, #fff 100%, #000 100%);
     }
     .room-node.is-sel {
       border-color: rgba(var(--c-accent),0.9);
@@ -4551,9 +4613,10 @@
     #avatar-pfp-view-modal.open { display: flex; }
     #avatar-pfp-view-circle {
       width: min(70vw, 340px); height: min(70vw, 340px); border-radius: 50%;
+      overflow: hidden;
       background-color: rgba(var(--c-panel3),0.8);
-      background-position: center; background-size: cover; background-repeat: no-repeat;
       border: 3px solid rgba(var(--c-accent),0.5); box-shadow: 0 0 40px rgba(var(--c-accent),0.35);
+      -webkit-mask-image: -webkit-radial-gradient(circle, #fff 100%, #000 100%);
     }
 
     /* ── Challenges ── */
@@ -4571,10 +4634,11 @@
     }
     .challenge-row-leader-avatar {
       width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
-      background-size: cover; background-position: center;
-      background-color: rgba(var(--c-accent),0.25);
+      overflow: hidden;
+      background-color: rgb(var(--c-accent));
       display: flex; align-items: center; justify-content: center;
       font-size: 14px; font-weight: 800; color: rgb(var(--c-text));
+      -webkit-mask-image: -webkit-radial-gradient(circle, #fff 100%, #000 100%);
     }
     .challenge-row-title { font-size: 14px; font-weight: 700; color: rgb(var(--c-text)); }
     .challenge-row-sub { font-size: 11px; color: rgb(var(--c-text4)); margin-top: 3px; }
@@ -4653,10 +4717,12 @@
     #challenge-leader-stat { font-size: 14px; font-weight: 700; margin-top: 8px; }
     .challenge-lb-avatar-lg {
       width: 84px; height: 84px; border-radius: 50%;
-      background-color: rgba(var(--c-panel3),0.85); background-position: center; background-size: cover;
+      overflow: hidden;
+      background-color: rgb(var(--c-panel3));
       border: 3px solid rgb(var(--c-accent)); box-shadow: 0 0 18px rgba(var(--c-accent),0.45);
       display: flex; align-items: center; justify-content: center;
       font-size: 30px; font-weight: 800; color: rgb(var(--c-text2));
+      -webkit-mask-image: -webkit-radial-gradient(circle, #fff 100%, #000 100%);
     }
     .challenge-lb-row {
       display: flex; align-items: center; gap: 12px;
@@ -4666,10 +4732,12 @@
     .challenge-lb-rank { width: 18px; text-align: center; font-size: 13px; font-weight: 800; color: rgb(var(--c-text4)); flex-shrink: 0; }
     .challenge-lb-avatar {
       width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
-      background-color: rgba(var(--c-panel3),0.85); background-position: center; background-size: cover;
+      overflow: hidden;
+      background-color: rgb(var(--c-panel3));
       display: flex; align-items: center; justify-content: center;
       font-size: 14px; font-weight: 800; color: rgb(var(--c-text3));
       border: 1px solid rgba(var(--c-accent2),0.3);
+      -webkit-mask-image: -webkit-radial-gradient(circle, #fff 100%, #000 100%);
     }
     .challenge-lb-info { flex: 1; min-width: 0; }
     .challenge-lb-name { font-size: 14px; font-weight: 700; color: rgb(var(--c-text)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -4715,9 +4783,10 @@
     }
     #avatar-preset-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
     .avatar-preset-tile {
-      aspect-ratio: 1; border-radius: 50%; border: 2px solid rgba(255,255,255,0.15);
+      aspect-ratio: 1; border-radius: 50%; overflow: hidden; border: 2px solid rgba(255,255,255,0.15);
       display: flex; align-items: center; justify-content: center; font-size: 26px;
       cursor: pointer; touch-action: manipulation; padding: 0;
+      -webkit-mask-image: -webkit-radial-gradient(circle, #fff 100%, #000 100%);
     }
     .avatar-preset-tile:active { border-color: rgba(255,255,255,0.5); }
     #challenge-chat-log { overflow-y: auto; flex: 1; margin: 14px 0; min-height: 80px; max-height: 220px; }
@@ -5158,6 +5227,14 @@
 <!-- 3D Canvas -->
 <div id="canvas-container"></div>
 
+<!-- Shape Aura canvas — shared by every target listed in SHAPE_AURA_TARGETS below. Starts
+     here (a sibling of #app, behind it) for targets living directly in the normal page
+     flow (host: '#app'). Targets living inside a modal (which has its own opaque
+     full-screen backdrop) need this canvas physically moved inside that modal while
+     it's open instead — see the long comment above updateShapeAuraHost() near
+     SHAPE_AURA_TARGETS for why a z-index alone can't do this. -->
+<canvas id="flex-aura-canvas" style="position:fixed;inset:0;z-index:5;pointer-events:none;"></canvas>
+
 <!-- App -->
 <div id="app" style="display:none;">
 
@@ -5232,6 +5309,21 @@
     <div class="profile-overlay-body">
       <div id="friends-overlay-signedout" class="profile-overlay-signedout" style="display:none;">Sign in from Stats &gt; Account to add and manage friends.</div>
       <div id="friends-overlay-content">
+        <div id="friends-self-header">
+          <div id="friends-self-username"></div>
+          <div id="friends-self-row">
+            <div class="friends-self-stat">
+              <div id="friends-self-level-num" class="friends-self-stat-num"></div>
+              <div class="friends-self-stat-label">Level</div>
+            </div>
+            <div id="friends-self-avatar"></div>
+            <div class="friends-self-stat">
+              <div id="friends-self-cardio-num" class="friends-self-stat-num"></div>
+              <div class="friends-self-stat-label">Cardio</div>
+            </div>
+          </div>
+          <div id="friends-self-count"></div>
+        </div>
         <div class="acct-section-label" style="margin-top:0;">Add a Friend</div>
         <div style="display:flex;gap:8px;align-items:center;">
           <input id="friend-search-input" name="friend-search-q" class="acct-input" type="text" placeholder="Username" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" style="flex:1;" />
@@ -5549,7 +5641,17 @@
 <div id="train-modal">
   <div id="train-header">
     <button id="cancel-btn">Cancel</button>
-    <div id="train-timer">00:00</div>
+    <div id="train-header-center">
+      <button id="rest-start-btn" title="Start Rest Timer" aria-label="Start Rest Timer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="13" r="8"/>
+          <path d="M12 9v4l2.5 2.5"/>
+          <path d="M9 2h6"/>
+          <path d="M18.5 5.5l1.5-1.5"/>
+        </svg>
+      </button>
+      <div id="train-timer">00:00</div>
+    </div>
     <button id="finish-btn">Finish</button>
   </div>
   <div id="train-body">
@@ -6415,6 +6517,7 @@
 
 <script type="module">
 import * as THREE from 'three';
+window.THREE = THREE; // exposed as a global for the classic (non-module) Aura Shapes scripts below
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { SHELL, SHELL_REFERENCE_HEIGHT, syncHuggingAuraUniforms, setModelGroundY, setTargetHeight } from './Aura/toon-outline-code.js';
@@ -6890,6 +6993,14 @@ function getMondayStr() {
 // project's CLAUDE.md for the required pre-push changelog-confirmation step.
 // ═══════════════════════════════════════════════════════════
 const UPDATE_LOG = [
+  {
+    version: '107',
+    date: 'Aug 12, 2026',
+    title: 'Cardio Aura',
+    bullets: [
+      'Your profile photo can now glow with a "Cardio Aura" based on your Cardio Level — visible to you, and to friends viewing you in the Friends and Challenges menus. Only Level 2\'s look is live right now; more levels are coming.',
+    ]
+  },
   {
     version: '106',
     date: 'Aug 12, 2026',
@@ -8124,6 +8235,9 @@ async function refreshFriends() {
   const outgoing = rows.filter(r => r.status === 'pending' && r.requester_id === uid);
   const accepted = rows.filter(r => r.status === 'accepted');
 
+  const selfCountEl = document.getElementById('friends-self-count');
+  if (selfCountEl) selfCountEl.textContent = `${accepted.length} Friend${accepted.length === 1 ? '' : 's'}`;
+
   const otherUsername = r => r.requester_id === uid ? r.addressee_username : r.requester_username;
 
   const reqLabel = document.getElementById('friend-requests-label');
@@ -8156,6 +8270,7 @@ async function refreshFriends() {
   }
 
   const friendsList = document.getElementById('friends-list');
+  destroyDynamicProfilePhotoAurasIn(friendsList);
   friendsList.innerHTML = '';
   if (!accepted.length) {
     friendsList.innerHTML = '<div class="friend-empty">No friends yet — add one above.</div>';
@@ -8175,7 +8290,8 @@ async function refreshFriends() {
     const username = otherUsername(r);
     const nickname = nicknamesById[friendId];
     const displayName = nickname ? `${username} (${escapeHtml(nickname)})` : escapeHtml(username);
-    const lv = computeFriendHairLevel(statesById[friendId] || {});
+    const friendState = statesById[friendId] || {};
+    const lv = computeFriendHairLevel(friendState);
     const lvColor = HAIR_COLORS[lv];
     const row = document.createElement('div');
     row.className = 'friend-row friend-row-clickable';
@@ -8186,7 +8302,7 @@ async function refreshFriends() {
         <div class="friend-row-avatar-slot"></div>
         <div style="min-width:0;">
           <div class="friend-row-name">${displayName}</div>
-          <div class="friend-row-sub">${friendsSinceLabel(r.accepted_at || r.updated_at)}</div>
+          <div class="friend-row-sub">${friendsSinceLabel(r.accepted_at || r.updated_at)} &middot; Last workout: ${fmtFriendLastWorkout(friendState)}</div>
           <div class="friend-row-level">
             <div class="friend-row-level-dot" style="background:${lvColor};"></div>
             <div class="friend-row-level-text" style="color:${HAIR_TEXT_COLORS[lv]};">Level ${lv}</div>
@@ -8199,6 +8315,7 @@ async function refreshFriends() {
     const avatarEl = document.createElement('div');
     avatarEl.className = 'challenge-lb-avatar';
     setLbAvatar(avatarEl, avatarsById[friendId], username);
+    applyDynamicProfilePhotoAura(avatarEl, '#friends-overlay', computeFriendCardioLevel(friendState));
     row.querySelector('.friend-row-avatar-slot').replaceWith(avatarEl);
     friendsList.appendChild(row);
   }
@@ -8434,6 +8551,24 @@ function computeFriendHairLevel(friendState) {
 
 const HAIR_LEVEL_BADGES = { 1: 'Base Form', 2: 'Super Saiyan', 3: 'Super Saiyan God', 4: 'Super Saiyan Blue', 5: 'Ultra Ego' };
 
+// Mirrors getCardioLevel()'s quarter-of-goal math (see getCardioLevel() near
+// updateCoreAuraForLevel()), against an explicit friend-state object instead
+// of the global state — same "explicit friendState" pattern computeFriendLevel/
+// computeFriendHairLevel above use for muscle levels. Drives the Shape Aura
+// profile-photo effect wherever a friend/participant's photo is shown (see
+// applyProfilePhotoAuraLevel / applyDynamicProfilePhotoAura).
+function computeFriendCardioLevel(friendState) {
+  const goalVal = parseInt((friendState.goals || {}).Cardio);
+  const goal = ((!isNaN(goalVal) && goalVal >= 300) ? goalVal : 3600) / 60;
+  const minutes = getFriendWeeklyCardioSecs(friendState) / 60;
+  if (minutes >= goal) return 5;
+  const step = goal / 4;
+  if (minutes >= step * 3) return 4;
+  if (minutes >= step * 2) return 3;
+  if (minutes >= step * 1) return 2;
+  return 1;
+}
+
 // Finds the exercise with the biggest this-week E1RM gain over its
 // pre-this-week best, for an arbitrary friend state (mirrors the E1RM logic
 // in computeChallengeProgress, but compares against the calendar week
@@ -8498,9 +8633,11 @@ function fmtFriendLastWorkout(friendState) {
   }
   if (latestMs === null) return 'Never';
   const hoursAgo = Math.floor((Date.now() - latestMs) / 3600000);
-  if (hoursAgo < 24) return hoursAgo <= 0 ? 'Today' : `${hoursAgo}h ago`;
+  if (hoursAgo <= 0) return 'Today';
+  if (hoursAgo < 24) return `${hoursAgo}h ago`;
   const daysAgo = Math.floor(hoursAgo / 24);
-  if (daysAgo < 14) return `${daysAgo}d ago`;
+  const remHours = hoursAgo % 24;
+  if (daysAgo < 14) return remHours > 0 ? `${daysAgo}d ${remHours}h ago` : `${daysAgo}d ago`;
   return `${Math.floor(daysAgo / 7)}w ago`;
 }
 
@@ -8520,8 +8657,10 @@ async function openFriendDetail(friendId, username) {
     body.innerHTML = '<div class="friend-empty">Could not load this friend\'s data.</div>';
     return;
   }
-  setLbAvatar(document.getElementById('friend-detail-avatar'), profile.avatar_url, username);
+  const fdAvatarEl = document.getElementById('friend-detail-avatar');
+  setLbAvatar(fdAvatarEl, profile.avatar_url, username);
   const friendState = profile.state || {};
+  if (fdAvatarEl.__shapeAura) applyProfilePhotoAuraLevel(fdAvatarEl.__shapeAura, computeFriendCardioLevel(friendState));
   const lv = computeFriendHairLevel(friendState);
   const color = HAIR_COLORS[lv];
   const lastWorkoutLabel = fmtFriendLastWorkout(friendState);
@@ -8765,6 +8904,7 @@ async function refreshChallenges() {
     if (myToken !== challengesRefreshToken) return;
     (profs || []).forEach(p => { othersById[p.id] = p; });
   }
+  destroyDynamicProfilePhotoAurasIn(list);
   list.innerHTML = '';
 
   for (const c of rows) {
@@ -8795,7 +8935,7 @@ async function refreshChallenges() {
       const prog = computeChallengeProgress(pState, p.exercise_name, c.start_date);
       if (prog.changePct === null) continue;
       if (!leader || prog.changePct > leader.prog.changePct) {
-        leader = { p, prog, avatarUrl: p.user_id === uid ? myAvatarUrl : (othersById[p.user_id] || {}).avatar_url };
+        leader = { p, prog, pState, isMe: p.user_id === uid, avatarUrl: p.user_id === uid ? myAvatarUrl : (othersById[p.user_id] || {}).avatar_url };
       }
     }
 
@@ -8819,6 +8959,7 @@ async function refreshChallenges() {
       const avatarEl = document.createElement('div');
       avatarEl.className = 'challenge-row-leader-avatar';
       setLbAvatar(avatarEl, leader.avatarUrl, leader.p.username);
+      applyDynamicProfilePhotoAura(avatarEl, '#challenges-overlay', leader.isMe ? getCardioLevel() : computeFriendCardioLevel(leader.pState || {}));
       wrap.innerHTML = '<div class="challenge-row-leader-place">1st</div>';
       wrap.appendChild(avatarEl);
       row.querySelector('.challenge-row-leader-avatar-slot').replaceWith(wrap);
@@ -9142,7 +9283,7 @@ async function renderChallengeDetail() {
       avatarUrl = prof ? prof.avatar_url : null;
     }
     if (p.status !== 'joined') {
-      pendingList.push({ p, avatarUrl, isMe });
+      pendingList.push({ p, avatarUrl, isMe, pState });
       continue;
     }
     const prog = computeChallengeProgress(pState, p.exercise_name, c.start_date);
@@ -9156,6 +9297,7 @@ async function renderChallengeDetail() {
   });
 
   const leaderCard = document.getElementById('challenge-leader-card');
+  destroyDynamicProfilePhotoAurasIn(partList);
   partList.innerHTML = '';
 
   if (!ranked.length && !pendingList.length) {
@@ -9165,7 +9307,9 @@ async function renderChallengeDetail() {
     if (ranked.length) {
       const [leader, ...rest] = ranked;
       leaderCard.style.display = 'flex';
-      setLbAvatar(document.getElementById('challenge-leader-avatar'), leader.avatarUrl, leader.p.username);
+      const clAvatarEl = document.getElementById('challenge-leader-avatar');
+      setLbAvatar(clAvatarEl, leader.avatarUrl, leader.p.username);
+      if (clAvatarEl.__shapeAura) applyProfilePhotoAuraLevel(clAvatarEl.__shapeAura, leader.isMe ? getCardioLevel() : computeFriendCardioLevel(leader.pState || {}));
       document.getElementById('challenge-leader-name').textContent = leader.p.username + (leader.isMe ? ' (you)' : '');
       document.getElementById('challenge-leader-ex').textContent = leader.p.exercise_name
         ? exerciseLabelWithCategory(leader.p.exercise_name, (leader.pState || {}).exerciseMeta)
@@ -9178,6 +9322,7 @@ async function renderChallengeDetail() {
         const avatarEl = document.createElement('div');
         avatarEl.className = 'challenge-lb-avatar';
         setLbAvatar(avatarEl, entry.avatarUrl, entry.p.username);
+        applyDynamicProfilePhotoAura(avatarEl, '#challenge-detail-modal', entry.isMe ? getCardioLevel() : computeFriendCardioLevel(entry.pState || {}));
         row.innerHTML = `
           <div class="challenge-lb-rank">${i + 2}</div>
           <div class="challenge-lb-avatar-slot"></div>
@@ -9199,6 +9344,7 @@ async function renderChallengeDetail() {
       const avatarEl = document.createElement('div');
       avatarEl.className = 'challenge-lb-avatar';
       setLbAvatar(avatarEl, entry.avatarUrl, entry.p.username);
+      applyDynamicProfilePhotoAura(avatarEl, '#challenge-detail-modal', entry.isMe ? getCardioLevel() : computeFriendCardioLevel(entry.pState || {}));
       row.innerHTML = `
         <div class="challenge-lb-rank">—</div>
         <div class="challenge-lb-avatar-slot"></div>
@@ -9216,12 +9362,23 @@ async function renderChallengeDetail() {
   subscribeChallengeChat(currentChallengeId);
 }
 
+// A real <img> (object-fit:cover), not a CSS background-image — iOS Safari
+// has long-standing reliability issues clipping a background-image to a
+// border-radius circle (only shows up once an actual photo is set, never
+// with the plain color+letter placeholder, which is exactly what was
+// reported: circular avatars reading as "cut off"/flattened at the top,
+// bottom, left and right on iPhone, only when a real photo is loaded).
+// Clipping an actual <img> element via border-radius is far more reliably
+// supported. See the identical .lb-avatar-img CSS rule for the object-fit.
 function setLbAvatar(el, url, username) {
+  el.innerHTML = '';
   if (url) {
-    el.style.backgroundImage = `url("${url}")`;
-    el.textContent = '';
+    const img = document.createElement('img');
+    img.className = 'lb-avatar-img';
+    img.src = url;
+    img.alt = '';
+    el.appendChild(img);
   } else {
-    el.style.backgroundImage = 'none';
     el.textContent = (username || '?')[0].toUpperCase();
   }
 }
@@ -9724,6 +9881,12 @@ function updateModel() {
   const hl = getHairLevel();
   const hairOpt = loadHairOption();
   updateCoreAuraForLevel(getCardioLevel());
+  // Shape Aura equivalent for the flat profile-photo circles (own photo only —
+  // friends'/participants' levels get applied where their data actually loads,
+  // e.g. openFriendDetail). updateOwnProfilePhotoAuraLevel is a classic-script
+  // global (see the Shape Aura script near the end of body); it no-ops safely
+  // if that script hasn't set up the target elements' auras yet.
+  updateOwnProfilePhotoAuraLevel(getCardioLevel());
 
   const hair = meshMap['Hair'];
   if (hair) {
@@ -12167,14 +12330,34 @@ document.getElementById('rest-plus-btn').addEventListener('click', () => {
 // ── In-workout rest edit modal ──
 let restEditTemp = 90;
 let restEditExercise = null;
+let restEditManualStart = false;
 
 function openRestEdit(exName) {
   restEditExercise = exName || null;
+  restEditManualStart = false;
   const currentRest = (exName && state.exerciseMeta[exName] && state.exerciseMeta[exName].restTime) || restDuration;
   restEditTemp = currentRest;
   document.getElementById('rest-edit-display').value = fmtRestSecs(restEditTemp);
+  document.getElementById('rest-edit-title').textContent = 'Rest Duration';
+  document.getElementById('rest-edit-sub').textContent = 'This workout only';
+  document.getElementById('rest-edit-apply').textContent = 'Apply';
   document.getElementById('rest-edit-modal').classList.add('open');
 }
+
+// Manual rest timer start — triggered from the stopwatch button in the
+// train header, independent of finishing a set.
+function openRestManualStart() {
+  restEditExercise = null;
+  restEditManualStart = true;
+  restEditTemp = restInterval ? restSecs : restDuration;
+  document.getElementById('rest-edit-display').value = fmtRestSecs(restEditTemp);
+  document.getElementById('rest-edit-title').textContent = 'Rest Timer';
+  document.getElementById('rest-edit-sub').textContent = 'Adjust, then start';
+  document.getElementById('rest-edit-apply').textContent = 'Start';
+  document.getElementById('rest-edit-modal').classList.add('open');
+}
+
+document.getElementById('rest-start-btn').addEventListener('click', openRestManualStart);
 
 function closeRestEdit() {
   document.getElementById('rest-edit-modal').classList.remove('open');
@@ -12191,7 +12374,10 @@ document.getElementById('rest-edit-plus').addEventListener('click', () => {
 });
 
 document.getElementById('rest-edit-apply').addEventListener('click', () => {
-  if (restEditExercise) {
+  if (restEditManualStart) {
+    restCurrentExercise = null;
+    startRestTimer(restEditTemp);
+  } else if (restEditExercise) {
     if (!state.exerciseMeta[restEditExercise]) state.exerciseMeta[restEditExercise] = {};
     state.exerciseMeta[restEditExercise].restTime = restEditTemp;
     updateExerciseRestMarkers(restEditExercise, restEditTemp);
@@ -14642,7 +14828,15 @@ function buildArcNodes() {
     node.className = 'room-node';
     node.style.width = NODE_SIZE + 'px';
     node.style.height = NODE_SIZE + 'px';
-    detectRoomSrc(i + 1).then(src => { node.style.backgroundImage = cssUrl(src); });
+    // Real <img> (object-fit:cover), not a CSS background-image — see
+    // setLbAvatar's comment for why (iOS Safari clipping reliability).
+    detectRoomSrc(i + 1).then(src => {
+      const img = document.createElement('img');
+      img.className = 'lb-avatar-img';
+      img.src = src;
+      img.alt = '';
+      node.appendChild(img);
+    });
     node.addEventListener('click', () => {
       let diff = SEL_ANGLE - arcNodeAngle(i);
       diff = ((diff % (2 * Math.PI)) + 3 * Math.PI) % (2 * Math.PI) - Math.PI;
@@ -16007,16 +16201,9 @@ document.getElementById('profile-menu-overlay').addEventListener('click', (e) =>
 function renderAvatarPfpPreview() {
   const el = document.getElementById('avatar-pfp-preview');
   const removeBtn = document.getElementById('avatar-pfp-remove-btn');
-  if (myAvatarUrl) {
-    el.style.backgroundImage = `url("${myAvatarUrl}")`;
-    el.textContent = '';
-    removeBtn.style.display = 'block';
-  } else {
-    el.style.backgroundImage = 'none';
-    const uname = document.getElementById('acct-username-display').textContent || '';
-    el.textContent = uname ? uname[0].toUpperCase() : '?';
-    removeBtn.style.display = 'none';
-  }
+  const uname = document.getElementById('acct-username-display').textContent || '';
+  setLbAvatar(el, myAvatarUrl, uname);
+  removeBtn.style.display = myAvatarUrl ? 'block' : 'none';
 }
 
 function closeAvatarPfpMenu() {
@@ -16035,7 +16222,7 @@ document.getElementById('avatar-pfp-menu').addEventListener('click', (e) => {
 
 document.getElementById('avatar-pfp-preview').addEventListener('click', () => {
   if (!myAvatarUrl) return;
-  document.getElementById('avatar-pfp-view-circle').style.backgroundImage = `url("${myAvatarUrl}")`;
+  setLbAvatar(document.getElementById('avatar-pfp-view-circle'), myAvatarUrl, '');
   document.getElementById('avatar-pfp-view-modal').classList.add('open');
 });
 document.getElementById('avatar-pfp-view-modal').addEventListener('click', (e) => {
@@ -16272,9 +16459,11 @@ document.getElementById('avatar-pfp-presets-btn').addEventListener('click', () =
     const tile = document.createElement('button');
     tile.type = 'button';
     tile.className = 'avatar-preset-tile';
-    tile.style.backgroundImage = `url("${src}")`;
-    tile.style.backgroundSize = 'cover';
-    tile.style.backgroundPosition = 'center';
+    const tileImg = document.createElement('img');
+    tileImg.className = 'lb-avatar-img';
+    tileImg.src = src;
+    tileImg.alt = '';
+    tile.appendChild(tileImg);
     tile.addEventListener('click', () => selectAvatarPreset(src));
     grid.appendChild(tile);
   });
@@ -16299,7 +16488,18 @@ function selectAvatarPreset(src) {
     canvas.width = size;
     canvas.height = size;
     const ctx = canvas.getContext('2d');
-    ctx.drawImage(img, 0, 0, size, size);
+    // Cover-crop a centered square out of the source first, instead of
+    // stretching the whole (not necessarily square) source image to fit —
+    // drawImage(img, 0, 0, size, size) ignored the source's actual aspect
+    // ratio, squashing it non-uniformly and distorting any circular graphic
+    // inside (e.g. these preset badges' own ring) into an uneven oval that
+    // then reads as "cut off" once displayed in a border-radius:50% circle.
+    // Same cover-fit approach the regular upload/crop flow already uses
+    // above (see avatar-crop-save's drawImage call).
+    const srcSize = Math.min(img.naturalWidth, img.naturalHeight);
+    const sx = (img.naturalWidth - srcSize) / 2;
+    const sy = (img.naturalHeight - srcSize) / 2;
+    ctx.drawImage(img, sx, sy, srcSize, srcSize, 0, 0, size, size);
     canvas.toBlob(async (blob) => {
       if (!blob) return;
       document.getElementById('avatar-preset-modal').classList.remove('open');
@@ -16365,7 +16565,20 @@ document.getElementById('friends-btn').addEventListener('click', () => {
   document.getElementById('friends-overlay-signedout').style.display = signedIn ? 'none' : 'block';
   document.getElementById('friends-overlay-content').style.display = signedIn ? 'block' : 'none';
   document.getElementById('friends-overlay').classList.add('open');
-  if (signedIn) refreshFriends();
+  if (signedIn) {
+    const myUsername = document.getElementById('acct-username-display').textContent || '';
+    document.getElementById('friends-self-username').textContent = myUsername;
+    setLbAvatar(document.getElementById('friends-self-avatar'), myAvatarUrl, myUsername);
+    const hl = getHairLevel();
+    const levelNumEl = document.getElementById('friends-self-level-num');
+    levelNumEl.textContent = hl;
+    levelNumEl.style.color = HAIR_TEXT_COLORS[hl];
+    const cl = getCardioLevel();
+    const cardioNumEl = document.getElementById('friends-self-cardio-num');
+    cardioNumEl.textContent = cl;
+    cardioNumEl.style.color = LEVEL_COLORS[cl];
+    refreshFriends();
+  }
 });
 
 document.getElementById('friends-overlay-close-btn').addEventListener('click', () => {
@@ -17085,6 +17298,30 @@ function lockNumpadKeysUntilSettled(panel, keys) {
   var hardTimer = setTimeout(finalUnlock, 900); // absolute safety net so keys never stay locked forever
 }
 
+// Numpad keys register on `click`, which fires at the touch's LIFT-OFF
+// position — but a finger's contact point commonly drifts a few px between
+// touchdown and liftoff (more so typing fast on a tightly packed grid), so
+// the tap can resolve to a neighboring key from the one actually pressed.
+// Binding touch/pen taps on `pointerdown` instead locks in the key at the
+// INITIAL contact point, before any drift happens. Mouse and keyboard
+// activation still go through `click` as normal — only touch/pen taps get
+// intercepted, and preventDefault on that pointerdown suppresses the
+// compatibility click touch would otherwise also fire, so taps never
+// double-register.
+function bindNumpadTap(el, handler) {
+  let firedByPointer = false;
+  el.addEventListener('pointerdown', (e) => {
+    if (e.pointerType !== 'touch' && e.pointerType !== 'pen') return;
+    e.preventDefault();
+    firedByPointer = true;
+    handler(e);
+  });
+  el.addEventListener('click', (e) => {
+    if (firedByPointer) { firedByPointer = false; return; }
+    handler(e);
+  });
+}
+
 // ═══════════════════════════════════════════════════════════
 // TRAIN NUMPAD POPUP
 // ═══════════════════════════════════════════════════════════
@@ -17188,7 +17425,7 @@ function lockNumpadKeysUntilSettled(panel, keys) {
       const repsBtn = document.createElement('button');
       repsBtn.className = 'tnp-reps-btn';
       repsBtn.textContent = 'REPS →';
-      repsBtn.addEventListener('click', () => {
+      bindNumpadTap(repsBtn, () => {
         switchToField(pairInp, activeInp, checkBtnRef, 'reps');
       });
       actionsEl.appendChild(repsBtn);
@@ -17196,7 +17433,7 @@ function lockNumpadKeysUntilSettled(panel, keys) {
       const completeBtn = document.createElement('button');
       completeBtn.className = 'tnp-complete-btn';
       completeBtn.textContent = 'COMPLETE SET';
-      completeBtn.addEventListener('click', () => {
+      bindNumpadTap(completeBtn, () => {
         commitToInput();
         const repsVal = parseInt(activeInp.value) || 0;
         if (repsVal < 1) return;
@@ -17211,7 +17448,7 @@ function lockNumpadKeysUntilSettled(panel, keys) {
 
   // Numpad key presses
   overlay.querySelectorAll('.tnp-key').forEach(key => {
-    key.addEventListener('click', () => {
+    bindNumpadTap(key, () => {
       const val = key.dataset.val;
       if (val === 'back') {
         currentStr = currentStr.slice(0, -1);
@@ -17429,15 +17666,297 @@ function attachTrainNumpad(inp, pairInp, checkBtn, field) {
   }
 
   numpad.querySelectorAll('.rnp-key').forEach(btn => {
-    btn.addEventListener('click', () => handleKey(btn.dataset.val));
+    bindNumpadTap(btn, () => handleKey(btn.dataset.val));
   });
 
-  document.getElementById('rnp-done').addEventListener('click', commit);
+  bindNumpadTap(document.getElementById('rnp-done'), commit);
   backdrop.addEventListener('click', closeNumpad);
 })();
 // ─────────────────────────────────────────────────────────────
 
 </script>
+
+<!-- Shape Aura — hugging outline effect on 2D DOM elements (buttons/boxes), separate -->
+<!-- from the 3D character's aura in Aura/. Engine lives in "Shape Aura/engine/" and is -->
+<!-- shared by every target below; each target gets its own preset folder under -->
+<!-- "Shape Aura/<name>/preset.json" (see "Shape Aura/_template/README.md" for how to -->
+<!-- add a new one). Classic (non-module) scripts: THREE is exposed as window.THREE -->
+<!-- above so these can read it as a plain global. -->
+<script defer src="Shape%20Aura/engine/core-aura-code.js"></script>
+<script defer src="Shape%20Aura/engine/flex-shape-aura-code.js"></script>
+<script>
+// Add a new FIXED (always in the DOM, never recreated) box/button here:
+// { selector: CSS selector for the target element, preset: path to its
+// preset.json, host: the nearest ancestor to move the shared canvas into —
+// '#app' for anything living directly in the normal page flow (no modal
+// involved), or the CSS selector of its containing
+// modal/overlay element otherwise (must be listed in SHAPE_AURA_MODAL_HOSTS
+// below too). For an avatar circle that gets rebuilt from scratch every time
+// a list refreshes (a friend row, a challenge leaderboard row, ...), don't
+// add it here — call applyDynamicProfilePhotoAura(el, hostSelector, level)
+// right after creating the element instead (see the friends/challenges
+// rendering code for examples), and
+// destroyDynamicProfilePhotoAurasIn(listContainerEl) right before that list
+// gets wiped/rebuilt. See "Shape Aura/_template/README.md".
+//
+// The 4 profile-photo circles below don't get a `preset` — theirs is cardio-
+// level-driven (see PROFILE_PHOTO_AURA_LEVEL_FILES / applyProfilePhotoAuraLevel
+// below), so they start disabled here and get their real level applied once
+// real data loads: #avatar-pfp-preview/#friends-self-avatar (the CURRENT
+// user's own photo) via updateOwnProfilePhotoAuraLevel(), called from
+// updateModel() every time alongside the 3D character's own
+// updateCoreAuraForLevel(); the other two (someone ELSE's photo) via the
+// friend-detail/challenge-detail rendering code, every time they load a
+// different person's data.
+const SHAPE_AURA_TARGETS = [
+  { selector: '#avatar-pfp-preview', host: '#profile-menu-overlay' },
+  { selector: '#friends-self-avatar', host: '#friends-overlay' },
+  { selector: '#friend-detail-avatar', host: '#friend-detail-modal' },
+  { selector: '#challenge-leader-avatar', host: '#challenge-detail-modal' },
+];
+
+// Every modal/overlay that might contain a Shape Aura target, MOST-NESTED /
+// TOPMOST first — e.g. Friend Detail can open on top of the still-visible
+// Friends list, so it must be checked (and win) before '#friends-overlay'.
+// '#app' is the implicit default the canvas returns to when none of these are
+// open; it isn't listed here.
+const SHAPE_AURA_MODAL_HOSTS = [
+  '#friend-detail-modal',
+  '#challenge-detail-modal',
+  '#friends-overlay',
+  '#challenges-overlay',
+  '#profile-menu-overlay',
+];
+
+// Same "position:relative + a small local z-index" fix described in the big
+// comment below, factored out so both fixed targets (below) and dynamically-
+// created ones (friend rows, challenge leaderboard rows, ...) can use it. Safe
+// to call unconditionally, even while the shared canvas isn't currently
+// parented in this element's container — the z-index only matters relative to
+// this element's own local stacking context, so it can't bleed through or
+// affect anything unrelated.
+function bumpShapeAuraStacking(el) {
+  if (getComputedStyle(el).position === 'static') el.style.position = 'relative';
+  el.style.zIndex = 6;
+}
+
+// Cardio-level-driven profile photo aura — mirrors the 3D character's Core
+// Aura level system exactly, filenames included (see CORE_AURA_LEVEL_FILES /
+// loadCoreAuraPreset / updateCoreAuraForLevel in the module script above,
+// and "assets/aura-presets/Core Aura - Level N.json"): one preset JSON per
+// cardio level, named "Profile Photo - Level N.json" in
+// "Shape Aura/Profile Photo/". No aura at all below level 2 — that's a
+// hardcoded rule (see applyProfilePhotoAuraLevel below), not driven by a
+// "Level 1" file, exactly like Core Aura has no Level 1 file either (a
+// "Profile Photo - Level 1.json" placeholder exists on disk for reference/
+// consistency, but nothing ever loads it). Level 3-5 files currently hold
+// placeholder content copied from Level 2 — waiting on their real values.
+const PROFILE_PHOTO_AURA_LEVEL_FILES = {
+  2: 'Shape%20Aura/Profile%20Photo/Profile%20Photo%20-%20Level%202.json',
+  3: 'Shape%20Aura/Profile%20Photo/Profile%20Photo%20-%20Level%203.json',
+  4: 'Shape%20Aura/Profile%20Photo/Profile%20Photo%20-%20Level%204.json',
+  5: 'Shape%20Aura/Profile%20Photo/Profile%20Photo%20-%20Level%205.json',
+};
+const profilePhotoAuraPresetCache = {};
+function loadProfilePhotoAuraPresetForLevel(level) {
+  if (Object.prototype.hasOwnProperty.call(profilePhotoAuraPresetCache, level)) {
+    return Promise.resolve(profilePhotoAuraPresetCache[level]);
+  }
+  const file = PROFILE_PHOTO_AURA_LEVEL_FILES[level];
+  if (!file) { profilePhotoAuraPresetCache[level] = null; return Promise.resolve(null); }
+  return fetch(file)
+    .then(function (r) { return r.json(); })
+    .then(function (data) { profilePhotoAuraPresetCache[level] = data; return data; })
+    .catch(function (e) { console.error('Profile photo aura preset load failed:', file, e); return null; });
+}
+
+// Every modal-hosted Shape Aura target currently alive (fixed or dynamic):
+// { aura, host }. WHY THIS EXISTS: a target's own modal (e.g. Friends list,
+// "#friends-overlay") doesn't actually CLOSE when a narrower modal opens on
+// top of it (e.g. tapping a friend row opens Friend Detail, "#friend-detail-
+// modal", while the list stays .open underneath, just visually covered) — so
+// that friend row's avatar element is still in the DOM at its real on-screen
+// position, still passes the "am I visible" bounding-box check, and would
+// keep rendering into the shared canvas every frame regardless. That's
+// harmless while the canvas is still parented behind that same modal's own
+// backdrop (the backdrop hides it) — but the instant the canvas moves to
+// serve the NEWER, topmost modal instead (see updateShapeAuraHost), it also
+// ends up sitting in front of that now-covered older modal's own backdrop
+// from the canvas's own (reparented) point of view, revealing the stale row
+// aura frozen at its old position instead of following to the new one. Fixed
+// by explicitly disabling any registered aura whose own host isn't the
+// currently-active one, and re-enabling it when its host becomes active
+// again — see the host-matching loop in updateShapeAuraHost().
+const SHAPE_AURA_REGISTRY = [];
+
+// aura.config.enabled is a combination of two independent things that can
+// each change at different times: __levelEnabled (does this person's cardio
+// level even warrant an aura at all?) and __hostVisible (is this element's
+// own modal the one currently on top, per SHAPE_AURA_REGISTRY above?) —
+// recomputed here whenever either one changes, instead of overwriting
+// config.enabled directly from either place and clobbering the other's say.
+function refreshShapeAuraEnabled(aura) {
+  aura.config.enabled = !!aura.__levelEnabled && aura.__hostVisible !== false;
+}
+
+// Applies (or re-applies) the profile-photo look for a given cardio level onto
+// an already-created aura handle (see createFlexAura's return value). Safe to
+// call repeatedly on the same handle as the level/data changes (own level
+// ticking up, or the same fixed element getting reused for a different
+// friend/participant — see openFriendDetail and the challenge leaderboard
+// rendering for that latter case).
+function applyProfilePhotoAuraLevel(aura, level) {
+  loadProfilePhotoAuraPresetForLevel(level).then(function (preset) {
+    if (preset && preset.SHELL) Object.assign(aura.config, preset.SHELL);
+    aura.__levelEnabled = level >= 2 && !!preset;
+    refreshShapeAuraEnabled(aura);
+  });
+}
+
+// Call once, from updateModel() (see the module script above), any time the
+// CURRENT user's own cardio level might have changed — updates every fixed
+// element showing their OWN photo (not friends'/participants', which get
+// their level applied wherever THEIR data actually loads instead). Declared
+// as a plain global (not wrapped in DOMContentLoaded) so it exists the moment
+// this script runs and can't be missed by an early call; it just no-ops via
+// the __shapeAura check below until SHAPE_AURA_TARGETS has actually created
+// these elements' auras.
+function updateOwnProfilePhotoAuraLevel(level) {
+  ['#avatar-pfp-preview', '#friends-self-avatar'].forEach(function (sel) {
+    const el = document.querySelector(sel);
+    if (el && el.__shapeAura) applyProfilePhotoAuraLevel(el.__shapeAura, level);
+  });
+}
+
+// Call right after creating a dynamically-generated avatar circle (a friend
+// row, a challenge leaderboard row, ...) — these get destroyed and rebuilt
+// from scratch every time their list refreshes, unlike the fixed elements in
+// SHAPE_AURA_TARGETS above, so they can't be set up once at page load.
+// modalHost: the CSS selector of the modal/overlay this element lives inside
+// (must also be listed in SHAPE_AURA_MODAL_HOSTS above); pass a falsy value
+// for anything living directly in the normal page flow instead. level: that
+// specific person's cardio level (see computeFriendCardioLevel / getCardioLevel
+// in the module script above).
+function applyDynamicProfilePhotoAura(el, modalHost, level) {
+  if (modalHost) bumpShapeAuraStacking(el);
+  const aura = createFlexAura(el, {});
+  el.__shapeAura = aura;
+  if (modalHost) {
+    // Assume visible at creation time — a row only ever gets created while
+    // its own list is being rendered, which only happens while that list's
+    // modal is the one actually open; updateShapeAuraHost() corrects this
+    // the moment a DIFFERENT modal becomes the active one instead.
+    aura.__hostVisible = true;
+    SHAPE_AURA_REGISTRY.push({ aura: aura, host: modalHost });
+  }
+  applyProfilePhotoAuraLevel(aura, level);
+  return aura;
+}
+
+// Call right before wiping/rebuilding a list of dynamically-generated avatar
+// circles (e.g. right before `someList.innerHTML = ''`) — otherwise their
+// auras pile up forever in the engine's internal registry with no element
+// left to ever point at again (a real, unbounded leak every time the list
+// refreshes, e.g. every time the friends list reloads).
+function destroyDynamicProfilePhotoAurasIn(containerEl) {
+  containerEl.querySelectorAll('.challenge-lb-avatar, .challenge-lb-avatar-lg, .challenge-row-leader-avatar').forEach(function (el) {
+    if (el.__shapeAura) {
+      el.__shapeAura.destroy();
+      const i = SHAPE_AURA_REGISTRY.findIndex(function (entry) { return entry.aura === el.__shapeAura; });
+      if (i >= 0) SHAPE_AURA_REGISTRY.splice(i, 1);
+      el.__shapeAura = null;
+    }
+  });
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+  const auraCanvas = document.getElementById('flex-aura-canvas');
+  const auraDefaultParent = auraCanvas.parentElement;
+  const auraDefaultNextSibling = auraCanvas.nextSibling; // #app itself, originally
+  let auraActiveHost = null;
+
+  // WHY THIS EXISTS: a single flat z-index on the canvas can't put it "behind a
+  // modal's own opaque full-screen backdrop, but in front of that modal's own
+  // child target" from OUTSIDE that modal's DOM subtree — z-index only compares
+  // within a shared stacking context, and from outside, the whole modal (backdrop
+  // + everything in it) is one atomic unit: the canvas is either entirely behind
+  // it (hidden completely, useless) or entirely in front of it (floods every
+  // target inside with the aura's full filled interior instead of masking it,
+  // since it's now also in front of the targets themselves). The only fix is to
+  // physically move the one shared canvas to be a child of whatever modal
+  // currently owns visible targets — then it's genuinely sandwiched between
+  // that modal's own backdrop background (which always paints first/behind its
+  // own children) and the targets (deeper descendants, which paint after/in
+  // front) — each of which needs its own small local z-index bump (see
+  // bumpShapeAuraStacking above) to stay in front of the canvas too, since
+  // fixed-position content otherwise always paints above plain static content
+  // regardless of DOM order. When no such modal is open, the canvas goes back
+  // to its original spot as a sibling of #app (its proven-working default for
+  // page-flow targets, host: '#app', which need no bump at all).
+  function updateShapeAuraHost() {
+    let host = null;
+    let hostSelector = null;
+    for (const sel of SHAPE_AURA_MODAL_HOSTS) {
+      const hostEl = document.querySelector(sel);
+      if (hostEl && hostEl.classList.contains('open')) { host = hostEl; hostSelector = sel; break; }
+    }
+    if (host === auraActiveHost) return;
+    if (host) {
+      host.insertBefore(auraCanvas, host.firstChild);
+    } else {
+      auraDefaultParent.insertBefore(auraCanvas, auraDefaultNextSibling);
+    }
+    auraActiveHost = host;
+
+    // See the big comment above SHAPE_AURA_REGISTRY: a target whose own modal
+    // isn't the currently-active one gets explicitly disabled, since it's
+    // otherwise still sitting in the DOM at a real on-screen position and
+    // would keep rendering wherever the canvas happens to be parented now.
+    SHAPE_AURA_REGISTRY.forEach(function (entry) {
+      entry.aura.__hostVisible = entry.host === hostSelector;
+      refreshShapeAuraEnabled(entry.aura);
+    });
+  }
+
+  SHAPE_AURA_TARGETS.forEach(function (t) {
+    const el = document.querySelector(t.selector);
+    if (!el) return;
+    if (t.host !== '#app') bumpShapeAuraStacking(el);
+    const aura = createFlexAura(el, {});
+    el.__shapeAura = aura;
+    if (t.preset) {
+      // Fixed, non-level-based look. Editable preset,
+      // same convention as the 3D character's assets/aura-presets/*.json
+      // (Core Aura - Level N.json): only the "SHELL" key is applied, via
+      // Object.assign onto the aura's live config — hand-edit the JSON's
+      // values to tune the look, no code changes needed. Its "enabled" field
+      // is applied as-is too, so if an aura seems to vanish after loading,
+      // check that field in its preset.json first.
+      fetch(t.preset)
+        .then(function (r) { return r.json(); })
+        .then(function (preset) { if (preset && preset.SHELL) Object.assign(aura.config, preset.SHELL); })
+        .catch(function (e) { console.error('Shape aura preset load failed:', t.preset, e); });
+    } else {
+      // Cardio-level-driven profile photo circle — starts disabled; its real
+      // level gets applied the moment real data loads for it (see
+      // updateOwnProfilePhotoAuraLevel / openFriendDetail / the challenge
+      // leaderboard rendering, all in the module script above).
+      aura.__levelEnabled = false;
+      aura.__hostVisible = true; // corrected by updateShapeAuraHost() below once it runs
+      refreshShapeAuraEnabled(aura);
+      if (t.host !== '#app') SHAPE_AURA_REGISTRY.push({ aura: aura, host: t.host });
+    }
+  });
+
+  updateShapeAuraHost();
+  // Same "watch class changes app-wide" convention this file already uses for
+  // nav-bar visibility (see the .open MutationObserver a bit above this script).
+  new MutationObserver(updateShapeAuraHost).observe(document.body, {
+    attributes: true, attributeFilter: ['class'], subtree: true
+  });
+});
+</script>
+
 <!-- Reset button & modal — outside #app so pointer-events work -->
 
 <!-- Train Numpad Popup -->
