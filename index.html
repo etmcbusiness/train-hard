@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#000000" />
-  <meta name="app-version" content="103" />
+  <meta name="app-version" content="104" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -6890,6 +6890,16 @@ function getMondayStr() {
 // project's CLAUDE.md for the required pre-push changelog-confirmation step.
 // ═══════════════════════════════════════════════════════════
 const UPDATE_LOG = [
+  {
+    version: '104',
+    date: 'Aug 12, 2026',
+    title: 'Eat Plenty Cloud Sync',
+    bullets: [
+      "Eat Plenty (food/nutrition tracking) now saves to your account in the cloud, the same way your workouts already do. Your food log, nutrition goals, weight log, and custom foods now follow you across devices when you're signed in — no separate sign-in needed, it uses whichever account you're already signed into on the main Train Hard tab. This data stays private to you, not shared with friends the way workout stats are.",
+      'Fixed the food-logging number pad popping up and pushing the screen up way more than necessary, sometimes hiding the field you were typing into (and the info below it, like the macro preview) behind the keypad.',
+      'Quick Add\'s Cals/Protein/Carbs/Fat fields now have a "Next" button that jumps to the next field left to right, instead of having to close the keypad and re-tap each one.',
+    ]
+  },
   {
     version: '103',
     date: 'Aug 11, 2026',

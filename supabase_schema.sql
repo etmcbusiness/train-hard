@@ -748,3 +748,59 @@ drop trigger if exists on_friendship_accepted on public.friendships;
 create trigger on_friendship_accepted
   before update on public.friendships
   for each row execute function public.set_friendship_accepted_at();
+
+-- ═══════════════════════════════════════════════════════════
+-- Phase 9 — Eat Plenty cloud sync (nutrition log / goals / weight log /
+-- custom foods), added 2026-08-12
+--
+-- Mirrors profiles.state's "one JSONB blob" shape, but as its OWN table
+-- instead of a new column on profiles: profiles already carries a "friends
+-- can view" SELECT policy (Phase 3) that applies to the whole row, and
+-- Postgres RLS has no per-column granularity — any column added to
+-- profiles would inherit that policy and expose it to accepted friends
+-- too. What/how much someone eats, their weight log, and their diet goals
+-- are explicitly private, visible only to their owner, so this needs a
+-- table with its own narrower RLS instead.
+--
+-- No auto-create-on-signup trigger (unlike handle_new_user() for profiles,
+-- Phase 1) — most accounts will never open Eat Plenty at all, so a row is
+-- only worth creating the first time one actually does. The client uses
+-- .upsert() instead of profiles' .update()-assumes-a-row-already-exists
+-- pattern, which is why this needs BOTH an insert and an update policy
+-- below.
+--
+-- Deliberately NOT added to the supabase_realtime publication (contrast
+-- Phase 8, which does this for profiles) — Eat Plenty sync is push-on-change
+-- + pull-on-load only, no live cross-device subscription.
+-- ═══════════════════════════════════════════════════════════
+
+create table if not exists public.nutrition_data (
+  id uuid primary key references auth.users(id) on delete cascade,
+  state jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+alter table public.nutrition_data enable row level security;
+
+create policy "Users can view own nutrition data"
+  on public.nutrition_data for select
+  using (auth.uid() = id);
+
+create policy "Users can insert own nutrition data"
+  on public.nutrition_data for insert
+  with check (auth.uid() = id);
+
+create policy "Users can update own nutrition data"
+  on public.nutrition_data for update
+  using (auth.uid() = id)
+  with check (auth.uid() = id);
+
+-- No "friends can view" policy — see the note at the top of this phase.
+-- This table's whole reason for existing separately from profiles.state is
+-- to keep nutrition data out of reach of that policy.
+
+drop trigger if exists on_nutrition_data_updated on public.nutrition_data;
+create trigger on_nutrition_data_updated
+  before update on public.nutrition_data
+  for each row execute function public.set_updated_at();
