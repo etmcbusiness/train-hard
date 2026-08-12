@@ -1908,16 +1908,19 @@
   // ═══════════════════════════════════════════════════════════
   const SUPABASE_URL = 'https://wuboizuqyucvioexgkwh.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_r5VhU8EDB5N8F0rV8SpGMQ_Gms-6tkT';
-  // window.supabase.createClient (not the bare `supabase` global) so this
-  // line still reads the UMD namespace correctly even though `const supabase`
-  // two lines down declares a same-named binding for the rest of this
-  // script — writing `const supabase = supabase.createClient(...)` instead
-  // would throw ("Cannot access 'supabase' before initialization"), since
-  // that redeclaration shadows the global for the whole script, TDZ included.
-  const { createClient } = window.supabase;
-  const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
-    global: { fetch: (url, options) => fetch(url, { ...options, cache: 'no-store' }) }
-  });
+  // The Supabase UMD script (loaded via a <script src> tag near the top of
+  // the file) can fail to load — flaky network, an ad/script blocker, a CDN
+  // hiccup — in which case window.supabase never gets set. Cloud sync is a
+  // nice-to-have layered on top of a fully-functional local-only app, so a
+  // missing/failed CDN load must never take down the rest of Eat Plenty;
+  // `supabase` degrades to null and initCloudSync() below no-ops instead of
+  // throwing (which, unguarded, previously killed this entire script partway
+  // through and left the app stuck on the loading screen).
+  const supabase = window.supabase
+    ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+        global: { fetch: (url, options) => fetch(url, { ...options, cache: 'no-store' }) }
+      })
+    : null;
   let cloudSession = null;           // current Supabase auth session, or null when signed out
   let cloudSyncTimer = null;         // debounce handle for pushing state to the cloud
   let suppressNextCloudPush = false; // set while applying pulled/pushed state, so it isn't mistaken for a new local edit
@@ -2085,6 +2088,7 @@
   // calls or errors, when nobody's signed in — the common case for anyone
   // who hasn't touched Train Hard's Profile screen.
   function initCloudSync() {
+    if (!supabase) { console.error('Supabase failed to load — Eat Plenty will stay local-only this session.'); return; }
     supabase.auth.getSession().then(({ data: { session } }) => {
       cloudSession = session || null;
       renderSyncUI();

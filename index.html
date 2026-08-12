@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#000000" />
-  <meta name="app-version" content="104" />
+  <meta name="app-version" content="105" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -6890,6 +6890,14 @@ function getMondayStr() {
 // project's CLAUDE.md for the required pre-push changelog-confirmation step.
 // ═══════════════════════════════════════════════════════════
 const UPDATE_LOG = [
+  {
+    version: '105',
+    date: 'Aug 12, 2026',
+    title: 'Eat Plenty Load Fix',
+    bullets: [
+      "Fixed Eat Plenty failing to load entirely if the cloud-sync library couldn't load (network hiccup, blocker, etc.) — it now just runs normally without cloud sync in that case instead of getting stuck.",
+    ]
+  },
   {
     version: '104',
     date: 'Aug 12, 2026',
