@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#000000" />
-  <meta name="app-version" content="108" />
+  <meta name="app-version" content="109" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -771,7 +771,7 @@
       top: 0;
       bottom: 0;
       display: flex;
-      width: 160px;
+      width: 240px;
       z-index: 0;
     }
     .hist-swipe-btn {
@@ -790,7 +790,8 @@
       letter-spacing: 0.3px;
       -webkit-tap-highlight-color: transparent;
     }
-    .hist-swipe-btn.hsb-edit   { background: rgb(var(--c-accent)); border-radius: 16px 0 0 16px; }
+    .hist-swipe-btn.hsb-template { background: #16a085; color: #fff; border-radius: 16px 0 0 16px; }
+    .hist-swipe-btn.hsb-edit   { background: rgb(var(--c-accent)); }
     .hist-swipe-btn.hsb-delete { background: #e74c3c; color: #fff; }
     .hist-swipe-btn svg { width: 20px; height: 20px; }
 
@@ -811,6 +812,7 @@
       transition: opacity 0.15s;
     }
     .hist-desktop-btn svg { width: 14px; height: 14px; flex-shrink: 0; }
+    .hist-desktop-btn.hdb-template { background: rgba(22,160,133,0.12); border: 1px solid rgba(22,160,133,0.4); color: #16a085; }
     .hist-desktop-btn.hdb-edit   { background: rgba(var(--c-accent),0.15); border: 1px solid rgba(var(--c-accent),0.4); color: rgb(var(--c-accent)); }
     .hist-desktop-btn.hdb-delete { background: rgba(231,76,60,0.12); border: 1px solid rgba(231,76,60,0.4); color: #e74c3c; }
     .hist-desktop-btn:hover { opacity: 0.8; }
@@ -1324,6 +1326,19 @@
       line-height: 1;
       padding: 3px 9px;
     }
+    .replace-ex {
+      background: rgba(var(--c-accent-light),0.1);
+      border: 1px solid rgba(var(--c-accent-light),0.3);
+      border-radius: 8px;
+      color: rgb(var(--c-accent-light));
+      cursor: pointer;
+      line-height: 1;
+      padding: 3px 8px;
+      display: flex;
+      align-items: center;
+      margin-right: 6px;
+    }
+    .replace-ex:active { background: rgba(var(--c-accent-light),0.22); }
 
     /* Set column headers */
     .set-cols {
@@ -4328,7 +4343,13 @@
       background: rgba(var(--c-panel1),0.6); border: 1px solid rgba(var(--c-accent2),0.2);
       border-radius: 14px; padding: 14px 16px; margin-bottom: 10px;
       display: flex; align-items: flex-start; justify-content: space-between; gap: 10px;
+      transition: opacity 0.15s, border-color 0.15s;
     }
+    .tpl-item.dragging { opacity: 0.25; }
+    /* While reordering templates, hide the edit/delete buttons so the drag
+       handle has a clean row to travel through — matches the exercise
+       reorder treatment in the active training session. */
+    body.reordering-templates .tpl-item-actions { display: none; }
     .tpl-item-info { flex: 1; min-width: 0; cursor: pointer; touch-action: manipulation; }
     .tpl-item-info:active { opacity: 0.75; }
     .tpl-name { font-size: 15px; font-weight: 700; color: rgb(var(--c-text)); margin-bottom: 4px; }
@@ -7054,6 +7075,18 @@ function countedSets(sets) {
 // project's CLAUDE.md for the required pre-push changelog-confirmation step.
 // ═══════════════════════════════════════════════════════════
 const UPDATE_LOG = [
+  {
+    version: '109',
+    date: 'Aug 13, 2026',
+    title: 'Template Tools & Exercise Swap',
+    bullets: [
+      'Reorder your templates — long-press the drag handle on any saved template to rearrange your list. The new order sticks until you rearrange it again.',
+      'Turn a past workout into a template right from the History tab — carries over the exercises, their order, and how many sets each had (not the old weights/reps), then lets you edit and name it before saving.',
+      'Replace an exercise mid-workout or while building a template — a new swap button next to each exercise\'s × lets you swap in a different exercise without losing its spot in the list or its set count.',
+      'Fixed history swipe actions (Edit/Delete/Template) occasionally snapping shut on their own before you could tap anything.',
+      'Rest timer now keeps counting — and still alerts you — even if you leave the workout screen to log food in Eat Plenty.',
+    ]
+  },
   {
     version: '108',
     date: 'Aug 13, 2026',
@@ -10221,6 +10254,10 @@ function closePicker() {
   picker._tplMode = false;
   picker._challengeMode = false;
   picker._challengeCallback = null;
+  picker._replaceMode = false;
+  picker._replaceTarget = null;
+  picker._replaceIdx = null;
+  picker._replaceBlock = null;
   document.getElementById('picker-heading').textContent = 'Add Exercise';
   picker.classList.remove('open');
   if (challengeExercisePickerReturnModal) {
@@ -10305,7 +10342,13 @@ function fmtTime(s) {
 }
 
 function renderHistory() {
+  // A background cloud-sync pull (see subscribeOwnProfileUpdates) can call
+  // this mid-gesture, while the user has a card swiped open — rebuild the
+  // list same as always, but re-open whichever entry was open so it doesn't
+  // read as the swipe randomly snapping shut on its own.
+  const reopenIdx = openSwipeCardIdx;
   openSwipeCard = null;
+  openSwipeCardIdx = null;
   const el = document.getElementById('history-list');
   if (!state.history.length) {
     el.innerHTML = '<div class="empty-state">No workouts logged yet</div>';
@@ -10322,6 +10365,10 @@ function renderHistory() {
     const actions = document.createElement('div');
     actions.className = 'hist-swipe-actions';
     actions.innerHTML = `
+      <button class="hist-swipe-btn hsb-template">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M9 14h6"/><path d="M9 18h6"/></svg>
+        Template
+      </button>
       <button class="hist-swipe-btn hsb-edit">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
         Edit
@@ -10338,6 +10385,10 @@ function renderHistory() {
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:2px;">
         <div class="card-title" style="margin-bottom:0;">${w.date}</div>
         <div class="hist-desktop-actions">
+          <button class="hist-desktop-btn hdb-template">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M9 14h6"/><path d="M9 18h6"/></svg>
+            Template
+          </button>
           <button class="hist-desktop-btn hdb-edit">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
             Edit
@@ -10359,6 +10410,9 @@ function renderHistory() {
       }).join('')}
     `;
 
+    card.querySelector('.hdb-template').addEventListener('click', () => {
+      openTplBuilderFromHistory(w);
+    });
     card.querySelector('.hdb-edit').addEventListener('click', () => {
       openHistEdit(realIdx);
     });
@@ -10374,6 +10428,10 @@ function renderHistory() {
       }, 220);
     });
 
+    actions.querySelector('.hsb-template').addEventListener('click', () => {
+      closeAllSwipeCards();
+      openTplBuilderFromHistory(w);
+    });
     actions.querySelector('.hsb-edit').addEventListener('click', () => {
       closeAllSwipeCards();
       openHistEdit(realIdx);
@@ -10393,12 +10451,20 @@ function renderHistory() {
     wrapper.appendChild(actions);
     wrapper.appendChild(card);
     el.appendChild(wrapper);
-    attachHistSwipe(card);
+    attachHistSwipe(card, realIdx);
+    if (realIdx === reopenIdx) {
+      card.style.transition = 'none';
+      card.style.transform = `translateX(-${HIST_SWIPE_ACTION_WIDTH}px)`;
+      openSwipeCard = card;
+      openSwipeCardIdx = realIdx;
+    }
   });
 }
 
 // ── History swipe gestures ──
 let openSwipeCard = null;
+let openSwipeCardIdx = null; // which state.history index openSwipeCard belongs to
+const HIST_SWIPE_ACTION_WIDTH = 240;
 
 function closeAllSwipeCards() {
   if (openSwipeCard) {
@@ -10406,10 +10472,11 @@ function closeAllSwipeCards() {
     openSwipeCard.style.transform = 'translateX(0)';
     openSwipeCard = null;
   }
+  openSwipeCardIdx = null;
 }
 
-function attachHistSwipe(card) {
-  const ACTION_WIDTH = 160;
+function attachHistSwipe(card, realIdx) {
+  const ACTION_WIDTH = HIST_SWIPE_ACTION_WIDTH;
   const SNAP_THRESHOLD = 60;
   let startX = 0, startY = 0, startTranslate = 0;
   let tracking = false, isHorizontal = null, didSwipe = false;
@@ -10458,9 +10525,10 @@ function attachHistSwipe(card) {
       }
       card.style.transform = `translateX(-${ACTION_WIDTH}px)`;
       openSwipeCard = card;
+      openSwipeCardIdx = realIdx;
     } else {
       card.style.transform = 'translateX(0)';
-      if (openSwipeCard === card) openSwipeCard = null;
+      if (openSwipeCard === card) { openSwipeCard = null; openSwipeCardIdx = null; }
     }
   });
 }
@@ -12243,11 +12311,11 @@ function checkAndRestoreSession() {
   trainActive = true;
   livePreviewActive = true;
   document.querySelector('.nav-btn[data-tab="train"]').classList.add('train-live');
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === 'train'));
   session.length = 0;
   setTimerDisplay(fmtTime(timerSecs));
   const wSummary = document.getElementById('workout-summary');
   if (wSummary) wSummary.classList.remove('open');
-  stopRestTimer();
   document.getElementById('train-exercises').innerHTML = '';
   const modal = document.getElementById('train-modal');
   modal.style.display = 'flex';
@@ -12269,6 +12337,7 @@ function checkAndRestoreSession() {
   for (const ex of data.session) {
     addExerciseBlock(ex.name, ex.muscle, ex.sets, ex.note);
   }
+  resumeRestStateFromStorage();
 }
 
 // Save before page unloads / app backgrounds; re-sync timer on unlock
@@ -12303,6 +12372,51 @@ let restEndTime = 0; // absolute ms timestamp when rest expires
 let restCurrentExercise = null;
 let restCurrentDuration = 90;
 
+// Persisted so the rest timer survives a full-page navigation to Eat Plenty
+// and back — that's a separate document/JS context, so in-memory state
+// alone doesn't make the trip. Eat Plenty polls the same key so it can
+// notify the user there too. See resumeRestStateFromStorage().
+const REST_STATE_KEY = 'trainhard_rest_state';
+function persistRestState() {
+  try {
+    if (restEndTime) {
+      localStorage.setItem(REST_STATE_KEY, JSON.stringify({ restEndTime, restCurrentDuration, restCurrentExercise }));
+    } else {
+      localStorage.removeItem(REST_STATE_KEY);
+    }
+  } catch(e) {}
+}
+
+function resumeRestStateFromStorage() {
+  let data = null;
+  try {
+    const raw = localStorage.getItem(REST_STATE_KEY);
+    if (raw) data = JSON.parse(raw);
+  } catch(e) {}
+  if (!data || !data.restEndTime) {
+    stopRestTimer();
+    return;
+  }
+  restCurrentDuration = data.restCurrentDuration || restDuration;
+  restCurrentExercise = data.restCurrentExercise || null;
+  restEndTime = data.restEndTime;
+  if (Date.now() >= restEndTime) {
+    // Rest finished while we were away (Eat Plenty, or the page was
+    // unloaded) — Eat Plenty already alerted the user if it caught this
+    // first and will have cleared the key, so this only fires once.
+    stopRestTimer();
+    flashRestComplete();
+    playSound('restTimerEnd');
+    notifyRestComplete();
+  } else {
+    restSecs = Math.ceil((restEndTime - Date.now()) / 1000);
+    updateRestDisplay();
+    document.getElementById('rest-timer-bar').classList.add('active');
+    clearInterval(restInterval);
+    restInterval = setInterval(tickRestTimer, 500);
+  }
+}
+
 function fmtRestSecs(secs) {
   const m = Math.floor(secs / 60);
   const s = secs % 60;
@@ -12331,6 +12445,7 @@ function startRestTimer(duration) {
   document.getElementById('rest-timer-bar').classList.add('active');
   restInterval = setInterval(tickRestTimer, 500);
   scheduleNativeRestNotification(restEndTime);
+  persistRestState();
 }
 
 function tickRestTimer() {
@@ -12353,6 +12468,7 @@ function stopRestTimer() {
   document.getElementById('rest-timer-bar').classList.remove('active');
   document.getElementById('rest-complete-flash').classList.remove('flash');
   cancelNativeRestNotification();
+  persistRestState();
 }
 
 function flashRestComplete() {
@@ -12390,7 +12506,7 @@ document.getElementById('rest-minus-btn').addEventListener('click', () => {
   if (restInterval) {
     restEndTime = Math.max(Date.now() + 1000, restEndTime - 15000);
     tickRestTimer();
-    if (restInterval) scheduleNativeRestNotification(restEndTime);
+    if (restInterval) { scheduleNativeRestNotification(restEndTime); persistRestState(); }
   }
 });
 
@@ -12410,6 +12526,7 @@ document.getElementById('rest-plus-btn').addEventListener('click', () => {
     restEndTime = restEndTime + 15000;
     tickRestTimer();
     scheduleNativeRestNotification(restEndTime);
+    persistRestState();
   }
 });
 
@@ -12771,6 +12888,13 @@ function renderTemplatePicker() {
   tpls.forEach((tpl, idx) => {
     const item = document.createElement('div');
     item.className = 'tpl-item';
+    item.dataset.tplId = tpl.id;
+
+    const dragHandle = document.createElement('div');
+    dragHandle.className = 'drag-handle';
+    dragHandle.innerHTML = `<svg width="20" height="20" viewBox="0 0 20 20" fill="rgba(var(--c-accent-light),0.7)"><circle cx="4" cy="4" r="2.2"/><circle cx="10" cy="4" r="2.2"/><circle cx="16" cy="4" r="2.2"/><circle cx="4" cy="10" r="2.2"/><circle cx="10" cy="10" r="2.2"/><circle cx="16" cy="10" r="2.2"/><circle cx="4" cy="16" r="2.2"/><circle cx="10" cy="16" r="2.2"/><circle cx="16" cy="16" r="2.2"/></svg>`;
+    item.appendChild(dragHandle);
+
     const info = document.createElement('div');
     info.className = 'tpl-item-info';
     info.innerHTML = `<div class="tpl-name">${tpl.name}</div><div class="tpl-exercises">${tpl.exercises.map(e => parseCableExName(e.name).displayName).join(' · ')}</div>`;
@@ -12849,14 +12973,32 @@ function openTplBuilder(tpl) {
   }
 }
 
+// Seeds a brand-new template from a past workout — exercises, their order,
+// and how many sets each had, but never the actual weights/reps logged that
+// day. Opens straight into the builder so the user can add/remove exercises
+// or sets and rename it before it's ever saved as a real template.
+function openTplBuilderFromHistory(entry) {
+  tplSession.length = 0;
+  document.getElementById('tpl-exercises').innerHTML = '';
+  editingTplId = null;
+  document.getElementById('tpl-title').textContent = 'New Template';
+  document.getElementById('tpl-builder').classList.add('open');
+  entry.exercises.forEach(ex => {
+    addTplExerciseBlock(ex.name, ex.muscle, ex.sets.map(() => ({})));
+  });
+}
+
 function closeTplBuilder() {
   document.getElementById('tpl-builder').classList.remove('open');
   editingTplId = null;
 }
 
-function addTplExerciseBlock(name, muscle, initialSets) {
-  const idx = tplSession.length;
-  tplSession.push({ name, muscle, sets: [] });
+function addTplExerciseBlock(name, muscle, initialSets, replaceIdx, replaceBlock) {
+  // replaceIdx/replaceBlock mirror addExerciseBlock's replace mode — swap
+  // one exercise for another in the same tplSession slot/list position
+  // instead of appending. Normal adds leave these undefined.
+  const idx = replaceIdx != null ? replaceIdx : tplSession.length;
+  tplSession[idx] = { name, muscle, sets: [] };
 
   const block = document.createElement('div');
   block.className = 'train-ex';
@@ -12871,6 +13013,15 @@ function addTplExerciseBlock(name, muscle, initialSets) {
   const top = document.createElement('div');
   top.className = 'train-ex-top';
   top.innerHTML = `<div><div class="train-ex-name">${nameLabel}${pulleyBadge}</div><div class="train-ex-muscle">${muscleLabel}</div></div>`;
+
+  const replaceBtn = document.createElement('button');
+  replaceBtn.className = 'replace-ex';
+  replaceBtn.type = 'button';
+  replaceBtn.title = 'Replace exercise';
+  replaceBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>`;
+  replaceBtn.addEventListener('click', () => openTplExerciseReplacePicker(idx, block));
+  top.appendChild(replaceBtn);
+
   const removeBtn = document.createElement('button');
   removeBtn.className = 'remove-ex';
   removeBtn.type = 'button';
@@ -12896,13 +13047,30 @@ function addTplExerciseBlock(name, muscle, initialSets) {
   block.appendChild(setsContainer);
   block.appendChild(addSetBtn);
 
-  document.getElementById('tpl-exercises').appendChild(block);
+  if (replaceBlock) replaceBlock.replaceWith(block);
+  else document.getElementById('tpl-exercises').appendChild(block);
   if (initialSets && initialSets.length) {
     tplSession[idx].sets = initialSets.map(s => ({ weight: s.weight || '', reps: s.reps || '' }));
     renderTplSets(idx, block);
   } else {
     addTplSet(idx, block);
   }
+}
+
+// Opens the shared exercise picker in "replace" mode, scoped to the template
+// builder — picking an exercise swaps it into this tplSession slot in place
+// (same spot in the list, same number of blank sets) instead of appending.
+function openTplExerciseReplacePicker(idx, block) {
+  const picker = document.getElementById('picker');
+  picker._histMode = false;
+  picker._tplMode = false;
+  picker._challengeMode = false;
+  picker._replaceMode = true;
+  picker._replaceTarget = 'tpl';
+  picker._replaceIdx = idx;
+  picker._replaceBlock = block;
+  document.getElementById('picker-heading').textContent = 'Replace Exercise';
+  openPicker();
 }
 
 function addTplSet(exIdx, block) {
@@ -13004,10 +13172,14 @@ document.getElementById('tpl-add-ex').addEventListener('click', () => {
   picker.classList.add('open');
 });
 
-function addExerciseBlock(name, muscle, initialSets, noteOverride) {
+function addExerciseBlock(name, muscle, initialSets, noteOverride, replaceIdx, replaceBlock) {
   touchActivity();
   playSound('exerciseSelect');
-  const idx = session.length;
+  // replaceIdx/replaceBlock let a caller swap one exercise for another in
+  // place (same session slot, same spot in the list) instead of appending —
+  // see the "replace exercise" button. Normal adds leave these undefined,
+  // so idx falls back to appending at the end exactly as before.
+  const idx = replaceIdx != null ? replaceIdx : session.length;
   const isExposure = (state.exerciseMeta[name] || {}).expType === 'exposure';
   const noTemp = isExposure && exerciseNoTemp(name, muscle);
   const fieldKind = isExposure ? null : getExerciseFieldKind(name);
@@ -13024,7 +13196,7 @@ function addExerciseBlock(name, muscle, initialSets, noteOverride) {
         : initialSets.map(s => ({ weight: s.weight || '', reps: s.reps || '', done: s.done || false })))
     : [];
   const savedNote = noteOverride != null ? noteOverride : ((state.exerciseMeta[name] || {}).note || '');
-  session.push({ name, muscle, sets: preSets, expType: isExposure ? 'exposure' : null, noTemp, fieldKind: shape ? fieldKind : null, note: savedNote });
+  session[idx] = { name, muscle, sets: preSets, expType: isExposure ? 'exposure' : null, noTemp, fieldKind: shape ? fieldKind : null, note: savedNote };
 
   const block = document.createElement('div');
   block.className = 'train-ex';
@@ -13055,6 +13227,18 @@ function addExerciseBlock(name, muscle, initialSets, noteOverride) {
   `;
   nameDiv.addEventListener('click', () => openExDetail(name, muscle));
   top.appendChild(nameDiv);
+
+  const replaceBtn = document.createElement('button');
+  replaceBtn.className = 'replace-ex';
+  replaceBtn.type = 'button';
+  replaceBtn.title = 'Replace exercise';
+  replaceBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>`;
+  replaceBtn.addEventListener('click', () => {
+    touchActivity();
+    const curIdx = parseInt(block.dataset.sessionIdx);
+    openExerciseReplacePicker(curIdx, block);
+  });
+  top.appendChild(replaceBtn);
 
   const removeBtn = document.createElement('button');
   removeBtn.className = 'remove-ex';
@@ -13143,7 +13327,8 @@ function addExerciseBlock(name, muscle, initialSets, noteOverride) {
   block.appendChild(setsContainer);
   block.appendChild(addSetBtn);
 
-  document.getElementById('train-exercises').appendChild(block);
+  if (replaceBlock) replaceBlock.replaceWith(block);
+  else document.getElementById('train-exercises').appendChild(block);
   resizeNoteInput();
   const setsEl = block.querySelector('.train-ex-sets');
   if (setsEl) {
@@ -13156,6 +13341,23 @@ function addExerciseBlock(name, muscle, initialSets, noteOverride) {
     addSet(idx, block);
   }
   saveActiveSession();
+}
+
+// Opens the shared exercise picker in "replace" mode — picking an exercise
+// there swaps it into this session slot in place (same spot in the list,
+// same number of blank sets) instead of appending a new exercise. Used by
+// the swap-icon button next to a training exercise's × button.
+function openExerciseReplacePicker(idx, block) {
+  const picker = document.getElementById('picker');
+  picker._histMode = false;
+  picker._tplMode = false;
+  picker._challengeMode = false;
+  picker._replaceMode = true;
+  picker._replaceTarget = 'session';
+  picker._replaceIdx = idx;
+  picker._replaceBlock = block;
+  document.getElementById('picker-heading').textContent = 'Replace Exercise';
+  openPicker();
 }
 
 // Finds the best historical rep count at the exact weight of the exercise's
@@ -13210,8 +13412,11 @@ function updateCurrentLbsPR(exIdx, block) {
     : `PR for Current Lbs: <span>${w} lbs needs 13+ reps for PR</span>`;
 }
 
-// ─── Drag-to-reorder exercises (long-press on handle) ───────
-(function() {
+// ─── Generic drag-to-reorder list (long-press on a .drag-handle) ───────
+// Reused for both the active training session's exercise list and the
+// saved-templates list — pass the container, the item selector, and an
+// onDrop callback that persists whatever order the drop left the DOM in.
+function setupDragReorder(container, itemSelector, { collapsedClass, scrollLockEl, onDrop } = {}) {
   const LONG_PRESS_MS = 280;
   const CANCEL_MOVE_PX = 10;
 
@@ -13222,11 +13427,9 @@ function updateCurrentLbsPR(exIdx, block) {
   let touchStartY = 0;
   let active = false;
 
-  const trainExContainer = document.getElementById('train-exercises');
-
-  trainExContainer.addEventListener('touchstart', e => {
+  container.addEventListener('touchstart', e => {
     if (!e.target.closest('.drag-handle')) return;
-    const block = e.target.closest('.train-ex');
+    const block = e.target.closest(itemSelector);
     if (!block) return;
     const touch = e.touches[0];
     touchStartY = touch.clientY;
@@ -13234,7 +13437,7 @@ function updateCurrentLbsPR(exIdx, block) {
   }, { passive: true });
 
   // Cancel long-press if the finger scrolls before timer fires
-  trainExContainer.addEventListener('touchmove', e => {
+  container.addEventListener('touchmove', e => {
     if (active) return;
     if (Math.abs(e.touches[0].clientY - touchStartY) > CANCEL_MOVE_PX) {
       clearTimeout(longPressTimer);
@@ -13269,11 +13472,10 @@ function updateCurrentLbsPR(exIdx, block) {
     // block ends up after the reflow.
     const rect = block.getBoundingClientRect();
     dragOffsetY = clientY - rect.top;
-    document.body.classList.add('reordering-exercises');
+    if (collapsedClass) document.body.classList.add(collapsedClass);
 
-    // Lock train-body scroll so rubber-band/inertia doesn't fight the drag
-    const trainBody = document.getElementById('train-body');
-    trainBody.style.overflow = 'hidden';
+    // Lock the scrolling container so rubber-band/inertia doesn't fight the drag
+    if (scrollLockEl) scrollLockEl.style.overflow = 'hidden';
 
     ghostEl = block.cloneNode(true);
     // Zero transitions before adding to DOM to avoid flicker on first frame
@@ -13300,20 +13502,20 @@ function updateCurrentLbsPR(exIdx, block) {
   // result is FLIP-animated from its old spot to its new one so the whole
   // list visibly reflows around the drag, like a native list reorder.
   function reorderLive(clientY) {
-    const others = [...trainExContainer.querySelectorAll('.train-ex:not(.dragging)')];
+    const others = [...container.querySelectorAll(itemSelector + ':not(.dragging)')];
     let target = null;
     for (const b of others) {
       const r = b.getBoundingClientRect();
       if (clientY < r.top + r.height / 2) { target = b; break; }
     }
-    const alreadyInPlace = target ? dragEl.nextElementSibling === target : dragEl === trainExContainer.lastElementChild;
+    const alreadyInPlace = target ? dragEl.nextElementSibling === target : dragEl === container.lastElementChild;
     if (alreadyInPlace) return;
 
     const firstRects = new Map();
     others.forEach(b => firstRects.set(b, b.getBoundingClientRect()));
 
-    if (target) trainExContainer.insertBefore(dragEl, target);
-    else trainExContainer.appendChild(dragEl);
+    if (target) container.insertBefore(dragEl, target);
+    else container.appendChild(dragEl);
 
     others.forEach(b => {
       const first = firstRects.get(b);
@@ -13329,9 +13531,9 @@ function updateCurrentLbsPR(exIdx, block) {
     });
   }
 
-  function unlockScroll() {
-    document.getElementById('train-body').style.overflow = '';
-    document.body.classList.remove('reordering-exercises');
+  function unlock() {
+    if (scrollLockEl) scrollLockEl.style.overflow = '';
+    if (collapsedClass) document.body.classList.remove(collapsedClass);
   }
 
   function finishDrag() {
@@ -13342,24 +13544,43 @@ function updateCurrentLbsPR(exIdx, block) {
     ghostEl = null;
     dragEl = null;
     active = false;
-    unlockScroll();
+    unlock();
 
+    const allBlocks = [...container.querySelectorAll(itemSelector)];
+    if (onDrop) onDrop(allBlocks);
+  }
+
+  function cancelDrag() {
+    // The DOM was already live-reordered by reorderLive() up to this point
+    // (touchcancel interrupts the gesture, it doesn't undo the move), so
+    // finish the same way finishDrag() would: settle it and persist the order.
+    if (dragEl) finishDrag();
+  }
+}
+
+setupDragReorder(document.getElementById('train-exercises'), '.train-ex', {
+  collapsedClass: 'reordering-exercises',
+  scrollLockEl: document.getElementById('train-body'),
+  onDrop: (allBlocks) => {
     // Sync session array and data attributes to match new DOM order
-    const allBlocks = [...trainExContainer.querySelectorAll('.train-ex')];
     const reordered = allBlocks.map(b => session[parseInt(b.dataset.sessionIdx)]).filter(Boolean);
     session.length = 0;
     reordered.forEach(ex => session.push(ex));
     allBlocks.forEach((b, i) => { b.dataset.sessionIdx = i; });
     saveActiveSession();
   }
+});
 
-  function cancelDrag() {
-    // The DOM was already live-reordered by reorderLive() up to this point
-    // (touchcancel interrupts the gesture, it doesn't undo the move), so
-    // finish the same way finishDrag() would: settle it and sync session.
-    if (dragEl) finishDrag();
+setupDragReorder(document.getElementById('template-picker-list'), '.tpl-item', {
+  collapsedClass: 'reordering-templates',
+  scrollLockEl: document.getElementById('template-picker-list'),
+  onDrop: (allBlocks) => {
+    // Persist the new template order permanently (until rearranged again).
+    const tpls = loadTemplates();
+    const reordered = allBlocks.map(b => tpls.find(t => t.id === b.dataset.tplId)).filter(Boolean);
+    saveTemplates(reordered);
   }
-})();
+});
 
 function getLastSetsForExercise(name) {
   for (let i = state.history.length - 1; i >= 0; i--) {
@@ -14644,6 +14865,22 @@ function openPickerExPopup(muscle) {
         challengeExercisePickerReturnModal = null;
         document.getElementById('picker-heading').textContent = 'Add Exercise';
         if (cb) cb(ex, muscle);
+      } else if (picker._replaceMode) {
+        picker._replaceMode = false;
+        const replaceIdx = picker._replaceIdx;
+        const replaceBlock = picker._replaceBlock;
+        const replaceTarget = picker._replaceTarget;
+        picker._replaceTarget = null;
+        picker._replaceIdx = null;
+        picker._replaceBlock = null;
+        document.getElementById('picker-heading').textContent = 'Add Exercise';
+        if (replaceTarget === 'tpl') {
+          const oldSetCount = (tplSession[replaceIdx] && tplSession[replaceIdx].sets.length) || 1;
+          addTplExerciseBlock(ex, muscle, Array.from({ length: oldSetCount }, () => ({})), replaceIdx, replaceBlock);
+        } else {
+          const oldSetCount = (session[replaceIdx] && session[replaceIdx].sets.length) || 1;
+          addExerciseBlock(ex, muscle, Array.from({ length: oldSetCount }, () => ({})), null, replaceIdx, replaceBlock);
+        }
       } else {
         addExerciseBlock(ex, muscle);
       }
@@ -14653,7 +14890,7 @@ function openPickerExPopup(muscle) {
 
   const picker = document.getElementById('picker');
   const newBtn = document.getElementById('picker-ex-new');
-  if (picker._histMode) {
+  if (picker._histMode || picker._replaceMode) {
     newBtn.style.display = 'none';
   } else {
     newBtn.style.display = 'block';

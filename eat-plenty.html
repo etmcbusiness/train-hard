@@ -187,7 +187,7 @@
        the back button's width. Persistent across every tab. */
     #ep-header {
       display: grid;
-      grid-template-columns: 44px 1fr 44px;
+      grid-template-columns: auto 1fr 44px;
       align-items: center;
       gap: 8px;
       padding: calc(10px + env(safe-area-inset-top, 0px)) 16px 10px;
@@ -196,8 +196,8 @@
       background: rgba(var(--c-panel3),0.9);
     }
     #ep-back-btn {
-      width: 44px;
       height: 36px;
+      padding: 0 12px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -205,7 +205,9 @@
       border: 1px solid rgba(var(--c-accent2),0.3);
       border-radius: 10px;
       color: rgb(var(--c-text2));
-      font-size: 18px;
+      font-size: 14px;
+      font-weight: 700;
+      white-space: nowrap;
       cursor: pointer;
     }
     #ep-title {
@@ -213,6 +215,38 @@
       font-size: 16px;
       font-weight: 800;
       color: rgb(var(--c-text));
+    }
+
+    /* Rest-timer completion banner — Train Hard's rest timer can finish
+       while the user is browsing here on a different page/document, so
+       index.html isn't running to tell them; this page polls for it and
+       surfaces its own alert instead. */
+    #ep-rest-alert {
+      position: fixed;
+      left: 16px;
+      right: 16px;
+      top: calc(-140px + env(safe-area-inset-top, 0px));
+      z-index: 1500;
+      background: #0d1f12;
+      border: 1px solid rgba(60,181,88,0.55);
+      border-radius: 14px;
+      padding: 12px 14px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.45);
+      transition: top 0.35s cubic-bezier(0.25,0.46,0.45,0.94);
+      cursor: pointer;
+    }
+    #ep-rest-alert.show {
+      top: calc(12px + env(safe-area-inset-top, 0px));
+    }
+    #ep-rest-alert-title {
+      font-size: 14px;
+      font-weight: 800;
+      color: rgb(var(--c-text));
+    }
+    #ep-rest-alert-sub {
+      font-size: 12px;
+      color: rgb(var(--c-text3));
+      margin-top: 2px;
     }
 
     /* ── Tab sections ── */
@@ -235,8 +269,11 @@
       gap: 16px;
       margin: -16px -16px 16px;
       padding: 8px 16px;
-      background: rgba(var(--c-panel3),0.55);
+      background: rgba(var(--c-panel3),0.95);
       border-bottom: 1px solid rgba(var(--c-accent3),0.12);
+      position: sticky;
+      top: -16px;
+      z-index: 2;
     }
     .ep-date-arrow {
       background: none;
@@ -1224,7 +1261,7 @@
 <!-- App -->
 <div id="app">
   <div id="ep-header">
-    <button id="ep-back-btn">&larr;</button>
+    <button id="ep-back-btn">Train Hard</button>
     <div id="ep-title">Eat Plenty</div>
     <div></div>
   </div>
@@ -1448,6 +1485,11 @@
       Stats
     </button>
   </nav>
+
+  <div id="ep-rest-alert">
+    <div id="ep-rest-alert-title">Rest Complete</div>
+    <div id="ep-rest-alert-sub">Tap to get back to Train Hard</div>
+  </div>
 </div>
 
 <!-- Numeric entry popup — attached to every number field on this page -->
@@ -1756,6 +1798,43 @@
   document.getElementById('ep-back-btn').addEventListener('click', () => {
     location.href = 'index.html';
   });
+
+  // ═══════════════════════════════════════════════════════════
+  // TRAIN HARD REST TIMER — surfaced here too
+  // ═══════════════════════════════════════════════════════════
+  // index.html persists the rest timer's absolute end time to localStorage
+  // (trainhard_rest_state) so it survives a full-page navigation over here;
+  // since this page's JS is the only thing running while the user is on
+  // Eat Plenty, it's on us to notice when that timer runs out — index.html
+  // is unloaded and can't. Whichever page is open when it expires clears
+  // the key after alerting, so the user only gets notified once.
+  const REST_STATE_KEY = 'trainhard_rest_state';
+  let restAlertTimeout = null;
+  function showRestCompleteAlert() {
+    const el = document.getElementById('ep-rest-alert');
+    el.classList.add('show');
+    if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+    clearTimeout(restAlertTimeout);
+    restAlertTimeout = setTimeout(() => el.classList.remove('show'), 6000);
+  }
+  document.getElementById('ep-rest-alert').addEventListener('click', () => {
+    location.href = 'index.html';
+  });
+  function checkRestTimerCompletion() {
+    let data;
+    try {
+      const raw = localStorage.getItem(REST_STATE_KEY);
+      if (!raw) return;
+      data = JSON.parse(raw);
+    } catch(e) { localStorage.removeItem(REST_STATE_KEY); return; }
+    if (!data || !data.restEndTime) return;
+    if (Date.now() >= data.restEndTime) {
+      localStorage.removeItem(REST_STATE_KEY);
+      showRestCompleteAlert();
+    }
+  }
+  checkRestTimerCompletion();
+  setInterval(checkRestTimerCompletion, 1000);
 
   // ═══════════════════════════════════════════════════════════
   // TAB SWITCHING
