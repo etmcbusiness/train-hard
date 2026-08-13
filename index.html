@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#000000" />
-  <meta name="app-version" content="107" />
+  <meta name="app-version" content="108" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -966,6 +966,20 @@
     .hedit-col-heads { display:grid; grid-template-columns:32px 1fr 1fr 36px; gap:8px; font-size:11px; color:rgb(var(--c-text3)); margin-bottom:6px; padding:0 2px; text-align:center; letter-spacing:0.3px; }
     .hedit-set-row { display:grid; grid-template-columns:32px 1fr 1fr 36px; gap:8px; margin-bottom:8px; align-items:center; }
     .hedit-set-num { font-size:13px; font-weight:700; color:rgb(var(--c-text3)); text-align:center; }
+    button.hedit-set-num {
+      background: transparent;
+      border: none;
+      border-radius: 6px;
+      padding: 4px 0;
+      margin: 0;
+      font-family: inherit;
+      cursor: pointer;
+      touch-action: manipulation;
+      -webkit-user-select: none;
+      user-select: none;
+      transition: background 0.15s, color 0.15s;
+    }
+    button.hedit-set-num:active { background: rgba(var(--c-accent2),0.18); }
     .hedit-remove-set { background:none; border:none; color:#4a3a4a; font-size:20px; cursor:pointer; text-align:center; line-height:1; }
     .hedit-add-set { margin-top:6px; background: rgba(var(--c-accent),0.08); border: 1px solid rgba(var(--c-accent),0.25); border-radius:8px; color:rgb(var(--c-accent)); font-size:13px; font-weight:600; cursor:pointer; padding:8px; width:100%; }
 
@@ -1314,7 +1328,7 @@
     /* Set column headers */
     .set-cols {
       display: grid;
-      grid-template-columns: 12px 62px 1fr 1fr 48px 14px;
+      grid-template-columns: 22px 62px 1fr 1fr 48px 14px;
       gap: 2px;
       font-size: 9px;
       font-weight: 700;
@@ -1328,7 +1342,7 @@
     /* Set row */
     .set-row {
       display: grid;
-      grid-template-columns: 12px 62px 1fr 1fr 48px 14px;
+      grid-template-columns: 22px 62px 1fr 1fr 48px 14px;
       gap: 2px;
       align-items: center;
       margin-bottom: 8px;
@@ -1481,6 +1495,26 @@
       font-weight: 800;
       color: rgb(var(--c-text3));
       text-align: center;
+      background: transparent;
+      border: none;
+      border-radius: 6px;
+      padding: 5px 0;
+      margin: 0;
+      font-family: inherit;
+      cursor: pointer;
+      touch-action: manipulation;
+      -webkit-user-select: none;
+      user-select: none;
+      transition: background 0.15s, color 0.15s;
+    }
+    .set-num:active { background: rgba(var(--c-accent2),0.18); }
+    .set-num.set-type-warmup, .hedit-set-num.set-type-warmup {
+      color: #e0a030;
+      background: rgba(224,160,48,0.16);
+    }
+    .set-num.set-type-drop, .hedit-set-num.set-type-drop {
+      color: #d060e0;
+      background: rgba(208,96,224,0.16);
     }
 
 
@@ -2914,6 +2948,25 @@
       justify-content: center;
       cursor: pointer;
       line-height: 1;
+    }
+    #room-back-btn {
+      position: fixed;
+      top: calc(env(safe-area-inset-top, 20px) + 20px);
+      left: calc(env(safe-area-inset-left, 0px) + 20px);
+      z-index: 455;
+      background: rgba(var(--c-panel4),0.7);
+      border: 1px solid rgba(var(--c-accent2),0.3);
+      border-radius: 50%;
+      color: rgb(var(--c-text2));
+      font-size: 18px;
+      width: 40px;
+      height: 40px;
+      line-height: 1;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: all;
     }
     #room-arc-sel-ring {
       position: fixed;
@@ -5940,6 +5993,7 @@
 <input type="file" id="custom-room-input" accept="image/*" style="display:none;" />
 <!-- Arc nodes in a separate fixed layer — outside the backdrop-filter element so nothing clips them -->
 <div id="room-arc-layer">
+  <button id="room-back-btn" aria-label="Back">←</button>
   <div id="room-arc-sel-ring"></div>
   <div id="room-arc-nodes"></div>
 </div>
@@ -6987,12 +7041,29 @@ function getMondayStr() {
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
 
+// Warm-up sets (set.setType === 'warmup') are logged for reference but never
+// count toward a muscle's weekly set total or level — only working sets and
+// drop sets (which are real work, just flagged) do.
+function countedSets(sets) {
+  return sets.filter(s => s.setType !== 'warmup').length;
+}
+
 // ═══════════════════════════════════════════════════════════
 // UPDATE HISTORY — one entry per push, newest first (unshift new ones onto
 // the front, don't append). Whoever is pushing supplies this list — see the
 // project's CLAUDE.md for the required pre-push changelog-confirmation step.
 // ═══════════════════════════════════════════════════════════
 const UPDATE_LOG = [
+  {
+    version: '108',
+    date: 'Aug 13, 2026',
+    title: 'Warm-Up & Drop Sets',
+    bullets: [
+      'Added Warm-up and Drop Set tags for sets — tap a set\'s number during a training session to mark it. Warm-up sets are saved with your workout but don\'t count toward your weekly volume; drop sets do.',
+      'Fixed the "Set" and "Previous" column headers overlapping into unreadable text during a workout.',
+      'Added a Back button to the Avatar Room\'s carousel screen, and fixed it occasionally closing mid-drag while rotating through avatars.',
+    ]
+  },
   {
     version: '107',
     date: 'Aug 12, 2026',
@@ -7349,7 +7420,7 @@ function resetAllDefaultExercises(s) {
     if (w.date && isThisWeek(w.date, monday)) {
       for (const ex of w.exercises) {
         if (s.weeklySets[ex.muscle] !== undefined && !(s.exerciseMeta[ex.name] || {}).noTemp) {
-          s.weeklySets[ex.muscle] += ex.sets.length;
+          s.weeklySets[ex.muscle] += countedSets(ex.sets);
         }
       }
     }
@@ -7677,7 +7748,7 @@ function loadState() {
           // category — see exerciseNoTemp) log duration, not working sets, and
           // never count toward that muscle's weekly sets/level.
           if (s.weeklySets[ex.muscle] !== undefined && !(s.exerciseMeta[ex.name] || {}).noTemp) {
-            s.weeklySets[ex.muscle] += ex.sets.length;
+            s.weeklySets[ex.muscle] += countedSets(ex.sets);
           }
         }
       }
@@ -9791,7 +9862,7 @@ function getLiveSessionSets(muscle) {
   let count = 0;
   for (const ex of session) {
     if (ex && ex.muscle === muscle) {
-      count += ex.sets.filter(s => s.done).length;
+      count += ex.sets.filter(s => s.done && s.setType !== 'warmup').length;
     }
   }
   return count;
@@ -10402,7 +10473,7 @@ function recalcStats() {
     if (w.date && isThisWeek(w.date, monday)) {
       for (const ex of w.exercises) {
         if (state.weeklySets[ex.muscle] !== undefined && !(state.exerciseMeta[ex.name] || {}).noTemp) {
-          state.weeklySets[ex.muscle] += ex.sets.length;
+          state.weeklySets[ex.muscle] += countedSets(ex.sets);
         }
       }
     }
@@ -10484,7 +10555,9 @@ function renderHistEditExercises() {
       const sets = histEditData.exercises[exIdx].sets;
       const prevSet = sets[sets.length - 1];
       const prevTemp = (prevSet && prevSet.temp !== '' && prevSet.temp != null) ? prevSet.temp : 100;
-      sets.push(isExp ? { temp: noTemp ? '' : prevTemp, duration: 0, done: true } : { weight: '', reps: '', done: true });
+      sets.push(isExp
+        ? { temp: noTemp ? '' : prevTemp, duration: 0, done: true }
+        : { weight: '', reps: '', done: true, setType: prevSet && prevSet.setType === 'warmup' ? 'warmup' : null });
       renderHistEditExercises();
     });
 
@@ -10496,9 +10569,22 @@ function makeHistSetRow(exIdx, sIdx, s, isExp, noTemp) {
   const row = document.createElement('div');
   row.className = 'hedit-set-row';
 
-  const numEl = document.createElement('div');
+  // Heat/Cold Exposure sets don't have a warm-up/drop-set concept — leave
+  // their set number a plain, non-interactive label. Weight+reps sets get
+  // the same tap-to-cycle badge as the live training screen.
+  const numEl = document.createElement(isExp ? 'div' : 'button');
+  if (!isExp) numEl.type = 'button';
   numEl.className = 'hedit-set-num';
-  numEl.textContent = sIdx + 1;
+  if (isExp) {
+    numEl.textContent = sIdx + 1;
+  } else {
+    applySetTypeBadge(numEl, s, sIdx);
+    numEl.addEventListener('click', () => {
+      playSound('commonButton');
+      cycleSetType(s);
+      applySetTypeBadge(numEl, s, sIdx);
+    });
+  }
 
   let aWrap, bWrap;
   if (isExp) {
@@ -11976,7 +12062,7 @@ document.getElementById('ex-delete-yes').addEventListener('click', () => {
     if (w.date && isThisWeek(w.date, monday)) {
       for (const ex of w.exercises) {
         if (state.weeklySets[ex.muscle] !== undefined && !(state.exerciseMeta[ex.name] || {}).noTemp) {
-          state.weeklySets[ex.muscle] += ex.sets.length;
+          state.weeklySets[ex.muscle] += countedSets(ex.sets);
         }
       }
     }
@@ -13033,11 +13119,11 @@ function addExerciseBlock(name, muscle, initialSets, noteOverride) {
     // it alongside the other field(s) — i.e. only for the 3-field shape.
     const rowFields = shape.fields.length > 2 ? shape.fields.filter(f => f.type !== 'time') : shape.fields;
     cols.className = 'set-cols ' + fieldGridClassSuffix(rowFields.length, 'cols');
-    cols.innerHTML = '<span>Set</span><span>Previous</span>'
+    cols.innerHTML = '<span>Set</span><span> Previous</span>'
       + rowFields.map(f => `<span>${f.label}</span>`).join('') + '<span></span><span></span>';
   } else {
     cols.className = 'set-cols';
-    cols.innerHTML = '<span>Set</span><span>Previous</span><span>lbs</span><span>Reps</span><span></span><span></span>';
+    cols.innerHTML = '<span>Set</span><span> Previous</span><span>lbs</span><span>Reps</span><span></span><span></span>';
   }
 
   const setsContainer = document.createElement('div');
@@ -13284,6 +13370,30 @@ function getLastSetsForExercise(name) {
   return null;
 }
 
+// Warm-up / drop-set marking — tapping a set's number cycles it through
+// normal → warm-up → drop set → normal. Warm-up sets are logged like any
+// other set but excluded from weekly-sets/level counting (see countedSets());
+// drop sets count normally and are just flagged for reference.
+function cycleSetType(set) {
+  set.setType = set.setType === 'warmup' ? 'drop' : (set.setType === 'drop' ? null : 'warmup');
+}
+
+function applySetTypeBadge(el, set, setIdx) {
+  el.classList.remove('set-type-warmup', 'set-type-drop');
+  if (set.setType === 'warmup') {
+    el.textContent = 'W';
+    el.title = "Warm-up set (doesn't count toward weekly sets) — tap to change";
+    el.classList.add('set-type-warmup');
+  } else if (set.setType === 'drop') {
+    el.textContent = 'D';
+    el.title = 'Drop set — tap to change';
+    el.classList.add('set-type-drop');
+  } else {
+    el.textContent = setIdx + 1;
+    el.title = 'Tap to mark as warm-up or drop set';
+  }
+}
+
 function renderSets(exIdx, block) {
   const ex = session[exIdx];
   if (!ex) return;
@@ -13307,9 +13417,20 @@ function renderSets(exIdx, block) {
     const row = document.createElement('div');
     row.className = 'set-row';
 
-    const numEl = document.createElement('div');
+    const numEl = document.createElement('button');
+    numEl.type = 'button';
     numEl.className = 'set-num';
-    numEl.textContent = setIdx + 1;
+    applySetTypeBadge(numEl, ex.sets[setIdx], setIdx);
+    numEl.addEventListener('click', () => {
+      touchActivity();
+      playSound('commonButton');
+      cycleSetType(ex.sets[setIdx]);
+      applySetTypeBadge(numEl, ex.sets[setIdx], setIdx);
+      saveActiveSession();
+      updateModel();
+      updateAllTrainExSets();
+      refreshPickerIfOpen();
+    });
 
     const prevEl = document.createElement('div');
     prevEl.className = 'set-previous';
@@ -13737,7 +13858,10 @@ function addSet(exIdx, block) {
     ex.sets.push({
       weight: prevSet ? (prevSet.weight ?? '') : '',
       reps: prevSet ? (prevSet.reps ?? '') : '',
-      done: false
+      done: false,
+      // Consecutive warm-ups are common (carry the flag forward); a drop set
+      // is normally a one-off, so don't auto-repeat it onto the next set.
+      setType: prevSet && prevSet.setType === 'warmup' ? 'warmup' : null
     });
   }
   renderSets(exIdx, block);
@@ -14681,6 +14805,7 @@ let arcVelocity = ARC_IDLE;
 let arcAnimId = null;
 let arcLastTime = null;
 let arcDragging = false;
+let arcDragMoved = false;
 let arcDragLastY = 0;
 let arcDragLastT = 0;
 let arcDragVelSamples = []; // {dy, dt} pairs for velocity estimation
@@ -14930,6 +15055,7 @@ const arcPanel = document.getElementById('room-arc-panel');
 
 function arcDragStart(clientY) {
   arcDragging = true;
+  arcDragMoved = false;
   if (activeRoom.startsWith('c')) activeRoom = '1';
   arcDragLastY = clientY;
   arcDragLastT = performance.now();
@@ -14941,6 +15067,7 @@ function arcDragMove(clientY) {
   const R = document.getElementById('room-arc-panel').offsetWidth;
   const now = performance.now();
   const dy = clientY - arcDragLastY;
+  if (Math.abs(dy) > 3) arcDragMoved = true;
   const dt = (now - arcDragLastT) / 1000;
   arcOffset += dy / R;
   if (dt > 0) {
@@ -14990,17 +15117,26 @@ document.getElementById('avatar-room-btn').addEventListener('click', () => {
   openRoomOverlay();
 });
 
+function closeRoomOverlay() {
+  document.getElementById('room-overlay').classList.remove('open');
+  document.getElementById('room-arc-layer').classList.remove('open');
+  stopArcAnim();
+}
+
 document.getElementById('room-close-btn').addEventListener('click', () => {
   playSound('roomSelect');
-  document.getElementById('room-overlay').classList.remove('open');
-  document.getElementById('room-arc-layer').classList.remove('open');
-  stopArcAnim();
+  closeRoomOverlay();
 });
+document.getElementById('room-back-btn').addEventListener('click', () => {
+  closeRoomOverlay();
+  document.getElementById('avatar-overlay').classList.add('open');
+});
+// Tap anywhere in the overlay (arc panel or info panel) to exit, unless the
+// tap lands on an interactive control or was actually a drag of the arc.
 document.getElementById('room-overlay').addEventListener('click', (e) => {
-  if (e.target !== document.getElementById('room-overlay')) return;
-  document.getElementById('room-overlay').classList.remove('open');
-  document.getElementById('room-arc-layer').classList.remove('open');
-  stopArcAnim();
+  if (arcDragMoved) { arcDragMoved = false; return; }
+  if (e.target.closest('#room-close-btn, .custom-room-slot')) return;
+  closeRoomOverlay();
 });
 
 setRoom(activeRoom);
