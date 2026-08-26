@@ -2095,7 +2095,7 @@
     }
     #profile-btns-right.visible { display: flex; }
     #profile-btns.visible { display: flex; }
-    /* ── Testing Buttons (bottom-left / bottom-right, Peter's dev account only) ── */
+    /* ── Testing Buttons (bottom-left / bottom-right, "tester" dev account only) ── */
     #testing-btns-bottom-left {
       position: fixed;
       bottom: calc(70px + env(safe-area-inset-bottom) + 12px);
@@ -4969,26 +4969,6 @@
       text-align: center; font-size: 12px; color: rgb(var(--c-text4)); letter-spacing: 0.3px;
     }
 
-    /* ── Avatar Preset Picker ── */
-    #avatar-preset-modal {
-      position: fixed; inset: 0; z-index: 720;
-      background: rgba(var(--c-shadow),0.85);
-      backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-      display: none; align-items: center; justify-content: center; padding: 20px;
-    }
-    #avatar-preset-modal.open { display: flex; }
-    #avatar-preset-box {
-      background: rgba(var(--c-panel2),0.98); border: 1px solid rgba(var(--c-accent2),0.3);
-      border-radius: 20px; padding: 22px; width: 100%; max-width: 340px;
-    }
-    #avatar-preset-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
-    .avatar-preset-tile {
-      aspect-ratio: 1; border-radius: 50%; overflow: hidden; border: 2px solid rgba(255,255,255,0.15);
-      display: flex; align-items: center; justify-content: center; font-size: 26px;
-      cursor: pointer; touch-action: manipulation; padding: 0;
-      -webkit-mask-image: -webkit-radial-gradient(circle, #fff 100%, #000 100%);
-    }
-    .avatar-preset-tile:active { border-color: rgba(255,255,255,0.5); }
     #challenge-chat-log { overflow-y: auto; flex: 1; margin: 14px 0; min-height: 80px; max-height: 220px; }
     .challenge-chat-msg { margin-bottom: 10px; }
     .challenge-chat-msg-name { font-size: 11px; font-weight: 700; color: rgb(var(--c-text4)); margin-bottom: 2px; }
@@ -5587,7 +5567,6 @@
 <div id="avatar-pfp-menu">
   <div id="avatar-pfp-menu-box">
     <button type="button" id="avatar-pfp-change-btn" class="acct-btn">Change Photo</button>
-    <button type="button" id="avatar-pfp-presets-btn" class="acct-signout-btn">Choose a Preset</button>
     <button type="button" id="avatar-pfp-remove-btn" class="acct-signout-btn" style="display:none;color:#e05a4a;">Remove Photo</button>
     <button type="button" id="avatar-pfp-menu-cancel-btn" class="acct-link-btn">Cancel</button>
   </div>
@@ -6108,7 +6087,7 @@
   <button id="weekly-overview-btn">Weekly Overview</button>
 </div>
 
-<!-- Testing buttons (Peter's dev account only, see updateTestingButtonsVisibility) —
+<!-- Testing buttons ("tester" dev account only, see updateTestingButtonsVisibility) —
      kept off to the bottom corners so they never crowd the real profile buttons above. -->
 <div id="testing-btns-bottom-left">
   <button id="testing-btn" style="display:none;">Testing: Muscles</button>
@@ -6381,17 +6360,6 @@
       <button id="avatar-crop-cancel" class="acct-signout-btn" style="flex:1;">Cancel</button>
       <button id="avatar-crop-save" class="acct-btn" style="flex:1;margin-top:0;">Use Photo</button>
     </div>
-  </div>
-</div>
-
-<!-- Avatar Preset Picker -->
-<div id="avatar-preset-modal">
-  <div id="avatar-preset-box">
-    <div class="challenge-modal-header">
-      <div class="challenge-modal-title">Choose a Preset</div>
-      <button class="challenge-modal-close" id="avatar-preset-close">✕</button>
-    </div>
-    <div id="avatar-preset-grid"></div>
   </div>
 </div>
 
@@ -8283,7 +8251,7 @@ async function refreshAccountView() {
 // The Testing buttons flip on debug muscle/cardio-level overrides — only the
 // developer's own account should be able to see or use them; every other
 // signed-in (or signed-out/guest) user must never see them.
-const TESTING_ACCOUNT_USERNAME = 'peter';
+const TESTING_ACCOUNT_USERNAME = 'tester';
 function updateTestingButtonsVisibility(username) {
   const isTestingAccount = (username || '').toLowerCase() === TESTING_ACCOUNT_USERNAME;
   document.getElementById('testing-btn').style.display = isTestingAccount ? '' : 'none';
@@ -19002,9 +18970,6 @@ document.getElementById('avatar-pfp-remove-btn').addEventListener('click', async
   renderAvatarPfpPreview();
 });
 
-// Shared by both the cropped-photo flow and the preset picker below —
-// whichever produced the final square JPEG, uploading and wiring it up as
-// the profile picture works identically from here on.
 async function uploadAvatarBlob(blob) {
   if (!cloudSession) return;
   try {
@@ -19181,80 +19146,6 @@ document.getElementById('avatar-crop-save').addEventListener('click', () => {
     await uploadAvatarBlob(blob);
   }, 'image/jpeg', 0.85);
 });
-
-// ── Avatar presets ──
-// Real image files shipped in assets/profile picture presets/ — these are
-// the only presets offered (no procedural/emoji fallback).
-const AVATAR_PRESETS = [
-  'assets/profile picture presets/preset-1.jpg',
-  'assets/profile picture presets/preset-2.jpg',
-  'assets/profile picture presets/preset-3.jpg',
-  'assets/profile picture presets/preset-4.jpg',
-  'assets/profile picture presets/preset-5.jpg',
-  'assets/profile picture presets/preset-6.jpg',
-  'assets/profile picture presets/preset-7.jpg',
-  'assets/profile picture presets/preset-8.jpg',
-  'assets/profile picture presets/preset-9.jpg',
-];
-
-document.getElementById('avatar-pfp-presets-btn').addEventListener('click', () => {
-  if (!cloudSession) return;
-  closeAvatarPfpMenu();
-  const grid = document.getElementById('avatar-preset-grid');
-  grid.innerHTML = '';
-  AVATAR_PRESETS.forEach(src => {
-    const tile = document.createElement('button');
-    tile.type = 'button';
-    tile.className = 'avatar-preset-tile';
-    const tileImg = document.createElement('img');
-    tileImg.className = 'lb-avatar-img';
-    tileImg.src = src;
-    tileImg.alt = '';
-    tile.appendChild(tileImg);
-    tile.addEventListener('click', () => selectAvatarPreset(src));
-    grid.appendChild(tile);
-  });
-  document.getElementById('avatar-preset-modal').classList.add('open');
-});
-
-document.getElementById('avatar-preset-close').addEventListener('click', () => {
-  document.getElementById('avatar-preset-modal').classList.remove('open');
-});
-document.getElementById('avatar-preset-modal').addEventListener('click', (e) => {
-  if (e.target === document.getElementById('avatar-preset-modal')) {
-    document.getElementById('avatar-preset-modal').classList.remove('open');
-  }
-});
-
-function selectAvatarPreset(src) {
-  const size = 320;
-  const img = new Image();
-  img.crossOrigin = 'anonymous';
-  img.onload = () => {
-    const canvas = document.createElement('canvas');
-    canvas.width = size;
-    canvas.height = size;
-    const ctx = canvas.getContext('2d');
-    // Cover-crop a centered square out of the source first, instead of
-    // stretching the whole (not necessarily square) source image to fit —
-    // drawImage(img, 0, 0, size, size) ignored the source's actual aspect
-    // ratio, squashing it non-uniformly and distorting any circular graphic
-    // inside (e.g. these preset badges' own ring) into an uneven oval that
-    // then reads as "cut off" once displayed in a border-radius:50% circle.
-    // Same cover-fit approach the regular upload/crop flow already uses
-    // above (see avatar-crop-save's drawImage call).
-    const srcSize = Math.min(img.naturalWidth, img.naturalHeight);
-    const sx = (img.naturalWidth - srcSize) / 2;
-    const sy = (img.naturalHeight - srcSize) / 2;
-    ctx.drawImage(img, sx, sy, srcSize, srcSize, 0, 0, size, size);
-    canvas.toBlob(async (blob) => {
-      if (!blob) return;
-      document.getElementById('avatar-preset-modal').classList.remove('open');
-      await uploadAvatarBlob(blob);
-    }, 'image/jpeg', 0.9);
-  };
-  img.src = src;
-}
 
 document.getElementById('avatar-close-btn').addEventListener('click', () => {
   playSound('delete');
