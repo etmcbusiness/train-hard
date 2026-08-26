@@ -6094,7 +6094,7 @@
   <button id="testing-cardio-btn" style="display:none;">Testing: Cardio</button>
 </div>
 <div id="testing-btns-bottom-right">
-  <button id="model-testing-btn">Model Testing</button>
+  <button id="model-testing-btn" style="display:none;">Model Testing</button>
   <button id="testing-update-popup-btn" style="display:none;">Testing: Update Popup</button>
   <button id="exit-testing-btn" style="display:none;">Exit Testing</button>
 </div>
@@ -8257,6 +8257,7 @@ function updateTestingButtonsVisibility(username) {
   document.getElementById('testing-btn').style.display = isTestingAccount ? '' : 'none';
   document.getElementById('testing-cardio-btn').style.display = isTestingAccount ? '' : 'none';
   document.getElementById('testing-update-popup-btn').style.display = isTestingAccount ? '' : 'none';
+  document.getElementById('model-testing-btn').style.display = isTestingAccount ? '' : 'none';
   if (!isTestingAccount) {
     document.getElementById('exit-testing-btn').style.display = 'none';
     testingLevelOverride = null;
