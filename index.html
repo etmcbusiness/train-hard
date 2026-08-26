@@ -15194,8 +15194,39 @@ function renderTemplatePicker() {
   });
 }
 
+// Templates snapshot each exercise's muscle at save time (see the "Save as
+// Template" handler above). If a muscle later gets renamed/split (e.g. the
+// old flat 'Shoulders' becoming Front/Side/Rear Delts), an old template's
+// stored muscle goes stale and nothing else ever re-validates it — starting
+// a workout from it silently misattributes every set to a muscle that may
+// no longer even exist, so its mesh/level never updates. Re-resolves against
+// wherever the exercise actually lives in state.exercises right now (the
+// live migration already moved it there) and persists the fix into the
+// template so it's only ever repaired once.
+function resolveTplExerciseMuscle(name) {
+  for (const m of Object.keys(state.exercises)) {
+    if ((state.exercises[m] || []).includes(name)) return m;
+  }
+  return null;
+}
+function repairTemplateMuscles(tpl) {
+  let changed = false;
+  tpl.exercises.forEach(ex => {
+    if ((state.exercises[ex.muscle] || []).includes(ex.name)) return; // still correct, nothing to do
+    let current = resolveTplExerciseMuscle(ex.name);
+    if (!current && ex.muscle === 'Shoulders') current = classifyLegacyShoulderExercise(ex.name);
+    if (current && current !== ex.muscle) { ex.muscle = current; changed = true; }
+  });
+  if (changed) {
+    const tpls = loadTemplates();
+    const idx = tpls.findIndex(t => t.id === tpl.id);
+    if (idx !== -1) { tpls[idx] = tpl; saveTemplates(tpls); }
+  }
+}
+
 function openTrainWithTemplate(tpl) {
   openTrain();
+  repairTemplateMuscles(tpl);
   tpl.exercises.forEach(ex => addExerciseBlock(ex.name, ex.muscle, ex.sets));
 }
 
@@ -15228,6 +15259,7 @@ function openTplBuilder(tpl) {
   document.getElementById('tpl-title').textContent = tpl ? 'Edit Template' : 'New Template';
   document.getElementById('tpl-builder').classList.add('open');
   if (tpl) {
+    repairTemplateMuscles(tpl);
     tpl.exercises.forEach(ex => addTplExerciseBlock(ex.name, ex.muscle, ex.sets));
   }
 }
@@ -20220,7 +20252,7 @@ function lockNumpadKeysUntilSettled(panel, keys) {
 
   function armQuietWindow() {
     clearTimeout(quietTimer);
-    quietTimer = setTimeout(finalUnlock, 150);
+    quietTimer = setTimeout(finalUnlock, 100);
   }
 
   function onBaseSettled() {
@@ -20239,7 +20271,16 @@ function lockNumpadKeysUntilSettled(panel, keys) {
 
   panel.addEventListener('transitionend', onTransitionEnd);
   setTimeout(onBaseSettled, 300); // fallback if transitionend never fires (e.g. reduced-motion)
-  var hardTimer = setTimeout(finalUnlock, 900); // absolute safety net so keys never stay locked forever
+  // Was 900ms — measured this locking real taps out for the better part of a
+  // second (transitionend can fail to fire at all when the panel's .open
+  // class is toggled in the same synchronous tick as its initial transform,
+  // so this fell all the way back to the hard cap on every open), which read
+  // as "the numpad doesn't input anything" to anyone who tapped digits
+  // quickly right after it appeared — very common when entering cardio
+  // durations back-to-back across several sets. 400ms still covers the
+  // panel's real 250ms slide-in plus a buffer, without ever locking taps out
+  // for anywhere near a full second.
+  var hardTimer = setTimeout(finalUnlock, 400);
 }
 
 // Numpad keys register on `click`, which fires at the touch's LIFT-OFF
