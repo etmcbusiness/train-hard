@@ -16,7 +16,10 @@
     // Same theme key as Train Hard, so switching pages never jars the user
     // with a different color scheme.
     (function() {
-      var t = localStorage.getItem('trainhard_uitheme') || 'vegeta';
+      // 2026-08-26 rename: old theme ids -> new ids, for users with a saved value.
+      var THEME_RENAMES = { vegeta: 'amber', goku: 'ember', trunks: 'lavender', jiren: 'crimson', broly: 'jade', frieza: 'amethyst' };
+      var t = localStorage.getItem('trainhard_uitheme') || 'amber';
+      if (THEME_RENAMES[t]) { t = THEME_RENAMES[t]; localStorage.setItem('trainhard_uitheme', t); }
       document.documentElement.setAttribute('data-theme', t);
     })();
   </script>
@@ -77,31 +80,31 @@
       --c-accent3: 100,100,100; --c-accent-light: 230,230,230; --c-text: 255,255,255; --c-text2: 205,205,205;
       --c-text3: 222,222,222; --c-text4: 195,195,195; --c-text5: 170,170,170;
     }
-    :root[data-theme="jiren"] {
+    :root[data-theme="crimson"] {
       --c-bg: 26,18,20; --c-panel1: 46,32,36; --c-panel2: 40,28,31; --c-panel3: 36,25,28; --c-panel4: 52,38,42;
       --c-shadow: 30,20,23; --c-accent: 211,31,43; --c-accent-dark: 209,18,31; --c-accent2: 125,130,140;
       --c-accent3: 169,173,181; --c-accent-light: 255,200,110; --c-text: 255,255,255; --c-text2: 201,206,214;
       --c-text3: 222,222,222; --c-text4: 195,195,195; --c-text5: 170,170,170;
     }
-    :root[data-theme="goku"] {
+    :root[data-theme="ember"] {
       --c-bg: 22,31,61; --c-panel1: 46,52,88; --c-panel2: 38,44,76; --c-panel3: 34,40,70; --c-panel4: 54,60,98;
       --c-shadow: 16,20,40; --c-accent: 244,123,32; --c-accent-dark: 194,42,42; --c-accent2: 90,120,220;
       --c-accent3: 60,85,170; --c-accent-light: 250,180,40; --c-text: 245,242,234; --c-text2: 150,175,235;
       --c-text3: 222,222,222; --c-text4: 195,195,195; --c-text5: 170,170,170;
     }
-    :root[data-theme="trunks"] {
+    :root[data-theme="lavender"] {
       --c-bg: 27,21,48; --c-panel1: 47,38,72; --c-panel2: 40,32,62; --c-panel3: 36,29,56; --c-panel4: 54,44,82;
       --c-shadow: 33,26,54; --c-accent: 181,142,222; --c-accent-dark: 74,91,143; --c-accent2: 61,107,216;
       --c-accent3: 110,105,125; --c-accent-light: 248,210,28; --c-text: 245,242,234; --c-text2: 130,160,225;
       --c-text3: 222,222,222; --c-text4: 195,195,195; --c-text5: 170,170,170;
     }
-    :root[data-theme="broly"] {
+    :root[data-theme="jade"] {
       --c-bg: 15,28,18; --c-panel1: 40,58,42; --c-panel2: 33,50,36; --c-panel3: 30,45,33; --c-panel4: 46,64,48;
       --c-shadow: 22,36,25; --c-accent: 201,232,100; --c-accent-dark: 26,122,42; --c-accent2: 62,122,62;
       --c-accent3: 75,68,95; --c-accent-light: 242,255,216; --c-text: 242,240,232; --c-text2: 120,180,120;
       --c-text3: 222,222,222; --c-text4: 195,195,195; --c-text5: 170,170,170;
     }
-    :root[data-theme="frieza"] {
+    :root[data-theme="amethyst"] {
       --c-bg: 28,18,38; --c-panel1: 50,36,64; --c-panel2: 46,33,58; --c-panel3: 43,30,54; --c-panel4: 56,40,70;
       --c-shadow: 36,24,48; --c-accent: 138,47,216; --c-accent-dark: 90,30,150; --c-accent2: 216,31,42;
       --c-accent3: 200,196,216; --c-accent-light: 232,122,232; --c-text: 242,240,245; --c-text2: 232,216,240;

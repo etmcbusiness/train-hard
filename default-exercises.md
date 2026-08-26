@@ -48,14 +48,24 @@ the durable replacement for it).
 | Incline Bench Press | Dumbbell |
 | Cable Fly | Cable Machine (3P) |
 
-## Shoulders
+## Front Delts
 | Name | Category |
 |---|---|
 | Seated Overhead Press | Barbell |
 | Standing Overhead Press | Barbell |
 | Seated Overhead Press | Dumbbell |
+
+## Side Delts
+| Name | Category |
+|---|---|
 | Lateral Raise | Dumbbell |
 | Lateral Raise | Cable Machine (3P) |
+
+## Rear Delts
+| Name | Category |
+|---|---|
+| Rear Delt Fly | Dumbbell |
+| Rear Delt Fly | Cable Machine (3P) |
 
 ## Traps
 | Name | Category |
@@ -83,6 +93,12 @@ the durable replacement for it).
 |---|---|
 | Face Pulls (Rope) | Cable Machine (3P) |
 | Reverse Flys | Dumbbell |
+
+## Lower Back
+| Name | Category |
+|---|---|
+| Back Extension | Weighted Body Weight |
+| Good Morning | Barbell |
 
 ## Biceps
 | Name | Category |
@@ -186,4 +202,16 @@ the durable replacement for it).
 | Cold Shower |
 | Cold Plunge |
 
-**Total: 71 exercises** (63 muscle-group + 3 Cardio + 3 Heat Exposure + 2 Cold Exposure)
+**Total: 75 exercises** (67 muscle-group + 3 Cardio + 3 Heat Exposure + 2 Cold Exposure)
+
+## Notes on the Shoulders split
+
+'Shoulders' was replaced with three independently-tracked heads (Front
+Delts, Side Delts, Rear Delts), and Lower Back was added as a new tracked
+muscle. The 3D model doesn't have dedicated meshes for these four yet, so
+they won't get per-level glow/coloring on the avatar for now — they still
+track sets, goals, and levels like any other muscle. A one-time migration
+(`migrateShouldersToDeltHeads` in `index.html`) reassigns any
+already-logged 'Shoulders' history/exercises/goals into Front or Side Delts
+by exercise name (Lateral Raise → Side Delts, everything else → Front
+Delts) the next time each user's client loads.

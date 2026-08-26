@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#000000" />
-  <meta name="app-version" content="109" />
+  <meta name="app-version" content="110" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -15,7 +15,10 @@
   <title>Train Hard</title>
   <script>
     (function() {
-      var t = localStorage.getItem('trainhard_uitheme') || 'vegeta';
+      // 2026-08-26 rename: old theme ids -> new ids, for users with a saved value.
+      var THEME_RENAMES = { vegeta: 'amber', goku: 'ember', trunks: 'lavender', jiren: 'crimson', broly: 'jade', frieza: 'amethyst' };
+      var t = localStorage.getItem('trainhard_uitheme') || 'amber';
+      if (THEME_RENAMES[t]) { t = THEME_RENAMES[t]; localStorage.setItem('trainhard_uitheme', t); }
       document.documentElement.setAttribute('data-theme', t);
     })();
   </script>
@@ -47,7 +50,7 @@
       --rvw: 1vw;
 
       /* UI color scheme tokens (R,G,B triples so they work in both rgb()/rgba()).
-         Default / [data-theme="vegeta"]. */
+         Default / [data-theme="amber"]. */
       --c-bg: 29,42,94;
       --c-panel1: 38,52,110;
       --c-panel2: 33,46,100;
@@ -123,7 +126,7 @@
       --c-text5: 170,170,170;
     }
 
-    :root[data-theme="jiren"] {
+    :root[data-theme="crimson"] {
       --c-bg: 26,18,20;
       --c-panel1: 46,32,36;
       --c-panel2: 40,28,31;
@@ -142,7 +145,7 @@
       --c-text5: 170,170,170;
     }
 
-    :root[data-theme="goku"] {
+    :root[data-theme="ember"] {
       --c-bg: 22,31,61;
       --c-panel1: 46,52,88;
       --c-panel2: 38,44,76;
@@ -161,7 +164,7 @@
       --c-text5: 170,170,170;
     }
 
-    :root[data-theme="trunks"] {
+    :root[data-theme="lavender"] {
       --c-bg: 27,21,48;
       --c-panel1: 47,38,72;
       --c-panel2: 40,32,62;
@@ -180,7 +183,7 @@
       --c-text5: 170,170,170;
     }
 
-    :root[data-theme="broly"] {
+    :root[data-theme="jade"] {
       --c-bg: 15,28,18;
       --c-panel1: 40,58,42;
       --c-panel2: 33,50,36;
@@ -199,7 +202,7 @@
       --c-text5: 170,170,170;
     }
 
-    :root[data-theme="frieza"] {
+    :root[data-theme="amethyst"] {
       --c-bg: 28,18,38;
       --c-panel1: 50,36,64;
       --c-panel2: 46,33,58;
@@ -2092,7 +2095,32 @@
     }
     #profile-btns-right.visible { display: flex; }
     #profile-btns.visible { display: flex; }
-    #profile-menu-btn, #weekly-overview-btn, #testing-btn, #testing-cardio-btn, #testing-update-popup-btn, #exit-testing-btn, #friends-btn, #challenges-btn, #eat-plenty-btn {
+    /* ── Testing Buttons (bottom-left / bottom-right, Peter's dev account only) ── */
+    #testing-btns-bottom-left {
+      position: fixed;
+      bottom: calc(70px + env(safe-area-inset-bottom) + 12px);
+      left: 16px;
+      z-index: 25;
+      display: none;
+      flex-direction: column;
+      gap: 8px;
+      align-items: flex-start;
+      pointer-events: all;
+    }
+    #testing-btns-bottom-right {
+      position: fixed;
+      bottom: calc(70px + env(safe-area-inset-bottom) + 12px);
+      right: 16px;
+      z-index: 25;
+      display: none;
+      flex-direction: column;
+      gap: 8px;
+      align-items: flex-end;
+      pointer-events: all;
+    }
+    #testing-btns-bottom-left.visible { display: flex; }
+    #testing-btns-bottom-right.visible { display: flex; }
+    #profile-menu-btn, #weekly-overview-btn, #model-testing-btn, #testing-btn, #testing-cardio-btn, #testing-update-popup-btn, #exit-testing-btn, #friends-btn, #challenges-btn, #eat-plenty-btn {
       background: rgba(var(--c-panel3),0.88);
       border: 1px solid rgba(var(--c-accent2),0.35);
       border-radius: 12px;
@@ -2545,7 +2573,7 @@
       flex-direction: column;
       align-items: center;
       justify-content: flex-start;
-      padding: calc(env(safe-area-inset-top) + 24px) 16px calc(env(safe-area-inset-bottom) + 24px);
+      padding: calc(env(safe-area-inset-top) + 40px) 40px calc(env(safe-area-inset-bottom) + 40px);
       box-sizing: border-box;
       overflow-y: auto;
       overscroll-behavior: none;
@@ -2578,7 +2606,7 @@
       text-transform: uppercase;
     }
     #avatar-body {
-      padding: 18px 16px 20px;
+      padding: 0 16px 20px;
     }
     .avatar-section-label {
       font-size: 11px;
@@ -2658,23 +2686,6 @@
       margin-top: 2px; text-transform: uppercase; letter-spacing: 0.4px;
     }
     #friends-self-count { font-size: 12.5px; font-weight: 600; color: rgb(var(--c-text3)); }
-    #avatar-hair-options,
-    #avatar-ui-options,
-    #avatar-sound-options,
-    #avatar-coach-options,
-    #avatar-notification-options {
-      display: flex;
-      gap: 10px;
-    }
-    #avatar-ui-options,
-    #avatar-coach-options {
-      flex-wrap: wrap;
-    }
-    #avatar-ui-options .avatar-inspiration-btn,
-    #avatar-coach-options .avatar-inspiration-btn {
-      flex: 1 1 calc(33.333% - 7px);
-      height: 56px;
-    }
     .avatar-hair-card,
     .avatar-inspiration-btn {
       flex: 1;
@@ -2718,6 +2729,113 @@
     }
     .avatar-inspiration-btn.selected {
       color: rgb(var(--c-text));
+    }
+    .avatar-inspiration-btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+    #ui-theme-wheel-wrap {
+      position: relative;
+      width: 100%;
+      height: 64px;
+      overflow: hidden;
+      touch-action: pan-y;
+      cursor: grab;
+      /* Only softens the very edge so items never hard-clip at the container
+         boundary — kept narrow (unlike an earlier wider 16%/84% version)
+         since the per-item JS fade (uiWheelFadeOpacity) already handles the
+         visible falloff; stacking a second, more aggressive fade on top of
+         that was making the outermost items nearly invisible. */
+      -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 5%, #000 95%, transparent 100%);
+      mask-image: linear-gradient(to right, transparent 0%, #000 5%, #000 95%, transparent 100%);
+    }
+    #ui-theme-wheel-wrap.dragging { cursor: grabbing; }
+    #ui-theme-wheel-center-mark {
+      position: absolute;
+      left: 50%;
+      top: 4px;
+      bottom: 4px;
+      width: var(--ui-wheel-item-width, 84px);
+      transform: translateX(-50%);
+      border-radius: 12px;
+      background: rgba(var(--c-panel4),0.55);
+      border: 1px solid rgba(var(--c-accent-light),0.4);
+      pointer-events: none;
+    }
+    #ui-theme-wheel-track {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+    }
+    /* Each slot is independently positioned via its own translateX/scale
+       transform (set in JS on every render) rather than flex layout — a
+       fixed small set of slots gets relabeled from the current position
+       every frame, so there's no finite strip to run off the end of. */
+    .ui-wheel-item {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 84px;
+      height: 100%;
+      background: none;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      color: rgb(var(--c-text2));
+      will-change: opacity, transform;
+    }
+    .ui-wheel-item.selected {
+      color: rgb(var(--c-text));
+      font-weight: 800;
+    }
+    .ui-wheel-arrow {
+      position: absolute;
+      top: 0;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      font-size: 22px;
+      font-weight: 800;
+      color: rgb(var(--c-text));
+      text-shadow: 0 0 6px rgba(var(--c-shadow), 0.8);
+      pointer-events: none;
+      z-index: 2;
+    }
+    .ui-wheel-arrow-left { left: 0px; }
+    .ui-wheel-arrow-right { right: 0px; }
+    #avatar-preview-row {
+      display: flex;
+      align-items: stretch;
+      gap: 10px;
+    }
+    #avatar-preview-wrap {
+      flex: 3 1 0;
+      height: 340px;
+      overflow: hidden;
+      margin-bottom: 0;
+    }
+    #avatar-preview-canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    #avatar-model-options {
+      flex: 2 1 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    #avatar-model-options .avatar-inspiration-btn {
+      flex: 1;
+      width: 100%;
+      height: auto;
     }
     #avatar-close-btn {
       background: rgba(var(--c-panel3),0.7);
@@ -2878,16 +2996,24 @@
       transition: opacity 0.2s ease;
     }
     #room-arc-preview-label {
-      font-size: 13px;
       font-weight: 700;
       color: rgb(var(--c-text));
       letter-spacing: 1.5px;
       text-transform: uppercase;
       text-shadow: 0 2px 8px rgba(0,0,0,0.8);
-      max-width: 78%;
+      width: 100%;
       text-align: center;
-      word-wrap: break-word;
-      overflow-wrap: break-word;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+    /* Each line is measured/shrunk in JS (see setRoomArcLabel) so a name
+       always renders as exactly two lines with no overflow, regardless of
+       how long its two halves are or how narrow the device is. */
+    .room-label-line {
+      font-size: 13px;
+      white-space: nowrap;
     }
     #room-close-btn {
       background: rgba(var(--c-panel3),0.7);
@@ -5980,8 +6106,16 @@
   <button id="profile-menu-btn">Profile</button>
   <button id="avatar-btn">Avatar</button>
   <button id="weekly-overview-btn">Weekly Overview</button>
-  <button id="testing-btn" style="margin-top:20px;display:none;">Testing: Muscles</button>
+</div>
+
+<!-- Testing buttons (Peter's dev account only, see updateTestingButtonsVisibility) —
+     kept off to the bottom corners so they never crowd the real profile buttons above. -->
+<div id="testing-btns-bottom-left">
+  <button id="testing-btn" style="display:none;">Testing: Muscles</button>
   <button id="testing-cardio-btn" style="display:none;">Testing: Cardio</button>
+</div>
+<div id="testing-btns-bottom-right">
+  <button id="model-testing-btn">Model Testing</button>
   <button id="testing-update-popup-btn" style="display:none;">Testing: Update Popup</button>
   <button id="exit-testing-btn" style="display:none;">Exit Testing</button>
 </div>
@@ -6002,7 +6136,7 @@
     <button id="room-close-btn">Select</button>
     <div id="custom-rooms-section">
       <div id="custom-rooms-label">Custom Rooms</div>
-      <div id="custom-rooms-aspect">Best results: Wpx × Hpx</div>
+      <div id="custom-rooms-aspect">Best results: 1024px × 1536px</div>
       <div id="custom-rooms-slots">
         <div class="custom-room-slot" data-slot="0"></div>
         <div class="custom-room-slot" data-slot="1"></div>
@@ -6112,69 +6246,29 @@
       <span id="avatar-title">Avatar</span>
     </div>
     <div id="avatar-body">
-      <div class="avatar-section-label" style="margin-top:0;">Hair Color</div>
-      <div id="avatar-hair-options">
-        <div class="avatar-hair-card" data-option="1">
-          <div class="avatar-hair-swatches">
-            <div class="avatar-swatch" style="background:#1A1A1A;"></div>
-            <div class="avatar-swatch" style="background:#9B5FC0;"></div>
-          </div>
-          <div class="avatar-hair-name">Dark &amp; Purple</div>
+      <div class="avatar-section-label" style="margin-top:8px;">Choose Your Avatar</div>
+      <div id="avatar-preview-row">
+        <div id="avatar-preview-wrap">
+          <canvas id="avatar-preview-canvas"></canvas>
         </div>
-        <div class="avatar-hair-card" data-option="2">
-          <div class="avatar-hair-swatches">
-            <div class="avatar-swatch" style="background:#1A1A1A;"></div>
-            <div class="avatar-swatch" style="background:#1A1A1A;"></div>
-          </div>
-          <div class="avatar-hair-name">All Dark</div>
-        </div>
-        <div class="avatar-hair-card" data-option="3">
-          <div class="avatar-hair-swatches">
-            <div class="avatar-swatch" style="background:#9B5FC0;"></div>
-            <div class="avatar-swatch" style="background:#9B5FC0;"></div>
-          </div>
-          <div class="avatar-hair-name">All Purple</div>
-        </div>
+        <div id="avatar-model-options"></div>
       </div>
-      <div class="avatar-section-label" style="margin-top:22px;">Inspiration</div>
-      <div id="avatar-ui-options">
-        <button class="avatar-inspiration-btn" id="ui-theme-classic" data-theme-value="classic">Classic</button>
-        <button class="avatar-inspiration-btn" id="ui-theme-minimal" data-theme-value="minimal">Minimal</button>
-        <button class="avatar-inspiration-btn" id="ui-theme-noir" data-theme-value="noir">Noir</button>
-        <button class="avatar-inspiration-btn" id="ui-theme-goku" data-theme-value="goku">Goku</button>
-        <button class="avatar-inspiration-btn" id="ui-theme-vegeta" data-theme-value="vegeta">Vegeta</button>
-        <button class="avatar-inspiration-btn" id="ui-theme-trunks" data-theme-value="trunks">Trunks</button>
-        <button class="avatar-inspiration-btn" id="ui-theme-jiren" data-theme-value="jiren">Jiren</button>
-        <button class="avatar-inspiration-btn" id="ui-theme-broly" data-theme-value="broly">Broly</button>
-        <button class="avatar-inspiration-btn" id="ui-theme-frieza" data-theme-value="frieza">Frieza</button>
+
+      <div class="avatar-section-label" style="margin-top:22px;">Custom UI</div>
+      <div id="ui-theme-wheel-wrap">
+        <div id="ui-theme-wheel-center-mark"></div>
+        <div id="ui-theme-wheel-track"></div>
+        <div class="ui-wheel-arrow ui-wheel-arrow-left">‹</div>
+        <div class="ui-wheel-arrow ui-wheel-arrow-right">›</div>
       </div>
       <div class="avatar-section-label" style="margin-top:22px;">Training Room</div>
-      <button id="avatar-room-btn" class="acct-btn" style="margin-top:0;">Training Room</button>
-
-      <div class="avatar-section-label" style="margin-top:22px;">Sound</div>
-      <div id="avatar-sound-options">
-        <button class="avatar-inspiration-btn" id="sounds-toggle-btn">Sounds: On</button>
-        <button class="avatar-inspiration-btn" id="other-sounds-toggle-btn">Coach Sounds: On</button>
-      </div>
-
-      <div class="avatar-section-label" style="margin-top:22px;">Coach</div>
-      <div id="avatar-coach-options">
-        <button class="avatar-inspiration-btn" id="coach-1" data-coach-value="1">Coach 1</button>
-        <button class="avatar-inspiration-btn" id="coach-2" data-coach-value="2">Coach 2</button>
-        <button class="avatar-inspiration-btn" id="coach-3" data-coach-value="3">Coach 3</button>
-        <button class="avatar-inspiration-btn" id="coach-4" data-coach-value="4">Coach 4</button>
-        <button class="avatar-inspiration-btn" id="coach-5" data-coach-value="5">Coach 5</button>
-        <button class="avatar-inspiration-btn" id="coach-6" data-coach-value="6">Coach 6</button>
-        <button class="avatar-inspiration-btn" id="coach-7" data-coach-value="7">Coach 7</button>
-        <button class="avatar-inspiration-btn" id="coach-8" data-coach-value="8">Coach 8</button>
-        <button class="avatar-inspiration-btn" id="coach-9" data-coach-value="9">Coach 9</button>
-      </div>
+      <button id="avatar-room-btn" class="acct-signout-btn" style="margin-top:0;">Choose Training Room</button>
     </div>
   </div>
   <button id="avatar-close-btn">Done</button>
 </div>
 
-<!-- Profile Menu Overlay (Photo, Username, Alerts — moved out of Avatar) -->
+<!-- Profile Menu Overlay (Photo, Username, Sounds/Notifications under More — moved out of Avatar) -->
 <div id="profile-menu-overlay" class="profile-overlay">
   <div class="profile-overlay-inner">
     <div class="profile-overlay-header">
@@ -6242,16 +6336,6 @@
         <div class="acct-error" id="avatar-pfp-error"></div>
         <div class="acct-error" id="avatar-username-error"></div>
 
-        <div class="avatar-section-label" style="margin-top:14px;">Alerts</div>
-        <div id="avatar-notification-options">
-          <button class="avatar-inspiration-btn" id="notifications-toggle-btn">Notifications: Off</button>
-        </div>
-        <div id="notifications-debug" style="margin-top:6px; font-size:10px; color:rgb(var(--c-text4)); text-align:center; letter-spacing:0.3px;"></div>
-
-        <div class="profile-btn-row" style="margin-top:14px;">
-          <button id="acct-restore-backup-btn" class="acct-signout-btn">Restore Backup</button>
-          <button id="acct-signout-btn" class="acct-signout-btn">Sign Out</button>
-        </div>
         <div id="acct-sync-card">
           <div id="acct-sync-email-row">
             <span id="acct-sync-email-icon">✉</span>
@@ -6267,8 +6351,18 @@
 
       <div class="avatar-section-label" style="margin-top:14px;">More</div>
       <div class="profile-btn-row">
+        <button id="sounds-toggle-btn" class="acct-signout-btn">Sounds: On</button>
+        <button id="notifications-toggle-btn" class="acct-signout-btn">Notifications: Off</button>
+      </div>
+      <div class="profile-btn-row" style="margin-top:10px;">
         <button id="restore-defaults-btn" class="acct-signout-btn">Restore Default Exercises</button>
         <button id="update-history-btn" class="acct-signout-btn">Update History</button>
+      </div>
+      <div id="acct-signedin-more-btns" style="display:none;">
+        <div class="profile-btn-row" style="margin-top:10px;">
+          <button id="acct-restore-backup-btn" class="acct-signout-btn">Restore Backup</button>
+          <button id="acct-signout-btn" class="acct-signout-btn">Sign Out</button>
+        </div>
       </div>
     </div>
   </div>
@@ -6531,26 +6625,43 @@
 <script>
   // Prevent background scrolling on iOS PWA — only allow touchmove inside
   // explicitly scrollable containers so the body never shifts position.
-  document.addEventListener('touchmove', function(e) {
+  //
+  // The scrollable-ancestor walk (with getComputedStyle at every level) used
+  // to run on EVERY touchmove event — which fires continuously, many times a
+  // second, for the whole duration of any drag/scroll gesture anywhere in the
+  // app. getComputedStyle forces a style recalculation, so repeating that
+  // walk every frame during a scroll was real, avoidable main-thread jank —
+  // severe enough to delay or drop touch event processing elsewhere,
+  // producing exactly the "taps feel unresponsive / register on the wrong
+  // thing" symptom users kept reporting. The answer (whether this touch's
+  // path allows native scrolling) can't change mid-gesture, so it's now
+  // computed once on touchstart and cached for every touchmove in that same
+  // gesture instead of recomputed every frame.
+  var _scrollGuardAllowsScroll = false;
+  document.addEventListener('touchstart', function(e) {
     var el = e.target;
+    _scrollGuardAllowsScroll = false;
     while (el && el !== document.body) {
       var style = window.getComputedStyle(el);
       var overflow = style.overflow + style.overflowY;
-      if (overflow.includes('auto') || overflow.includes('scroll')) return;
+      if (overflow.includes('auto') || overflow.includes('scroll')) { _scrollGuardAllowsScroll = true; break; }
       // The avatar crop viewport handles its own drag-to-pan gesture via
       // Pointer Events (touch-action: none) — this global handler must not
       // preventDefault there or dragging never registers.
-      if (el.id === 'avatar-crop-viewport') return;
+      if (el.id === 'avatar-crop-viewport') { _scrollGuardAllowsScroll = true; break; }
       // Native range sliders drag their thumb via the same touch pipeline —
       // preventDefault here swallows that gesture too, on any slider in the app.
-      if (el.tagName === 'INPUT' && el.type === 'range') return;
+      if (el.tagName === 'INPUT' && el.type === 'range') { _scrollGuardAllowsScroll = true; break; }
       // History cards' swipe-to-reveal-actions gesture (attachHistSwipe) drives
       // its own touchmove/preventDefault — this handler preventDefault-ing the
       // very first (still-ambiguous-direction) touchmove event before that
       // logic decides horizontal-vs-vertical snaps the card back closed.
-      if (el.classList && el.classList.contains('hist-swipe-wrapper')) return;
+      if (el.classList && el.classList.contains('hist-swipe-wrapper')) { _scrollGuardAllowsScroll = true; break; }
       el = el.parentElement;
     }
+  }, { passive: true });
+  document.addEventListener('touchmove', function(e) {
+    if (_scrollGuardAllowsScroll) return;
     e.preventDefault();
   }, { passive: false });
 </script>
@@ -6595,8 +6706,11 @@ import * as THREE from 'three';
 window.THREE = THREE; // exposed as a global for the classic (non-module) Aura Shapes scripts below
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { SHELL, SHELL_REFERENCE_HEIGHT, syncHuggingAuraUniforms, setModelGroundY, setTargetHeight } from './Aura/toon-outline-code.js';
-import { shellUniforms, shellMaterial, shellMeshes } from './Aura/toon-outline-apply.js';
+// Core Aura (see "layers new/AURA-LEVELS-INSTALL.md") — replaces the old
+// thin toon-outline shell (Aura/toon-outline-*.js, no longer imported)
+// entirely with a mesh-hugging "rising flame/cloud" shell + a hand-rolled
+// bloom pass (no postprocessing addon imports needed — see "search CORE
+// AURA" further down, once spinGroup exists to serve as auraAnchor).
 import { EXTENDED_REST_STAGE_1_SEC, EXTENDED_REST_STAGE_2_SEC, EXTENDED_REST_STAGE_3_SEC, EXTENDED_REST_ASK_SEC } from './extended-rest-notifications.js';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.110.8';
 
@@ -6657,7 +6771,7 @@ const OTHER_SOUND_KEYS = new Set([
   'workoutComplete',
 ]);
 let soundsEnabled = localStorage.getItem('trainhard_sounds') !== 'off';
-let otherSoundsEnabled = localStorage.getItem('trainhard_other_sounds') !== 'off';
+let otherSoundsEnabled = soundsEnabled; // merged into a single "Sounds" toggle — see syncSoundsToggle
 
 // Web Audio API instead of <audio>/new Audio(): HTMLMediaElement playback
 // claims the OS "media" audio session and both interrupts background music
@@ -6741,6 +6855,12 @@ function playSound(key) {
 // escalation stage — so every coach can have entirely different lines.
 const RANDOM_FOLDER_MAX = 50;
 let selectedCoach = localStorage.getItem('trainhard_coach') || '1';
+// Coach picker is "Coming Soon" in the Avatar menu (UI removed, no way for
+// a user to change selectedCoach anymore) — this is the single kill switch
+// that disables the feature's actual effect for everyone in the meantime.
+// Everything else (selection state, sound loading, playback) is untouched
+// and ready to re-enable by flipping this back to true.
+const COACH_ENABLED = false;
 
 function randomFolderPaths(coach) {
   const base = `assets/sounds/no-time-to-rest/coach-${coach}/`;
@@ -6775,6 +6895,7 @@ async function loadRandomFolder(key) {
 }
 
 function loadCoachSounds() {
+  if (!COACH_ENABLED) return;
   loadRandomFolder('noTimeToRest');
   loadRandomFolder('noTimeToRestStage2');
   loadRandomFolder('noTimeToRestStage3');
@@ -6784,7 +6905,7 @@ function loadCoachSounds() {
 loadCoachSounds();
 
 function playRandomFromFolder(key) {
-  if (!otherSoundsEnabled) return;
+  if (!COACH_ENABLED || !otherSoundsEnabled) return;
   const buffers = randomFolderBuffers[key];
   if (!buffers || !buffers.length) return;
   const buffer = buffers[Math.floor(Math.random() * buffers.length)];
@@ -6923,10 +7044,12 @@ document.addEventListener('click', (e) => {
 // DATA
 // ═══════════════════════════════════════════════════════════
 
-const MUSCLES = ['Mid Back','Lats','Upper Back','Biceps','Triceps','Forearms','Quads','Hamstrings','Calves','Chest','Abs','Obliques','Shoulders','Neck','Traps','Glutes'];
+const MUSCLES = ['Mid Back','Lats','Upper Back','Lower Back','Biceps','Triceps','Forearms','Quads','Hamstrings','Calves','Chest','Abs','Obliques','Front Delts','Side Delts','Rear Delts','Neck','Traps','Glutes'];
 
 const MUSCLE_GROUPS = [
-  { label: 'Upper Body', muscles: ['Chest','Shoulders','Traps','Mid Back','Lats','Upper Back','Biceps','Triceps','Forearms','Abs','Obliques','Neck'] },
+  { label: 'Chest and Shoulders', muscles: ['Chest','Front Delts','Side Delts','Rear Delts','Neck'] },
+  { label: 'Back', muscles: ['Upper Back','Mid Back','Lower Back','Lats','Traps'] },
+  { label: 'Arms and Abs', muscles: ['Biceps','Triceps','Forearms','Abs','Obliques'] },
   { label: 'Lower Body', muscles: ['Quads','Hamstrings','Glutes','Calves'] },
 ];
 
@@ -7075,6 +7198,17 @@ function countedSets(sets) {
 // project's CLAUDE.md for the required pre-push changelog-confirmation step.
 // ═══════════════════════════════════════════════════════════
 const UPDATE_LOG = [
+  {
+    version: '110',
+    date: 'Aug 26, 2026',
+    title: 'New Muscles, Avatars & Training Rooms',
+    bullets: [
+      'New Muscles: Front/Side/Rear Delts/Lower Back',
+      'New Avatar Model: Generic Male and Female',
+      'New Backgrounds: Choose Any or Add Your Own!',
+      "Bugs and Fixes: Let's See!",
+    ]
+  },
   {
     version: '109',
     date: 'Aug 13, 2026',
@@ -7319,12 +7453,16 @@ const DEFAULT_EXERCISES = [
   { name: 'Bench Press', muscle: 'Chest', category: 'Dumbbell' },
   { name: 'Incline Bench Press', muscle: 'Chest', category: 'Dumbbell' },
   { name: 'Cable Fly', muscle: 'Chest', category: 'Cable Machine', pulleys: 3 },
-  // Shoulders
-  { name: 'Seated Overhead Press', muscle: 'Shoulders', category: 'Barbell' },
-  { name: 'Standing Overhead Press', muscle: 'Shoulders', category: 'Barbell' },
-  { name: 'Seated Overhead Press', muscle: 'Shoulders', category: 'Dumbbell' },
-  { name: 'Lateral Raise', muscle: 'Shoulders', category: 'Dumbbell' },
-  { name: 'Lateral Raise', muscle: 'Shoulders', category: 'Cable Machine', pulleys: 3 },
+  // Front Delts
+  { name: 'Seated Overhead Press', muscle: 'Front Delts', category: 'Barbell' },
+  { name: 'Standing Overhead Press', muscle: 'Front Delts', category: 'Barbell' },
+  { name: 'Seated Overhead Press', muscle: 'Front Delts', category: 'Dumbbell' },
+  // Side Delts
+  { name: 'Lateral Raise', muscle: 'Side Delts', category: 'Dumbbell' },
+  { name: 'Lateral Raise', muscle: 'Side Delts', category: 'Cable Machine', pulleys: 3 },
+  // Rear Delts
+  { name: 'Rear Delt Fly', muscle: 'Rear Delts', category: 'Dumbbell' },
+  { name: 'Rear Delt Fly', muscle: 'Rear Delts', category: 'Cable Machine', pulleys: 3 },
   // Traps
   { name: 'Shrugs', muscle: 'Traps', category: 'Dumbbell' },
   { name: 'Shrugs Single', muscle: 'Traps', category: 'Dumbbell' },
@@ -7340,6 +7478,9 @@ const DEFAULT_EXERCISES = [
   // Upper Back
   { name: 'Face Pulls (Rope)', muscle: 'Upper Back', category: 'Cable Machine', pulleys: 3 },
   { name: 'Reverse Flys', muscle: 'Upper Back', category: 'Dumbbell' },
+  // Lower Back
+  { name: 'Back Extension', muscle: 'Lower Back', category: 'Weighted Body Weight' },
+  { name: 'Good Morning', muscle: 'Lower Back', category: 'Barbell' },
   // Biceps
   { name: 'Bicep Curl', muscle: 'Biceps', category: 'Barbell' },
   { name: 'Bicep Curl', muscle: 'Biceps', category: 'Dumbbell' },
@@ -7549,6 +7690,58 @@ function renameLegacyVisibleDefaultSuffix(s) {
   return changed;
 }
 
+// One-time split of the old flat 'Shoulders' muscle into its three
+// independently-tracked heads (Front/Side/Rear Delts). Classifies each
+// exercise that lived under 'Shoulders' by name — Lateral Raise variants go
+// to Side Delts, everything else (presses, any user custom exercise) falls
+// back to Front Delts — and moves the exercise library entry, every past
+// workout's logged muscle tag, and any custom weekly goal accordingly, so
+// nothing already logged is lost or silently stops counting. Also renames
+// the affected seededDefaultExercises keys so seedDefaultExercises() treats
+// the migrated defaults as already-seeded instead of adding fresh
+// duplicates under their new muscle names.
+const SHOULDERS_SPLIT_DEFAULT_KEY_RENAMES = {
+  'Seated Overhead Press|Shoulders|Barbell': 'Seated Overhead Press|Front Delts|Barbell',
+  'Standing Overhead Press|Shoulders|Barbell': 'Standing Overhead Press|Front Delts|Barbell',
+  'Seated Overhead Press|Shoulders|Dumbbell': 'Seated Overhead Press|Front Delts|Dumbbell',
+  'Lateral Raise|Shoulders|Dumbbell': 'Lateral Raise|Side Delts|Dumbbell',
+  'Lateral Raise|Shoulders|Cable Machine': 'Lateral Raise|Side Delts|Cable Machine',
+};
+function classifyLegacyShoulderExercise(name) {
+  return /lateral raise/i.test(name) ? 'Side Delts' : 'Front Delts';
+}
+function migrateShouldersToDeltHeads(s) {
+  if (!s.exercises || !('Shoulders' in s.exercises)) return false;
+  for (const name of (s.exercises['Shoulders'] || [])) {
+    const target = classifyLegacyShoulderExercise(name);
+    if (!s.exercises[target]) s.exercises[target] = [];
+    if (!s.exercises[target].includes(name)) s.exercises[target].push(name);
+  }
+  delete s.exercises['Shoulders'];
+  for (const w of (s.history || [])) {
+    for (const ex of (w.exercises || [])) {
+      if (ex.muscle === 'Shoulders') ex.muscle = classifyLegacyShoulderExercise(ex.name);
+    }
+  }
+  if (s.goals && 'Shoulders' in s.goals) {
+    const val = s.goals['Shoulders'];
+    for (const m of ['Front Delts', 'Side Delts', 'Rear Delts']) {
+      if (!(m in s.goals)) s.goals[m] = val;
+    }
+    delete s.goals['Shoulders'];
+  }
+  if (s.weeklySets) delete s.weeklySets['Shoulders'];
+  if (s.seededDefaultExercises) {
+    for (const [oldKey, newKey] of Object.entries(SHOULDERS_SPLIT_DEFAULT_KEY_RENAMES)) {
+      if (s.seededDefaultExercises[oldKey]) {
+        delete s.seededDefaultExercises[oldKey];
+        s.seededDefaultExercises[newKey] = true;
+      }
+    }
+  }
+  return true;
+}
+
 // Adds every DEFAULT_EXERCISES entry to this state exactly once, ever (see
 // s.seededDefaultExercises, a permanent seeded-log keyed independently of
 // whether the exercise is still present — so a user deleting a default
@@ -7638,6 +7831,7 @@ function applyDefaultExerciseMigrations(s) {
     s.defaultExercisesResetV1 = true;
     changed = true; // flag itself flipping is a change that needs persisting
   }
+  if (migrateShouldersToDeltHeads(s)) changed = true;
   if (repairMisflaggedDefaultExercises(s)) changed = true;
   if (renameLegacyVisibleDefaultSuffix(s)) changed = true;
   if (seedDefaultExercises(s)) changed = true;
@@ -8046,9 +8240,11 @@ async function refreshAccountView() {
   cloudSession = session;
   const signedOut = document.getElementById('acct-signedout');
   const signedIn = document.getElementById('acct-signedin');
+  const signedInMoreBtns = document.getElementById('acct-signedin-more-btns');
   if (session) {
     signedOut.style.display = 'none';
     signedIn.style.display = 'block';
+    signedInMoreBtns.style.display = 'block';
     const { data: profile } = await supabase
       .from('profiles')
       .select('username, avatar_url')
@@ -8063,6 +8259,7 @@ async function refreshAccountView() {
   } else {
     signedOut.style.display = 'block';
     signedIn.style.display = 'none';
+    signedInMoreBtns.style.display = 'none';
     myAvatarUrl = null;
     updateTestingButtonsVisibility('');
   }
@@ -8653,7 +8850,7 @@ function computeFriendHairLevel(friendState) {
   return 1;
 }
 
-const HAIR_LEVEL_BADGES = { 1: 'Base Form', 2: 'Super Saiyan', 3: 'Super Saiyan God', 4: 'Super Saiyan Blue', 5: 'Ultra Ego' };
+const HAIR_LEVEL_BADGES = { 1: 'Base Form', 2: 'Trained', 3: 'Advanced', 4: 'Elite', 5: 'Peak Form' };
 
 // Mirrors getCardioLevel()'s quarter-of-goal math (see getCardioLevel() near
 // updateCoreAuraForLevel()), against an explicit friend-state object instead
@@ -9724,48 +9921,604 @@ controls.rotateSpeed = 2.5;
 controls.minPolarAngle = Math.PI / 2;
 controls.maxPolarAngle = Math.PI / 2;
 
-const autoRotateEnabled = true;
+let autoRotateEnabled = true;
 
-// ── Core Aura (the toon-outline hugging shell) — on/off + level-driven presets ──
-// One preset JSON per character level (2-5), same trigger as the hair Super
-// Saiyan colors (getHairLevel()) — no preset at level 1 (mirrors the hair
-// system having no badge at level 1: the aura is simply off).  Files live in
-// assets/aura-presets/ and only their "SHELL" key is applied (Object.assign
-// onto the live SHELL config); the rest of each file (MODEL/MODEL_GLOW/
-// auraAnchor/CONFIG) is from the original standalone editor's preset export
-// and isn't used here.
-const CORE_AURA_LEVEL_FILES = {
-  2: 'Core Aura - Level 2.json',
-  3: 'Core Aura - Level 3.json',
-  4: 'Core Aura - Level 4.json',
-  5: 'Core Aura - Level 5.json',
+// ══════════════════════════════════════════════════════════════
+// CORE AURA — installed 2026-08-24 from "layers new/" (see "layers new/
+// AURA-LEVELS-INSTALL.md"), replacing an incomplete first attempt from
+// Layers/ that was missing core-aura-bloom.js — without that file the shell
+// still rendered (geometry/colors/noise/rise-fade all worked) but looked
+// like a flat, thin, glow-less outline, since the soft blur/glow depends
+// entirely on that separate render pass. This block is core-aura-code.js's
+// SHELL object + core-aura-apply.js's shader/uniforms/material +
+// core-aura-bloom.js's bloom pass + preset-apply.js's applyPreset, all
+// inlined verbatim (per the install doc's own troubleshooting note: use
+// shellMaterial/renderWithBloom exactly as authored, don't reimplement)
+// rather than loaded as separate classic <script> tags, since renderer/
+// scene/camera/spinGroup already live in this same module scope. Mesh-
+// hugging "rising flame/cloud" shell (soft billowing cloud/flame
+// silhouette, white/light near the body fading to a saturated color at
+// the tips, rising and dissipating into smoke over time). The
+// HUGGING_AURA_*/buildHuggingAuraGui parts of core-aura-code.js are NOT
+// copied here — those are leftover shared helpers only "layers new/flex-
+// shape-aura-code.js"'s 2D DOM aura uses, a separate, already-independent
+// system (Shape Aura/engine/flex-shape-aura-code.js, driving the profile-
+// photo circles) that this project doesn't touch.
+const TARGET_HEIGHT = 6.6; // every tuned SHELL number below assumes this
+let modelGroundY = 0; // world-Y where the character's feet touch the ground; kept live per-model, see attachModelScene/loadModel
+
+const SHELL = {
+  enabled: true,
+  pushAmount: 0.0075,
+  color: '#FFF3B0',
+  colorEdge: '#ffd23f',
+  opacity: 1,
+  cloudAmp: 0.05,
+  cloudFreq: 7,
+  cloudSpeed: 0.45,
+  topBias: 1.75,
+  bottomBias: 0.5092,
+  flowDirection: 'vertical',
+  flowSpeed: 0,
+  flameSharpness: 5,
+  riseFadeAmp: 0.75,
+  driftAmp: 0,
+  smokeColor: '#B3E5FC',
+  smokeAmount: 1
 };
-const coreAuraPresetCache = {};
-let coreAuraLastLevel = null;
+// Bloom/glow config (see the hand-rolled bloom pass below, from core-aura-
+// bloom.js) — "source": "aura" means only shellMeshes bloom, not the whole
+// character/scene.
+const BLOOM = {
+  enabled: true,
+  threshold: 0.25,
+  strength: 0.75,
+  radius: 1.5,
+  resolutionScale: 0.5,
+  source: 'aura'
+};
+const CORE_AURA_FLOW_MODES = { vertical: 0, converge: 1 };
 
-async function loadCoreAuraPreset(level) {
-  if (coreAuraPresetCache[level]) return coreAuraPresetCache[level];
-  const file = CORE_AURA_LEVEL_FILES[level];
-  if (!file) return null;
-  try {
-    const data = await fetch('assets/aura-presets/' + file).then(r => r.json());
-    coreAuraPresetCache[level] = data;
-    return data;
-  } catch (e) {
-    console.error('Core Aura preset load failed:', file, e);
-    return null;
+const CORE_AURA_VERTEX_SHADER = `
+    uniform float pushAmount;
+    uniform float densityScale;
+    uniform float cloudAmp;
+    uniform float cloudFreq;
+    uniform float cloudSpeed;
+    uniform float topBias;
+    uniform float bottomBias;
+    uniform int flowMode; // 0 = plain vertical rise, 1 = converge (both sides flow up + inward toward top-center)
+    uniform float flowSpeed;
+    uniform float time;
+    uniform float modelGroundY;
+    uniform float modelHeight;
+    uniform mat4 auraAnchorInverse;
+    uniform float riseFadeAmp;
+    uniform float driftAmp;
+    uniform float flameSharpness;
+    #include <skinning_pars_vertex>
+
+    varying float vCloud;
+    varying float vRiseEnvelope;
+
+    float hash3(vec3 p) {
+        return fract(sin(dot(p, vec3(12.9898, 78.233, 37.719))) * 43758.5453);
+    }
+    float valueNoise3(vec3 p) {
+        vec3 i = floor(p);
+        vec3 f = fract(p);
+        f = f * f * (3.0 - 2.0 * f);
+        float n000 = hash3(i + vec3(0.0, 0.0, 0.0));
+        float n100 = hash3(i + vec3(1.0, 0.0, 0.0));
+        float n010 = hash3(i + vec3(0.0, 1.0, 0.0));
+        float n110 = hash3(i + vec3(1.0, 1.0, 0.0));
+        float n001 = hash3(i + vec3(0.0, 0.0, 1.0));
+        float n101 = hash3(i + vec3(1.0, 0.0, 1.0));
+        float n011 = hash3(i + vec3(0.0, 1.0, 1.0));
+        float n111 = hash3(i + vec3(1.0, 1.0, 1.0));
+        float nx00 = mix(n000, n100, f.x);
+        float nx10 = mix(n010, n110, f.x);
+        float nx01 = mix(n001, n101, f.x);
+        float nx11 = mix(n011, n111, f.x);
+        float nxy0 = mix(nx00, nx10, f.y);
+        float nxy1 = mix(nx01, nx11, f.y);
+        return mix(nxy0, nxy1, f.z);
+    }
+    float fbm3(vec3 p) {
+        float sum = 0.0;
+        float amp = 0.55;
+        float freq = 1.0;
+        for (int i = 0; i < 3; i++) {
+            sum += valueNoise3(p * freq) * amp;
+            freq *= 2.05;
+            amp *= 0.5;
+        }
+        return sum;
+    }
+
+    void main() {
+        vec3 transformed = vec3(position);
+        vec3 objectNormal = vec3(normal);
+        #include <skinbase_vertex>
+        #include <skinning_vertex>
+        #include <skinnormal_vertex>
+        objectNormal = normalize(objectNormal);
+
+        vec3 worldPos = (modelMatrix * vec4(transformed, 1.0)).xyz;
+        vec3 charPos = (auraAnchorInverse * vec4(worldPos, 1.0)).xyz;
+
+        float heightFrac = clamp(1.0 - (charPos.y - modelGroundY) / max(0.0001, modelHeight), 0.0, 1.0);
+
+        float stagger = fbm3(vec3(charPos.x, charPos.z, 0.0) * 0.6) * 3.0;
+
+        float riseEnvelope = 1.0;
+        if (riseFadeAmp > 0.0) {
+            float riseCoord = charPos.y / 0.8 - time * 1.5 + stagger;
+            float risePhase = fract(riseCoord);
+            float rawEnvelope = smoothstep(0.0, 0.12, risePhase) * (1.0 - smoothstep(0.15, 1.0, risePhase));
+            riseEnvelope = mix(1.0, rawEnvelope, riseFadeAmp);
+        }
+        vRiseEnvelope = riseEnvelope;
+
+        vec3 driftOffset = vec3(0.0);
+        if (driftAmp > 0.0) {
+            float driftPhase = charPos.y * 1.1 + stagger * 2.0 + time * 0.6;
+            driftOffset = vec3(sin(driftPhase), 0.0, cos(driftPhase * 0.7)) * driftAmp * cloudAmp * (1.0 - heightFrac) * 1.5;
+        }
+
+        vec3 flowPos = charPos;
+        if (flowMode == 1) {
+            flowPos.x = abs(charPos.x) + time * flowSpeed * 0.5;
+        }
+        flowPos.y -= time * cloudSpeed;
+
+        float n = fbm3(flowPos * cloudFreq);
+        float cloudShapeRound = clamp(n * 1.3 - 0.15, 0.0, 1.0);
+        float cloudShape = pow(cloudShapeRound, max(1.0, flameSharpness));
+        vCloud = cloudShape;
+
+        float topAmp = mix(topBias, 1.0, heightFrac);
+        float bottomBlend = smoothstep(0.72, 0.98, heightFrac);
+        float bottomAmp = mix(1.0, bottomBias, bottomBlend);
+        float cloud = cloudShape * cloudAmp * topAmp * bottomAmp * densityScale;
+
+        cloud *= riseEnvelope;
+
+        vec3 displaced = transformed + objectNormal * (pushAmount * densityScale + cloud) + driftOffset;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(displaced, 1.0);
+    }
+`;
+const CORE_AURA_FRAGMENT_SHADER = `
+    uniform vec3 uColor;
+    uniform vec3 uColorEdge;
+    uniform vec3 uSmokeColor;
+    uniform float smokeAmount;
+    uniform float uOpacity;
+    varying float vCloud;
+    varying float vRiseEnvelope;
+
+    void main() {
+        vec3 col = mix(uColor, uColorEdge, vCloud);
+        col = mix(col, uSmokeColor, (1.0 - vRiseEnvelope) * smokeAmount);
+        float alpha = uOpacity * mix(1.0, 0.8, vCloud);
+        alpha *= vRiseEnvelope;
+        gl_FragColor = vec4(col, alpha);
+    }
+`;
+
+function buildCoreAuraUniforms(cfg) {
+  return {
+    pushAmount: { value: cfg.pushAmount },
+    densityScale: { value: 1.0 },
+    cloudAmp: { value: cfg.cloudAmp },
+    cloudFreq: { value: cfg.cloudFreq },
+    cloudSpeed: { value: cfg.cloudSpeed },
+    topBias: { value: cfg.topBias },
+    bottomBias: { value: cfg.bottomBias },
+    flowMode: { value: CORE_AURA_FLOW_MODES[cfg.flowDirection] },
+    flowSpeed: { value: cfg.flowSpeed },
+    time: { value: 0 },
+    modelGroundY: { value: 0 },
+    modelHeight: { value: 1 },
+    auraAnchorInverse: { value: new THREE.Matrix4() },
+    uColor: { value: new THREE.Color(cfg.color) },
+    uColorEdge: { value: new THREE.Color(cfg.colorEdge) },
+    uSmokeColor: { value: new THREE.Color(cfg.smokeColor) },
+    smokeAmount: { value: cfg.smokeAmount },
+    uOpacity: { value: cfg.opacity },
+    riseFadeAmp: { value: cfg.riseFadeAmp },
+    driftAmp: { value: cfg.driftAmp },
+    flameSharpness: { value: cfg.flameSharpness }
+  };
+}
+function syncCoreAuraUniforms(cfg, uniforms, time) {
+  uniforms.pushAmount.value = cfg.pushAmount;
+  uniforms.cloudAmp.value = cfg.cloudAmp;
+  uniforms.cloudFreq.value = cfg.cloudFreq;
+  uniforms.cloudSpeed.value = cfg.cloudSpeed;
+  uniforms.topBias.value = cfg.topBias;
+  uniforms.bottomBias.value = cfg.bottomBias;
+  uniforms.flowMode.value = CORE_AURA_FLOW_MODES[cfg.flowDirection];
+  uniforms.flowSpeed.value = cfg.flowSpeed;
+  uniforms.time.value = time || 0;
+  uniforms.modelGroundY.value = modelGroundY;
+  uniforms.modelHeight.value = TARGET_HEIGHT;
+  auraAnchor.updateMatrixWorld();
+  uniforms.auraAnchorInverse.value.copy(auraAnchor.matrixWorld).invert();
+  uniforms.uColor.value.set(cfg.color);
+  uniforms.uColorEdge.value.set(cfg.colorEdge);
+  uniforms.uSmokeColor.value.set(cfg.smokeColor);
+  uniforms.smokeAmount.value = cfg.smokeAmount;
+  uniforms.uOpacity.value = cfg.opacity;
+  uniforms.riseFadeAmp.value = cfg.riseFadeAmp;
+  uniforms.driftAmp.value = cfg.driftAmp;
+  uniforms.flameSharpness.value = cfg.flameSharpness;
+}
+
+// What the shader's charPos/heightFrac math is relative to — spinGroup is
+// what left-click-drag rotation actually spins, so the aura's rise/drift
+// directions stay correct relative to the character through any rotation.
+const auraAnchor = spinGroup;
+
+const shellUniforms = buildCoreAuraUniforms(SHELL);
+const shellMaterial = new THREE.ShaderMaterial({
+  uniforms: shellUniforms,
+  transparent: true,
+  depthWrite: false,
+  side: THREE.BackSide,
+  stencilWrite: true,
+  stencilRef: 1,
+  stencilFunc: THREE.NotEqualStencilFunc,
+  stencilZPass: THREE.KeepStencilOp,
+  stencilFail: THREE.KeepStencilOp,
+  stencilZFail: THREE.KeepStencilOp,
+  vertexShader: CORE_AURA_VERTEX_SHADER,
+  fragmentShader: CORE_AURA_FRAGMENT_SHADER
+});
+shellMaterial.skinning = true;
+const shellMeshes = [];
+// One cloned material per shell mesh, so each can carry its own densityScale
+// correction (see stencilAndShell) — verified empirically that this rig's
+// individual body-part meshes (Abs, Biceps, Forearms, ...) each carry their
+// own inherited scale, varying roughly 6x mesh-to-mesh (e.g. Lower_Back
+// ~0.22 vs Forearms ~1.35 at the same root scale). SHELL's pushAmount/
+// cloudAmp are object-space, so without per-mesh correction the aura renders
+// visibly thinner on some body parts (abs, head, neck) than others (arms) —
+// this is what densityScale (already read by the shader, previously always
+// 1.0) exists for.
+const auraShellMaterials = [];
+let coreAuraRootScale = 1; // set right before each stencilAndShell batch — the reference scale SHELL's numbers were tuned against
+const _densPosV = new THREE.Vector3(), _densQuatQ = new THREE.Quaternion(), _densScaleV = new THREE.Vector3();
+
+// core-aura-bloom.js's renderWithBloom() reads a global named `characterModel`
+// by that literal name (see its file-top comment) — this project's own name
+// for the same concept is `calMdl`, so this is the one adaptation made while
+// inlining that file verbatim: every place calMdl gets (re)assigned
+// (attachModelScene / loadModel's boot callback / switchModelVariant) also
+// sets this in lock-step, rather than aliasing it once and going stale.
+let characterModel = null;
+
+// ── Bloom / glow post-process (from core-aura-bloom.js, verbatim) — hand-
+// rolled, not three.js's EffectComposer/UnrealBloomPass addons: classic
+// 3-pass bloom, bright-pass (keep only pixels above a brightness threshold)
+// -> separable Gaussian blur (horizontal then vertical) -> additive
+// composite back onto the crisp original. Every pass is a fullscreen
+// textured quad; the quad's own vertex shader writes clip-space position
+// directly from its local (-1..1) coordinates, so it ignores whatever
+// camera renderWithBloom() is called with.
+const bloomQuadGeometry = new THREE.PlaneGeometry(2, 2);
+const bloomQuadScene = new THREE.Scene();
+const BLOOM_QUAD_VERTEX_SHADER = `
+    varying vec2 vUv;
+    void main() {
+        vUv = uv;
+        gl_Position = vec4(position.xy, 0.0, 1.0);
+    }
+`;
+const bloomBrightMaterial = new THREE.ShaderMaterial({
+  uniforms: { tDiffuse: { value: null }, threshold: { value: BLOOM.threshold } },
+  vertexShader: BLOOM_QUAD_VERTEX_SHADER,
+  fragmentShader: `
+        uniform sampler2D tDiffuse;
+        uniform float threshold;
+        varying vec2 vUv;
+        void main() {
+            vec4 color = texture2D(tDiffuse, vUv);
+            float brightness = max(color.r, max(color.g, color.b));
+            float contrib = smoothstep(threshold, threshold + 0.25, brightness);
+            gl_FragColor = vec4(color.rgb * contrib, color.a * contrib);
+        }
+    `
+});
+const bloomBlurMaterial = new THREE.ShaderMaterial({
+  uniforms: { tDiffuse: { value: null }, direction: { value: new THREE.Vector2(1, 0) } },
+  vertexShader: BLOOM_QUAD_VERTEX_SHADER,
+  fragmentShader: `
+        uniform sampler2D tDiffuse;
+        uniform vec2 direction; // texel step * blur radius, pre-scaled on the JS side
+        varying vec2 vUv;
+        void main() {
+            vec4 sum = vec4(0.0);
+            sum += texture2D(tDiffuse, vUv - 4.0 * direction) * 0.0162162162;
+            sum += texture2D(tDiffuse, vUv - 3.0 * direction) * 0.0540540541;
+            sum += texture2D(tDiffuse, vUv - 2.0 * direction) * 0.1216216216;
+            sum += texture2D(tDiffuse, vUv - 1.0 * direction) * 0.1945945946;
+            sum += texture2D(tDiffuse, vUv)                  * 0.2270270270;
+            sum += texture2D(tDiffuse, vUv + 1.0 * direction) * 0.1945945946;
+            sum += texture2D(tDiffuse, vUv + 2.0 * direction) * 0.1216216216;
+            sum += texture2D(tDiffuse, vUv + 3.0 * direction) * 0.0540540541;
+            sum += texture2D(tDiffuse, vUv + 4.0 * direction) * 0.0162162162;
+            gl_FragColor = sum;
+        }
+    `
+});
+const bloomCompositeMaterial = new THREE.ShaderMaterial({
+  uniforms: { tScene: { value: null }, tBloom: { value: null }, strength: { value: BLOOM.strength } },
+  vertexShader: BLOOM_QUAD_VERTEX_SHADER,
+  fragmentShader: `
+        uniform sampler2D tScene;
+        uniform sampler2D tBloom;
+        uniform float strength;
+        varying vec2 vUv;
+        // tScene/tBloom both hold plain linear values (see bloomSceneRT's own
+        // comment) — this pass renders straight to the canvas, so it's the
+        // one place that has to explicitly re-encode to sRGB before writing
+        // gl_FragColor; built-in materials get this for free from three.js's
+        // own shader chunks, a raw ShaderMaterial like this one doesn't.
+        vec3 LinearToSRGB(vec3 value) {
+            vec3 lo = value * 12.92;
+            vec3 hi = pow(clamp(value, 0.0, 1.0), vec3(1.0 / 2.4)) * 1.055 - vec3(0.055);
+            return mix(hi, lo, vec3(lessThanEqual(value, vec3(0.0031308))));
+        }
+        void main() {
+            vec4 scene = texture2D(tScene, vUv);
+            vec4 bloom = texture2D(tBloom, vUv);
+            vec3 combined = scene.rgb + bloom.rgb * strength;
+            gl_FragColor = vec4(LinearToSRGB(combined), max(scene.a, bloom.a * strength));
+        }
+    `,
+  transparent: true
+});
+const bloomQuad = new THREE.Mesh(bloomQuadGeometry, bloomBrightMaterial);
+bloomQuadScene.add(bloomQuad);
+
+const bloomRTOptions = { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, format: THREE.RGBAFormat };
+// stencilBuffer defaults to false on WebGLRenderTarget (unlike the main
+// canvas, which gets one automatically) — the shell's masking trick depends
+// on a real stencil buffer, so the target the scene actually renders into
+// needs one explicitly or that masking silently breaks. The bright-pass/
+// blur targets only render flat fullscreen quads, no stencil test involved.
+// Deliberately left at the default NoColorSpace (not SRGBColorSpace) — the
+// body's real PBR materials then render into this target as raw LINEAR
+// values, same as tagging it sRGB would produce for the STORED bytes, but
+// tagging it sRGB also makes the GPU auto-DECODE back to linear on every
+// texture2D() sample in the composite shader below (that's automatic
+// hardware behavior tied to the texture's format, not something a shader
+// can opt out of) — with nothing on the other end to re-encode, that
+// silently darkened/flattened the whole body whenever bloom was on. Keeping
+// this target plain linear and doing one explicit LinearToSRGB() at the very
+// end of bloomCompositeMaterial's fragment shader (the only place output
+// actually reaches the canvas) fixes it without fighting the implicit GPU
+// decode.
+let bloomSceneRT = new THREE.WebGLRenderTarget(1, 1, Object.assign({ stencilBuffer: true }, bloomRTOptions));
+// Same size/format as bloomSceneRT — only used when BLOOM.source isn't
+// 'both', to render a SECOND copy of the scene with either the body or the
+// aura shells swapped to solid black first (see bloomMaskBlackMaterial and
+// renderWithBloom below), so the bright-pass can sample from that instead
+// and only the chosen group contributes to the glow.
+let bloomMaskRT = new THREE.WebGLRenderTarget(1, 1, Object.assign({ stencilBuffer: true }, bloomRTOptions));
+let bloomBrightRT = new THREE.WebGLRenderTarget(1, 1, bloomRTOptions);
+let bloomBlurRT_A = new THREE.WebGLRenderTarget(1, 1, bloomRTOptions);
+let bloomBlurRT_B = new THREE.WebGLRenderTarget(1, 1, bloomRTOptions);
+
+// Swapped in for whichever group (body meshes or aura shells) should be
+// EXCLUDED from the bright-pass source during a selective-bloom masked pass.
+// Solid black so it contributes nothing to the bright-pass regardless of
+// lighting; skinning:true so it still deforms correctly on a SkinnedMesh
+// (matches shellMaterial's own skinning flag). Also carries the same
+// stencilWrite/Ref/Always/Replace settings every body mesh's real material
+// has (see stencilAndShell) — the aura shell's own material tests that
+// stencil bit (NotEqual, ref 1) to mask itself against the body's
+// silhouette, so if this override material dropped those stencil writes
+// while standing in for a body mesh, the shell would lose its masking and
+// render unclipped in that one masked pass, throwing off the glow it produces.
+const bloomMaskBlackMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 });
+bloomMaskBlackMaterial.skinning = true;
+bloomMaskBlackMaterial.stencilWrite = true;
+bloomMaskBlackMaterial.stencilRef = 1;
+bloomMaskBlackMaterial.stencilFunc = THREE.AlwaysStencilFunc;
+bloomMaskBlackMaterial.stencilZPass = THREE.ReplaceStencilOp;
+
+function resizeBloomTargets() {
+  const w = renderer.domElement.width, h = renderer.domElement.height;
+  const bw = Math.max(1, Math.round(w * BLOOM.resolutionScale));
+  const bh = Math.max(1, Math.round(h * BLOOM.resolutionScale));
+  bloomSceneRT.setSize(w, h);
+  bloomMaskRT.setSize(w, h);
+  bloomBrightRT.setSize(bw, bh);
+  bloomBlurRT_A.setSize(bw, bh);
+  bloomBlurRT_B.setSize(bw, bh);
+}
+resizeBloomTargets();
+
+// Renders scene/camera with bloom applied, ending with the composited result
+// on the actual screen (render target null). Called INSTEAD OF a plain
+// renderer.render(scene, camera) in animate() below.
+function renderWithBloom() {
+  if (!BLOOM.enabled) {
+    renderer.setRenderTarget(null);
+    renderer.render(scene, camera);
+    return;
+  }
+
+  renderer.setRenderTarget(bloomSceneRT);
+  renderer.render(scene, camera);
+
+  // Bright-pass source: the full scene by default, or — if BLOOM.source
+  // restricts the glow to just the body or just the aura — a second render
+  // with the OTHER group's materials swapped to solid black first. Swapping
+  // materials rather than toggling .visible matters because every shell mesh
+  // is a CHILD of its body mesh — three.js's renderer skips a whole subtree
+  // once a parent fails its own .visible check, so hiding the body would
+  // hide its shell children too. Material assignment has no such parent/
+  // child inheritance, so swapping it only affects the object it's set on.
+  let brightSourceTexture = bloomSceneRT.texture;
+  if (BLOOM.source !== 'both') {
+    const swapBody = BLOOM.source === 'aura';
+    const swapped = [];
+    if (swapBody) {
+      const shellSet = new Set(shellMeshes);
+      if (characterModel) {
+        characterModel.traverse((o) => {
+          if (o.isMesh && !shellSet.has(o)) {
+            swapped.push([o, o.material]);
+            o.material = bloomMaskBlackMaterial;
+          }
+        });
+      }
+    } else {
+      shellMeshes.forEach((s) => {
+        swapped.push([s, s.material]);
+        s.material = bloomMaskBlackMaterial;
+      });
+    }
+    renderer.setRenderTarget(bloomMaskRT);
+    renderer.render(scene, camera);
+    brightSourceTexture = bloomMaskRT.texture;
+    swapped.forEach(([o, mat]) => { o.material = mat; });
+  }
+
+  bloomBrightMaterial.uniforms.tDiffuse.value = brightSourceTexture;
+  bloomBrightMaterial.uniforms.threshold.value = BLOOM.threshold;
+  bloomQuad.material = bloomBrightMaterial;
+  renderer.setRenderTarget(bloomBrightRT);
+  renderer.render(bloomQuadScene, camera);
+
+  const texelX = 1 / bloomBrightRT.width, texelY = 1 / bloomBrightRT.height;
+  bloomQuad.material = bloomBlurMaterial;
+
+  bloomBlurMaterial.uniforms.tDiffuse.value = bloomBrightRT.texture;
+  bloomBlurMaterial.uniforms.direction.value.set(texelX * BLOOM.radius, 0);
+  renderer.setRenderTarget(bloomBlurRT_A);
+  renderer.render(bloomQuadScene, camera);
+
+  bloomBlurMaterial.uniforms.tDiffuse.value = bloomBlurRT_A.texture;
+  bloomBlurMaterial.uniforms.direction.value.set(0, texelY * BLOOM.radius);
+  renderer.setRenderTarget(bloomBlurRT_B);
+  renderer.render(bloomQuadScene, camera);
+
+  bloomCompositeMaterial.uniforms.tScene.value = bloomSceneRT.texture;
+  bloomCompositeMaterial.uniforms.tBloom.value = bloomBlurRT_B.texture;
+  bloomCompositeMaterial.uniforms.strength.value = BLOOM.strength;
+  bloomQuad.material = bloomCompositeMaterial;
+  renderer.setRenderTarget(null);
+  renderer.render(bloomQuadScene, camera);
+}
+
+// ── Preset apply (from preset-apply.js, verbatim) — shallow-merges a
+// preset's SHELL/BLOOM (and MODEL/MODEL_GLOW/CONFIG/auraAnchor if the host
+// page has them, which this one doesn't besides SHELL/BLOOM/auraAnchor)
+// into the live config objects of the same name. Safe to call with a
+// partial preset — missing pieces are just skipped, not errors.
+function applyPreset(preset) {
+  if (!preset) return;
+  const flatTargets = {
+    SHELL: typeof SHELL !== 'undefined' ? SHELL : null,
+    MODEL: typeof MODEL !== 'undefined' ? MODEL : null,
+    MODEL_GLOW: typeof MODEL_GLOW !== 'undefined' ? MODEL_GLOW : null,
+    BLOOM: typeof BLOOM !== 'undefined' ? BLOOM : null
+  };
+  Object.keys(flatTargets).forEach(key => {
+    if (flatTargets[key] && preset[key]) Object.assign(flatTargets[key], preset[key]);
+  });
+  if (typeof CONFIG !== 'undefined' && preset.CONFIG) {
+    Object.keys(preset.CONFIG).forEach(section => {
+      const incoming = preset.CONFIG[section];
+      if (incoming && typeof incoming === 'object' && CONFIG[section] && typeof CONFIG[section] === 'object') {
+        Object.assign(CONFIG[section], incoming);
+      } else if (incoming !== undefined && typeof incoming !== 'object') {
+        CONFIG[section] = incoming;
+      }
+    });
+  }
+  // auraAnchor is a live THREE.Object3D transform, not a plain data object —
+  // apply its fields directly instead of Object.assign. Never actually
+  // triggers here: none of CORE_AURA_LEVEL_PRESETS below carry an auraAnchor
+  // key, since that field is the standalone Aura Editor project's own debug-
+  // anchor position and isn't meaningful pointed at this app's spinGroup.
+  if (typeof auraAnchor !== 'undefined' && preset.auraAnchor) {
+    if (preset.auraAnchor.position) {
+      auraAnchor.position.set(preset.auraAnchor.position.x, preset.auraAnchor.position.y, preset.auraAnchor.position.z);
+    }
+    if (preset.auraAnchor.rotationY !== undefined) {
+      auraAnchor.rotation.y = preset.auraAnchor.rotationY;
+    }
   }
 }
 
+// ── Level-driven presets (see AURA-LEVELS-INSTALL.md Step 4) — one block
+// per character level (2-5), same trigger as the hair level colors
+// (getCardioLevel()) — no aura at level 1, mirroring the hair system having
+// no badge at level 1. Levels 2-5 only differ in SHELL.color/colorEdge/
+// smokeColor; every other SHELL field and all of BLOOM is identical across
+// them (per the install doc, these are the exact current tuned values —
+// pulled from "layers new/presets/Core Aura - Level N.json", SHELL/BLOOM
+// keys only).
+const CORE_AURA_LEVEL_PRESETS = {
+  1: { SHELL: { enabled: false }, BLOOM: { enabled: false } },
+  2: {
+    SHELL: {
+      enabled: true, pushAmount: 0.0075,
+      color: '#FFF3B0', colorEdge: '#ffd23f', smokeColor: '#B3E5FC',
+      opacity: 1, cloudAmp: 0.05, cloudFreq: 7, cloudSpeed: 0.45,
+      topBias: 1.75, bottomBias: 0.5092, flowDirection: 'vertical',
+      flowSpeed: 0, flameSharpness: 5, riseFadeAmp: 0.75,
+      driftAmp: 0, smokeAmount: 1
+    },
+    BLOOM: { enabled: true, threshold: 0.25, strength: 0.75, radius: 1.5, resolutionScale: 0.5, source: 'aura' }
+  },
+  3: {
+    SHELL: {
+      enabled: true, pushAmount: 0.0075,
+      color: '#c2003a', colorEdge: '#dc143c', smokeColor: '#ff6d38',
+      opacity: 1, cloudAmp: 0.05, cloudFreq: 7, cloudSpeed: 0.45,
+      topBias: 1.75, bottomBias: 0.5092, flowDirection: 'vertical',
+      flowSpeed: 0, flameSharpness: 5, riseFadeAmp: 0.75,
+      driftAmp: 0, smokeAmount: 1
+    },
+    BLOOM: { enabled: true, threshold: 0.25, strength: 0.75, radius: 1.5, resolutionScale: 0.5, source: 'aura' }
+  },
+  4: {
+    SHELL: {
+      enabled: true, pushAmount: 0.0075,
+      color: '#00bfff', colorEdge: '#0047ab', smokeColor: '#f0ffff',
+      opacity: 1, cloudAmp: 0.05, cloudFreq: 7, cloudSpeed: 0.45,
+      topBias: 1.75, bottomBias: 0.5092, flowDirection: 'vertical',
+      flowSpeed: 0, flameSharpness: 5, riseFadeAmp: 0.75,
+      driftAmp: 0, smokeAmount: 1
+    },
+    BLOOM: { enabled: true, threshold: 0.25, strength: 0.75, radius: 1.5, resolutionScale: 0.5, source: 'aura' }
+  },
+  5: {
+    SHELL: {
+      enabled: true, pushAmount: 0.0075,
+      color: '#6a0dad', colorEdge: '#8b008b', smokeColor: '#2e0057',
+      opacity: 1, cloudAmp: 0.05, cloudFreq: 7, cloudSpeed: 0.45,
+      topBias: 1.75, bottomBias: 0.5092, flowDirection: 'vertical',
+      flowSpeed: 0, flameSharpness: 5, riseFadeAmp: 0.75,
+      driftAmp: 0, smokeAmount: 1
+    },
+    BLOOM: { enabled: true, threshold: 0.25, strength: 0.75, radius: 1.5, resolutionScale: 0.5, source: 'aura' }
+  }
+};
+let coreAuraLastLevel = null;
+
 // Called from updateModel() whenever the character's overall level might have
 // changed — re-applies the matching preset only when the level actually changes.
-async function updateCoreAuraForLevel(level) {
-  SHELL.enabled = level >= 2;
+function updateCoreAuraForLevel(level) {
   if (level === coreAuraLastLevel) return;
   coreAuraLastLevel = level;
-  if (level < 2) return;
-  const preset = await loadCoreAuraPreset(level);
-  if (preset && preset.SHELL) Object.assign(SHELL, preset.SHELL);
+  applyPreset(CORE_AURA_LEVEL_PRESETS[level] || CORE_AURA_LEVEL_PRESETS[1]);
 }
 
 // ── Spin / fidget-spinner momentum ───────────────────────────
@@ -9809,11 +10562,178 @@ const _ce = renderer.domElement;
 _ce.addEventListener('touchstart', e => _spinStart(e.touches[0].clientX), { passive: true });
 _ce.addEventListener('touchmove',  e => _spinMove(e.touches[0].clientX),  { passive: true });
 _ce.addEventListener('touchend',   () => _spinEnd());
-_ce.addEventListener('mousedown',  e => _spinStart(e.clientX));
+_ce.addEventListener('mousedown',  e => { if (e.button === 0) _spinStart(e.clientX); });
 window.addEventListener('mousemove', e => { if (spinTouching) _spinMove(e.clientX); });
 window.addEventListener('mouseup',   () => { if (spinTouching) _spinEnd(); });
 
-scene.add(new THREE.AmbientLight(0xffffff, 0.4));
+// TEMP TEST: right-click-drag pans the whole model (body + hair together)
+// up/down — handy for lining up a tall/short model in the fixed camera frame
+// while calibrating. Moves spinGroup, so it's independent of the hair-fit math.
+const PAN_SENSITIVITY = TARGET_HEIGHT; // ~1 full-screen drag ≈ 1 model height
+let panTouching = false;
+let _lastPanY = 0;
+function _panStart(y) { panTouching = true; _lastPanY = y; }
+function _panMove(y) {
+  if (!panTouching) return;
+  const dy = y - _lastPanY;
+  spinGroup.position.y -= (dy / window.innerHeight) * PAN_SENSITIVITY;
+  _lastPanY = y;
+}
+function _panEnd() { panTouching = false; }
+
+_ce.addEventListener('contextmenu', e => e.preventDefault());
+_ce.addEventListener('mousedown', e => { if (e.button === 2) _panStart(e.clientY); });
+window.addEventListener('mousemove', e => { if (panTouching) _panMove(e.clientY); });
+window.addEventListener('mouseup',   () => { if (panTouching) _panEnd(); });
+
+// TEMP TEST: tap/click a mesh (without dragging) to identify which traversal
+// index + raw GLB name it is — cross-references the rainbow debug coloring
+// from setupModelMeshes so unlabeled parts can be mapped to body regions.
+let identifiableMeshes = [];
+const TAP_MOVE_THRESHOLD = 6; // px — below this, treat as a tap, not a drag
+let _tapActive = false;
+let _tapStartX = 0, _tapStartY = 0, _tapMoved = false;
+function _tapDown(x, y) { _tapActive = true; _tapStartX = x; _tapStartY = y; _tapMoved = false; }
+function _tapTrack(x, y) {
+  if (!_tapActive) return;
+  if (Math.abs(x - _tapStartX) > TAP_MOVE_THRESHOLD || Math.abs(y - _tapStartY) > TAP_MOVE_THRESHOLD) _tapMoved = true;
+}
+function _tapUp(x, y) {
+  if (!_tapActive) return;
+  _tapActive = false;
+  if (!_tapMoved) identifyMeshAt(x, y);
+}
+
+const _identifyRaycaster = new THREE.Raycaster();
+function identifyMeshAt(clientX, clientY) {
+  // TEMP TEST: the identify/rename readout is a dev tool for mapping mesh
+  // names to body parts while swapping models — it must stay silent outside
+  // the Model Testing screen so a normal tap on the profile character
+  // doesn't pop up a debug panel.
+  if (!document.getElementById('model-testing-screen')?.classList.contains('open')) return;
+  const rect = _ce.getBoundingClientRect();
+  const ndc = new THREE.Vector2(
+    ((clientX - rect.left) / rect.width) * 2 - 1,
+    -((clientY - rect.top) / rect.height) * 2 + 1
+  );
+  _identifyRaycaster.setFromCamera(ndc, camera);
+  const hits = _identifyRaycaster.intersectObjects(identifiableMeshes, false);
+  const mesh = hits.length ? hits[0].object : null;
+  showMeshIdReadout(mesh);
+  // Tapping a body part while Model Testing is open also doubles as "add a
+  // set to this muscle" (see addTestSetForMesh).
+  if (mesh) addTestSetForMesh(mesh);
+}
+// TEMP TEST: mesh-rename scratchpad for the tap-to-identify panel — lets you
+// type the real muscle name for each raw GLB mesh (e.g. "tripo_part_25")
+// right on the model instead of writing it down separately, keyed by the
+// mesh's own name (stable across reloads of the same file) rather than its
+// traversal index. "Copy All" puts the whole { rawName: muscleName } map on
+// the clipboard as JSON to paste back for the actual rename pass.
+function loadMeshRenames() {
+  try { return JSON.parse(localStorage.getItem('trainhard_mesh_renames') || '{}'); } catch { return {}; }
+}
+function saveMeshRenames(map) {
+  localStorage.setItem('trainhard_mesh_renames', JSON.stringify(map));
+}
+let meshRenames = loadMeshRenames();
+
+function meshRenameControlsHtml() {
+  const renamedCount = Object.keys(meshRenames).length;
+  const total = identifiableMeshes.length;
+  return `<div style="margin-top:8px;display:flex;gap:6px;">`
+    + `<button id="mesh-rename-copy-btn" style="flex:1;padding:4px 6px;font:11px monospace;cursor:pointer;">Copy All (${renamedCount}/${total})</button>`
+    + `<button id="mesh-rename-clear-btn" style="padding:4px 6px;font:11px monospace;cursor:pointer;">Clear</button>`
+    + `</div>`;
+}
+// navigator.clipboard needs a secure context (https/localhost) — a plain
+// file:// page (how this gets tested, opened straight from disk) doesn't
+// qualify, so fall back to the old execCommand('copy') textarea trick there.
+function copyTextToClipboard(text) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    return navigator.clipboard.writeText(text);
+  }
+  return new Promise((resolve, reject) => {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;top:-9999px;left:-9999px;';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    try {
+      document.execCommand('copy') ? resolve() : reject(new Error('execCommand copy failed'));
+    } catch (err) {
+      reject(err);
+    } finally {
+      document.body.removeChild(ta);
+    }
+  });
+}
+function wireMeshRenameControls(currentMesh) {
+  document.getElementById('mesh-rename-copy-btn').addEventListener('click', (e) => {
+    copyTextToClipboard(JSON.stringify(meshRenames, null, 2)).then(() => {
+      e.target.textContent = 'Copied!';
+      setTimeout(() => showMeshIdReadout(currentMesh), 1000);
+    }).catch(() => {
+      e.target.textContent = 'Copy failed';
+      setTimeout(() => showMeshIdReadout(currentMesh), 1200);
+    });
+  });
+  document.getElementById('mesh-rename-clear-btn').addEventListener('click', () => {
+    if (!confirm('Clear all saved mesh renames?')) return;
+    meshRenames = {};
+    saveMeshRenames(meshRenames);
+    showMeshIdReadout(currentMesh);
+  });
+}
+function showMeshIdReadout(mesh) {
+  let el = document.getElementById('mesh-id-readout');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'mesh-id-readout';
+    el.style.cssText = 'position:fixed;bottom:12px;right:12px;z-index:99999;'
+      + 'background:rgba(20,20,30,0.92);color:#eee;font:12px/1.5 monospace;'
+      + 'padding:10px 12px;border-radius:8px;max-width:260px;box-shadow:0 4px 16px rgba(0,0,0,0.4);';
+    document.body.appendChild(el);
+  }
+  if (!mesh) {
+    el.innerHTML = `<div style="font-weight:bold;margin-bottom:4px;">Mesh Identify (TEST)</div>Tap a mesh on the model to identify it.`
+      + meshRenameControlsHtml();
+    wireMeshRenameControls(null);
+    return;
+  }
+  const idx = identifiableMeshes.indexOf(mesh);
+  const mat = Array.isArray(mesh.material) ? mesh.material[0] : mesh.material;
+  const hex = mat && mat.color ? '#' + mat.color.getHexString() : '(n/a)';
+  const existing = meshRenames[mesh.name] || '';
+  el.innerHTML = `<div style="font-weight:bold;margin-bottom:4px;">Mesh Identify (TEST)</div>`
+    + `Index: ${idx}<br>Name: ${mesh.name || '(unnamed)'}<br>Color: <span style="color:${hex}">${hex}</span>`
+    + `<div style="margin-top:6px;"><input id="mesh-rename-input" type="text" placeholder="Real muscle name…" `
+    + `value="${existing.replace(/"/g, '&quot;')}" style="width:100%;box-sizing:border-box;padding:4px 6px;`
+    + `font:12px monospace;border-radius:4px;border:1px solid #555;background:#111;color:#eee;"></div>`
+    + `<button id="mesh-rename-save-btn" style="margin-top:6px;padding:4px 8px;font:11px monospace;cursor:pointer;">Save Name</button>`
+    + meshRenameControlsHtml();
+  document.getElementById('mesh-rename-save-btn').addEventListener('click', () => {
+    const val = document.getElementById('mesh-rename-input').value.trim();
+    if (val) meshRenames[mesh.name] = val; else delete meshRenames[mesh.name];
+    saveMeshRenames(meshRenames);
+    showMeshIdReadout(mesh);
+  });
+  document.getElementById('mesh-rename-input').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') document.getElementById('mesh-rename-save-btn').click();
+  });
+  wireMeshRenameControls(mesh);
+}
+
+_ce.addEventListener('mousedown', e => { if (e.button === 0) _tapDown(e.clientX, e.clientY); });
+window.addEventListener('mousemove', e => _tapTrack(e.clientX, e.clientY));
+window.addEventListener('mouseup', e => { if (e.button === 0) _tapUp(e.clientX, e.clientY); });
+_ce.addEventListener('touchstart', e => { const t = e.touches[0]; if (t) _tapDown(t.clientX, t.clientY); }, { passive: true });
+_ce.addEventListener('touchmove', e => { const t = e.touches[0]; if (t) _tapTrack(t.clientX, t.clientY); }, { passive: true });
+_ce.addEventListener('touchend', e => { const t = e.changedTouches[0]; if (t) _tapUp(t.clientX, t.clientY); });
+
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.4); // TEMP TEST: named for the lighting panel
+scene.add(ambientLight);
 const keyLight = new THREE.DirectionalLight(0xffffff, 2.2);
 keyLight.position.set(1.5, 3, 2);
 scene.add(keyLight);
@@ -9829,22 +10749,1147 @@ scene.add(rimLight);
 // ─────────────────────────────────────────────────────────────
 
 // ── Add new models here ──────────────────────────────────────
+// TEMP TEST: the 4 selectable body models. All four share the same mesh
+// naming/aura setup, so loading is fully generic (prepModelScene() below) —
+// a model needs zero code beyond one entry here + its .glb dropped in place.
+// hasHair marks the two models that get the swappable hair-style picker
+// (see HAIR_MESH_OPTIONS_BY_MODEL below); the generic silhouettes don't
+// offer that. available: false means no .glb has been dropped in yet —
+// switchModelVariant() shows a "Coming Soon" note instead of trying to fetch
+// one. Flip it to true (and fill in `file`) once the real model is in place.
 const MODELS = [
-  { name: 'Standing', file: 'assets/models/standing.glb' },
+  { id: 'generic-male',   name: 'Generic Male',   file: 'assets/models/Generic Male/Meshy_AI_Muscle_Anatomy_Figure_0815191645_generate.glb_Clone1_Clone1-compressed.glb', hasHair: false, available: true  }, // boot default, only fully available model right now
+  { id: 'generic-female', name: 'Generic Female', file: 'assets/models/Generic Female/Generic Female.glb', hasHair: false, available: true  },
+  { id: 'base-male',      name: 'Custom Male',    file: 'Model Testing/Base Male/base male.glb',           hasHair: true,  available: false }, // TEMP TEST — coming soon
+  { id: 'base-female',    name: 'Custom Female',  file: 'Model Testing/Base Female/Base+Female.glb',       hasHair: true,  available: false }, // TEMP TEST — coming soon
 ];
 // ─────────────────────────────────────────────────────────────
 
+// TEMP TEST: per-(body+hair)-combo transforms locked in via the calibration
+// panel. Keyed by "bodyFile|hairFile" — a fit is body-specific (proportions
+// differ per model), so it must never apply across a different body. A combo
+// with no entry here falls back to the auto-fit bounding-box heuristic.
+const HAIR_STYLE_PRESETS = {
+  'assets/models/standing.glb|Model Testing/Base Male/Basic Male Hair 1.glb': { x: 0.02, y: 0.75, z: 0, scale: 0.19, rotY: 1.47 },
+  'Model Testing/Base Male/test+1.glb|Model Testing/Base Male/test+hair+1.glb': { x: 0, y: 0.835, z: 0, scale: 0.23, rotY: 0 },
+  'Model Testing/Base Male/test+1.glb|Model Testing/Base Male/test+hair+2.glb': { x: 0.005, y: 0.835, z: 0.0175, scale: 0.18, rotY: 0 },
+  'Model Testing/Base Male/Train+Hard+Base+Male.glb|Model Testing/Base Male/Hair/hair+1.glb': { x: 0, y: 0.92, z: 0.025, scale: 0.13, rotY: 0 },
+  'Model Testing/Base Male/Train+Hard+Base+Male.glb|Model Testing/Base Male/Hair/hair+2.glb': { x: -0.0002, y: 0.885, z: -0.025, scale: 0.3, rotX: 0.12, rotY: 0, rotZ: 0 },
+  'Model Testing/Base Male/Train+Hard+Base+Male.glb|Model Testing/Base Male/Hair/Hair+3.glb': { x: 0, y: 0.845, z: 0.0075, scale: 0.175, rotX: 0.08, rotY: 0, rotZ: 0 },
+};
+
+// TEMP TEST: on a non-classic-layout model, this is the mesh index treated as
+// "hair" — identified for test+1.glb (22 meshes) as traversal index 18
+// (node tripo_part_6), the single topmost mesh by world-space Y bounds.
+// Double-check with the tap-to-identify tool if this looks wrong for a
+// different model, and update this number.
+const NON_CLASSIC_HAIR_MESH_INDEX = 18;
+
+// TEMP TEST: runtime-swappable hair options, picked from the right-side
+// panel — keyed by MODELS[].id since a hairstyle sized/shaped for one head
+// won't fit another, and only base-male/base-female offer hair-swapping at
+// all (see hasHair on MODELS above). Add a new entry to a model's list once
+// a new hair GLB is ready — no other code changes needed unless it needs a
+// locked-in preset (add that to HAIR_STYLE_PRESETS, keyed "bodyFile|hairFile").
+// available: false means no .glb for that slot yet — selectHairOption()
+// shows a "Coming Soon" note instead of trying to fetch one.
+const HAIR_MESH_OPTIONS_BY_MODEL = {
+  'base-male': [
+    { id: 'none',  label: 'No Edit', file: null },
+    { id: 'hair1', label: 'Hair 1',  file: 'Model Testing/Base Male/Hair/hair+1.glb' },
+    { id: 'hair2', label: 'Hair 2',  file: 'Model Testing/Base Male/Hair/hair+2.glb' },
+    { id: 'hair3', label: 'Hair 3',  file: 'Model Testing/Base Male/Hair/Hair+3.glb' },
+    { id: 'hair4', label: 'Hair 4',  file: 'Model Testing/Base Male/Hair/hair+4.glb', available: false }, // TEMP TEST — coming soon
+    { id: 'hair5', label: 'Hair 5',  file: 'Model Testing/Base Male/Hair/hair+5.glb', available: false }, // TEMP TEST — coming soon
+  ],
+  // Base Female hairstyles live under Model Testing/Base Female/Hair/ once
+  // added — none yet, so this stays just "No Edit" (all hairstyles for now
+  // live in Base Male's folder only).
+  'base-female': [
+    { id: 'none', label: 'No Edit', file: null },
+  ],
+};
+let activeHairOptionId = 'none'; // TEMP TEST: models start bald — hair is opt-in via the picker
+// The hairstyle list for whichever body model is currently active.
+function getHairOptionsForActiveModel() {
+  return HAIR_MESH_OPTIONS_BY_MODEL[MODELS[activeIdx]?.id] || [];
+}
+
+// TEMP TEST: some hair GLBs bundle extra non-hair meshes with no "hair"-named
+// node to filter by (see hasNamedHair below) — this maps those files to the
+// specific 0-indexed traversal position that's the real hair, hiding the rest.
+// (Empty for now — hair+1/2/3.glb are each a single clean mesh already.)
+const HAIR_FILE_KEEP_INDEX = {};
+
+// TEMP TEST: shared stencil+outline-shell setup, used for both the base body
+// meshes and whatever hair mesh gets swapped in.
+function stencilAndShell(obj) {
+  if (!obj.geometry || !obj.geometry.attributes.position) return;
+  obj.material.stencilWrite = true;
+  obj.material.stencilRef = 1;
+  obj.material.stencilFunc = THREE.AlwaysStencilFunc;
+  obj.material.stencilZPass = THREE.ReplaceStencilOp;
+  obj.material.needsUpdate = true;
+  if (!obj.geometry.attributes.normal) obj.geometry.computeVertexNormals();
+
+  // Per-mesh scale correction (see auraShellMaterials above) — obj.matrixWorld
+  // must already be current here (callers force an updateMatrixWorld(true)
+  // right before batching stencilAndShell calls).
+  obj.matrixWorld.decompose(_densPosV, _densQuatQ, _densScaleV);
+  const meshScale = (_densScaleV.x + _densScaleV.y + _densScaleV.z) / 3;
+  const densityScale = meshScale > 0 ? THREE.MathUtils.clamp(coreAuraRootScale / meshScale, 0.05, 20) : 1;
+
+  const meshMaterial = shellMaterial.clone();
+  meshMaterial.skinning = true;
+  meshMaterial.uniforms.densityScale.value = densityScale;
+  auraShellMaterials.push(meshMaterial);
+
+  let shell;
+  if (obj.isSkinnedMesh) {
+    shell = new THREE.SkinnedMesh(obj.geometry, meshMaterial);
+    shell.bind(obj.skeleton, obj.bindMatrix);
+  } else {
+    shell = new THREE.Mesh(obj.geometry, meshMaterial);
+  }
+  shell.visible = SHELL.enabled;
+  obj.add(shell);
+  shellMeshes.push(shell);
+}
+
+// TEMP TEST: detaches whatever hair object is currently attached (if any),
+// including its outline shells, so a fresh option can be swapped in cleanly.
+function removeCurrentHair() {
+  if (!hairCalObj) return;
+  hairCalObj.traverse(o => {
+    o.children.forEach(c => {
+      const idx = shellMeshes.indexOf(c);
+      if (idx !== -1) {
+        shellMeshes.splice(idx, 1);
+        const matIdx = auraShellMaterials.indexOf(c.material);
+        if (matIdx !== -1) auraShellMaterials.splice(matIdx, 1);
+      }
+    });
+  });
+  if (calMdl) calMdl.remove(hairCalObj);
+  hairCalObj = null;
+}
+
+// TEMP TEST: fetches+fits+attaches a hair GLB onto the active body, or (with
+// hairFile = null) just detaches whatever's currently attached. Reusable for
+// both the initial load and the right-side hair picker.
+//
+// Guarded against overlapping calls (e.g. the initial default-hair auto-load
+// racing a user's picker click): each call gets a token, and a stale call
+// that resolves after being superseded discards its result instead of
+// clobbering whatever the newer call already applied.
+let hairLoadToken = 0;
+async function applyHairOption(hairFile) {
+  const myToken = ++hairLoadToken;
+  removeCurrentHair();
+  if (!hairFile || !calMdl || !identifiableMeshes.length) { currentHairFit = null; refreshModelTestingFields(); return; }
+
+  const isClassicForHair = identifiableMeshes.length === 20;
+  const hairSlotBox = new THREE.Box3();
+  if (isClassicForHair) {
+    if (identifiableMeshes[2]) hairSlotBox.union(new THREE.Box3().setFromObject(identifiableMeshes[2]));
+    if (identifiableMeshes[6]) hairSlotBox.union(new THREE.Box3().setFromObject(identifiableMeshes[6]));
+  } else {
+    // Prefer a real named "Head" mesh (properly-labeled models) over the
+    // blind topmost-mesh-index guess (unlabeled models like test+1.glb).
+    const headMesh = identifiableMeshes.find(m => /head/i.test(m.name));
+    if (headMesh) {
+      hairSlotBox.union(new THREE.Box3().setFromObject(headMesh));
+    } else if (identifiableMeshes[NON_CLASSIC_HAIR_MESH_INDEX]) {
+      hairSlotBox.union(new THREE.Box3().setFromObject(identifiableMeshes[NON_CLASSIC_HAIR_MESH_INDEX]));
+    }
+  }
+  if (hairSlotBox.isEmpty()) {
+    // No identifiable hair region on this body (e.g. a single unified mesh
+    // with no separate parts) — approximate one from the top slice of the
+    // whole model so hair still has a starting anchor; the calibration
+    // panel's sliders are the real way to dial it in from there.
+    const wholeBox = new THREE.Box3().setFromObject(calMdl);
+    const sliceHeight = (wholeBox.max.y - wholeBox.min.y) * 0.12;
+    hairSlotBox.union(new THREE.Box3(
+      new THREE.Vector3(wholeBox.min.x * 0.4, wholeBox.max.y - sliceHeight, wholeBox.min.z * 0.4),
+      new THREE.Vector3(wholeBox.max.x * 0.4, wholeBox.max.y, wholeBox.max.z * 0.4)
+    ));
+  }
+
+  try {
+    const buf = await (await fetch(encodeURI(hairFile))).arrayBuffer();
+    const hairGltf = await new Promise((resolve, reject) => new GLTFLoader().parse(buf, '', resolve, reject));
+    if (myToken !== hairLoadToken) return; // superseded by a newer selection — discard
+    const hairObj = hairGltf.scene;
+    // Some hair GLBs bundle extra parts alongside the actual hair (a node
+    // literally named "hair") — size/fit off just that part if present.
+    const hairPart = hairObj.getObjectByName('hair') || hairObj;
+    const preset = HAIR_STYLE_PRESETS[MODELS[activeIdx].file + '|' + hairFile];
+    let fit;
+    if (preset) {
+      fit = { rotX: 0, rotZ: 0, ...preset }; // older presets predate rotX/rotZ — default them in
+    } else {
+      const rawHairBox = new THREE.Box3().setFromObject(hairPart);
+      const rawHairSize = rawHairBox.getSize(new THREE.Vector3());
+      const targetSize = hairSlotBox.getSize(new THREE.Vector3());
+      const s = rawHairSize.y > 0 ? targetSize.y / rawHairSize.y : 1;
+      hairObj.scale.setScalar(s);
+      const scaledCenter = new THREE.Box3().setFromObject(hairPart).getCenter(new THREE.Vector3());
+      const targetCenterLocal = calMdl.worldToLocal(hairSlotBox.getCenter(new THREE.Vector3()));
+      const pos = targetCenterLocal.clone().sub(scaledCenter);
+      fit = { x: pos.x, y: pos.y, z: pos.z, scale: s, rotX: 0, rotY: 0, rotZ: 0 };
+    }
+    hairObj.position.set(fit.x, fit.y, fit.z);
+    hairObj.scale.setScalar(fit.scale);
+    hairObj.rotation.set(fit.rotX, fit.rotY, fit.rotZ);
+
+    calMdl.add(hairObj);
+    hairObj.updateMatrixWorld(true); // stencilAndShell's density correction needs this current
+    coreAuraRootScale = calMdlBaseScale;
+    const hairMeshes = [];
+    hairObj.traverse(o => { if (o.isMesh) hairMeshes.push(o); });
+    const hasNamedHair = hairMeshes.some(m => m.name === 'hair');
+    const keepIndex = HAIR_FILE_KEEP_INDEX[hairFile];
+    hairMeshes.forEach((m, i) => {
+      const keep = hasNamedHair ? (m.name === 'hair')
+        : (keepIndex !== undefined ? i === keepIndex : true);
+      if (!keep) { m.visible = false; return; }
+      stencilAndShell(m);
+    });
+
+    hairCalObj = hairObj;
+    Object.assign(hairCal, fit);
+    currentHairFit = fit;
+    applyTransparency(); // carry over the current transparency amount onto freshly-loaded hair
+    refreshModelTestingFields();
+  } catch (e) {
+    if (myToken !== hairLoadToken) return; // superseded — don't show a stale error either
+    console.error('Hair option failed to load:', e);
+    currentHairFit = null;
+    refreshModelTestingFields();
+  }
+}
+
+// TEMP TEST: whichever hair is currently actually visible — the swapped-in
+// test hair if one's attached, otherwise the base body's own native hair
+// mesh(es) — so the color wheel always targets what's on screen.
+function getActiveHairTargets() {
+  if (hairCalObj) {
+    const list = [];
+    hairCalObj.traverse(o => { if (o.isMesh && o.visible) list.push(o); });
+    return list;
+  }
+  if (identifiableMeshes.length === 20) {
+    return [...(meshMap['Hair'] || []), ...(meshMap['HairStatic'] || [])];
+  }
+  const m = identifiableMeshes[NON_CLASSIC_HAIR_MESH_INDEX];
+  return m ? [m] : [];
+}
+function applyHairColor(hex) {
+  getActiveHairTargets().forEach(obj => {
+    if (!obj.material) return;
+    const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
+    mats.forEach(m => { if (m.color) { m.map = null; m.color.set(hex); } });
+  });
+}
+function applyBodyColor(hex) {
+  identifiableMeshes.forEach(obj => {
+    if (!obj.material) return;
+    const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
+    mats.forEach(m => { if (m.color) { m.map = null; m.color.set(hex); } });
+  });
+}
+function hsvToHex(h, s, v) {
+  const c = v * s;
+  const x = c * (1 - Math.abs((h / 60) % 2 - 1));
+  const m = v - c;
+  let r = 0, g = 0, b = 0;
+  if (h < 60)       { r = c; g = x; b = 0; }
+  else if (h < 120) { r = x; g = c; b = 0; }
+  else if (h < 180) { r = 0; g = c; b = x; }
+  else if (h < 240) { r = 0; g = x; b = c; }
+  else if (h < 300) { r = x; g = 0; b = c; }
+  else              { r = c; g = 0; b = x; }
+  const toHex = (n) => Math.round((n + m) * 255).toString(16).padStart(2, '0');
+  return '#' + toHex(r) + toHex(g) + toHex(b);
+}
+
+function selectHairOption(id) {
+  const opt = getHairOptionsForActiveModel().find(o => o.id === id);
+  if (!opt) return;
+  activeHairOptionId = id;
+  refreshHairPickerButtons();
+  if (opt.available === false) {
+    removeCurrentHair();
+    currentHairFit = null;
+    refreshModelTestingFields();
+    setHairPickerStatus(opt.label + ' — Coming Soon');
+    return;
+  }
+  setHairPickerStatus('');
+  applyHairOption(opt.file);
+}
+function setHairPickerStatus(text) {
+  const el = document.getElementById('mts-hair-status');
+  if (el) el.textContent = text;
+}
+function refreshHairPickerButtons() {
+  document.querySelectorAll('#mts-hair-picker-list button').forEach(btn => {
+    btn.classList.toggle('mts-btn-active', btn.dataset.hairId === activeHairOptionId);
+  });
+}
+
+// TEMP TEST: rebuilds the Hair Style picker list for whichever body model is
+// currently active, and hides the whole section for models with no real
+// hairstyle files yet (hasHair: false, or hasHair: true but every option so
+// far is just "No Edit" — nothing actually swappable).
+function rebuildHairStylePicker() {
+  const screen = document.getElementById('model-testing-screen');
+  if (!screen) return;
+  const section = screen.querySelector('#mts-hair-style-section');
+  const cfg = MODELS[activeIdx];
+  const options = getHairOptionsForActiveModel();
+  const show = !!(cfg && cfg.hasHair && options.some(o => o.file));
+  if (section) section.style.display = show ? '' : 'none';
+  setHairPickerStatus('');
+  const list = screen.querySelector('#mts-hair-picker-list');
+  if (!list) return;
+  list.innerHTML = '';
+  options.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'mts-btn';
+    btn.textContent = opt.label;
+    btn.dataset.hairId = opt.id;
+    btn.addEventListener('click', () => selectHairOption(opt.id));
+    list.appendChild(btn);
+  });
+  refreshHairPickerButtons();
+}
+
+// TEMP TEST: small status line under the Body Model picker — "Loading…"
+// while a variant's .glb is being fetched, or a "not added yet" note if a
+// model folder doesn't have its .glb dropped in yet.
+function setModelPickerStatus(text) {
+  const el = document.getElementById('mts-model-status');
+  if (el) el.textContent = text;
+}
+function refreshBodyModelPicker() {
+  document.querySelectorAll('#mts-model-picker-list button').forEach(btn => {
+    btn.classList.toggle('mts-btn-active', Number(btn.dataset.modelIdx) === activeIdx);
+  });
+  document.querySelectorAll('#avatar-model-options button').forEach(btn => {
+    btn.classList.toggle('selected', Number(btn.dataset.modelIdx) === activeIdx);
+  });
+  // Only refresh the mini preview if its render loop is actually running
+  // (i.e. the Avatar overlay is open) — avoids setting up a renderer/canvas
+  // that isn't visible yet, e.g. during the very first boot-time model load.
+  if (avatarPreviewRafId) refreshAvatarPreview();
+}
+
+// Persists the user's chosen body model across app opens (device-local,
+// same convention as the other Avatar-tab preferences like hair option/UI
+// theme/coach — none of those are cloud-synced state either).
+function loadSelectedModelId() {
+  return localStorage.getItem('trainhard_model_id');
+}
+function saveSelectedModelId(id) {
+  localStorage.setItem('trainhard_model_id', id);
+}
+// Resolves the saved model choice to a MODELS[] index to boot into — falls
+// back to 0 (Generic Male, always available) if nothing saved, the saved id
+// no longer exists, or that model became unavailable since it was chosen
+// (e.g. its .glb was pulled during Model Testing iteration).
+function resolveBootModelIdx() {
+  const savedId = loadSelectedModelId();
+  if (!savedId) return 0;
+  const idx = MODELS.findIndex(m => m.id === savedId);
+  return (idx !== -1 && MODELS[idx].available) ? idx : 0;
+}
+function buildAvatarModelPicker() {
+  const wrap = document.getElementById('avatar-model-options');
+  wrap.innerHTML = '';
+  MODELS.forEach((cfg, idx) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'avatar-inspiration-btn';
+    btn.textContent = cfg.available ? cfg.name : (cfg.name + ' — Coming Soon');
+    btn.dataset.modelIdx = idx;
+    if (!cfg.available) btn.disabled = true;
+    btn.addEventListener('click', async () => {
+      if (btn.disabled || idx === activeIdx) return;
+      // Immediate feedback — switchModelVariant can take a moment on a model
+      // that isn't cached yet this session (these .glb files run 30MB+), and
+      // without this the button just sits there looking unresponsive.
+      btn.textContent = 'Loading…';
+      await switchModelVariant(idx);
+      saveSelectedModelId(cfg.id);
+      buildAvatarModelPicker();
+    });
+    wrap.appendChild(btn);
+  });
+  refreshBodyModelPicker();
+}
+
 const meshMap = {};
 let activeIdx = 0;
-const modelCache = MODELS.map(() => ({ scene: null, meshMap: {} }));
+const modelCache = MODELS.map(() => ({ scene: null, meshMap: {}, meshes: [], baseScale: 1, baseCenter: null }));
+
+// Small live preview of the currently-selected avatar model, shown at the
+// top of the Avatar menu so picking a model is "see it, then choose" instead
+// of a blind guess. Runs its own tiny renderer/scene entirely apart from the
+// main character's — the main renderer's bloom/Core Aura render-target
+// pipeline is sized to its own canvas, and temporarily resizing it for a
+// small preview would risk breaking that (fragile, already-tuned effect).
+// This is just a plain-lit clone with no post-processing. Object3D.clone()
+// shares .material/.geometry by reference rather than deep-copying them, so
+// the preview's meshes point at the exact same Material instances the main
+// character uses — muscle-level glow colors stay in sync automatically with
+// zero extra work; only the mesh hierarchy itself needs re-cloning when the
+// selected model changes.
+let avatarPreviewRenderer = null;
+let avatarPreviewScene = null;
+let avatarPreviewCamera = null;
+let avatarPreviewGroup = null;
+let avatarPreviewRafId = null;
+
+function ensureAvatarPreviewSetup() {
+  if (avatarPreviewRenderer) return;
+  const canvasEl = document.getElementById('avatar-preview-canvas');
+  // stencil:true is required here — the Core Aura shell/outline effect
+  // (stencilAndShell()) writes the base mesh into the stencil buffer and
+  // only draws the glow shell where that stencil test fails (i.e. past the
+  // silhouette edge). Without a real stencil buffer that test can't work,
+  // so the shell was drawing over the whole model instead of just its edge.
+  avatarPreviewRenderer = new THREE.WebGLRenderer({ canvas: canvasEl, antialias: true, alpha: true, stencil: true });
+  avatarPreviewRenderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  avatarPreviewRenderer.setClearColor(0x000000, 0);
+
+  avatarPreviewScene = new THREE.Scene();
+  avatarPreviewGroup = new THREE.Group();
+  avatarPreviewScene.add(avatarPreviewGroup);
+
+  avatarPreviewScene.add(new THREE.AmbientLight(0xffffff, 0.5));
+  const key = new THREE.DirectionalLight(0xffffff, 2.0);
+  key.position.set(1.5, 3, 2);
+  avatarPreviewScene.add(key);
+  const fill = new THREE.DirectionalLight(0xffffff, 0.6);
+  fill.position.set(-2, 1, -1);
+  avatarPreviewScene.add(fill);
+
+  avatarPreviewCamera = new THREE.PerspectiveCamera(35, 1, 0.01, 100);
+}
+
+function fitAvatarPreviewCamera(obj) {
+  const box = new THREE.Box3().setFromObject(obj);
+  const sphere = box.getBoundingSphere(new THREE.Sphere());
+  const fovRad = THREE.MathUtils.degToRad(avatarPreviewCamera.fov);
+  // Tight fit — just enough distance to contain the bounding sphere, almost
+  // no headroom padding, so the model fills the preview top-to-bottom.
+  const dist = (sphere.radius / Math.sin(fovRad / 2)) * 1.02;
+  const eyeY = sphere.center.y;
+  avatarPreviewCamera.position.set(0, eyeY, dist);
+  avatarPreviewCamera.near = dist / 100;
+  avatarPreviewCamera.far = dist * 10;
+  avatarPreviewCamera.lookAt(0, eyeY, 0);
+  avatarPreviewCamera.updateProjectionMatrix();
+}
+
+function refreshAvatarPreview() {
+  const entry = modelCache[activeIdx];
+  if (!entry || !entry.scene) return;
+  ensureAvatarPreviewSetup();
+  while (avatarPreviewGroup.children.length) avatarPreviewGroup.remove(avatarPreviewGroup.children[0]);
+  const clone = entry.scene.clone();
+  clone.visible = true;
+  avatarPreviewGroup.add(clone);
+  fitAvatarPreviewCamera(clone);
+}
+
+function resizeAvatarPreviewRenderer() {
+  if (!avatarPreviewRenderer) return;
+  const canvasEl = document.getElementById('avatar-preview-canvas');
+  const w = canvasEl.clientWidth, h = canvasEl.clientHeight;
+  if (!w || !h) return;
+  avatarPreviewRenderer.setSize(w, h, false);
+  avatarPreviewCamera.aspect = w / h;
+  avatarPreviewCamera.updateProjectionMatrix();
+}
+
+function startAvatarPreviewLoop() {
+  ensureAvatarPreviewSetup();
+  resizeAvatarPreviewRenderer();
+  refreshAvatarPreview();
+  if (avatarPreviewRafId) return; // already running
+  const tick = () => {
+    avatarPreviewGroup.rotation.y += 0.012;
+    avatarPreviewRenderer.render(avatarPreviewScene, avatarPreviewCamera);
+    avatarPreviewRafId = requestAnimationFrame(tick);
+  };
+  avatarPreviewRafId = requestAnimationFrame(tick);
+}
+function stopAvatarPreviewLoop() {
+  if (avatarPreviewRafId) { cancelAnimationFrame(avatarPreviewRafId); avatarPreviewRafId = null; }
+}
+
+// Must run after activeIdx/modelCache/avatarPreviewRafId are all declared
+// above — buildAvatarModelPicker calls refreshBodyModelPicker(), which reads
+// them (all `let`/`const`, so calling this any earlier hits their temporal
+// dead zone and throws, silently aborting the rest of the boot script before
+// loadModel() ever runs).
+buildAvatarModelPicker();
+
+// TEMP TEST: Hair calibration rig — live X/Y/Z/scale/rotation controls for
+// fitting a swapped-in hair GLB onto the head, plus an overall character-scale
+// control (the whole body is parented under one group, so scaling it keeps the
+// hair fit intact), so the final numbers can be hardcoded into a per-hairstyle
+// preset once dialed in. Remove before shipping.
+const hairCal = { x: 0, y: 0, z: 0, scale: 1, rotX: 0, rotY: 0, rotZ: 0 };
+let hairCalObj = null;
+let currentHairFit = null; // the active hairstyle's fit object, or null if none attached
+function applyHairCal() {
+  if (!hairCalObj) return;
+  hairCalObj.position.set(hairCal.x, hairCal.y, hairCal.z);
+  hairCalObj.scale.setScalar(hairCal.scale);
+  hairCalObj.rotation.set(hairCal.rotX, hairCal.rotY, hairCal.rotZ);
+}
+
+const charCal = { scale: 1 };
+let calMdl = null;
+let calMdlBaseScale = 1;
+let calMdlBaseCenter = null; // bbox center at scale=calMdlBaseScale, in mdl's own local frame (pre-parent, so world==local there)
+function applyCharCal() {
+  if (!calMdl || !calMdlBaseCenter) return;
+  calMdl.scale.setScalar(calMdlBaseScale * charCal.scale);
+  // Bbox center scales linearly with the model's own scale factor, so the
+  // recentering offset is a straight multiply — no need to (and must not)
+  // recompute a world-space Box3 here, since calMdl now sits under spinGroup,
+  // which is rotated by auto-spin/drag; mixing world-space and local-space
+  // vectors there caused the model to drift and eventually fly off-screen.
+  calMdl.position.copy(calMdlBaseCenter).multiplyScalar(-charCal.scale);
+}
+
+// TEMP TEST: hologram-style transparency — 0 = normal/opaque, 1 = fully
+// invisible. Applies to the whole body plus whatever hair is currently
+// showing; re-run this after swapping hairstyles to carry the same amount
+// over, since freshly-loaded hair starts opaque again.
+const transparencyCal = { amount: 0 };
+// TEMP TEST: default body lightness on the white(1)-black(0) grayscale axis
+// — separate from the Body Color wheel (applyBodyColor) above, which picks
+// any hue; this is specifically for landing on the right default grey/white/
+// black tone. 1 (pure white) confirmed via the slider as the wanted default.
+const bodyColorCal = { lightness: 1 };
+function applyBodyLightness() {
+  const v = bodyColorCal.lightness;
+  identifiableMeshes.forEach(obj => {
+    if (!obj.material) return;
+    const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
+    mats.forEach(m => { if (m.color) { m.map = null; m.color.setScalar(v); } });
+  });
+}
+// Shared target-name → state-object lookup for the generic char/hair/transparency
+// slider-and-number fields (the field() template in buildModelTestingScreen).
+const FIELD_STORES = { hair: hairCal, char: charCal, transparency: transparencyCal, bodyColor: bodyColorCal };
+function applyTransparency() {
+  const opacity = 1 - transparencyCal.amount;
+  const targets = [...identifiableMeshes, ...getActiveHairTargets()];
+  targets.forEach(obj => {
+    if (!obj.material) return;
+    const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
+    mats.forEach(m => {
+      m.transparent = opacity < 1;
+      m.opacity = opacity;
+      m.depthWrite = opacity >= 0.98; // avoid draw-order artifacts once actually see-through
+      m.needsUpdate = true;
+    });
+  });
+}
+
+// TEMP TEST: refreshes the Model Testing screen's displayed values (character
+// scale, hair fields, JSON readout) from current state — called whenever hair
+// swaps or a value changes, since the screen persists across selections now
+// instead of being rebuilt from scratch each time.
+function refreshModelTestingFields() {
+  const screen = document.getElementById('model-testing-screen');
+  if (!screen) return;
+  const hairSection = screen.querySelector('#mts-hair-section');
+  hairSection.style.display = currentHairFit ? '' : 'none';
+  const pauseBox = screen.querySelector('#mts-pause-spin');
+  if (pauseBox) pauseBox.checked = !autoRotateEnabled;
+  refreshLevelUpBtn();
+  refreshCardioBtn();
+  screen.querySelectorAll('input[data-key]').forEach(inp => {
+    const store = FIELD_STORES[inp.dataset.target];
+    if (!store) return; // 'light' fields sync themselves
+    inp.value = store[inp.dataset.key];
+  });
+  const readout = screen.querySelector('#mts-readout');
+  readout.textContent = 'Character:\n' + JSON.stringify({
+    scale: +charCal.scale.toFixed(4)
+  }, null, 1) + '\n\nBody Lightness:\n' + JSON.stringify({
+    lightness: +bodyColorCal.lightness.toFixed(4)
+  }, null, 1) + (currentHairFit ? '\n\nHair:\n' + JSON.stringify({
+    x: +hairCal.x.toFixed(4), y: +hairCal.y.toFixed(4), z: +hairCal.z.toFixed(4),
+    scale: +hairCal.scale.toFixed(4),
+    rotX: +hairCal.rotX.toFixed(4), rotY: +hairCal.rotY.toFixed(4), rotZ: +hairCal.rotZ.toFixed(4)
+  }, null, 1) : '');
+  const lightReadout = screen.querySelector('#mts-light-readout');
+  if (lightReadout) {
+    lightReadout.textContent = 'Lighting:\n' + JSON.stringify({
+      ambient: +ambientLight.intensity.toFixed(3),
+      key: +keyLight.intensity.toFixed(3),
+      fill: +fillLight.intensity.toFixed(3),
+      rim: +rimLight.intensity.toFixed(3),
+    }, null, 1);
+  }
+}
+
+// TEMP TEST: draws one clickable/draggable HSV wheel (hue by angle,
+// saturation by radius, fixed full value) into `container`, calling
+// `applyColor(hex)` on every pick — shared by the hair and body wheels.
+function buildColorWheel(container, applyColor) {
+  container.innerHTML = `
+    <canvas class="mts-wheel" width="120" height="120"></canvas>
+    <div class="mts-swatch-row">
+      <div class="mts-swatch"></div>
+      <span class="mts-hex-label">#ffffff</span>
+    </div>
+    <input class="mts-hex-input" type="text" placeholder="#rrggbb" maxlength="7">
+  `;
+  const canvas = container.querySelector('canvas');
+  const ctx = canvas.getContext('2d');
+  const size = canvas.width;
+  const radius = size / 2;
+  const img = ctx.createImageData(size, size);
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      const dx = x - radius, dy = y - radius;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      const idx = (y * size + x) * 4;
+      if (dist <= radius) {
+        let angle = Math.atan2(dy, dx) * 180 / Math.PI;
+        if (angle < 0) angle += 360;
+        const sat = Math.min(dist / radius, 1);
+        const hex = hsvToHex(angle, sat, 1);
+        img.data[idx]     = parseInt(hex.slice(1, 3), 16);
+        img.data[idx + 1] = parseInt(hex.slice(3, 5), 16);
+        img.data[idx + 2] = parseInt(hex.slice(5, 7), 16);
+        img.data[idx + 3] = 255;
+      }
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+
+  const swatch = container.querySelector('.mts-swatch');
+  const hexLabel = container.querySelector('.mts-hex-label');
+  const hexInput = container.querySelector('.mts-hex-input');
+  let dragging = false;
+
+  function setColor(hex) {
+    swatch.style.background = hex;
+    hexLabel.textContent = hex;
+    hexInput.value = hex;
+    applyColor(hex);
+  }
+  function pickAt(clientX, clientY) {
+    const rect = canvas.getBoundingClientRect();
+    const x = clientX - rect.left;
+    const y = clientY - rect.top;
+    const dx = x - radius, dy = y - radius;
+    const dist = Math.min(Math.sqrt(dx * dx + dy * dy), radius);
+    if (dist > radius) return; // outside the wheel — ignore
+    let angle = Math.atan2(dy, dx) * 180 / Math.PI;
+    if (angle < 0) angle += 360;
+    const sat = dist / radius;
+    setColor(hsvToHex(angle, sat, 1));
+  }
+  canvas.addEventListener('mousedown', e => { dragging = true; pickAt(e.clientX, e.clientY); });
+  window.addEventListener('mousemove', e => { if (dragging) pickAt(e.clientX, e.clientY); });
+  window.addEventListener('mouseup', () => { dragging = false; });
+  canvas.addEventListener('touchstart', e => { dragging = true; const t = e.touches[0]; pickAt(t.clientX, t.clientY); }, { passive: true });
+  canvas.addEventListener('touchmove', e => { if (dragging) { const t = e.touches[0]; pickAt(t.clientX, t.clientY); } }, { passive: true });
+  canvas.addEventListener('touchend', () => { dragging = false; });
+
+  function submitHexInput() {
+    let v = hexInput.value.trim();
+    if (!v) return;
+    if (!v.startsWith('#')) v = '#' + v;
+    if (/^#([0-9a-fA-F]{6})$/.test(v)) {
+      setColor(v.toLowerCase());
+    } else if (/^#([0-9a-fA-F]{3})$/.test(v)) {
+      const [r, g, b] = v.slice(1).split('');
+      setColor(('#' + r + r + g + g + b + b).toLowerCase());
+    } else {
+      hexInput.value = hexLabel.textContent; // invalid — revert to current
+    }
+  }
+  hexInput.addEventListener('keydown', e => { if (e.key === 'Enter') { submitHexInput(); hexInput.blur(); } });
+  hexInput.addEventListener('blur', submitHexInput);
+}
+
+// TEMP TEST: builds the full-screen Model Testing UI once (idempotent) —
+// character/hair transform on the left, hair picker + color wheels +
+// lighting on the right. Styled from the app's own design tokens so it reads
+// as a real screen, not a debug overlay. The middle of the screen has
+// pointer-events:none so drag-to-rotate/right-click-pan on the model still
+// work; only the docked panels themselves capture clicks.
+function buildModelTestingScreen() {
+  if (document.getElementById('model-testing-screen')) return;
+
+  const root = document.createElement('div');
+  root.id = 'model-testing-screen';
+  document.body.appendChild(root);
+
+  // Every field gets a fine slider (its own step) plus ±1 stepper buttons for
+  // a fast coarse jump — clamped to the field's own min/max.
+  const field = (label, target, key, min, max, step) => `
+    <label class="mts-field">
+      <div class="mts-field-row">
+        <span>${label}</span>
+        <div class="mts-num-group">
+          <button type="button" class="mts-step" data-dir="-1" data-target="${target}" data-key="${key}">−</button>
+          <input type="number" step="${step}" data-target="${target}" data-key="${key}" data-role="num" data-min="${min}" data-max="${max}">
+          <button type="button" class="mts-step" data-dir="1" data-target="${target}" data-key="${key}">+</button>
+        </div>
+      </div>
+      <input type="range" min="${min}" max="${max}" step="${step}" data-target="${target}" data-key="${key}" data-role="range">
+    </label>`;
+
+  root.innerHTML = `
+    <style>
+      #model-testing-screen {
+        position:fixed; inset:0; z-index:500; pointer-events:none;
+        opacity:0; visibility:hidden; transition: opacity .22s ease;
+      }
+      #model-testing-screen.open { opacity:1; visibility:visible; }
+      #model-testing-screen .mts-bar {
+        pointer-events:all; position:fixed; top:0; left:0; right:0;
+        display:flex; align-items:center; justify-content:space-between;
+        padding: calc(env(safe-area-inset-top) + 14px) 20px 30px;
+        background: linear-gradient(rgba(var(--c-shadow),0.92), rgba(var(--c-shadow),0));
+      }
+      #model-testing-screen .mts-bar-titles { display:flex; flex-direction:column; gap:2px; }
+      #model-testing-screen .mts-title {
+        font-size:13px; font-weight:800; letter-spacing:2.5px; text-transform:uppercase;
+        color: rgb(var(--c-text));
+      }
+      #model-testing-screen .mts-subtitle {
+        font-size:10.5px; color: rgb(var(--c-text4)); letter-spacing:0.2px;
+      }
+      #model-testing-screen .mts-close {
+        background: rgba(var(--c-panel3),0.88); border:1px solid rgba(var(--c-accent2),0.4);
+        border-radius:12px; color: rgb(var(--c-text2)); font-size:12px; font-weight:700;
+        padding:9px 20px; cursor:pointer; transition: background .15s ease, transform .1s ease;
+      }
+      #model-testing-screen .mts-close:hover { background: rgba(var(--c-panel3),1); }
+      #model-testing-screen .mts-close:active { transform: scale(0.96); }
+      /* Mobile: the two panels used to sit side-by-side at fixed pixel widths
+         (258px + 222px), which only ever fit a wide desktop window — on an
+         actual phone they overflowed/overlapped. They're now full-width
+         bottom sheets, one at a time, switched via the tab strip below,
+         so the model stays visible above whichever panel is open instead of
+         being boxed in on both sides. */
+      #model-testing-screen .mts-tabs {
+        pointer-events:all; position:fixed; left:14px; right:14px;
+        top: calc(env(safe-area-inset-top) + 78px);
+        display:flex; gap:8px; z-index:1;
+      }
+      #model-testing-screen .mts-tab-btn {
+        flex:1; background: rgba(var(--c-panel3),0.85); border:1px solid rgba(var(--c-accent2),0.3);
+        border-radius:10px; color: rgb(var(--c-text2)); font-size:12.5px; font-weight:700;
+        padding:11px; cursor:pointer; text-align:center; transition: background .15s ease, transform .1s ease;
+      }
+      #model-testing-screen .mts-tab-btn:active { transform: scale(0.97); }
+      #model-testing-screen .mts-tab-btn.mts-tab-active {
+        background: rgb(var(--c-accent2)); color: rgb(var(--c-bg)); border-color: rgb(var(--c-accent2));
+      }
+      #model-testing-screen .mts-panel {
+        pointer-events:all; position:fixed;
+        background: linear-gradient(165deg, rgba(var(--c-panel1),0.96), rgba(var(--c-panel2),0.93));
+        backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+        border:1px solid rgba(var(--c-accent2),0.25); border-radius:18px;
+        box-shadow: 0 14px 44px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.05);
+        color: rgb(var(--c-text)); font-size:13px;
+        overflow-y:auto;
+        transition: opacity .25s ease, transform .25s ease;
+        opacity:0; transform: translateY(8px);
+      }
+      #model-testing-screen.open .mts-panel { opacity:1; transform: translateY(0); }
+      #model-testing-screen .mts-left,
+      #model-testing-screen .mts-right {
+        left:14px; right:14px; width:auto; padding:16px;
+        top: calc(env(safe-area-inset-top) + 128px);
+        bottom: calc(env(safe-area-inset-bottom) + 14px);
+      }
+      #model-testing-screen .mts-panel.mts-tab-hidden { display:none; }
+      #model-testing-screen .mts-section-title {
+        font-size:10.5px; font-weight:800; letter-spacing:1.5px; text-transform:uppercase;
+        color: rgb(var(--c-text2)); margin: 18px 0 10px; padding-left:9px;
+        border-left: 3px solid rgba(var(--c-accent2),0.65); line-height:14px;
+      }
+      #model-testing-screen .mts-section-title:first-child { margin-top:0; }
+      #model-testing-screen .mts-field { display:block; margin:10px 0; }
+      #model-testing-screen .mts-field-row { display:flex; align-items:center; justify-content:space-between; font-size:11.5px; color: rgb(var(--c-text4)); margin-bottom:4px; }
+      #model-testing-screen .mts-num-group { display:flex; align-items:center; gap:4px; }
+      #model-testing-screen .mts-num-group input[type="number"] {
+        width:50px; text-align:center; background: rgba(var(--c-panel3),0.85);
+        border:1px solid rgba(var(--c-accent2),0.28); border-radius:6px; color: rgb(var(--c-text));
+        font-size:11px; padding:3px 2px;
+      }
+      #model-testing-screen .mts-step {
+        flex-shrink:0; width:30px; height:30px; padding:0; line-height:1;
+        display:flex; align-items:center; justify-content:center;
+        background: rgba(var(--c-panel3),0.85); border:1px solid rgba(var(--c-accent2),0.3);
+        border-radius:7px; color: rgb(var(--c-accent2)); font-size:15px; font-weight:700;
+        cursor:pointer; user-select:none; transition: background .12s ease, transform .08s ease;
+        touch-action:manipulation;
+      }
+      #model-testing-screen .mts-step:hover { background: rgba(var(--c-accent2),0.25); }
+      #model-testing-screen .mts-step:active { transform: scale(0.9); }
+      #model-testing-screen input[type="range"] { width:100%; accent-color: rgb(var(--c-accent2)); height:16px; }
+      #model-testing-screen .mts-row { display:flex; gap:8px; margin-top:12px; }
+      #model-testing-screen .mts-btn {
+        flex:1; background: rgba(var(--c-panel3),0.85); border:1px solid rgba(var(--c-accent2),0.3);
+        border-radius:10px; color: rgb(var(--c-text2)); font-size:11.5px; font-weight:700;
+        padding:8px; cursor:pointer; text-align:center; transition: background .15s ease, transform .1s ease;
+      }
+      #model-testing-screen .mts-btn:hover { background: rgba(var(--c-panel3),1); }
+      #model-testing-screen .mts-btn:active { transform: scale(0.97); }
+      #model-testing-screen .mts-btn.mts-btn-active {
+        background: rgb(var(--c-accent2)); color: rgb(var(--c-bg)); border-color: rgb(var(--c-accent2));
+      }
+      #model-testing-screen .mts-hair-list { display:flex; flex-direction:column; gap:7px; }
+      #model-testing-screen .mts-hair-list .mts-btn { width:100%; text-align:left; padding-left:12px; }
+      #model-testing-screen .mts-model-status { font-size:10.5px; color: rgb(var(--c-text4)); margin:8px 0 4px; min-height:13px; }
+      #model-testing-screen .mts-toggle { display:flex; align-items:center; gap:8px; font-size:12px; color: rgb(var(--c-text3)); margin-top:14px; }
+      #model-testing-screen .mts-toggle input { accent-color: rgb(var(--c-accent2)); width:15px; height:15px; }
+      #model-testing-screen .mts-readout {
+        white-space:pre-wrap; margin-top:12px; font-size:10px; font-family:ui-monospace,monospace;
+        color: rgb(var(--c-text4)); background: rgba(var(--c-panel3),0.55); border-radius:10px; padding:10px;
+        border:1px solid rgba(var(--c-accent2),0.15);
+      }
+      #model-testing-screen .mts-wheel-wrap { text-align:center; }
+      #model-testing-screen canvas.mts-wheel { border-radius:50%; cursor:crosshair; touch-action:none; box-shadow:0 2px 10px rgba(0,0,0,0.35); }
+      #model-testing-screen .mts-swatch-row { display:flex; align-items:center; gap:7px; justify-content:center; margin-top:9px; }
+      #model-testing-screen .mts-swatch { width:16px; height:16px; border-radius:5px; border:1px solid rgba(var(--c-accent2),0.4); }
+      #model-testing-screen .mts-hex-label { font-size:11px; color: rgb(var(--c-text4)); font-family:ui-monospace,monospace; }
+      #model-testing-screen .mts-hex-input {
+        margin-top:7px; width:100%; text-align:center; font:11px ui-monospace,monospace; box-sizing:border-box;
+        background: rgba(var(--c-panel3),0.8); color: rgb(var(--c-text)); border:1px solid rgba(var(--c-accent2),0.3);
+        border-radius:7px; padding:6px;
+      }
+      #model-testing-screen .mts-input {
+        margin-top:9px; width:100%; box-sizing:border-box; font-size:11.5px;
+        background: rgba(var(--c-panel3),0.8); color: rgb(var(--c-text)); border:1px solid rgba(var(--c-accent2),0.3);
+        border-radius:7px; padding:7px;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #model-testing-screen, #model-testing-screen .mts-panel, #model-testing-screen .mts-btn, #model-testing-screen .mts-step, #model-testing-screen .mts-close {
+          transition: none;
+        }
+      }
+    </style>
+    <div class="mts-bar">
+      <div class="mts-bar-titles">
+        <span class="mts-title">Model Testing</span>
+        <span class="mts-subtitle">Drag sliders to fine-tune · ± for a whole-number jump</span>
+      </div>
+      <button type="button" class="mts-close" id="mts-close-btn">Done</button>
+    </div>
+    <div class="mts-tabs">
+      <button type="button" class="mts-tab-btn mts-tab-active" id="mts-tab-body-btn">Body / Level / Character</button>
+      <button type="button" class="mts-tab-btn" id="mts-tab-hair-btn">Hair / Color / Lighting</button>
+    </div>
+    <div class="mts-panel mts-left">
+      <div class="mts-section-title">Body Model</div>
+      <div class="mts-hair-list" id="mts-model-picker-list"></div>
+      <div class="mts-model-status" id="mts-model-status"></div>
+      <div class="mts-section-title">Level Testing</div>
+      <div class="mts-row">
+        <button type="button" class="mts-btn" id="mts-levelup-btn">Level Up (All): Off</button>
+      </div>
+      <div class="mts-row">
+        <button type="button" class="mts-btn" id="mts-cardio-btn">Cardio Aura: Off</button>
+      </div>
+      <div class="mts-row">
+        <button type="button" class="mts-btn" id="mts-level-reset-btn">Reset All Sets</button>
+      </div>
+      <div class="mts-model-status" id="mts-level-status">Tap a body part on the model to add a set to it.</div>
+      <div class="mts-section-title">Character</div>
+      ${field('Scale', 'char', 'scale', 0.3, 5, 0.01)}
+      ${field('Transparency', 'transparency', 'amount', 0, 1, 0.01)}
+      <div id="mts-hair-section">
+        <div class="mts-section-title">Hair Placement</div>
+        ${field('X', 'hair', 'x', -3, 3, 0.01)}
+        ${field('Y', 'hair', 'y', -1, 8, 0.01)}
+        ${field('Z', 'hair', 'z', -3, 3, 0.01)}
+        ${field('Scale', 'hair', 'scale', 0.05, 8, 0.01)}
+        ${field('Rot X (rad)', 'hair', 'rotX', -3.15, 3.15, 0.02)}
+        ${field('Rot Y (rad)', 'hair', 'rotY', -3.15, 3.15, 0.02)}
+        ${field('Rot Z (rad)', 'hair', 'rotZ', -3.15, 3.15, 0.02)}
+      </div>
+      <label class="mts-toggle"><input type="checkbox" id="mts-pause-spin"> Pause auto-spin</label>
+      <div class="mts-row">
+        <button type="button" class="mts-btn" id="mts-reset-btn">Reset</button>
+        <button type="button" class="mts-btn" id="mts-copy-btn">Copy JSON</button>
+      </div>
+      <pre class="mts-readout" id="mts-readout"></pre>
+    </div>
+    <div class="mts-panel mts-right mts-tab-hidden">
+      <div id="mts-hair-style-section">
+        <div class="mts-section-title">Hair Style</div>
+        <div class="mts-hair-list" id="mts-hair-picker-list"></div>
+        <div class="mts-model-status" id="mts-hair-status"></div>
+      </div>
+      <div class="mts-section-title">Hair Color</div>
+      <div class="mts-wheel-wrap" id="mts-hair-color"></div>
+      <div class="mts-section-title">Body Color</div>
+      <div class="mts-wheel-wrap" id="mts-body-color"></div>
+      ${field('Body Lightness (black↔white)', 'bodyColor', 'lightness', 0, 1, 0.01)}
+      <div class="mts-section-title">Lighting</div>
+      ${field('Ambient', 'light', 'ambient', 0, 3, 0.05)}
+      ${field('Key', 'light', 'key', 0, 5, 0.05)}
+      ${field('Fill', 'light', 'fill', 0, 5, 0.05)}
+      ${field('Rim', 'light', 'rim', 0, 5, 0.05)}
+      <select class="mts-input" id="mts-light-preset-select"></select>
+      <input type="text" class="mts-input" id="mts-light-preset-name" placeholder="Preset name" maxlength="40">
+      <div class="mts-row">
+        <button type="button" class="mts-btn" id="mts-light-save-btn">Save</button>
+        <button type="button" class="mts-btn" id="mts-light-delete-btn">Delete</button>
+      </div>
+      <div class="mts-row">
+        <button type="button" class="mts-btn" id="mts-light-copy-btn">Copy JSON</button>
+      </div>
+      <pre class="mts-readout" id="mts-light-readout"></pre>
+    </div>
+  `;
+
+  root.querySelector('#mts-close-btn').addEventListener('click', closeModelTestingScreen);
+
+  // Mobile tab strip — the two panels are full-width bottom sheets shown
+  // one at a time (see the CSS note above .mts-tabs) instead of the old
+  // fixed-width side-by-side layout, so switching tabs just toggles which
+  // panel has .mts-tab-hidden.
+  const tabBodyBtn = root.querySelector('#mts-tab-body-btn');
+  const tabHairBtn = root.querySelector('#mts-tab-hair-btn');
+  const leftPanel = root.querySelector('.mts-left');
+  const rightPanel = root.querySelector('.mts-right');
+  function setMtsTab(tab) {
+    const showBody = tab === 'body';
+    tabBodyBtn.classList.toggle('mts-tab-active', showBody);
+    tabHairBtn.classList.toggle('mts-tab-active', !showBody);
+    leftPanel.classList.toggle('mts-tab-hidden', !showBody);
+    rightPanel.classList.toggle('mts-tab-hidden', showBody);
+  }
+  tabBodyBtn.addEventListener('click', () => setMtsTab('body'));
+  tabHairBtn.addEventListener('click', () => setMtsTab('hair'));
+
+  // Body Model picker
+  const modelList = root.querySelector('#mts-model-picker-list');
+  MODELS.forEach((cfg, idx) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'mts-btn';
+    btn.textContent = cfg.name;
+    btn.dataset.modelIdx = idx;
+    btn.addEventListener('click', () => switchModelVariant(idx));
+    modelList.appendChild(btn);
+  });
+  refreshBodyModelPicker();
+
+  // Level Testing
+  root.querySelector('#mts-levelup-btn').addEventListener('click', () => {
+    testingLevelOverride = testingLevelOverride == null ? 1 : (testingLevelOverride % 5) + 1;
+    refreshLevelUpBtn();
+    updateModel();
+    setLevelStatus('All muscles set to Level ' + testingLevelOverride + ' (overrides real sets).');
+  });
+  root.querySelector('#mts-cardio-btn').addEventListener('click', () => {
+    testingCardioLevelOverride = testingCardioLevelOverride == null ? 1 : (testingCardioLevelOverride % 5) + 1;
+    refreshCardioBtn();
+    updateModel();
+    setLevelStatus('Cardio Aura set to Level ' + testingCardioLevelOverride + ' (overrides real cardio).');
+  });
+  root.querySelector('#mts-level-reset-btn').addEventListener('click', () => {
+    testingLevelOverride = null;
+    testingCardioLevelOverride = null;
+    saveOverrides({});
+    refreshLevelUpBtn();
+    refreshCardioBtn();
+    updateModel();
+    setLevelStatus('Tap a body part on the model to add a set to it.');
+  });
+  refreshLevelUpBtn();
+  refreshCardioBtn();
+
+  // Hair style picker
+  rebuildHairStylePicker();
+
+  // TEMP TEST: unified read/write for every field (hair/char/transparency/
+  // light alike) — used by both the sliders/number inputs and the ± stepper
+  // buttons, so there's one code path for "a value changed."
+  const lights = { ambient: ambientLight, key: keyLight, fill: fillLight, rim: rimLight };
+  const appliers = { hair: applyHairCal, char: applyCharCal, transparency: applyTransparency, bodyColor: applyBodyLightness };
+  function getFieldValue(target, key) {
+    return target === 'light' ? lights[key].intensity : FIELD_STORES[target][key];
+  }
+  function setFieldValue(target, key, val) {
+    if (target === 'light') {
+      lights[key].intensity = val;
+    } else {
+      FIELD_STORES[target][key] = val;
+      appliers[target]();
+    }
+    root.querySelectorAll(`input[data-target="${target}"][data-key="${key}"]`).forEach(inp => { inp.value = val; });
+    refreshModelTestingFields();
+  }
+
+  root.querySelectorAll('input[data-key]').forEach(inp => {
+    if (inp.dataset.target === 'light') inp.value = getFieldValue('light', inp.dataset.key);
+    inp.addEventListener('input', () => {
+      const { target, key } = inp.dataset;
+      setFieldValue(target, key, parseFloat(inp.value) || 0);
+    });
+  });
+  root.querySelectorAll('.mts-step').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const { target, key, dir } = btn.dataset;
+      const numInput = root.querySelector(`input[data-target="${target}"][data-key="${key}"][data-role="num"]`);
+      const min = parseFloat(numInput.dataset.min), max = parseFloat(numInput.dataset.max);
+      const next = Math.min(max, Math.max(min, getFieldValue(target, key) + parseFloat(dir)));
+      setFieldValue(target, key, +next.toFixed(4));
+    });
+  });
+
+  root.querySelector('#mts-reset-btn').addEventListener('click', () => {
+    if (currentHairFit) Object.assign(hairCal, currentHairFit);
+    charCal.scale = 1;
+    transparencyCal.amount = 0;
+    bodyColorCal.lightness = 1;
+    if (currentHairFit) applyHairCal();
+    applyCharCal();
+    applyTransparency();
+    applyBodyLightness();
+    refreshModelTestingFields();
+  });
+  root.querySelector('#mts-copy-btn').addEventListener('click', () => {
+    navigator.clipboard?.writeText(root.querySelector('#mts-readout').textContent).catch(() => {});
+  });
+  const pauseBox = root.querySelector('#mts-pause-spin');
+  pauseBox.addEventListener('change', () => { autoRotateEnabled = !pauseBox.checked; });
+
+  // TEMP TEST: saved lighting presets, persisted to localStorage so they
+  // survive reloads without needing to be hardcoded into the app.
+  const LIGHT_PRESETS_KEY = 'trainhard_test_lighting_presets';
+  const loadLightPresets = () => {
+    try { return JSON.parse(localStorage.getItem(LIGHT_PRESETS_KEY) || '{}'); } catch { return {}; }
+  };
+  const saveLightPresets = (presets) => localStorage.setItem(LIGHT_PRESETS_KEY, JSON.stringify(presets));
+  const presetSelect = root.querySelector('#mts-light-preset-select');
+  function refreshLightPresetSelect(selectName) {
+    const names = Object.keys(loadLightPresets()).sort();
+    presetSelect.innerHTML = '<option value="">— Saved presets —</option>'
+      + names.map(n => `<option value="${n}">${n}</option>`).join('');
+    if (selectName) presetSelect.value = selectName;
+  }
+  refreshLightPresetSelect();
+
+  root.querySelector('#mts-light-save-btn').addEventListener('click', () => {
+    const nameInput = root.querySelector('#mts-light-preset-name');
+    const name = nameInput.value.trim();
+    if (!name) return;
+    const presets = loadLightPresets();
+    presets[name] = {
+      ambient: ambientLight.intensity, key: keyLight.intensity,
+      fill: fillLight.intensity, rim: rimLight.intensity,
+    };
+    saveLightPresets(presets);
+    refreshLightPresetSelect(name);
+    nameInput.value = '';
+  });
+  presetSelect.addEventListener('change', () => {
+    const preset = loadLightPresets()[presetSelect.value];
+    if (!preset) return;
+    Object.entries(preset).forEach(([key, val]) => setFieldValue('light', key, val));
+  });
+  root.querySelector('#mts-light-delete-btn').addEventListener('click', () => {
+    if (!presetSelect.value) return;
+    const presets = loadLightPresets();
+    delete presets[presetSelect.value];
+    saveLightPresets(presets);
+    refreshLightPresetSelect();
+  });
+  root.querySelector('#mts-light-copy-btn').addEventListener('click', () => {
+    navigator.clipboard?.writeText(root.querySelector('#mts-light-readout').textContent).catch(() => {});
+  });
+
+  // Color wheels
+  buildColorWheel(root.querySelector('#mts-hair-color'), applyHairColor);
+  buildColorWheel(root.querySelector('#mts-body-color'), applyBodyColor);
+
+  refreshModelTestingFields();
+}
+
+function openModelTestingScreen() {
+  autoRotateEnabled = false; // default to paused while testing
+  buildModelTestingScreen();
+  document.getElementById('model-testing-screen').classList.add('open');
+  document.getElementById('nav').style.display = 'none';
+  document.getElementById('profile-btns').style.display = 'none';
+  document.getElementById('profile-btns-right').style.display = 'none';
+  document.getElementById('testing-btns-bottom-left').style.display = 'none';
+  document.getElementById('testing-btns-bottom-right').style.display = 'none';
+  refreshModelTestingFields();
+}
+function closeModelTestingScreen() {
+  const screen = document.getElementById('model-testing-screen');
+  if (screen) screen.classList.remove('open');
+  document.getElementById('nav').style.display = '';
+  document.getElementById('profile-btns').style.display = '';
+  document.getElementById('profile-btns-right').style.display = '';
+  document.getElementById('testing-btns-bottom-left').style.display = '';
+  document.getElementById('testing-btns-bottom-right').style.display = '';
+  document.getElementById('mesh-id-readout')?.remove(); // don't leave the tap-to-identify panel floating once testing is closed
+}
+document.getElementById('model-testing-btn').addEventListener('click', openModelTestingScreen);
 
 function activateMeshMap(source) {
   for (const key of Object.keys(meshMap)) delete meshMap[key];
   Object.assign(meshMap, source);
 }
 
-function setupModelMeshes(allMeshes, targetMap) {
+// TEMP TEST: maps a named mesh (from a non-classic-layout model like the new
+// Base Male/Female/Generic Male/Female) to a MUSCLES entry, so the same
+// level-based glow loop in updateModel() works on these models too — mesh
+// names use underscores instead of spaces (e.g. "Upper_Back"), normalized
+// below before matching. Every mesh name matches a MUSCLES entry exactly
+// (case/underscore-insensitive) except "Middle Back", the one alias needed
+// for the shorter "Mid Back" muscle name. Meshes with no match (Boots,
+// Head, Lower Back — not a tracked muscle currently) return null and just
+// keep their own material.
+const MESH_NAME_TO_MUSCLE_ALIAS = { 'middle back': 'Mid Back' };
+function meshNameToMuscle(name) {
+  const key = (name || '').trim().toLowerCase().replace(/_/g, ' ');
+  const exact = MUSCLES.find(m => m.toLowerCase() === key);
+  if (exact) return exact;
+  return MESH_NAME_TO_MUSCLE_ALIAS[key] || null;
+}
+
+// Only assets/models/standing.glb (and its posed siblings) actually use the
+// old 20-index INDEX_TO_PART layout — matching by mesh count alone used to
+// misfire on any other model that happened to also have exactly 20 meshes
+// (e.g. a Generic Male export with 19 muscles + 1 head part), wrongly hiding
+// its indices 2/6 and mislabeling every part via the wrong index map.
+const CLASSIC_LAYOUT_FILES = /(?:^|\/)(?:standing|model-1|crossing-arms)\.glb$/i;
+function setupModelMeshes(allMeshes, targetMap, file) {
+  // TEMP TEST: INDEX_TO_PART (and the hair-slot hide below) were tuned to
+  // standing.glb's specific 20-mesh layout. A differently-structured model
+  // (e.g. base+male.glb's 34 generic parts) doesn't share that index meaning,
+  // so skip the whole part-classification/hide step for anything else —
+  // just clone materials and leave the model's own look untouched.
+  const isClassicLayout = allMeshes.length === 20 && CLASSIC_LAYOUT_FILES.test(file || '');
   allMeshes.forEach((mesh, i) => {
+    if (isClassicLayout && (i === 2 || i === 6)) { mesh.visible = false; return; } // TEMP TEST: disabled per user request
     if (Array.isArray(mesh.material)) {
       mesh.material = mesh.material.map(m => m.clone());
     } else {
@@ -9855,6 +11900,18 @@ function setupModelMeshes(allMeshes, targetMap) {
       if (Array.isArray(mesh.material)) mesh.material.forEach(fn);
       else fn(mesh.material);
     };
+    if (!isClassicLayout) {
+      // TEMP TEST: name-match this mesh to a tracked muscle (see
+      // meshNameToMuscle) so the same level-based glow loop in updateModel()
+      // works on these models too — keeps the mesh's own texture/color,
+      // updateModel() only ever touches .emissive.
+      const muscle = meshNameToMuscle(mesh.name);
+      if (muscle) {
+        if (!targetMap[muscle]) targetMap[muscle] = [];
+        targetMap[muscle].push(mesh);
+      }
+      return;
+    }
     const part = INDEX_TO_PART[i];
     if (!part) return;
 if (MUSCLES.includes(part)) {
@@ -9977,8 +12034,19 @@ function updateModel() {
     if (!meshes) continue;
     const lv = getLevel(muscle);
     for (const mesh of meshes) {
-      mesh.material.emissive.set(LEVEL_COLORS[lv]);
-      mesh.material.emissiveIntensity = 0.55;
+      // Level 1 (untrained) gets no emissive boost — matches meshes that
+      // were never in the muscle-tracking system at all (Head, Boots,
+      // Lower_Back), which stay at the GLB's own default black emissive.
+      // Without this, level-1 muscles looked visibly lighter/flatter than
+      // those meshes even though nothing about them is actually "trained"
+      // yet — the whole body is meant to read as one consistent material
+      // by default, only diverging once a muscle group actually levels up.
+      if (lv === 1) {
+        mesh.material.emissive.set(0x000000);
+      } else {
+        mesh.material.emissive.set(LEVEL_COLORS[lv]);
+        mesh.material.emissiveIntensity = 0.55;
+      }
     }
   }
 
@@ -10009,15 +12077,60 @@ function updateModel() {
     }
   }
 
-  const badges = { 1: '', 2: 'Super Saiyan — All muscles Level 2', 3: 'Super Saiyan God — All muscles Level 3', 4: 'Super Saiyan Blue — All muscles Level 4', 5: 'Ultra Ego — All muscles Level 5' };
+  const badges = { 1: '', 2: 'Trained — All muscles Level 2', 3: 'Advanced — All muscles Level 3', 4: 'Elite — All muscles Level 4', 5: 'Peak Form — All muscles Level 5' };
   document.getElementById('hair-badge').textContent = badges[hl] || '';
+
+  // TEMP TEST: the Model Testing screen's swappable hair (hairCalObj) is a
+  // separate attached GLB, not part of meshMap, so it needs its own
+  // level-color pass to preview the same hair-level progression.
+  if (hairCalObj) {
+    hairCalObj.traverse(o => {
+      if (o.isMesh && o.visible && o.material && o.material.color) o.material.color.set(HAIR_COLORS[hl]);
+    });
+  }
+}
+
+// TEMP TEST: tapping a body-part mesh while the Model Testing screen is open
+// adds one set to whatever muscle it maps to (see meshNameToMuscle), via the
+// same per-muscle override system the production "override sets" debug list
+// already uses (loadOverrides/saveOverrides) — so leveling can be previewed
+// muscle-by-muscle just by tapping parts on the model, instead of hunting
+// through a separate list. A per-part tap also clears the blanket "Level Up
+// (All)" override if one's active, so the tap's effect is actually visible.
+function addTestSetForMesh(mesh) {
+  const muscle = meshNameToMuscle(mesh.name);
+  if (!muscle) {
+    setLevelStatus((mesh.name || 'This part') + ' isn’t a tracked muscle group.');
+    return;
+  }
+  if (testingLevelOverride != null) testingLevelOverride = null;
+  const ov = loadOverrides();
+  const current = muscle in ov ? ov[muscle] : (state.weeklySets[muscle] || 0);
+  ov[muscle] = current + 1;
+  saveOverrides(ov);
+  updateModel();
+  refreshLevelUpBtn();
+  const lv = getLevel(muscle);
+  const goal = getGoal(muscle);
+  setLevelStatus(muscle + ': ' + ov[muscle] + '/' + goal + ' sets · Level ' + lv);
+}
+function setLevelStatus(text) {
+  const el = document.getElementById('mts-level-status');
+  if (el) el.textContent = text;
+}
+function refreshLevelUpBtn() {
+  const btn = document.getElementById('mts-levelup-btn');
+  if (btn) btn.textContent = 'Level Up (All): ' + (testingLevelOverride == null ? 'Off' : testingLevelOverride);
+}
+function refreshCardioBtn() {
+  const btn = document.getElementById('mts-cardio-btn');
+  if (btn) btn.textContent = 'Cardio Aura: ' + (testingCardioLevelOverride == null ? 'Off' : testingCardioLevelOverride);
 }
 
 
-// TOON OUTLINE (mesh-hugging inverted-hull aura shell) — SHELL config, shaders,
-// and the buildHuggingAuraUniforms/syncHuggingAuraUniforms/shellMaterial/
-// shellMeshes objects now live in Aura/toon-outline-code.js and
-// Aura/toon-outline-apply.js (imported at the top of this script block).
+// CORE AURA v2 — SHELL/BLOOM config, shaders, and the buildCoreAuraUniforms/
+// syncCoreAuraUniforms/shellMaterial/shellMeshes objects live earlier in this
+// script block, right after spinGroup (search "CORE AURA v2").
 
 
 // Letters rise one at a time on a fixed, even clock (T at t=0, then one more
@@ -10078,58 +12191,86 @@ function dismissLoadingScreen(cb) {
   }
 }
 
-function loadModel(idx, onReady) {
-  const entry = modelCache[idx];
-  if (entry.scene) { onReady(entry); return; }
+// TEMP TEST: fetches + normalizes + shells a body model's .glb — shared by
+// the initial boot load and switchModelVariant() (the Model Testing
+// screen's Body Model picker), so there's one code path for "load a model."
+// Each call only ever fetches the exact file it's given; nothing eagerly
+// pre-loads the other 3 variants, so a user only downloads the model(s)
+// they actually select, keeping the installed app small.
+function prepModelScene(mdl, file) {
+  // Normalize to the same 6.6-scene-unit height Core Aura was tuned against
+  // — see "layers new/AURA-LEVELS-INSTALL.md" Step 2. Rescaling
+  // the model itself (rather than hand-rescaling each layer's amplitude/
+  // frequency fields) means every tuned constant works completely unchanged,
+  // on any model's native scale.
+  const rawBox = new THREE.Box3().setFromObject(mdl);
+  const rawHeight = rawBox.max.y - rawBox.min.y;
+  const autoScale = rawHeight > 0 ? TARGET_HEIGHT / rawHeight : 1;
+  mdl.scale.setScalar(autoScale);
+  const center = new THREE.Box3().setFromObject(mdl).getCenter(new THREE.Vector3());
+  mdl.position.sub(center);
+  mdl.visible = false;
+  // mdl isn't in the scene graph yet at this point (added later, in
+  // loadModel's .then()), so matrixWorld is still stale from before the
+  // scale/position changes above — stencilAndShell's per-mesh density
+  // correction needs it current.
+  mdl.updateMatrixWorld(true);
 
-  const cfg = MODELS[idx];
+  const meshes = [];
+  mdl.traverse(o => { if (o.isMesh) meshes.push(o); });
+  const meshMapOut = {};
+  setupModelMeshes(meshes, meshMapOut, file);
+  coreAuraRootScale = autoScale;
+  meshes.forEach(stencilAndShell);
 
-  fetch(cfg.file)
+  return { scene: mdl, meshMap: meshMapOut, meshes, baseScale: autoScale, baseCenter: center.clone() };
+}
+function fetchModel(file) {
+  // These .glb files get replaced/edited in place during Model Testing
+  // iteration (same filename, new bytes) — a plain reload kept serving a
+  // stale cached copy (missing e.g. a just-patched material) until a hard
+  // reload forced a real re-fetch. `cache:'no-store'` alone isn't reliable
+  // for file:// URLs (no real HTTP caching semantics to honor there), so
+  // also cache-bust the URL itself with a per-page-load timestamp — a URL
+  // that's never repeated can't be served from any cache, keyed by URL.
+  const cacheBustedFile = encodeURI(file) + (file.includes('?') ? '&' : '?') + '_cb=' + Date.now();
+  return fetch(cacheBustedFile, { cache: 'no-store' })
     .then(r => {
       if (!r.ok) throw new Error('HTTP ' + r.status);
       return r.arrayBuffer();
     })
-    .then(buf => new Promise((resolve, reject) =>
-      new GLTFLoader().parse(buf, '', resolve, reject)
-    ))
-    .then(gltf => {
-      const mdl = gltf.scene;
-      // Normalize to the same 6.6-scene-unit height every hugging-aura layer
-      // (Toon Outline shell, and any future Aura/ layers) was tuned against —
-      // see Aura/README-INTEGRATION.md's "Scale mismatch" section. This model's
-      // native GLB scale is much smaller (~0.98 units tall), and rescaling the
-      // model itself (rather than hand-rescaling each layer's amplitude/frequency
-      // fields) means every tuned constant works completely unchanged, on any
-      // model's native scale.
-      const rawBox = new THREE.Box3().setFromObject(mdl);
-      const rawHeight = rawBox.max.y - rawBox.min.y;
-      const autoScale = rawHeight > 0 ? SHELL_REFERENCE_HEIGHT / rawHeight : 1;
-      mdl.scale.setScalar(autoScale);
-      const center = new THREE.Box3().setFromObject(mdl).getCenter(new THREE.Vector3());
-      mdl.position.sub(center);
-      mdl.visible = false;
-      spinGroup.add(mdl);
+    .then(buf => new Promise((resolve, reject) => new GLTFLoader().parse(buf, '', resolve, reject)))
+    .then(gltf => prepModelScene(gltf.scene, file));
+}
 
-      const meshes = [];
-      mdl.traverse(o => { if (o.isMesh) meshes.push(o); });
-      setupModelMeshes(meshes, entry.meshMap);
+function loadModel(idx, onReady) {
+  // TEMP TEST: MODELS is intentionally empty right now — skip straight to
+  // the same recovery path a real load failure uses, so the rest of the app
+  // still boots (no crash, no 3D character shown).
+  if (!MODELS[idx]) {
+    dismissLoadingScreen(() => {
+      const profileNameEl0 = document.getElementById('profile-name');
+      if (profileNameEl0) profileNameEl0.textContent = state.userName;
+      renderFocusStats();
+      checkAndRestoreSession();
+      setTimeout(checkForUpdatePopup, 1000);
+    });
+    return;
+  }
 
-      meshes.forEach(obj => {
-        if (!obj.geometry || !obj.geometry.attributes.position) return;
-        obj.material.stencilWrite = true;
-        obj.material.stencilRef = 1;
-        obj.material.stencilFunc = THREE.AlwaysStencilFunc;
-        obj.material.stencilZPass = THREE.ReplaceStencilOp;
-        obj.material.needsUpdate = true;
-        if (!obj.geometry.attributes.normal) obj.geometry.computeVertexNormals();
+  const entry = modelCache[idx];
+  if (entry.scene) { onReady(entry); return; }
 
-        const shell = new THREE.Mesh(obj.geometry, shellMaterial);
-        shell.visible = SHELL.enabled;
-        obj.add(shell);
-        shellMeshes.push(shell);
-      });
-
-      entry.scene = mdl;
+  fetchModel(MODELS[idx].file)
+    .then(prepped => {
+      Object.assign(entry, prepped);
+      spinGroup.add(prepped.scene);
+      calMdl = prepped.scene; // TEMP TEST: target for the character-scale calibration slider
+      characterModel = calMdl; // core-aura-bloom.js's renderWithBloom() reads this by name
+      calMdlBaseScale = prepped.baseScale;
+      calMdlBaseCenter = prepped.baseCenter;
+      identifiableMeshes = prepped.meshes; // TEMP TEST: tap-to-identify raycast target list
+      applyBodyLightness();
       onReady(entry);
     })
     .catch(e => {
@@ -10148,15 +12289,108 @@ function loadModel(idx, onReady) {
     });
 }
 
-loadModel(0, (entry) => {
+// TEMP TEST: attaches an already-prepped model (see prepModelScene) as the
+// on-screen character — detaches whatever was there before (and its hair)
+// first. Used by switchModelVariant when picking a different character.
+function attachModelScene(prepped) {
+  if (calMdl) spinGroup.remove(calMdl);
+  removeCurrentHair(); // detach hair from the outgoing model before calMdl is reassigned
+  prepped.scene.visible = true;
+  spinGroup.add(prepped.scene);
+  calMdl = prepped.scene;
+  characterModel = calMdl; // core-aura-bloom.js's renderWithBloom() reads this by name
+  calMdlBaseScale = prepped.baseScale;
+  calMdlBaseCenter = prepped.baseCenter;
+  identifiableMeshes = prepped.meshes;
+  applyBodyLightness();
+  activateMeshMap(prepped.meshMap);
+  // Core Aura's height-phase math (topBias/bottomBias/rise-fade) needs an
+  // accurate modelGroundY for whichever model is actually on screen now —
+  // each model is normalized to the same TARGET_HEIGHT, but its own centering
+  // can still put the feet at a slightly different local Y.
+  modelGroundY = new THREE.Box3().setFromObject(prepped.scene).min.y;
+}
+
+// TEMP TEST: swaps which body model is active — used by the Body Model
+// picker in the Model Testing screen. Lazy: a variant's .glb is only ever
+// fetched the first time it's actually selected, and modelCache keeps it
+// after that so flipping back and forth doesn't refetch — a variant nobody
+// picks is never downloaded at all. Clicking a model with available:false
+// (no .glb dropped in yet) still moves the selection to it (picker
+// highlight follows the click, matching what's on screen) but clears the
+// 3D viewport instead of leaving the previous model up, and shows a
+// "Coming Soon" note in place of attempting a fetch.
+let modelSwitchToken = 0;
+async function switchModelVariant(idx) {
+  if (idx === activeIdx || !MODELS[idx]) return;
+  const cfg = MODELS[idx];
+  if (!cfg.available) {
+    ++modelSwitchToken; // invalidate any in-flight load from the previous selection
+    if (calMdl) spinGroup.remove(calMdl);
+    removeCurrentHair();
+    calMdl = null;
+    characterModel = null;
+    calMdlBaseScale = 1;
+    calMdlBaseCenter = null;
+    identifiableMeshes = [];
+    activateMeshMap({});
+    activeIdx = idx;
+    currentHairFit = null;
+    rebuildHairStylePicker();
+    refreshModelTestingFields();
+    setModelPickerStatus(cfg.name + ' — Coming Soon');
+    refreshBodyModelPicker();
+    return;
+  }
+  const myToken = ++modelSwitchToken;
+  const entry = modelCache[idx];
+  setModelPickerStatus('Loading ' + cfg.name + '…');
+
+  const finish = () => {
+    if (myToken !== modelSwitchToken) return;
+    attachModelScene(entry);
+    activeIdx = idx;
+    charCal.scale = 1;
+    applyCharCal();
+    transparencyCal.amount = 0;
+    applyTransparency();
+
+    rebuildHairStylePicker();
+    activeHairOptionId = 'none'; // TEMP TEST: every model starts bald on selection — hair is opt-in
+    refreshHairPickerButtons();
+    currentHairFit = null;
+    refreshModelTestingFields();
+    setModelPickerStatus('');
+    refreshBodyModelPicker();
+    updateModel(); // TEMP TEST: color the newly-attached model's muscle meshes per current levels
+  };
+
+  if (entry.scene) { finish(); return; }
+
+  try {
+    const prepped = await fetchModel(cfg.file);
+    if (myToken !== modelSwitchToken) return;
+    Object.assign(entry, prepped);
+    finish();
+  } catch (e) {
+    if (myToken !== modelSwitchToken) return;
+    console.error('Model variant failed to load:', e);
+    setModelPickerStatus(cfg.name + ' — failed to load (see console).');
+    refreshBodyModelPicker();
+  }
+}
+
+const bootModelIdx = resolveBootModelIdx();
+activeIdx = bootModelIdx;
+refreshBodyModelPicker();
+loadModel(bootModelIdx, (entry) => {
   const mdl = entry.scene;
   const box    = new THREE.Box3().setFromObject(mdl);
   const radius = box.getBoundingSphere(new THREE.Sphere()).radius;
-  setModelGroundY(box.min.y);
-  setTargetHeight(box.max.y - box.min.y);
+  modelGroundY = box.min.y;
   // No per-field SHELL rescaling needed here: mdl was already normalized to
-  // SHELL_REFERENCE_HEIGHT in loadModel's gltf.then callback, so the height
-  // is ~6.6 and every tuned SHELL constant applies unchanged.
+  // TARGET_HEIGHT in loadModel's gltf.then callback, so the height is ~6.6
+  // and every tuned SHELL constant applies unchanged.
 
   const fovRad = THREE.MathUtils.degToRad(camera.fov);
   const dist   = (radius / Math.sin(fovRad / 2)) * 1.37;
@@ -10174,6 +12408,11 @@ loadModel(0, (entry) => {
   mdl.visible = true;
   spinGroup.rotation.y = -Math.PI / 2;
   recalcStats();
+
+  // TEMP TEST: apply the default hair option. The Model Testing screen (and
+  // its panels) now only builds when opened via the profile button, instead
+  // of always showing floating debug panels.
+  applyHairOption(getHairOptionsForActiveModel().find(o => o.id === activeHairOptionId)?.file ?? null);
 
   dismissLoadingScreen(() => {
     const profileNameEl2 = document.getElementById('profile-name');
@@ -10213,12 +12452,29 @@ if (window.visualViewport) {
   window.visualViewport.addEventListener('resize', stabilizeViewport);
 }
 
+// Mobile on-screen keyboards (and, on some browsers, the URL bar showing/
+// hiding on scroll) fire a plain 'resize' event and shrink innerHeight while
+// innerWidth stays the same — that's not a real layout change. #canvas-
+// container never centers the canvas, so resizing the renderer to that
+// shrunk height snapped the character's canvas into the top-left corner
+// every time a keyboard opened anywhere in the app (e.g. editing the
+// username, searching exercises) — reported as the model randomly
+// "glitching"/moving on its own. Only resize when the width changes (a real
+// rotation/window resize) or the height grows back (keyboard closing).
+let lastStableViewportW = null;
+let lastStableViewportH = null;
 window.addEventListener('resize', () => {
   updateViewportVars();
   const sz = getVisualViewportSize();
+  const widthChanged = lastStableViewportW === null || sz.w !== lastStableViewportW;
+  const heightShrankOnly = !widthChanged && lastStableViewportH !== null && sz.h < lastStableViewportH;
+  if (heightShrankOnly) return;
+  lastStableViewportW = sz.w;
+  lastStableViewportH = sz.h;
   camera.aspect = sz.w / sz.h;
   camera.updateProjectionMatrix();
   renderer.setSize(sz.w, sz.h);
+  resizeBloomTargets();
 });
 
 (function animate() {
@@ -10230,9 +12486,10 @@ window.addEventListener('resize', () => {
     spinGroup.rotation.y += SPIN_BASE_VEL * delta;
   }
   controls.update();
-  syncHuggingAuraUniforms(SHELL, shellUniforms, now / 1000);
+  const _coreAuraTime = now / 1000;
+  auraShellMaterials.forEach(m => syncCoreAuraUniforms(SHELL, m.uniforms, _coreAuraTime));
   shellMeshes.forEach(s => { s.visible = SHELL.enabled; });
-  renderer.render(scene, camera);
+  renderWithBloom();
 })();
 
 // ═══════════════════════════════════════════════════════════
@@ -10286,6 +12543,8 @@ function goToTab(tab) {
   document.getElementById('canvas-container').style.display = tab === 'profile' ? 'block' : 'none';
   document.getElementById('profile-btns').classList.toggle('visible', tab === 'profile');
   document.getElementById('profile-btns-right').classList.toggle('visible', tab === 'profile');
+  document.getElementById('testing-btns-bottom-left').classList.toggle('visible', tab === 'profile');
+  document.getElementById('testing-btns-bottom-right').classList.toggle('visible', tab === 'profile');
   if (tab === 'history')   renderHistory();
   if (tab === 'exercises') renderExercises();
   if (tab === 'stats')     showStatsMenu();
@@ -15019,13 +17278,25 @@ document.addEventListener('touchstart', (e) => {
 function cssUrl(src) { return `url('${src.replace(/'/g, "\\'")}')`; }
 
 const ROOMS = [
-  { name: 'Hyperbolic Time Chamber', file: 'assets/backgrounds/Hyperbolic Time Chamber.jpg' },
-  { name: 'Kame Island',        file: 'assets/backgrounds/Kame Island.webp' },
-  { name: 'Planet Namek',       file: 'assets/backgrounds/Namek.jpg' },
-  { name: 'Training Island',    file: 'assets/backgrounds/Training Island.jpg' },
-  { name: "King Kai's Planet",  file: "assets/backgrounds/King Kai's Planet.jpg" },
-  { name: 'Shenron',            file: 'assets/backgrounds/Shenron.jpg' },
-  { name: 'Snake Road',         file: 'assets/backgrounds/Snake Road.jpg' },
+  // Color chambers, in the requested order:
+  { name: 'Black Training Chamber',         file: 'assets/backgrounds/Black Training Chamber.png' },
+  { name: 'Grey Training Chamber',          file: 'assets/backgrounds/Grey Training Chamber.png' },
+  { name: 'White Training Chamber',         file: 'assets/backgrounds/White Training Chamber.png' },
+  { name: 'Blue Training Chamber',          file: 'assets/backgrounds/Blue Training Chamber.png' },
+  { name: 'Red Training Chamber',           file: 'assets/backgrounds/Red Training Chamber.png' },
+  // Scene chambers, alphabetical:
+  { name: 'Desert Training Chamber',        file: 'assets/backgrounds/Desert Training Chamber.png' },
+  { name: 'Destroyed City Training Chamber',file: 'assets/backgrounds/Destroyed City Training Chamber.png' },
+  { name: 'Fire Wall Training Chamber',     file: 'assets/backgrounds/Fire Wall Training Chamber.png' },
+  { name: 'Forest Training Chamber',        file: 'assets/backgrounds/Forest Training Chamber.png' },
+  { name: 'Mountain Training Chamber',      file: 'assets/backgrounds/Mountain Training Chamber.png' },
+  { name: 'Ocean Training Chamber',         file: 'assets/backgrounds/Ocean Training Chamber.png' },
+  { name: 'Sky Training Chamber',           file: 'assets/backgrounds/Sky Training Chamber.png' },
+  { name: 'Snowy Mountain Training Chamber',file: 'assets/backgrounds/Snowy Mountain Training Chamber.png' },
+  { name: 'Space Training Chamber',         file: 'assets/backgrounds/Space Training Chamber.png' },
+  { name: 'Sunset Training Chamber',        file: 'assets/backgrounds/Sunset Training Chamber.png' },
+  { name: 'Underwater Training Chamber',    file: 'assets/backgrounds/Underwater Training Chamber.png' },
+  { name: 'Wasteland Training Chamber',     file: 'assets/backgrounds/Wasteland Training Chamber.png' },
 ];
 const ROOM_COUNT = ROOMS.length;
 const NODE_SIZE = 96;
@@ -15059,6 +17330,12 @@ if (activeRoom.startsWith('c')) {
   } else {
     activeRoom = '1';
   }
+} else if (parseInt(activeRoom, 10) > ROOMS.length) {
+  // 2026-08-26: several stock rooms were removed, so a previously-saved
+  // numeric room can now point past the end of the array — fall back to
+  // room 1 instead of leaving the background blank.
+  activeRoom = '1';
+  localStorage.setItem('trainhard_room', activeRoom);
 }
 
 function detectRoomSrc(num) {
@@ -15133,7 +17410,7 @@ document.querySelectorAll('.custom-room-slot').forEach((slot, i) => {
       updateArcPreview._customSrc = customs[i];
       const img = document.getElementById('room-arc-preview-img');
       img.style.backgroundImage = cssUrl(customs[i]);
-      document.getElementById('room-arc-preview-label').textContent = `Custom ${i + 1}`;
+      setRoomArcLabel(`Custom ${i + 1}`);
     } else {
       customUploadTargetSlot = i;
       customRoomInput.value = '';
@@ -15154,7 +17431,7 @@ customRoomInput.addEventListener('change', () => {
     renderCustomSlots();
     const img = document.getElementById('room-arc-preview-img');
     img.style.backgroundImage = cssUrl(e.target.result);
-    document.getElementById('room-arc-preview-label').textContent = `Custom ${customUploadTargetSlot + 1}`;
+    setRoomArcLabel(`Custom ${customUploadTargetSlot + 1}`);
     customUploadTargetSlot = -1;
   };
   reader.readAsDataURL(file);
@@ -15165,10 +17442,40 @@ function arcNodeAngle(i) {
 }
 
 
+// Splits a room name into (up to) two lines, then shrinks the font size
+// just enough that neither line overflows the label's actual on-screen
+// width — guarantees exactly two lines with no clipping/wrapping surprise,
+// regardless of the name's length or how narrow the device is. Stock room
+// names all end in "Training Chamber", which is the natural break point;
+// anything else (e.g. "Custom 1") is short enough to just sit on one line.
+const ROOM_LABEL_BASE_FONT_SIZE = 13;
+const ROOM_LABEL_MIN_FONT_SIZE = 9;
+function setRoomArcLabel(name) {
+  const label = document.getElementById('room-arc-preview-label');
+  const SUFFIX = ' Training Chamber';
+  const lines = name.endsWith(SUFFIX)
+    ? [name.slice(0, -SUFFIX.length), 'Training Chamber']
+    : [name];
+  label.innerHTML = '';
+  const lineEls = lines.map(text => {
+    const el = document.createElement('div');
+    el.className = 'room-label-line';
+    el.textContent = text;
+    label.appendChild(el);
+    return el;
+  });
+  let fontSize = ROOM_LABEL_BASE_FONT_SIZE;
+  lineEls.forEach(el => { el.style.fontSize = fontSize + 'px'; });
+  const maxWidth = label.clientWidth;
+  while (fontSize > ROOM_LABEL_MIN_FONT_SIZE && lineEls.some(el => el.scrollWidth > maxWidth)) {
+    fontSize -= 0.5;
+    lineEls.forEach(el => { el.style.fontSize = fontSize + 'px'; });
+  }
+}
+
 let arcPreviewRoomNum = 0;
 function updateArcPreview(roomNum) {
   const img = document.getElementById('room-arc-preview-img');
-  const label = document.getElementById('room-arc-preview-label');
   if (arcPreviewRoomNum === roomNum) return;
   arcPreviewRoomNum = roomNum;
   detectRoomSrc(roomNum).then(src => {
@@ -15178,7 +17485,7 @@ function updateArcPreview(roomNum) {
       img.style.opacity = '1';
     }, 180);
   });
-  label.textContent = (ROOMS[roomNum - 1] && ROOMS[roomNum - 1].name) || `Room ${roomNum}`;
+  setRoomArcLabel((ROOMS[roomNum - 1] && ROOMS[roomNum - 1].name) || `Room ${roomNum}`);
 }
 
 function buildArcNodes() {
@@ -15351,6 +17658,8 @@ window.addEventListener('touchend', () => { arcDragEnd(); });
 document.getElementById('avatar-room-btn').addEventListener('click', () => {
   playSound('commonButton');
   document.getElementById('avatar-overlay').classList.remove('open');
+  stopAvatarPreviewLoop();
+  stopUiWheelAnim();
   openRoomOverlay();
 });
 
@@ -15367,6 +17676,7 @@ document.getElementById('room-close-btn').addEventListener('click', () => {
 document.getElementById('room-back-btn').addEventListener('click', () => {
   closeRoomOverlay();
   document.getElementById('avatar-overlay').classList.add('open');
+  startAvatarPreviewLoop();
 });
 // Tap anywhere in the overlay (arc panel or info panel) to exit, unless the
 // tap lands on an interactive control or was actually a drag of the arc.
@@ -15379,6 +17689,8 @@ document.getElementById('room-overlay').addEventListener('click', (e) => {
 setRoom(activeRoom);
 document.getElementById('profile-btns').classList.add('visible');
 document.getElementById('profile-btns-right').classList.add('visible');
+document.getElementById('testing-btns-bottom-left').classList.add('visible');
+document.getElementById('testing-btns-bottom-right').classList.add('visible');
 
 // ═══════════════════════════════════════════════════════════
 // REP PR TRACKING
@@ -16549,6 +18861,11 @@ document.getElementById('avatar-btn').addEventListener('click', () => {
   playSound('commonButton');
   syncAvatarSelection();
   document.getElementById('avatar-overlay').classList.add('open');
+  startAvatarPreviewLoop();
+  // Must run after .open is applied — the wheel centers itself against its
+  // own on-screen width, which reads as 0 while the overlay is hidden. Builds
+  // once ever, then just re-syncs to the active theme on later opens.
+  buildUiThemeWheel();
 });
 
 document.getElementById('profile-menu-btn').addEventListener('click', async () => {
@@ -16885,10 +19202,14 @@ function selectAvatarPreset(src) {
 document.getElementById('avatar-close-btn').addEventListener('click', () => {
   playSound('delete');
   document.getElementById('avatar-overlay').classList.remove('open');
+  stopAvatarPreviewLoop();
+  stopUiWheelAnim();
 });
 document.getElementById('avatar-overlay').addEventListener('click', (e) => {
   if (e.target === document.getElementById('avatar-overlay')) {
     document.getElementById('avatar-overlay').classList.remove('open');
+    stopAvatarPreviewLoop();
+    stopUiWheelAnim();
   }
 });
 
@@ -16997,21 +19318,9 @@ syncSoundsToggle();
 
 document.getElementById('sounds-toggle-btn').addEventListener('click', () => {
   soundsEnabled = !soundsEnabled;
+  otherSoundsEnabled = soundsEnabled; // single toggle now drives both sound categories
   localStorage.setItem('trainhard_sounds', soundsEnabled ? 'on' : 'off');
   syncSoundsToggle();
-});
-
-function syncOtherSoundsToggle() {
-  const btn = document.getElementById('other-sounds-toggle-btn');
-  btn.textContent = 'Coach Sounds: ' + (otherSoundsEnabled ? 'On' : 'Off');
-  btn.classList.toggle('selected', otherSoundsEnabled);
-}
-syncOtherSoundsToggle();
-
-document.getElementById('other-sounds-toggle-btn').addEventListener('click', () => {
-  otherSoundsEnabled = !otherSoundsEnabled;
-  localStorage.setItem('trainhard_other_sounds', otherSoundsEnabled ? 'on' : 'off');
-  syncOtherSoundsToggle();
 });
 
 // ── Native local notifications (Capacitor wrapper) ──
@@ -17081,22 +19390,13 @@ if (isNativeApp()) {
 
 function syncNotificationsToggle() {
   const btn = document.getElementById('notifications-toggle-btn');
-  const dbg = document.getElementById('notifications-debug');
   if (!isNativeApp() && typeof Notification === 'undefined') {
     btn.textContent = 'Notifications: Unsupported';
     btn.disabled = true;
-    if (dbg) dbg.textContent = 'Notification API not present in this context';
     return;
   }
   btn.textContent = 'Notifications: ' + (notificationsEnabled ? 'On' : 'Off');
   btn.classList.toggle('selected', notificationsEnabled);
-  if (dbg) {
-    dbg.textContent = isNativeApp()
-      ? 'native app | notifications: ' + (notificationsEnabled ? 'granted' : 'not granted')
-      : 'permission: ' + Notification.permission +
-        ' | standalone: ' + (window.navigator.standalone === true) +
-        ' | SW: ' + (navigator.serviceWorker && navigator.serviceWorker.controller ? 'active' : 'none');
-  }
 }
 syncNotificationsToggle();
 
@@ -17148,23 +19448,294 @@ function notifyRestComplete() {
   }
 }
 
-function syncUiThemeButtons() {
-  const active = document.documentElement.getAttribute('data-theme') || 'vegeta';
-  document.querySelectorAll('#avatar-ui-options .avatar-inspiration-btn').forEach(btn => {
-    btn.classList.toggle('selected', btn.dataset.themeValue === active);
-  });
+// Custom UI theme picker — a fully custom drag-driven carousel (not native
+// scroll-snap; that fought itself under load, see below). Dragging follows
+// the finger 1:1 in real time; releasing always locks to the nearest whole
+// item with a short slide animation. Themes repeat 3x back-to-back in the
+// DOM (UI_THEME_LOOP_COPIES) so dragging past either end just keeps going
+// into the next copy — after each lock, if the centered copy has drifted
+// away from the middle one, the index silently jumps by a whole copy-length
+// (identical visual position, so imperceptible) to stay within the buffer,
+// which is what makes it feel like an endless circular loop.
+//
+// The theme (data-theme attribute) is only applied once per LOCKED item, on
+// gesture release — never continuously during the drag. Applying it live on
+// every item crossed mid-drag was the original design, but data-theme
+// triggers a full CSS custom-property recalc across the whole app (which
+// leans heavily on backdrop-filter, expensive to repaint), and doing that
+// repeatedly during an active touch gesture was enough main-thread jank to
+// make the browser drop the touch-scroll partway through a fast swipe
+// (reported: got stuck around item 8/9). Locking once per settle still
+// gives a glimpse of each theme without fighting the gesture.
+const UI_THEMES = [
+  { value: 'classic', label: 'Classic' },
+  { value: 'minimal', label: 'Minimal' },
+  { value: 'noir', label: 'Noir' },
+  { value: 'ember', label: 'Ember' },
+  { value: 'amber', label: 'Amber' },
+  { value: 'lavender', label: 'Lavender' },
+  { value: 'crimson', label: 'Crimson' },
+  { value: 'jade', label: 'Jade' },
+  { value: 'amethyst', label: 'Amethyst' },
+];
+// Dynamic, not fixed — a fixed 84px * 5 slots (420px) only fits on wide
+// screens. On a typical phone, after the overlay's own edge padding and the
+// panel's padding, the wheel's real visible width is much narrower, so a
+// fixed width was clipping the outer 2 slots off-screen entirely (only ~3
+// were actually visible). Computed fresh each time the wheel is sized (see
+// computeUiWheelItemWidth) so exactly UI_WHEEL_SLOT_COUNT always fit.
+let uiWheelItemWidth = 84;
+function computeUiWheelItemWidth() {
+  const wrap = document.getElementById('ui-theme-wheel-wrap');
+  uiWheelItemWidth = wrap.clientWidth / UI_WHEEL_SLOT_COUNT;
+  wrap.style.setProperty('--ui-wheel-item-width', uiWheelItemWidth + 'px');
 }
-syncUiThemeButtons();
+// Truly unbounded loop: rather than pre-building a large repeated strip of
+// real theme items and moving it (which has a finite edge that a fast or
+// repeated fling can outrun — items would run off the rendered buffer into
+// blank space until a recenter-on-lock caught up), this keeps a small FIXED
+// set of slot elements and relabels them fresh every frame from the current
+// position via modulo. There's no strip to outrun, so no amount of spinning
+// can ever show blank space — every slot always has *some* valid theme's
+// label on it, however far uiWheelPos has drifted.
+const UI_WHEEL_SLOT_COUNT = 5; // exactly 5 visible at once: 2 faded, 2 less-faded, 1 selected in full color
+// Same momentum shape as the Training Room arc (see arcVelocity/ARC_FRICTION
+// above): friction is a per-second decay multiplier (velocity *= FRICTION^dt).
+// UI_WHEEL_MAX_VELOCITY caps how far a single fling can travel, just so a
+// very hard flick doesn't feel like it spins forever — not a correctness
+// requirement anymore (see above), purely a feel choice. Unlike the room
+// arc, there's also no "ease back up to an idle spin" — this wheel should
+// sit still when untouched.
+const UI_WHEEL_FRICTION = 0.12;
+const UI_WHEEL_MAX_VELOCITY = 15;        // items/sec, clamped at drag-release
+const UI_WHEEL_COAST_STOP = 0.05;        // items/sec — below this, stop coasting and ease into the nearest item
+const UI_WHEEL_SETTLE_DECAY = 0.0000005; // per-second decay constant for the final ease-to-lock (smaller = snappier) — tuned for a ~250ms lock from a half-item worst case
+const UI_WHEEL_SETTLE_DONE = 0.01;       // item-widths of remaining distance — below this, snap the rest of the way instantly
 
-document.querySelectorAll('#avatar-ui-options .avatar-inspiration-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const theme = btn.dataset.themeValue;
-    if (!theme) return;
+let uiWheelPos = 0;              // continuous, fractional "which flat index is centered" position — unbounded, can drift arbitrarily far in either direction
+let uiWheelVelocity = 0;         // items/sec, only meaningful while coasting (uiWheelTargetIndex === null)
+let uiWheelTargetIndex = null;   // non-null once we've committed to easing into a specific locked (flat) index
+let uiWheelAnimId = null;
+let uiWheelLastT = null;
+let uiWheelBuilt = false;
+let uiWheelDragging = false;
+let uiWheelDragMoved = false;
+let uiWheelDragStartX = 0;
+let uiWheelDragLastX = 0;
+let uiWheelDragLastT = 0;
+let uiWheelVelSamples = []; // {v, t} — same last-80ms velocity averaging as arcDragMove/arcDragEnd
+let uiWheelSlots = []; // the fixed SLOT_COUNT DOM buttons, index 0..N-1 left-to-right
+
+function localThemeIdx(flatIdx) {
+  return ((flatIdx % UI_THEMES.length) + UI_THEMES.length) % UI_THEMES.length;
+}
+
+// Applies + persists the theme the instant an item is nearest-center —
+// called on every render (drag, coast, and settle), not just at final lock.
+// Safe to do continuously here in a way it wasn't with the old native-
+// scroll-snap version: that broke because the expensive data-theme cascade
+// competed with the BROWSER's own touch-gesture tracking for main-thread
+// time. This is a fully custom drag/animation loop instead — the browser
+// isn't trying to interpret the gesture itself, so there's nothing for a
+// slow frame here to make it drop.
+function applyThemeForIndex(flatIdx) {
+  const theme = UI_THEMES[localThemeIdx(flatIdx)].value;
+  if (theme !== document.documentElement.getAttribute('data-theme')) {
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('trainhard_uitheme', theme);
-    syncUiThemeButtons();
+    playSound('roomHover'); // same crossing tick as the Training Room arc
+  }
+}
+
+// Fixed 5-step fade anchored at whole-item offsets from center — 0: full
+// color, ±1: less faded, ±2 (and beyond, for the brief transient moments
+// mid-slide where a slot's offset overshoots ±2): faded. Smoothly
+// interpolated between those anchors while a slot is moving between them.
+// Floored well above 0 — the outermost items still need to read clearly,
+// not just hint that something's there.
+function uiWheelFadeOpacity(absOffsetItems) {
+  if (absOffsetItems <= 1) return 1 - absOffsetItems * 0.3;   // 1.0 -> 0.7
+  return Math.max(0.5, 0.7 - (absOffsetItems - 1) * 0.2);     // 0.7 -> 0.5, floored
+}
+
+// Repositions + relabels every slot from scratch based on the current
+// uiWheelPos (no getBoundingClientRect reads needed — we already know
+// exactly where we're placing each slot).
+function renderUiWheelAtPos() {
+  const wrap = document.getElementById('ui-theme-wheel-wrap');
+  const centerX = wrap.clientWidth / 2;
+  const nearest = Math.round(uiWheelPos);
+  applyThemeForIndex(nearest);
+  const half = Math.floor(UI_WHEEL_SLOT_COUNT / 2);
+  uiWheelSlots.forEach((slot, s) => {
+    const flatIdx = nearest - half + s;
+    slot.textContent = UI_THEMES[localThemeIdx(flatIdx)].label;
+    slot.dataset.flatIdx = flatIdx;
+    slot.style.width = uiWheelItemWidth + 'px';
+    const offsetItems = flatIdx - uiWheelPos; // signed distance from center, in item-widths
+    const absOffset = Math.abs(offsetItems);
+    const x = centerX + offsetItems * uiWheelItemWidth - uiWheelItemWidth / 2;
+    slot.style.transform = `translateX(${x}px) scale(${(1 - Math.min(1, absOffset / half) * 0.15).toFixed(3)})`;
+    slot.style.opacity = uiWheelFadeOpacity(absOffset).toFixed(3);
+    slot.classList.toggle('selected', flatIdx === nearest);
   });
-});
+}
+
+// The animation loop — runs whenever the wheel is coasting under momentum
+// (uiWheelTargetIndex === null) or easing into its final locked position
+// (uiWheelTargetIndex set). These are two phases of one continuous motion,
+// not separate animations, so a fling smoothly transitions from "slows down"
+// into "locks in" instead of visibly handing off between two systems.
+function tickUiWheel(ts) {
+  if (uiWheelLastT !== null) {
+    const dt = Math.min((ts - uiWheelLastT) / 1000, 0.05); // clamp so a stalled tab can't jump on resume
+    if (uiWheelTargetIndex === null) {
+      uiWheelPos += uiWheelVelocity * dt;
+      uiWheelVelocity *= Math.pow(UI_WHEEL_FRICTION, dt);
+      if (Math.abs(uiWheelVelocity) < UI_WHEEL_COAST_STOP) {
+        uiWheelTargetIndex = Math.round(uiWheelPos);
+      }
+    } else {
+      const diff = uiWheelTargetIndex - uiWheelPos;
+      uiWheelPos += diff * (1 - Math.pow(UI_WHEEL_SETTLE_DECAY, dt));
+      if (Math.abs(diff) < UI_WHEEL_SETTLE_DONE) {
+        uiWheelPos = uiWheelTargetIndex;
+        renderUiWheelAtPos();
+        applyThemeForIndex(uiWheelTargetIndex); // covers a direct click-to-jump with no motion to have applied it along the way
+        stopUiWheelAnim();
+        return;
+      }
+    }
+  }
+  uiWheelLastT = ts;
+  renderUiWheelAtPos();
+  uiWheelAnimId = requestAnimationFrame(tickUiWheel);
+}
+function startUiWheelAnim() { uiWheelLastT = null; if (!uiWheelAnimId) uiWheelAnimId = requestAnimationFrame(tickUiWheel); }
+function stopUiWheelAnim() { if (uiWheelAnimId) cancelAnimationFrame(uiWheelAnimId); uiWheelAnimId = null; uiWheelLastT = null; }
+
+function buildUiThemeWheel() {
+  const track = document.getElementById('ui-theme-wheel-track');
+  if (uiWheelBuilt) { syncUiThemeWheelToActive(); return; }
+  uiWheelBuilt = true;
+  track.innerHTML = '';
+  uiWheelSlots = [];
+
+  const active = document.documentElement.getAttribute('data-theme') || 'amber';
+  uiWheelPos = Math.max(0, UI_THEMES.findIndex(t => t.value === active));
+
+  for (let s = 0; s < UI_WHEEL_SLOT_COUNT; s++) {
+    const item = document.createElement('button');
+    item.type = 'button';
+    item.className = 'ui-wheel-item';
+    track.appendChild(item);
+    uiWheelSlots.push(item);
+  }
+
+  wireUiWheelDrag();
+  computeUiWheelItemWidth();
+  renderUiWheelAtPos();
+}
+
+// Instantly re-centers the wheel on whatever theme is currently active —
+// called each time the Avatar menu opens so it doesn't stay wherever it was
+// left last time. Also re-measures the item width, in case the viewport
+// changed size (rotation, etc.) since the wheel was last open.
+//
+// Always snaps to an exact whole-number position rather than nudging
+// whatever uiWheelPos currently is — if the menu was closed mid-coast or
+// mid-settle (stopUiWheelAnim just freezes wherever the motion was, it
+// doesn't finish snapping it), uiWheelPos could still be fractional, and
+// shifting a fractional value by a whole-item correction leaves it exactly
+// as off-center as it started. Rounding first guarantees a clean center.
+function syncUiThemeWheelToActive() {
+  stopUiWheelAnim();
+  uiWheelVelocity = 0;
+  uiWheelTargetIndex = null;
+  const active = document.documentElement.getAttribute('data-theme') || 'amber';
+  const activeLocalIdx = Math.max(0, UI_THEMES.findIndex(t => t.value === active));
+  const nearestFlat = Math.round(uiWheelPos);
+  uiWheelPos = nearestFlat + (activeLocalIdx - localThemeIdx(nearestFlat));
+  computeUiWheelItemWidth();
+  renderUiWheelAtPos();
+}
+
+let uiWheelDragWired = false;
+function wireUiWheelDrag() {
+  if (uiWheelDragWired) return;
+  uiWheelDragWired = true;
+  const wrap = document.getElementById('ui-theme-wheel-wrap');
+
+  const dragStart = (x) => {
+    stopUiWheelAnim(); // grabbing mid-coast or mid-settle interrupts it, same as the room arc
+    uiWheelDragging = true;
+    uiWheelDragMoved = false;
+    uiWheelTargetIndex = null;
+    uiWheelDragStartX = x;
+    uiWheelDragLastX = x;
+    uiWheelDragLastT = performance.now();
+    uiWheelVelSamples = [];
+    wrap.classList.add('dragging');
+  };
+  const dragMove = (x) => {
+    if (!uiWheelDragging) return;
+    const now = performance.now();
+    const dx = x - uiWheelDragLastX;
+    if (Math.abs(x - uiWheelDragStartX) > 4) uiWheelDragMoved = true;
+    const dt = (now - uiWheelDragLastT) / 1000;
+    const dPos = -dx / uiWheelItemWidth; // dragging left (dx<0) advances forward (dPos>0)
+    uiWheelPos += dPos;
+    if (dt > 0) {
+      uiWheelVelSamples.push({ v: dPos / dt, t: now });
+      const cutoff = now - 80;
+      uiWheelVelSamples = uiWheelVelSamples.filter(s => s.t >= cutoff);
+    }
+    uiWheelDragLastX = x;
+    uiWheelDragLastT = now;
+    renderUiWheelAtPos();
+  };
+  // releaseX is the single source of truth for "what got tapped/released
+  // on" — a plain tap/click (no real movement) jumps straight to whichever
+  // slot is physically under that point, rather than a separate `click`
+  // listener on each item trying to do the same thing. Touch and mouse both
+  // fire a real click/touch AND a browser-synthesized click afterward for a
+  // simple tap, so having two independent handlers for "a tap happened" was
+  // a race — they could disagree by one slot, which is what caused the
+  // occasional off-center save.
+  const dragEnd = (releaseX) => {
+    if (!uiWheelDragging) return;
+    uiWheelDragging = false;
+    wrap.classList.remove('dragging');
+
+    if (!uiWheelDragMoved) {
+      const wrapRect = wrap.getBoundingClientRect();
+      const el = document.elementFromPoint(releaseX, wrapRect.top + wrapRect.height / 2);
+      const slotEl = el && el.closest ? el.closest('.ui-wheel-item') : null;
+      uiWheelVelocity = 0;
+      uiWheelTargetIndex = slotEl ? parseInt(slotEl.dataset.flatIdx, 10) : Math.round(uiWheelPos);
+      startUiWheelAnim();
+      return;
+    }
+
+    const avgV = uiWheelVelSamples.length
+      ? uiWheelVelSamples.reduce((s, x) => s + x.v, 0) / uiWheelVelSamples.length
+      : 0;
+    uiWheelVelocity = Math.max(-UI_WHEEL_MAX_VELOCITY, Math.min(UI_WHEEL_MAX_VELOCITY, avgV));
+    uiWheelVelSamples = [];
+    // Straight into the coast phase — tickUiWheel itself decides when
+    // friction has bled off enough velocity to switch to the settle-lock
+    // phase, exactly like the room arc's tickArc/renderArc split.
+    uiWheelTargetIndex = null;
+    startUiWheelAnim();
+  };
+
+  wrap.addEventListener('mousedown', (e) => { e.preventDefault(); dragStart(e.clientX); });
+  window.addEventListener('mousemove', (e) => dragMove(e.clientX));
+  window.addEventListener('mouseup', (e) => dragEnd(e.clientX));
+  wrap.addEventListener('touchstart', (e) => dragStart(e.touches[0].clientX), { passive: true });
+  wrap.addEventListener('touchmove', (e) => dragMove(e.touches[0].clientX), { passive: true });
+  wrap.addEventListener('touchend', (e) => dragEnd(e.changedTouches[0].clientX));
+}
 
 function syncCoachButtons() {
   document.querySelectorAll('#avatar-coach-options .avatar-inspiration-btn').forEach(btn => {
@@ -18114,9 +20685,9 @@ function bumpShapeAuraStacking(el) {
 }
 
 // Cardio-level-driven profile photo aura — mirrors the 3D character's Core
-// Aura level system exactly, filenames included (see CORE_AURA_LEVEL_FILES /
-// loadCoreAuraPreset / updateCoreAuraForLevel in the module script above,
-// and "assets/aura-presets/Core Aura - Level N.json"): one preset JSON per
+// Aura level system (see CORE_AURA_LEVEL_PRESETS / updateCoreAuraForLevel in
+// the module script above, which apply inlined SHELL/BLOOM blocks rather
+// than fetching JSON): one preset JSON per
 // cardio level, named "Profile Photo - Level N.json" in
 // "Shape Aura/Profile Photo/". No aura at all below level 2 — that's a
 // hardcoded rule (see applyProfilePhotoAuraLevel below), not driven by a
