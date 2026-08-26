@@ -14594,8 +14594,18 @@ function checkAndRestoreSession() {
     }
   }, 60 * 1000);
   for (const ex of data.session) {
+    // See resolveCurrentExerciseMuscle's comment — a session saved before a
+    // muscle rename/split (e.g. mid-workout when the Shoulders update
+    // shipped) still has the old muscle baked in here, and resuming it is a
+    // separate path from starting fresh off a template, so it needs the
+    // same correction applied.
+    if (!(state.exercises[ex.muscle] || []).includes(ex.name)) {
+      const current = resolveCurrentExerciseMuscle(ex.name) || (ex.muscle === 'Shoulders' ? classifyLegacyShoulderExercise(ex.name) : null);
+      if (current) ex.muscle = current;
+    }
     addExerciseBlock(ex.name, ex.muscle, ex.sets, ex.note);
   }
+  saveActiveSession();
   resumeRestStateFromStorage();
 }
 
@@ -15194,16 +15204,16 @@ function renderTemplatePicker() {
   });
 }
 
-// Templates snapshot each exercise's muscle at save time (see the "Save as
-// Template" handler above). If a muscle later gets renamed/split (e.g. the
-// old flat 'Shoulders' becoming Front/Side/Rear Delts), an old template's
-// stored muscle goes stale and nothing else ever re-validates it — starting
-// a workout from it silently misattributes every set to a muscle that may
-// no longer even exist, so its mesh/level never updates. Re-resolves against
+// Templates (and a saved in-progress session — see checkAndRestoreSession)
+// snapshot each exercise's muscle at save time. If a muscle later gets
+// renamed/split (e.g. the old flat 'Shoulders' becoming Front/Side/Rear
+// Delts), that stored muscle goes stale and nothing else ever re-validates
+// it — starting a workout from it, or just resuming one already in
+// progress, silently misattributes every set to a muscle that may no
+// longer even exist, so its mesh/level never updates. Re-resolves against
 // wherever the exercise actually lives in state.exercises right now (the
-// live migration already moved it there) and persists the fix into the
-// template so it's only ever repaired once.
-function resolveTplExerciseMuscle(name) {
+// live migration already moved it there).
+function resolveCurrentExerciseMuscle(name) {
   for (const m of Object.keys(state.exercises)) {
     if ((state.exercises[m] || []).includes(name)) return m;
   }
@@ -15213,7 +15223,7 @@ function repairTemplateMuscles(tpl) {
   let changed = false;
   tpl.exercises.forEach(ex => {
     if ((state.exercises[ex.muscle] || []).includes(ex.name)) return; // still correct, nothing to do
-    let current = resolveTplExerciseMuscle(ex.name);
+    let current = resolveCurrentExerciseMuscle(ex.name);
     if (!current && ex.muscle === 'Shoulders') current = classifyLegacyShoulderExercise(ex.name);
     if (current && current !== ex.muscle) { ex.muscle = current; changed = true; }
   });
