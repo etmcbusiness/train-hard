@@ -7710,17 +7710,30 @@ const SHOULDERS_SPLIT_DEFAULT_KEY_RENAMES = {
 function classifyLegacyShoulderExercise(name) {
   return /lateral raise/i.test(name) ? 'Side Delts' : 'Front Delts';
 }
+// Was a single early-return gated on 'Shoulders' still being a key in
+// s.exercises — which is only true the very first time this runs. Any
+// 'Shoulders'-tagged history entry created AFTER that first run (e.g. from
+// a workout started off an old, not-yet-repaired template) skipped this
+// entire function forever after — including the history-fixing loop — since
+// the exercises bucket was already gone. That's the actual reason a
+// completed workout's sets could stay permanently invisible to weekly
+// stats/levels no matter how many times the app reloaded. Each section now
+// checks its own condition independently, so a stray history entry always
+// gets caught regardless of what's already been cleaned up elsewhere.
 function migrateShouldersToDeltHeads(s) {
-  if (!s.exercises || !('Shoulders' in s.exercises)) return false;
-  for (const name of (s.exercises['Shoulders'] || [])) {
-    const target = classifyLegacyShoulderExercise(name);
-    if (!s.exercises[target]) s.exercises[target] = [];
-    if (!s.exercises[target].includes(name)) s.exercises[target].push(name);
+  let changed = false;
+  if (s.exercises && 'Shoulders' in s.exercises) {
+    for (const name of (s.exercises['Shoulders'] || [])) {
+      const target = classifyLegacyShoulderExercise(name);
+      if (!s.exercises[target]) s.exercises[target] = [];
+      if (!s.exercises[target].includes(name)) s.exercises[target].push(name);
+    }
+    delete s.exercises['Shoulders'];
+    changed = true;
   }
-  delete s.exercises['Shoulders'];
   for (const w of (s.history || [])) {
     for (const ex of (w.exercises || [])) {
-      if (ex.muscle === 'Shoulders') ex.muscle = classifyLegacyShoulderExercise(ex.name);
+      if (ex.muscle === 'Shoulders') { ex.muscle = classifyLegacyShoulderExercise(ex.name); changed = true; }
     }
   }
   if (s.goals && 'Shoulders' in s.goals) {
@@ -7729,17 +7742,19 @@ function migrateShouldersToDeltHeads(s) {
       if (!(m in s.goals)) s.goals[m] = val;
     }
     delete s.goals['Shoulders'];
+    changed = true;
   }
-  if (s.weeklySets) delete s.weeklySets['Shoulders'];
+  if (s.weeklySets && 'Shoulders' in s.weeklySets) { delete s.weeklySets['Shoulders']; changed = true; }
   if (s.seededDefaultExercises) {
     for (const [oldKey, newKey] of Object.entries(SHOULDERS_SPLIT_DEFAULT_KEY_RENAMES)) {
       if (s.seededDefaultExercises[oldKey]) {
         delete s.seededDefaultExercises[oldKey];
         s.seededDefaultExercises[newKey] = true;
+        changed = true;
       }
     }
   }
-  return true;
+  return changed;
 }
 
 // Adds every DEFAULT_EXERCISES entry to this state exactly once, ever (see
