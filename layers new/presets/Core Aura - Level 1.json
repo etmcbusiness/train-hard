@@ -1,0 +1,11 @@
+{
+    "name": "Level 1",
+    "layerType": "Core Aura",
+    "label": "Core Aura - Level 1",
+    "SHELL": {
+        "enabled": false
+    },
+    "BLOOM": {
+        "enabled": false
+    }
+}

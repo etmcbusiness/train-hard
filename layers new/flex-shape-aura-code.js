@@ -1,16 +1,22 @@
 // ============================================================================
-// FLEXABLE SHAPE AURA — the real Core Aura shader, driving a 2D DOM element
+// FLEXABLE SHAPE AURA — the full-featured hugging-aura shader, driving a 2D
+// DOM element
 //
-// This does NOT reimplement the aura's noise/shading math. It loads
-// core-aura-code.js as-is (SHELL, HUGGING_AURA_VERTEX_SHADER,
-// HUGGING_AURA_FRAGMENT_SHADER, buildHuggingAuraUniforms/sync...) — the exact
-// same code the 3D character uses — and runs it on a small WebGL scene of
-// its own: an orthographic camera whose units are literal CSS pixels, and
-// one flat, FILLED, rounded-rect mesh per target element (built from
-// roundedRectPoint()'s ring of points, fan-triangulated from a center
-// vertex). The vertex shader pushes every vertex outward along its normal by
-// pushAmount + noise*noiseAmp + ..., completely unaware it isn't running on
-// a 3D body.
+// This does NOT reimplement the aura's noise/shading math — it loads
+// core-aura-code.js's shared HUGGING_AURA_VERTEX_SHADER/FRAGMENT_SHADER and
+// buildHuggingAuraUniforms/buildHuggingAuraGui/sync as-is, and runs them on a
+// small WebGL scene of its own: an orthographic camera whose units are
+// literal CSS pixels, and one flat, FILLED, rounded-rect mesh per target
+// element (built from roundedRectPoint()'s ring of points, fan-triangulated
+// from a center vertex). The vertex shader pushes every vertex outward along
+// its normal by pushAmount + noise*noiseAmp + ..., completely unaware it
+// isn't running on a 3D body. Its OWN config (FLEX_AURA_DEFAULTS, below) is
+// a full standalone copy of every field that shader/those functions read —
+// it used to be derived live from core-aura-code.js's SHELL object, but
+// SHELL was stripped down to a handful of fields when the 3D character aura
+// was rebuilt from scratch, so this file no longer depends on SHELL's shape
+// at all (this is now the only place that shader's full noise/spike/glow
+// capability is actually exercised).
 //
 // MASKING: the 3D scene uses a stencil buffer so the shell only shows up
 // where it pokes out past the real character's silhouette. There's no
@@ -136,19 +142,26 @@ window.addEventListener('resize', resizeFlexAuraRenderer);
 const FLEX_AURAS = [];
 const flexAuraClock = new THREE.Clock();
 
-// Every field here IS a SHELL field (cloned straight from the loaded
-// core-aura-code.js default, not retyped) plus the handful of 2D-only mesh
-// settings (auraScale/segments/cornerRadius) that have no 3D counterpart.
-// One world-unit-per-pixel reference: an element whose own (width+height)/2
-// equals FLEX_TARGET_SIZE*<its auraScale> reads at "standard" thickness/bump
-// density. Used by resolveAuraScale() below to auto-derive a scale from each
-// target's OWN size — the exact same normalization idea as the 3D layer's
-// TARGET_HEIGHT (see README-INTEGRATION.md's "Scale mismatch" section):
-// there, any raw model height gets rescaled so SHELL's numbers always apply
-// consistently; here, any element size gets its own auraScale derived so
-// the same SHELL numbers apply consistently too, with NO per-box manual
-// tuning required. 0.3 was picked to reproduce roughly the same look this
-// project's demo shapes (~90-340px) had under the old fixed auraScale:450.
+// Every field here used to be inherited live from SHELL (Object.assign({},
+// SHELL, {...})) — Core Aura's own config in core-aura-code.js. SHELL was
+// stripped down to just {enabled, pushAmount, color, opacity} when the 3D
+// character aura was rebuilt from scratch, so this file now carries its OWN
+// full copy of every field HUGGING_AURA_VERTEX_SHADER/FRAGMENT_SHADER and
+// buildHuggingAuraUniforms/buildHuggingAuraGui actually read (those shared
+// functions/shaders in core-aura-code.js are UNCHANGED — this is the only
+// consumer still using their full capability) — plus the handful of 2D-only
+// mesh settings (auraScale/segments/cornerRadius) that have no 3D
+// counterpart. One world-unit-per-pixel reference: an element whose own
+// (width+height)/2 equals FLEX_TARGET_SIZE*<its auraScale> reads at
+// "standard" thickness/bump density. Used by resolveAuraScale() below to
+// auto-derive a scale from each target's OWN size — the exact same
+// normalization idea as the 3D layer's TARGET_HEIGHT (see
+// README-INTEGRATION.md's "Scale mismatch" section): there, any raw model
+// height gets rescaled so these numbers always apply consistently; here, any
+// element size gets its own auraScale derived so the same numbers apply
+// consistently too, with NO per-box manual tuning required. 0.3 was picked
+// to reproduce roughly the same look this project's demo shapes (~90-340px)
+// had under the old fixed auraScale:450.
 const FLEX_TARGET_SIZE = 0.3;
 
 // auraScale is 'auto' by default (per-element, see above) — pass a number
@@ -156,7 +169,82 @@ const FLEX_TARGET_SIZE = 0.3;
 // auraScaleMultiplier to scale the auto value up/down uniformly without
 // losing the auto-fit-to-size behavior (1 = unchanged, 2 = twice as thick
 // on every element, etc.).
-const FLEX_AURA_DEFAULTS = Object.assign({}, SHELL, {
+const FLEX_AURA_DEFAULTS = {
+    enabled: true,
+    pushAmount: 0.005,
+    color: '#ff0000',
+    opacity: 1,
+    noiseAmp: 0.01,
+    noiseFreq: 1,
+    noiseSpeed: 5,
+    spikiness: 8,
+    color2: '#ffffff',
+    color3: '#ff00aa',
+    pulseSpeed: 0,
+    pulseAmp: 0,
+    flowDirection: 'converge',
+    flowSpeed: 0.25,
+    warpAmp: 0,
+    warpFreq: 0.05,
+    warpSpeed: 0,
+    chaosAmp: 0.00378,
+    chaosFreq: 10.89,
+    chaosSpeed: 5,
+    bumpWidth: 0.50148,
+    bumpRoundness: 0.4,
+    distortAmp: 0,
+    distortFreq: 0.2,
+    distortSpeed: 0.5,
+    dissolveAmp: 0,
+    dissolveFreq: 0.5,
+    dissolveSpeed: 0.5,
+    randomSeed: 0,
+    bumpRandomizeSpeed: 0,
+    periodicSpikeCount: 2,
+    periodicSpikeSharpness: 1,
+    periodicSpikeBulge: 0.6,
+    periodicSpikeCoverage: 1,
+    periodicSpikeSkew: -0.9,
+    periodicSpikeTipWidth: 0,
+    periodicSpikeRoundness: 0,
+    periodicSpikeAmp: 0,
+    periodicSpikeChaos: 0,
+    periodicSpikeRotSpeed: 0,
+    subSpikes: 0,
+    subSpikeLength: 0,
+    jaggednessVariance: 0,
+    angleBias: 0,
+    asymmetryAngle: 0,
+    spikeCurve: 0,
+    widthApex: 1,
+    widthUpper: 1,
+    yPosUpper: 0.25,
+    widthCore: 1,
+    yPosCore: 0.5,
+    widthLower: 1,
+    yPosLower: 0.75,
+    widthBase: 1,
+    widthTransitionCurve: 1,
+    widthSmoothness: false,
+    baseFlare: 0,
+    bottomRounding: 0,
+    topStretch: 1,
+    bottomSquash: 1,
+    timeOffset: 0,
+    fluidity: 0,
+    wavinessFreq: 1,
+    wavinessAmp: 0,
+    flutterSpeed: 0,
+    flutterAmp: 0,
+    erosionAmp: 0,
+    erosionFreq: 1,
+    opacityFalloff: -0.4,
+    opacityGradientPower: 1,
+    flickerSpeed: 0,
+    flickerIntensity: 0,
+    useGradient: false,
+    gradientCoreColor: '#ffffff',
+    gradientEdgeColor: '#ffffff',
     auraScale: 'auto',
     auraScaleMultiplier: 1,
     segments: 96,
@@ -167,7 +255,7 @@ const FLEX_AURA_DEFAULTS = Object.assign({}, SHELL, {
     // circle, all for free from the same code path). 'triangle' switches to
     // trianglePoint() instead, for elements that aren't rect-shaped at all.
     shape: 'auto'
-});
+};
 
 // Resolves cfg.auraScale for this frame: a number is used as-is (manual
 // override, ignores auraScaleMultiplier entirely since you've already
@@ -182,9 +270,9 @@ function resolveAuraScale(cfg, rect) {
 }
 
 // Call once per target element: createFlexAura(document.querySelector('#myButton'), { ...overrides })
-// Returns { config, destroy() } — config is a live clone of FLEX_AURA_DEFAULTS
-// (which is itself a clone of SHELL); mutate its fields directly at any time
-// and the next frame picks it up. destroy() removes it and frees its
+// Returns { config, destroy() } — config is a live clone of FLEX_AURA_DEFAULTS.
+// Mutate its fields directly at any time and the next frame picks it up.
+// destroy() removes it and frees its
 // geometry/material.
 function createFlexAura(targetEl, overrides) {
     const config = Object.assign({}, FLEX_AURA_DEFAULTS, overrides || {});
@@ -205,7 +293,6 @@ function createFlexAura(targetEl, overrides) {
 
     const aura = { targetEl, config, uniforms, material, geometry, mesh };
     FLEX_AURAS.push(aura);
-    ensureFlexAuraLoopRunning();
     return {
         config,
         destroy() {
@@ -236,18 +323,7 @@ function rebuildFlexAuraGeometry(aura) {
 
     const cs = getComputedStyle(aura.targetEl);
     const autoRadius = parseFloat(cs.borderTopLeftRadius) || 0;
-    let radiusPx = cfg.cornerRadius > 0 ? cfg.cornerRadius : autoRadius;
-    // Snap to a true circle when the auto-detected radius is already ~half the
-    // smaller side (any element using CSS border-radius:50%, e.g. every avatar
-    // circle in this app) — getComputedStyle's resolved radius and
-    // getBoundingClientRect's box size are measured independently and can
-    // disagree by a fraction of a pixel (subpixel layout rounding), which
-    // otherwise leaves a real — if tiny — flat notch at the top/bottom/left/
-    // right of what should be a perfect circle once pushed outward by the
-    // shader (a flat segment's vertices all push in the exact same direction,
-    // unlike a curve's, so even a sub-pixel gap reads as a visible facet).
-    const halfMinSidePx = Math.min(rect.width, rect.height) / 2;
-    if (radiusPx > 0 && Math.abs(radiusPx - halfMinSidePx) < 1) radiusPx = halfMinSidePx;
+    const radiusPx = cfg.cornerRadius > 0 ? cfg.cornerRadius : autoRadius;
 
     const s = resolveAuraScale(cfg, rect);
     const rawW = rect.width / s, rawH = rect.height / s, rawR = radiusPx / s;
@@ -292,15 +368,6 @@ function rebuildFlexAuraGeometry(aura) {
     aura.mesh.visible = cfg.enabled;
 }
 
-// This used to reschedule itself unconditionally forever, rendering an
-// empty full-viewport scene at the display's native refresh rate even
-// while zero auras exist (the common case — these only get created for
-// on-screen profile-photo circles in the friends list/leaderboard/etc.)
-// and even while the page was backgrounded. Only run while there's
-// actually something to draw and the page is actually visible; the loop
-// stops itself as soon as either stops being true, and createFlexAura
-// wakes it back up when a new aura appears.
-let flexAuraRafId = null;
 function flexAuraLoop() {
     const time = flexAuraClock.getElapsedTime();
     for (const aura of FLEX_AURAS) {
@@ -309,15 +376,6 @@ function flexAuraLoop() {
         syncHuggingAuraUniforms(aura.config, aura.uniforms, time);
     }
     renderer.render(scene, camera);
-    if (FLEX_AURAS.length > 0 && document.visibilityState === 'visible') {
-        flexAuraRafId = requestAnimationFrame(flexAuraLoop);
-    } else {
-        flexAuraRafId = null;
-    }
+    requestAnimationFrame(flexAuraLoop);
 }
-function ensureFlexAuraLoopRunning() {
-    if (flexAuraRafId == null && FLEX_AURAS.length > 0 && document.visibilityState === 'visible') {
-        flexAuraRafId = requestAnimationFrame(flexAuraLoop);
-    }
-}
-document.addEventListener('visibilitychange', ensureFlexAuraLoopRunning);
+requestAnimationFrame(flexAuraLoop);

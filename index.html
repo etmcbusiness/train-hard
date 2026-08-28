@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#000000" />
-  <meta name="app-version" content="110" />
+  <meta name="app-version" content="111" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -12,6 +12,7 @@
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="assets/icons/icon-192.png" />
+  <link rel="stylesheet" href="tutorial.css" />
   <title>Train Hard</title>
   <script>
     (function() {
@@ -229,6 +230,15 @@
       height: 100%;
       overflow: hidden;
       overscroll-behavior: none;
+      /* Safari's "text autosizer" silently inflates font sizes to keep text
+         a comfortable reading width — specifically recalculated on
+         orientation change — which is likely the real cause of plain
+         (non-input) text like PR values/set counts growing after a
+         rotate/rotate-back with nothing else on the page actually changing.
+         Disabling it makes every font-size in this file the literal
+         rendered size, always, regardless of orientation. */
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
     }
 
     /* Force portrait: rotate the whole page back upright when the device is turned sideways.
@@ -258,6 +268,10 @@
       overscroll-behavior: none;
       text-shadow: 0 1px 2px rgba(0,0,0,0.9), 0 1px 5px rgba(0,0,0,0.5);
     }
+    /* Masks the brief real-rotation frame the portrait-lock CSS can't avoid
+       (see the orientationchange handler) behind a quick fade instead of
+       showing the actual rotate-then-snap movement. */
+    body.orientation-settling { opacity: 0; transition: opacity 0.12s ease; }
 
     /* ── Background Image ── */
     #gravity-room {
@@ -959,7 +973,7 @@
       border: 1px solid rgba(var(--c-accent2),0.18);
       border-radius: 10px;
       padding: 7px 10px;
-      font-size: 12.5px;
+      font-size: 16px; /* iOS auto-zooms a focused input under 16px */
       font-family: inherit;
       line-height: 1.4;
       color: rgb(var(--c-text2));
@@ -1367,28 +1381,37 @@
     }
 
     .set-row .stepper-btn { width: 28px; }
-    .set-row .stepper-inp { font-size: 15px; }
+    /* Must stay >=16px — anything smaller makes iOS auto-zoom the viewport
+       when this input is focused (see the stepper-inp base rule below), and
+       a rotation while mid-set focuses/reflows this exact field. */
+    .set-row .stepper-inp { font-size: 16px; }
     .set-row .set-check { width: 48px; height: 50px; }
     .set-row .set-delete { width: 14px; height: 14px; font-size: 11px; }
 
     .exposure-set-cols, .exposure-set-row {
       grid-template-columns: 12px 1fr 48px 14px;
     }
-    .field-set-cols-single, .field-set-row-single {
-      grid-template-columns: 12px 62px 1fr 48px 14px;
+    /* Cardio (Duration+Weight / Distance / Weighted+Distance) sets — no
+       "Previous" column crammed in HERE: a cardio set can carry 2-3 values
+       at once, and squeezing something like "185lbs x 3.1mi x 25:00" into
+       the same narrow column a plain "225lbs x 5" used to fit in is what
+       made it unreadable. Dropping that column gives every field here real
+       width to type/read instead — see .field-prev-line below for where
+       "Previous" actually lives now, as its own full-width line. */
+    .field-set-cols-1, .field-set-row-1 {
+      grid-template-columns: 22px 1fr 48px 14px;
     }
-    .field-set-cols-none, .field-set-row-none {
-      grid-template-columns: 12px 1fr 48px 14px;
+    .field-set-cols-2, .field-set-row-2 {
+      grid-template-columns: 22px 1fr 1fr 48px 14px;
     }
     /* Cardio's Time field gets its own row below the main set row instead of
        squeezing into the grid — the grid only has room for 1-2 compact numeric
-       fields before things start clipping. Reuses the single-field grid's
-       column widths (a leading spacer + a label column + a field column) so
-       the Time label/box line up with, and match the size of, a field box
-       above rather than stretching across the full row width. */
+       fields before things start clipping. Leading spacer matches the set-
+       number column above so the label/field line up under the fields
+       rather than starting flush at column 1. */
     .field-time-row {
       display: grid;
-      grid-template-columns: 12px 62px 1fr 48px 14px;
+      grid-template-columns: 22px 62px 1fr 48px 14px;
       gap: 2px;
       align-items: center;
       margin-bottom: 8px;
@@ -1400,6 +1423,31 @@
       text-transform: uppercase;
       letter-spacing: 0.5px;
       color: rgb(var(--c-text4));
+    }
+    /* A cardio set's previous values — its own full-width line above the
+       inputs (room to wrap, unlike a fixed grid cell), styled as a tag +
+       value pair matching .field-time-label's existing look rather than a
+       bare line of gray text. */
+    .field-prev-line {
+      display: flex;
+      align-items: baseline;
+      gap: 7px;
+      margin: 0 0 6px 2px;
+      flex-wrap: wrap;
+    }
+    .field-prev-tag {
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: rgb(var(--c-text4));
+      flex-shrink: 0;
+    }
+    .field-prev-values {
+      font-size: 11.5px;
+      color: rgb(var(--c-text3));
+      font-variant-numeric: tabular-nums;
+      line-height: 1.4;
     }
     .exposure-timer-btn {
       display: flex;
@@ -1500,7 +1548,7 @@
       border: 1px solid rgba(var(--c-accent2),0.18);
       border-radius: 10px;
       padding: 7px 10px;
-      font-size: 12.5px;
+      font-size: 16px; /* iOS auto-zooms a focused input under 16px — see the .set-row .stepper-inp comment */
       font-family: inherit;
       line-height: 1.4;
       color: rgb(var(--c-text2));
@@ -1794,20 +1842,6 @@
       border-color: #FFB040;
       background: rgba(255,176,64,0.14);
       color: #FFB040;
-    }
-    .catchup-seg.level.active.pulsing {
-      animation: catchup-pulse-level 1.6s ease-in-out infinite;
-    }
-    .catchup-seg.oldest.active.pulsing {
-      animation: catchup-pulse-oldest 1.6s ease-in-out infinite;
-    }
-    @keyframes catchup-pulse-level {
-      0%, 100% { background: rgba(200,200,200,0.14); }
-      50% { background: rgba(200,200,200,0.32); }
-    }
-    @keyframes catchup-pulse-oldest {
-      0%, 100% { background: rgba(255,176,64,0.14); }
-      50% { background: rgba(255,176,64,0.32); }
     }
     .picker-muscle-btn.catchup-highlight {
       background: rgba(200,200,200,0.07);
@@ -2140,6 +2174,17 @@
       align-items: center;
       justify-content: center;
     }
+    /* Nudges the user back to Eat Plenty when yesterday has no logged food —
+       same amber "catch up" language as the workout catchup pulse. */
+    #eat-plenty-btn.eat-plenty-missed {
+      border-color: rgba(255,176,64,0.6);
+      color: #FFB040;
+      animation: eat-plenty-missed-pulse 1.6s ease-in-out infinite;
+    }
+    @keyframes eat-plenty-missed-pulse {
+      0%, 100% { background: rgba(255,176,64,0.14); box-shadow: 0 0 0 rgba(255,176,64,0); }
+      50% { background: rgba(255,176,64,0.32); box-shadow: 0 0 10px rgba(255,176,64,0.35); }
+    }
     /* Longer label than the other profile buttons — let it wrap to 2 lines
        instead of clipping or forcing every other button wider. */
     #testing-update-popup-btn {
@@ -2205,7 +2250,7 @@
       border: 1px solid rgba(var(--c-accent2),0.3);
       border-radius: 12px;
       color: rgb(var(--c-text));
-      font-size: 14px;
+      font-size: 16px; /* iOS auto-zooms a focused input under 16px */
       padding: 10px 14px;
     }
     #focus-picker-search:focus { outline: none; border-color: rgba(var(--c-accent),0.6); }
@@ -3855,6 +3900,32 @@
     .profile-btn-row { display: flex; gap: 10px; }
     .profile-btn-row .acct-signout-btn { flex: 1; margin-top: 0; min-width: 0; }
 
+    /* ── Profile > Advanced (week start day, units) ── */
+    .advanced-btn { text-align: left; display: flex; flex-direction: column; gap: 3px; }
+    .advanced-btn-main { font-size: 14px; font-weight: 700; color: rgb(var(--c-text2)); }
+    .advanced-btn-sub { font-size: 11px; font-weight: 500; color: rgb(var(--c-text4)); }
+    .week-start-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+    .week-start-day-block {
+      aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
+      background: rgba(var(--c-panel2),0.85); border: 1px solid rgba(var(--c-accent2),0.3);
+      border-radius: 10px; color: rgb(var(--c-text2)); font-size: 12px; font-weight: 700;
+      cursor: pointer; touch-action: manipulation;
+    }
+    .week-start-day-block.selected {
+      border-color: rgb(var(--c-accent)); background: rgba(var(--c-accent),0.18);
+      color: rgb(var(--c-accent-light)); box-shadow: 0 0 10px rgba(var(--c-accent),0.35);
+    }
+    .unit-toggle-row { display: flex; gap: 10px; margin-bottom: 16px; }
+    .unit-toggle-btn {
+      flex: 1; background: rgba(var(--c-panel2),0.85); border: 1px solid rgba(var(--c-accent2),0.3);
+      border-radius: 12px; color: rgb(var(--c-text2)); font-size: 14px; font-weight: 700;
+      padding: 12px 10px; cursor: pointer; touch-action: manipulation;
+    }
+    .unit-toggle-btn.active {
+      border-color: rgb(var(--c-accent)); background: rgba(var(--c-accent),0.16);
+      color: rgb(var(--c-accent-light)); box-shadow: 0 0 10px rgba(var(--c-accent),0.3);
+    }
+
     /* ── Restore Default Exercises ── */
     #restore-defaults-actions { display: flex; gap: 10px; margin-top: 8px; flex-shrink: 0; }
     #restore-defaults-confirm-btn {
@@ -3863,6 +3934,9 @@
       padding: 8px 20px; cursor: pointer;
     }
     #restore-defaults-confirm-btn:disabled { opacity: 0.4; cursor: default; }
+
+    /* Tutorial styles moved to tutorial.css (shared with eat-plenty.html's
+       tutorial) — see tutorial.js for the accompanying behavior. */
     .restore-ex-row {
       display: flex; align-items: center; gap: 10px;
       background: rgba(var(--c-panel1),0.85); border: 1px solid rgba(var(--c-accent2),0.25);
@@ -4516,7 +4590,7 @@
     #custom-prompt-msg { font-size: 16px; font-weight: 600; color: rgb(var(--c-text)); margin-bottom: 14px; line-height: 1.5; }
     #custom-prompt-input {
       width: 100%; background: rgba(var(--c-panel1),0.95); border: 1px solid rgba(var(--c-accent2),0.3);
-      border-radius: 10px; color: rgb(var(--c-text)); font-size: 15px; padding: 12px 14px;
+      border-radius: 10px; color: rgb(var(--c-text)); font-size: 16px; padding: 12px 14px;
       margin-bottom: 16px; -webkit-appearance: none; outline: none; box-sizing: border-box;
     }
     #custom-prompt-input:focus { border-color: rgb(var(--c-accent)); }
@@ -4607,7 +4681,7 @@
     .acct-field label { display:block; font-size:12px; font-weight:700; letter-spacing:0.4px; color: rgb(var(--c-text3)); margin-bottom:6px; }
     .acct-input {
       width: 100%; background: rgba(var(--c-panel1),0.95); border: 1px solid rgba(var(--c-accent2),0.3);
-      border-radius: 10px; color: rgb(var(--c-text)); font-size: 15px; padding: 12px 14px;
+      border-radius: 10px; color: rgb(var(--c-text)); padding: 12px 14px;
       -webkit-appearance: none; outline: none; box-sizing: border-box; font-size: 16px;
     }
     .acct-input:focus { border-color: rgb(var(--c-accent)); }
@@ -5055,7 +5129,7 @@
     }
     .pr-edit-field input {
       width: 100%; background: rgba(var(--c-panel1),0.95); border: 1px solid rgba(var(--c-accent2),0.3);
-      border-radius: 10px; color: rgb(var(--c-text)); font-size: 15px; padding: 12px 14px;
+      border-radius: 10px; color: rgb(var(--c-text)); font-size: 16px; padding: 12px 14px;
       -webkit-appearance: none; outline: none; box-sizing: border-box;
     }
     .pr-edit-field input:focus { border-color: rgb(var(--c-accent)); }
@@ -6175,7 +6249,7 @@
     <div id="measurements-body">
       <div class="goal-card">
         <div class="goal-card-title">Track Your Progress</div>
-        <div style="font-size:12px;color:rgb(var(--c-text2));line-height:1.55;margin-top:6px;">
+        <div id="measurements-hint" style="font-size:12px;color:rgb(var(--c-text2));line-height:1.55;margin-top:6px;">
           Tap a body part to log a new measurement in inches and see your history and growth over time.
         </div>
       </div>
@@ -6337,11 +6411,28 @@
         <button id="restore-defaults-btn" class="acct-signout-btn">Restore Default Exercises</button>
         <button id="update-history-btn" class="acct-signout-btn">Update History</button>
       </div>
+      <div class="profile-btn-row" style="margin-top:10px;">
+        <button id="tutorial-btn" class="acct-signout-btn">Tutorial</button>
+      </div>
       <div id="acct-signedin-more-btns" style="display:none;">
         <div class="profile-btn-row" style="margin-top:10px;">
           <button id="acct-restore-backup-btn" class="acct-signout-btn">Restore Backup</button>
           <button id="acct-signout-btn" class="acct-signout-btn">Sign Out</button>
         </div>
+      </div>
+
+      <div class="avatar-section-label" style="margin-top:14px;">Advanced</div>
+      <div class="profile-btn-row">
+        <button id="week-start-btn" class="acct-signout-btn advanced-btn">
+          <div class="advanced-btn-main">Week Starts: <span id="week-start-btn-day">Monday</span></div>
+          <div class="advanced-btn-sub">Adjust week start date</div>
+        </button>
+      </div>
+      <div class="profile-btn-row" style="margin-top:10px;">
+        <button id="units-btn" class="acct-signout-btn advanced-btn">
+          <div class="advanced-btn-main">Units: <span id="units-btn-summary">Imperial</span></div>
+          <div class="advanced-btn-sub">Weight, distance, measurements</div>
+        </button>
       </div>
     </div>
   </div>
@@ -6380,6 +6471,52 @@
     </div>
   </div>
   <button id="weekly-overview-close-btn">Done</button>
+</div>
+
+<!-- Week Start Day Overlay (Profile > Advanced) -->
+<div id="week-start-overlay" class="profile-overlay">
+  <div class="profile-overlay-inner">
+    <div class="profile-overlay-header">
+      <span class="profile-overlay-title">Week Start Day</span>
+    </div>
+    <div class="profile-overlay-body">
+      <div class="acct-section-label" style="margin-top:0;">Muscle groups reset weekly on this day</div>
+      <div id="week-start-grid" class="week-start-grid"></div>
+    </div>
+  </div>
+  <button id="week-start-close-btn" class="profile-overlay-close-btn">Done</button>
+</div>
+
+<!-- Units Overlay (Profile > Advanced) -->
+<div id="units-overlay" class="profile-overlay">
+  <div class="profile-overlay-inner">
+    <div class="profile-overlay-header">
+      <span class="profile-overlay-title">Units</span>
+    </div>
+    <div class="profile-overlay-body">
+      <div class="acct-section-label" style="margin-top:0;">Quick Switch</div>
+      <div class="unit-toggle-row">
+        <button id="units-imperial-btn" class="unit-toggle-btn">Imperial</button>
+        <button id="units-metric-btn" class="unit-toggle-btn">Metric</button>
+      </div>
+      <div class="acct-section-label">Weight</div>
+      <div class="unit-toggle-row">
+        <button id="units-weight-lbs-btn" class="unit-toggle-btn">Lbs</button>
+        <button id="units-weight-kg-btn" class="unit-toggle-btn">KG</button>
+      </div>
+      <div class="acct-section-label">Cardio Distance</div>
+      <div class="unit-toggle-row">
+        <button id="units-distance-mi-btn" class="unit-toggle-btn">Miles</button>
+        <button id="units-distance-km-btn" class="unit-toggle-btn">Kilometers</button>
+      </div>
+      <div class="acct-section-label">Body Measurements</div>
+      <div class="unit-toggle-row">
+        <button id="units-length-in-btn" class="unit-toggle-btn">Inches</button>
+        <button id="units-length-cm-btn" class="unit-toggle-btn">Centimeters</button>
+      </div>
+    </div>
+  </div>
+  <button id="units-close-btn" class="profile-overlay-close-btn">Done</button>
 </div>
 
 <!-- Restore Default Exercises Overlay (Profile tab) -->
@@ -6424,6 +6561,29 @@
   </div>
   <button id="update-history-close-btn" class="profile-overlay-close-btn">Done</button>
 </div>
+
+<!-- Tutorial Popup — glowing text next to whatever it's explaining, background
+     stays fully visible behind it. Auto-opens for signed-out users on every
+     app open (see checkForTutorial) and never for signed-in users; also
+     replayable anytime via Profile > More > Tutorial. See TUTORIAL_STEPS
+     near UPDATE_LOG for the step content and renderTutorialStep() below.
+     Tapping anywhere advances to the next step (see the overlay's own click
+     listener) — only #tutorial-exit-btn actually ends the tutorial. -->
+<div id="tutorial-overlay">
+  <button id="tutorial-exit-btn">Exit</button>
+  <div id="tutorial-box">
+    <div id="tutorial-step-body"></div>
+    <div id="tutorial-actions">
+      <button id="tutorial-back-btn">Back</button>
+      <button id="tutorial-next-btn">Next</button>
+    </div>
+  </div>
+</div>
+
+<!-- Tutorial coach-marks — positioned via JS (see positionTutorialTarget) to
+     ring/point at whatever real UI element the current step calls out. -->
+<div id="tutorial-highlight"></div>
+<div id="tutorial-arrow">▼</div>
 
 <!-- Rest Edit Modal (in-workout only) -->
 <div id="rest-edit-modal">
@@ -6471,7 +6631,7 @@
     </div>
     <div id="pr-edit-body">
       <div class="pr-edit-field" id="pr-edit-field-weight">
-        <label>Weight (lbs)</label>
+        <label id="pr-edit-weight-label">Weight (lbs)</label>
         <input id="pr-edit-weight" type="number" inputmode="decimal" step="any" />
       </div>
       <div class="pr-edit-field" id="pr-edit-field-reps">
@@ -6578,6 +6738,7 @@
 </div>
 
 <script src="exercises.js"></script>
+<script src="tutorial.js"></script>
 <script>
   (function() {
     var v = document.querySelector('meta[name="app-version"]').content;
@@ -6647,7 +6808,10 @@
     // These three (.open-toggled) elements deliberately stop 70px short of the
     // bottom of the screen so the nav bar stays visible and usable underneath
     // them — they are not full-screen modals and must not trigger menu-open.
-    var NAV_VISIBLE_WHILE_OPEN = { 'train-modal': true, 'picker': true, 'tpl-builder': true };
+    // tutorial-overlay is also exempt — several tutorial steps point an arrow
+    // at the nav bar itself, which would be pointless if opening the popup
+    // hid it out from under the arrow.
+    var NAV_VISIBLE_WHILE_OPEN = { 'train-modal': true, 'picker': true, 'tpl-builder': true, 'tutorial-overlay': true };
     function updateNavVisibility() {
       var anyModalOpen = Array.prototype.some.call(document.querySelectorAll('.open'), function(el) {
         return !el.classList.contains('stats-subview') && !NAV_VISIBLE_WHILE_OPEN[el.id];
@@ -7146,10 +7310,29 @@ function customConfirm(message, yesText = 'Confirm', noText = 'Cancel') {
   });
 }
 
-function getMondayStr() {
-  const d = new Date();
-  const diff = d.getDay() === 0 ? -6 : 1 - d.getDay();
-  d.setDate(d.getDate() + diff);
+// 0=Sun..6=Sat — which weekday muscle-group resets and every weekly-grouped
+// chart treat as the start of "this week". Defaults to Monday (the app's
+// original fixed behavior) until the user picks one in Profile > Advanced.
+function getWeekStartDay() {
+  return (state.weekStartDay !== undefined && state.weekStartDay !== null) ? state.weekStartDay : 1;
+}
+
+// Returns a Date at local midnight on the most recent occurrence of the
+// configured week-start day on/before `d`.
+// weekStartDay defaults to the live setting (reads `state`) — pass it
+// explicitly when calling from code that runs before `state` exists yet
+// (defaultState() and loadState()'s own migrations), since the global isn't
+// initialized at that point.
+function getWeekStartDate(d, weekStartDay = getWeekStartDay()) {
+  const start = new Date(d);
+  const diff = (start.getDay() - weekStartDay + 7) % 7;
+  start.setDate(start.getDate() - diff);
+  start.setHours(0, 0, 0, 0);
+  return start;
+}
+
+function getWeekStartStr(weekStartDay = getWeekStartDay()) {
+  const d = getWeekStartDate(new Date(), weekStartDay);
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
 
@@ -7166,6 +7349,30 @@ function countedSets(sets) {
 // project's CLAUDE.md for the required pre-push changelog-confirmation step.
 // ═══════════════════════════════════════════════════════════
 const UPDATE_LOG = [
+  {
+    version: '111',
+    date: 'Aug 28, 2026',
+    title: 'Interactive Tutorial, Metric Units & Cardio PRs',
+    bullets: [
+      'New in-app tutorial — walks you through every tab in Train Hard and Eat Plenty. Plays automatically the first time you open the app, and replayable anytime via Profile > More > Tutorial.',
+      'Switch between Imperial and Metric — new Units screen (Profile > Advanced) lets you set weight (lbs/kg), cardio distance (mi/km), and measurements (in/cm) independently. Your existing workout history, PRs, and measurements convert automatically.',
+      'Pick your week start day — choose any day (not just Monday) as the start of your training week from Profile > Advanced; changes how weekly volume and stats are grouped going forward.',
+      'Cardio Personal Records — cardio exercises now track PRs too: max weight, max distance, longest duration, and best pace, with a live "about to set a record" indicator while training.',
+      'Eat Plenty: redesigned Goals page — goals now show as a clean summary with an Edit button instead of an always-open form; macros are locked by default (tap Adjust to override manually) to prevent accidental changes.',
+      "Eat Plenty: Progress tracking — see your weight progress toward your goal, average weekly change, and a heads-up if your weight's plateaued for 3+ weeks.",
+      'Eat Plenty: reminds you if you missed logging food yesterday — the nav button glows until you check it.',
+      "Eat Plenty: copy a meal's macros — tap the new copy icon next to any meal to copy its totals as text.",
+      'Eat Plenty: meal totals now show macros, not just calories.',
+      'Eat Plenty: delete old weight entries right from your weight history.',
+      'Replace Exercise can create a brand-new exercise on the spot, instead of only swapping in one that already exists.',
+      'Smoother drag-to-reorder — dragging an exercise near the top/bottom of a long list now auto-scrolls.',
+      'Catch Up highlight is now tap-to-cycle through neglected muscle groups instead of auto-pulsing on a timer.',
+      "Cardio logging redesign — clearer \"Previous\" values, and weight/distance now use the app's own number pad instead of the phone's keyboard (fixes dropped taps).",
+      'Rotation bug fixes — 3D model no longer gets stuck off-center after rotating, text no longer grows after repeated rotations, smoother rotate animation, and the screen no longer stays zoomed in if a text field was focused during rotation.',
+      'Fixed several inputs auto-zooming on iPhone (notes, exercise search, PR editing).',
+      'Reduced battery drain — the 3D avatar no longer keeps rendering at full speed while hidden (switched tabs, a popup open, or mid-workout) — should meaningfully help battery life during training sessions.',
+    ]
+  },
   {
     version: '110',
     date: 'Aug 26, 2026',
@@ -7402,6 +7609,11 @@ const UPDATE_LOG = [
   },
 ];
 
+// Tutorial step content/behavior now lives in tutorial.js (loaded as a
+// classic script — see its own header comment for why, and the
+// initTrainHardTutorial() call later in this script that hands it the live
+// app functions/values it needs).
+
 // ═══════════════════════════════════════════════════════════
 // DEFAULT EXERCISES — seeded into every user's library once (see
 // seedDefaultExercises()). Reference/editable copy: default-exercises.md
@@ -7557,7 +7769,7 @@ function resetAllDefaultExercises(s) {
   s.history = (s.history || []).filter(w => w.exercises.length > 0);
 
   s.weeklySets = Object.fromEntries(MUSCLES.map(m => [m, 0]));
-  const monday = getMondayStr();
+  const monday = getWeekStartStr(s.weekStartDay != null ? s.weekStartDay : 1);
   for (const w of s.history) {
     if (w.date && isThisWeek(w.date, monday)) {
       for (const ex of w.exercises) {
@@ -7856,19 +8068,182 @@ function getDeletedDefaultExercises() {
 function defaultState() {
   return {
     userName: 'Athlete',
-    lastReset: getMondayStr(),
+    weekStartDay: 1, // 0=Sun..6=Sat — see getWeekStartDay()
+    units: { weight: 'lbs', distance: 'mi', length: 'in' },
+    lastReset: getWeekStartStr(1), // explicit — `state` doesn't exist yet, can't use the getWeekStartDay() default
     weeklySets: Object.fromEntries(MUSCLES.map(m => [m, 0])),
     exercises: Object.fromEntries([...MUSCLES, ...WELLNESS_CATEGORIES].map(m => [m, []])),
     history: [],
     prs: {},
     repPRs: {},
     exposurePRs: {},
+    cardioPRs: {},
     cablePulleys: {},
     exerciseMeta: {},
     goals: {},
     measurements: {},
     measurementHistory: {}
   };
+}
+
+// ═══════════════════════════════════════════════════════════
+// UNIT SYSTEM (Profile > Advanced > Units)
+// ═══════════════════════════════════════════════════════════
+// Every weight/distance/length number in the app is stored in whichever unit
+// state.units currently says — there's no fixed internal canonical unit.
+// Switching a unit walks every place that number is saved and rewrites it in
+// place (see convertAllWeights/Distances/Lengths below), so flipping back and
+// forth round-trips the data instead of just re-labeling a display value.
+function getUnits() {
+  return state.units || { weight: 'lbs', distance: 'mi', length: 'in' };
+}
+function weightUnitLabel() { return getUnits().weight === 'kg' ? 'kg' : 'lbs'; }
+function weightUnitLabelCap() { return getUnits().weight === 'kg' ? 'KG' : 'Lbs'; }
+function distanceUnitLabel() { return getUnits().distance === 'km' ? 'km' : 'mi'; }
+function lengthUnitLabel() { return getUnits().length === 'cm' ? 'cm' : 'in'; }
+// Inches read as a bare trailing double-quote (e.g. 40.5"), cm as a spaced
+// unit word — matches how each is conventionally written inline.
+function lengthUnitSuffix() { return getUnits().length === 'cm' ? ' cm' : '"'; }
+
+const LB_PER_KG = 2.2046226218;
+const MI_PER_KM = 0.6213711922;
+const IN_PER_CM = 0.3937007874;
+
+function roundTo(val, decimals) {
+  const f = Math.pow(10, decimals);
+  return Math.round(val * f) / f;
+}
+function convertStoredWeight(val, toKg) {
+  const n = parseFloat(val);
+  if (isNaN(n)) return val;
+  return roundTo(toKg ? n / LB_PER_KG : n * LB_PER_KG, 1);
+}
+function convertStoredDistance(val, toKm) {
+  const n = parseFloat(val);
+  if (isNaN(n)) return val;
+  return roundTo(toKm ? n / MI_PER_KM : n * MI_PER_KM, 2);
+}
+function convertStoredLength(val, toCm) {
+  const n = parseFloat(val);
+  if (isNaN(n)) return val;
+  return roundTo(toCm ? n / IN_PER_CM : n * IN_PER_CM, 1);
+}
+
+// Rewrites every logged/in-progress set's weight (history + the live session
+// + manual PR overrides) — PRs themselves aren't touched directly since
+// they're always fully rebuilt from history (see recalcStats()).
+function convertAllWeights(toKg) {
+  for (const w of state.history) {
+    for (const ex of w.exercises) {
+      for (const s of ex.sets) {
+        if (s.weight !== '' && s.weight != null) s.weight = convertStoredWeight(s.weight, toKg);
+      }
+    }
+  }
+  for (const ex of session) {
+    if (!ex) continue;
+    for (const s of ex.sets) {
+      if (s.weight !== '' && s.weight != null) s.weight = convertStoredWeight(s.weight, toKg);
+    }
+  }
+  const overrides = loadPROverrides();
+  for (const ov of Object.values(overrides)) {
+    for (const e of (ov.entries || [])) {
+      if (e.weight != null) e.weight = convertStoredWeight(e.weight, toKg);
+    }
+  }
+  savePROverrides(overrides);
+  saveActiveSession();
+}
+
+// Rewrites every logged/in-progress Cardio set's distance field (Distance /
+// Weighted + Distance field-kinds).
+function convertAllDistances(toKm) {
+  for (const w of state.history) {
+    for (const ex of w.exercises) {
+      for (const s of ex.sets) {
+        if (s.distance !== '' && s.distance != null) s.distance = convertStoredDistance(s.distance, toKm);
+      }
+    }
+  }
+  for (const ex of session) {
+    if (!ex) continue;
+    for (const s of ex.sets) {
+      if (s.distance !== '' && s.distance != null) s.distance = convertStoredDistance(s.distance, toKm);
+    }
+  }
+  saveActiveSession();
+}
+
+// Rewrites every logged body-measurement value (state.measurements is just a
+// "latest" cache derived from state.measurementHistory — both get converted
+// directly so they stay in sync without re-deriving from scratch).
+function convertAllLengths(toCm) {
+  for (const key of Object.keys(state.measurementHistory || {})) {
+    const entry = state.measurementHistory[key];
+    if (Array.isArray(entry)) {
+      entry.forEach(e => { e.value = convertStoredLength(e.value, toCm); });
+    } else if (entry && typeof entry === 'object') {
+      for (const side of Object.keys(entry)) {
+        (entry[side] || []).forEach(e => { e.value = convertStoredLength(e.value, toCm); });
+      }
+    }
+  }
+  for (const key of Object.keys(state.measurements || {})) {
+    const val = state.measurements[key];
+    if (val && typeof val === 'object') {
+      for (const side of Object.keys(val)) val[side] = convertStoredLength(val[side], toCm);
+    } else if (val != null) {
+      state.measurements[key] = convertStoredLength(val, toCm);
+    }
+  }
+}
+
+// Each setter flips state.units and repaints the toggle buttons immediately
+// (cheap, synchronous), then defers the actual data conversion — walking
+// possibly years of history, rebuilding PRs, re-rendering Stats/the 3D model
+// — a beat later via setTimeout (not requestAnimationFrame, which pauses
+// entirely while the tab/PWA is backgrounded and could leave a converted
+// unit label sitting on top of never-actually-converted numbers if the app
+// gets backgrounded or killed right after the tap). Doing that work before
+// the click even repaints the button made taps on a large history feel
+// unresponsive/dropped, since the main thread was busy for a noticeable
+// beat before any visual feedback.
+function setWeightUnit(unit) {
+  if (getUnits().weight === unit) return;
+  if (!state.units) state.units = { weight: 'lbs', distance: 'mi', length: 'in' };
+  const toKg = unit === 'kg';
+  state.units.weight = unit;
+  syncUnitsUI();
+  setTimeout(() => {
+    convertAllWeights(toKg);
+    recalcStats();
+  }, 0);
+}
+function setDistanceUnit(unit) {
+  if (getUnits().distance === unit) return;
+  if (!state.units) state.units = { weight: 'lbs', distance: 'mi', length: 'in' };
+  const toKm = unit === 'km';
+  state.units.distance = unit;
+  syncUnitsUI();
+  setTimeout(() => {
+    convertAllDistances(toKm);
+    recalcAllCardioPRs();
+    save();
+  }, 0);
+}
+function setLengthUnit(unit) {
+  if (getUnits().length === unit) return;
+  if (!state.units) state.units = { weight: 'lbs', distance: 'mi', length: 'in' };
+  const toCm = unit === 'cm';
+  state.units.length = unit;
+  syncUnitsUI();
+  setTimeout(() => {
+    convertAllLengths(toCm);
+    save();
+    const measDetailPopup = document.getElementById('meas-detail-popup');
+    if (measDetailKey && measDetailPopup.classList.contains('open')) renderMeasDetailBody();
+  }, 0);
 }
 
 // measurementHistory briefly shipped as an array of dated snapshots before
@@ -7948,9 +8323,10 @@ function loadState() {
     }
     applyDefaultExerciseMigrations(s);
     // Always recompute from history so the model reflects workouts on every load
-    s.lastReset = getMondayStr();
+    const sWeekStartDay = s.weekStartDay != null ? s.weekStartDay : 1;
+    s.lastReset = getWeekStartStr(sWeekStartDay);
     s.weeklySets = Object.fromEntries(MUSCLES.map(m => [m, 0]));
-    const monday = getMondayStr();
+    const monday = getWeekStartStr(sWeekStartDay);
     for (const w of (s.history || [])) {
       if (w.date && isThisWeek(w.date, monday)) {
         for (const ex of (w.exercises || [])) {
@@ -8859,7 +9235,7 @@ function computeFriendCardioLevel(friendState) {
 // in computeChallengeProgress, but compares against the calendar week
 // instead of a challenge start date).
 function computeFriendWeeklyImprovement(friendState) {
-  const monday = getMondayStr();
+  const monday = getWeekStartStr();
   const byExercise = {};
   for (const w of (friendState.history || [])) {
     if (!w.date || !w.exercises) continue;
@@ -8894,7 +9270,7 @@ function computeFriendWeeklyImprovement(friendState) {
 // instead of the global `state` (a friend's live/in-progress session isn't
 // visible to us, so there's no getCardioLiveSessionDuration equivalent here).
 function getFriendWeeklyCardioSecs(friendState) {
-  const monday = getMondayStr();
+  const monday = getWeekStartStr();
   let secs = 0;
   for (const w of (friendState.history || [])) {
     if (!w.date || !isThisWeek(w.date, monday)) continue;
@@ -9404,7 +9780,7 @@ function computeChallengeProgress(pState, exerciseName, startDateISO) {
   const result = { timesTrained: 0, thisWeekCount: 0, baseline: null, current: null, changePct: null };
   if (!exerciseName || !pState) return result;
   const startDate = new Date(startDateISO + 'T00:00:00');
-  const monday = getMondayStr();
+  const monday = getWeekStartStr();
   const entries = [];
   for (const w of (pState.history || [])) {
     if (!w.date || !w.exercises) continue;
@@ -9678,7 +10054,7 @@ function lbStatHtml(prog, large) {
   const pctClass = large ? 'font-size:22px;font-weight:800;' : '';
   return `
     <div class="challenge-lb-stat-pct" style="color:${color};${pctClass}">${sign}${prog.changePct.toFixed(1)}%</div>
-    <div class="challenge-lb-stat-sub">${Math.round(prog.baseline)} → ${Math.round(prog.current)} lbs &middot; ${prog.thisWeekCount}x this week</div>`;
+    <div class="challenge-lb-stat-sub">${Math.round(prog.baseline)} → ${Math.round(prog.current)} ${weightUnitLabel()} &middot; ${prog.thisWeekCount}x this week</div>`;
 }
 
 document.getElementById('challenge-join-exercise-btn').addEventListener('click', () => {
@@ -9848,6 +10224,7 @@ let state = loadState();
 recalcAllPRs();
 recalcAllRepPRs();
 recalcAllExposurePRs();
+recalcAllCardioPRs();
 applyPROverrides();
 // checkForUpdatePopup() is called later, once the loading screen has
 // actually dismissed (see dismissLoadingScreen callers below) — calling it
@@ -10327,7 +10704,7 @@ resizeBloomTargets();
 
 // Renders scene/camera with bloom applied, ending with the composited result
 // on the actual screen (render target null). Called INSTEAD OF a plain
-// renderer.render(scene, camera) in animate() below.
+// renderer.render(scene, camera) in mainRenderTick() below.
 function renderWithBloom() {
   if (!BLOOM.enabled) {
     renderer.setRenderTarget(null);
@@ -12237,7 +12614,7 @@ function loadModel(idx, onReady) {
       if (profileNameEl0) profileNameEl0.textContent = state.userName;
       renderFocusStats();
       checkAndRestoreSession();
-      setTimeout(checkForUpdatePopup, 1000);
+      runPostLoadPopupChecks();
     });
     return;
   }
@@ -12268,7 +12645,7 @@ function loadModel(idx, onReady) {
         // setTimeout(...,1000)) so the popup never appears until the
         // loading screen has actually fully faded away, not while it's
         // still crossfading into the app underneath.
-        setTimeout(checkForUpdatePopup, 1000);
+        runPostLoadPopupChecks();
       });
     });
 }
@@ -12407,7 +12784,7 @@ loadModel(bootModelIdx, (entry) => {
     // setTimeout(...,1000)) so the popup never appears until the loading
     // screen has actually fully faded away, not while it's still
     // crossfading into the app underneath.
-    setTimeout(checkForUpdatePopup, 1000);
+    runPostLoadPopupChecks();
   });
 });
 
@@ -12419,21 +12796,59 @@ loadModel(bootModelIdx, (entry) => {
 // and drive sizing off --rvh/--rvw instead. Mobile browsers also report
 // window.innerWidth/innerHeight a beat late after rotation/keyboard/UI-chrome
 // changes, so re-measure a few times after the event fires, not just once.
+// Attempt a real OS-level orientation lock where the platform supports it.
+// The plain web Orientation API only works in a handful of browsers (mainly
+// Android Chrome/TWA in standalone display mode) — iOS Safari doesn't expose
+// it for web content at all, even installed to homescreen. The wrapped
+// native app (see isNativeApp()/Capacitor.Plugins elsewhere in this file)
+// can go through Capacitor's ScreenOrientation plugin instead, which *does*
+// work on iOS since it calls the native API, not the web one — used if that
+// plugin happens to be installed, a no-op otherwise. Either way this is
+// purely additive on top of the CSS/JS rotate-back trick below, which stays
+// as the fallback for plain browser/PWA usage on iOS.
+function tryLockOrientation() {
+  if (screen.orientation && screen.orientation.lock) {
+    screen.orientation.lock('portrait').catch(() => {});
+  }
+  if (isNativeApp() && Capacitor.Plugins && Capacitor.Plugins.ScreenOrientation) {
+    Capacitor.Plugins.ScreenOrientation.lock({ orientation: 'portrait' }).catch(() => {});
+  }
+}
+tryLockOrientation();
+window.addEventListener('load', tryLockOrientation);
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') tryLockOrientation();
+});
+
+// Rotating mid-set/mid-edit can leave iOS auto-zoomed in on whatever input
+// still had focus the instant the rotation reflow happened (even one field
+// that isn't >=16px anywhere in the app is enough to trigger it) — drop
+// focus before that reflow so there's nothing to zoom into, and force
+// Safari to throw away any zoom already in effect by nudging the viewport
+// meta tag's content (a well-known, if hacky, way to force a rescale).
+window.addEventListener('orientationchange', () => {
+  const active = document.activeElement;
+  if (active && active !== document.body && typeof active.blur === 'function') active.blur();
+  const viewportMeta = document.querySelector('meta[name="viewport"]');
+  if (viewportMeta) {
+    const original = viewportMeta.getAttribute('content');
+    viewportMeta.setAttribute('content', original + ', maximum-scale=1.0');
+    setTimeout(() => viewportMeta.setAttribute('content', original), 60);
+  }
+  // The portrait-lock CSS can't react until the browser has already
+  // reflowed to the real (physical) orientation, so a rotation is briefly
+  // visible before the counter-rotate snaps it back — fade the screen out
+  // for that instant instead of showing the actual rotation movement, then
+  // fade back in once stabilizeViewport's re-measuring has settled.
+  document.body.classList.add('orientation-settling');
+  setTimeout(() => document.body.classList.remove('orientation-settling'), 260);
+});
+
 const landscapeLockQuery = landscapeLockQueryForSize;
 function updateViewportVars() {
   const { w: visualW, h: visualH } = getVisualViewportSize();
   document.documentElement.style.setProperty('--rvh', (visualH * 0.01) + 'px');
   document.documentElement.style.setProperty('--rvw', (visualW * 0.01) + 'px');
-}
-function stabilizeViewport() {
-  updateViewportVars();
-  [50, 150, 350, 600].forEach(ms => setTimeout(updateViewportVars, ms));
-}
-stabilizeViewport();
-window.addEventListener('orientationchange', stabilizeViewport);
-window.addEventListener('pageshow', stabilizeViewport);
-if (window.visualViewport) {
-  window.visualViewport.addEventListener('resize', stabilizeViewport);
 }
 
 // Mobile on-screen keyboards (and, on some browsers, the URL bar showing/
@@ -12447,22 +12862,61 @@ if (window.visualViewport) {
 // rotation/window resize) or the height grows back (keyboard closing).
 let lastStableViewportW = null;
 let lastStableViewportH = null;
-window.addEventListener('resize', () => {
-  updateViewportVars();
+function resizeRendererToViewport() {
   const sz = getVisualViewportSize();
-  const widthChanged = lastStableViewportW === null || sz.w !== lastStableViewportW;
-  const heightShrankOnly = !widthChanged && lastStableViewportH !== null && sz.h < lastStableViewportH;
-  if (heightShrankOnly) return;
   lastStableViewportW = sz.w;
   lastStableViewportH = sz.h;
   camera.aspect = sz.w / sz.h;
   camera.updateProjectionMatrix();
   renderer.setSize(sz.w, sz.h);
   resizeBloomTargets();
+}
+
+// A rotation event can report window.innerWidth/innerHeight (and, briefly,
+// the portrait-lock CSS media query itself) a beat late or mid-transition —
+// sizing the renderer off that one bad reading left the model stuck shifted
+// into a corner until something else (e.g. a real reload) forced another
+// resize. Re-apply the renderer size on the same delayed re-measure schedule
+// stabilizeViewport already uses for --rvh/--rvw, so a bad initial reading
+// gets self-corrected within ~600ms instead of sticking permanently.
+function stabilizeViewport() {
+  updateViewportVars();
+  resizeRendererToViewport();
+  [50, 150, 350, 600].forEach(ms => setTimeout(() => {
+    updateViewportVars();
+    resizeRendererToViewport();
+  }, ms));
+}
+stabilizeViewport();
+window.addEventListener('orientationchange', stabilizeViewport);
+window.addEventListener('pageshow', stabilizeViewport);
+if (window.visualViewport) {
+  window.visualViewport.addEventListener('resize', stabilizeViewport);
+}
+
+window.addEventListener('resize', () => {
+  updateViewportVars();
+  const sz = getVisualViewportSize();
+  const widthChanged = lastStableViewportW === null || sz.w !== lastStableViewportW;
+  const heightShrankOnly = !widthChanged && lastStableViewportH !== null && sz.h < lastStableViewportH;
+  if (heightShrankOnly) return;
+  resizeRendererToViewport();
 });
 
-(function animate() {
-  requestAnimationFrame(animate);
+// The 3D view (with its hand-rolled 6-pass bloom pipeline — see
+// renderWithBloom above) is by far the most GPU-hungry thing this app does.
+// Left as a plain self-rescheduling rAF loop, it ran unconditionally
+// forever, including while canvas-container is display:none (every tab but
+// Profile — see goToTab below) and while the page/PWA is backgrounded —
+// burning battery rendering into a canvas nobody can see. Gate it on both
+// "Profile tab is actually showing" and "page is actually visible", and
+// actually stop rAF (not just skip work) when neither holds, so a phone
+// sitting on the History or Stats tab isn't still driving the GPU at its
+// full display refresh rate.
+let mainRenderRafId = null;
+let canvas3DTabActive = true; // profile is the default/initial tab
+function mainRenderTick() {
+  mainRenderRafId = requestAnimationFrame(mainRenderTick);
   const now   = performance.now();
   const delta = Math.min((now - _spinFrameTime) / 1000, 0.1);
   _spinFrameTime = now;
@@ -12474,7 +12928,67 @@ window.addEventListener('resize', () => {
   auraShellMaterials.forEach(m => syncCoreAuraUniforms(SHELL, m.uniforms, _coreAuraTime));
   shellMeshes.forEach(s => { s.visible = SHELL.enabled; });
   renderWithBloom();
-})();
+}
+// Being on the Profile tab isn't enough on its own — dozens of full-screen
+// modals in this app (train-modal, the exercise picker, edit-modal,
+// measurements-overlay, template builder, etc.) render an opaque/blurred
+// backdrop directly on top of #canvas-container without ever telling this
+// loop to stop, so a whole training session (or editing a set, or any other
+// popup opened from Profile) kept the 3D scene animating and re-rendering,
+// completely hidden, the entire time. Rather than hunting down and patching
+// every current and future modal's open/close code individually,
+// elementFromPoint at the canvas's own center tells us what's actually
+// topmost there — if it isn't the canvas itself, something opaque is
+// covering it and there's no point rendering.
+function isCanvas3DOccluded() {
+  const container = document.getElementById('canvas-container');
+  const rect = container.getBoundingClientRect();
+  if (rect.width === 0 || rect.height === 0) return true;
+  const topEl = document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2);
+  return !(topEl === container || container.contains(topEl));
+}
+
+function updateMainRenderLoopState() {
+  const shouldRun = canvas3DTabActive && document.visibilityState === 'visible' && !isCanvas3DOccluded();
+  if (shouldRun && !mainRenderRafId) {
+    _spinFrameTime = performance.now();
+    mainRenderRafId = requestAnimationFrame(mainRenderTick);
+  } else if (!shouldRun && mainRenderRafId) {
+    cancelAnimationFrame(mainRenderRafId);
+    mainRenderRafId = null;
+  }
+}
+updateMainRenderLoopState();
+document.addEventListener('visibilitychange', updateMainRenderLoopState);
+
+// Modals in this app show/hide purely by toggling a class (which CSS wires
+// to display/opacity — see e.g. #train-modal.open) rather than through any
+// single shared open/close function, so there's no one call site to hook.
+// Watch the whole document for class/style changes instead and re-run the
+// occlusion check whenever one happens — coalesced onto the next animation
+// frame so a burst of unrelated mutations (e.g. a drag gesture updating
+// transforms every frame) only costs one extra elementFromPoint hit-test
+// per frame, not one per mutation.
+let _occlusionCheckScheduled = false;
+function scheduleOcclusionCheck() {
+  if (_occlusionCheckScheduled) return;
+  _occlusionCheckScheduled = true;
+  requestAnimationFrame(() => {
+    _occlusionCheckScheduled = false;
+    updateMainRenderLoopState();
+  });
+}
+new MutationObserver(scheduleOcclusionCheck).observe(document.body, {
+  subtree: true, attributes: true, attributeFilter: ['class', 'style']
+});
+// Safety net: every current modal in this app shows/hides via class or
+// style attribute changes (caught above), but if anything ever closes by
+// being removed from the DOM instead (a childList change, which this
+// MutationObserver deliberately doesn't listen for, to avoid re-checking on
+// every unrelated DOM write in this large app), a missed transition would
+// otherwise leave the loop stuck paused indefinitely with no way to notice.
+// This just re-runs the (cheap) check periodically so that can't happen.
+setInterval(updateMainRenderLoopState, 3000);
 
 // ═══════════════════════════════════════════════════════════
 // NAVIGATION
@@ -12525,6 +13039,8 @@ function goToTab(tab) {
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   document.getElementById(tabSections[tab]).classList.add('active');
   document.getElementById('canvas-container').style.display = tab === 'profile' ? 'block' : 'none';
+  canvas3DTabActive = tab === 'profile';
+  updateMainRenderLoopState();
   document.getElementById('profile-btns').classList.toggle('visible', tab === 'profile');
   document.getElementById('profile-btns-right').classList.toggle('visible', tab === 'profile');
   document.getElementById('testing-btns-bottom-left').classList.toggle('visible', tab === 'profile');
@@ -12779,7 +13295,7 @@ function attachHistSwipe(card, realIdx) {
 // ── Stats recalculation ──
 function recalcStats() {
   state.weeklySets = Object.fromEntries(MUSCLES.map(m => [m, 0]));
-  const monday = getMondayStr();
+  const monday = getWeekStartStr();
   for (const w of state.history) {
     if (w.date && isThisWeek(w.date, monday)) {
       for (const ex of w.exercises) {
@@ -12792,6 +13308,7 @@ function recalcStats() {
   recalcAllPRs();
   recalcAllRepPRs();
   recalcAllExposurePRs();
+  recalcAllCardioPRs();
   applyPROverrides();
   save();
   updateModel();
@@ -12838,7 +13355,7 @@ function renderHistEditExercises() {
       <div class="hedit-ex-note"><textarea rows="1" placeholder="Add a note for this exercise…" maxlength="500">${escapeHtml(ex.note || '')}</textarea></div>
       <div class="hedit-col-heads">${isExp
         ? (noTemp ? '<span>Set</span><span></span><span>Sec</span><span></span>' : '<span>Set</span><span>°F</span><span>Sec</span><span></span>')
-        : '<span>Set</span><span>lbs</span><span>Reps</span><span></span>'}</div>
+        : `<span>Set</span><span>${weightUnitLabel()}</span><span>Reps</span><span></span>`}</div>
       <div class="hedit-sets"></div>
       <button class="hedit-add-set" data-ex="${exIdx}">+ Add Set</button>
     `;
@@ -13141,6 +13658,8 @@ function openExDetail(exName, muscle, readOnly = false) {
   const isWellness = WELLNESS_CATEGORIES.includes(muscle);
   const isExposure = (state.exerciseMeta[exName] || {}).expType === 'exposure';
   const noTemp = isExposure && exerciseNoTemp(exName, muscle);
+  const fieldKind = (state.exerciseMeta[exName] || {}).fieldKind;
+  const shape = fieldKind ? FIELD_KIND_SHAPES[fieldKind] : null;
   const lv = getLevel(muscle);
   const dotColor = LEVEL_COLORS[lv];
   const { displayName: _edn, pulleyCount: pc } = parseCableExName(exName);
@@ -13210,6 +13729,46 @@ function openExDetail(exName, muscle, readOnly = false) {
 
       body.appendChild(grid);
     }
+  } else if (shape) {
+    const cpr = (state.cardioPRs || {})[exName];
+    if (cpr && (cpr.maxWeight > 0 || cpr.maxDistance > 0 || cpr.maxDuration > 0)) {
+      const sec = document.createElement('div');
+      sec.className = 'exd-section';
+      sec.textContent = 'Personal Records';
+      body.appendChild(sec);
+
+      const grid = document.createElement('div');
+      grid.className = 'exd-pr-grid';
+
+      const head = document.createElement('div');
+      head.className = 'exd-pr-head exd-exposure-pr-head';
+      head.innerHTML = '<span>Record</span><span>Value</span>';
+      grid.appendChild(head);
+
+      const cprRows = [];
+      if (cpr.maxWeight > 0) cprRows.push([`Max ${weightUnitLabelCap()}`, `${cpr.maxWeight} ${weightUnitLabel()}`, false]);
+      if (cpr.maxDistance > 0) cprRows.push(['Max Distance', `${cpr.maxDistance} ${distanceUnitLabel()}`, false]);
+      if (cpr.maxDuration > 0) cprRows.push(['Longest Duration', fmtDurationHMS(cpr.maxDuration), false]);
+      if (cpr.bestPaceSecPerUnit != null) cprRows.push(['Best Pace', fmtCardioPace(cpr.bestPaceSecPerUnit), true]);
+      if (cpr.comboWeight > 0) {
+        const pairLabel = cpr.comboWeightPairKind === 'distance'
+          ? `${cpr.comboWeightPair} ${distanceUnitLabel()}`
+          : fmtDurationHMS(cpr.comboWeightPair);
+        const comboLabel = `Max ${weightUnitLabelCap()} @ ${cpr.comboWeightPairKind === 'distance' ? 'Distance' : 'Duration'}`;
+        cprRows.push([comboLabel, `${cpr.comboWeight} ${weightUnitLabel()} @ ${pairLabel}`, true]);
+      }
+      // Combo/pace rows get the same highlighted treatment the headline
+      // "Max/Temp @ Duration" row gets elsewhere — they're the two records
+      // that pair fields together instead of just tracking one in isolation.
+      cprRows.forEach(([label, val, isCombo]) => {
+        const row = document.createElement('div');
+        row.className = 'exd-pr-row exd-exposure-pr-row' + (isCombo ? ' exd-pr-max' : '');
+        row.innerHTML = `<span class="exd-pr-label">${label}</span><span class="exd-pr-val">${val}</span>`;
+        grid.appendChild(row);
+      });
+
+      body.appendChild(grid);
+    }
   } else {
     const repPRs = (state.repPRs || {})[exName] || {};
     const hasRepPRs = Object.keys(repPRs).length > 0;
@@ -13235,7 +13794,7 @@ function openExDetail(exName, muscle, readOnly = false) {
         const d = entryDate ? fmtPRDate(entryDate) : '—';
         const row = document.createElement('div');
         row.className = 'exd-pr-row';
-        row.innerHTML = `<span class="exd-pr-label">${r}RM</span><span class="exd-pr-val">${w} lbs</span><span class="exd-pr-date">${d}</span>`;
+        row.innerHTML = `<span class="exd-pr-label">${r}RM</span><span class="exd-pr-val">${w} ${weightUnitLabel()}</span><span class="exd-pr-date">${d}</span>`;
         grid.appendChild(row);
       }
 
@@ -13243,7 +13802,7 @@ function openExDetail(exName, muscle, readOnly = false) {
       if (mx) {
         const maxRow = document.createElement('div');
         maxRow.className = 'exd-pr-row exd-pr-max';
-        maxRow.innerHTML = `<span class="exd-pr-label">Max</span><span class="exd-pr-val">${mx.reps}r @ ${mx.weight} lbs</span><span class="exd-pr-date">${fmtPRDate(mx.date)}</span>`;
+        maxRow.innerHTML = `<span class="exd-pr-label">Max</span><span class="exd-pr-val">${mx.reps}r @ ${mx.weight} ${weightUnitLabel()}</span><span class="exd-pr-date">${fmtPRDate(mx.date)}</span>`;
         grid.appendChild(maxRow);
       }
 
@@ -13253,8 +13812,12 @@ function openExDetail(exName, muscle, readOnly = false) {
 
   // Stats > Exercise Stats: a single "Log PR Manually" button, instead of
   // per-row edits — enter a weight/reps (or temp/duration) + the date it was
-  // performed, and let it run through the same PR math a real logged set would.
-  if (readOnly) {
+  // performed, and let it run through the same PR math a real logged set
+  // would. Not offered for cardio (shape) yet — the manual-entry modal only
+  // has weight/reps and temp/duration fields, neither of which fit a
+  // weight/distance/duration cardio set; cardio PRs are computed from real
+  // logged history only for now (see recalcAllCardioPRs).
+  if (readOnly && !shape) {
     const editBtn = document.createElement('button');
     editBtn.className = 'exd-pr-edit-btn';
     editBtn.textContent = '✎ Log PR Manually';
@@ -13277,7 +13840,7 @@ function openExDetail(exName, muscle, readOnly = false) {
         row.className = 'exd-manual-pr-row';
         const valLabel = isExposure
           ? (noTemp ? fmtRestSecs(entry.duration) : `${entry.temp}°F × ${fmtRestSecs(entry.duration)}`)
-          : `${entry.weight} lbs × ${entry.reps}`;
+          : `${entry.weight} ${weightUnitLabel()} × ${entry.reps}`;
         row.innerHTML = `
           <span class="exd-manual-pr-label">${valLabel}</span>
           <span class="exd-manual-pr-date">${fmtPRDate(entry.date)}</span>
@@ -13302,7 +13865,11 @@ function openExDetail(exName, muscle, readOnly = false) {
   const entries = [];
   for (const w of state.history) {
     const ex = w.exercises.find(e => e.name === exName);
-    if (ex) entries.push({ date: w.date, sets: ex.sets.filter(s => isExposure ? (noTemp ? s.duration : (s.temp || s.duration)) : (s.weight || s.reps)) });
+    if (!ex) continue;
+    const sets = shape
+      ? ex.sets.filter(s => (parseFloat(s.weight) || 0) > 0 || (parseFloat(s.distance) || 0) > 0 || (parseInt(s.duration) || 0) > 0)
+      : ex.sets.filter(s => isExposure ? (noTemp ? s.duration : (s.temp || s.duration)) : (s.weight || s.reps));
+    entries.push({ date: w.date, sets });
   }
   entries.reverse();
 
@@ -13323,12 +13890,22 @@ function openExDetail(exName, muscle, readOnly = false) {
     entry.sets.forEach((s, i) => {
       const row = document.createElement('div');
       row.className = 'exd-set-row';
-      const val1 = isExposure
-        ? (noTemp ? (s.duration ? fmtRestSecs(s.duration) : '—') : (s.temp ? `${s.temp}°F` : '—'))
-        : (s.weight ? `${s.weight} lbs` : '—');
-      const val2 = isExposure
-        ? (noTemp ? '' : (s.duration ? fmtRestSecs(s.duration) : '—'))
-        : (s.reps ? `${s.reps} reps` : '—');
+      let val1, val2;
+      if (shape) {
+        const parts = shape.fields.filter(f => f.type !== 'time').map(f => {
+          const v = formatFieldValue(f, s[f.key]);
+          return v ? `${v} ${fieldUnitLabel(f).toLowerCase()}` : null;
+        }).filter(Boolean);
+        val1 = parts.length ? parts.join(' · ') : '—';
+        val2 = s.duration ? fmtDurationHMS(s.duration) : '—';
+      } else {
+        val1 = isExposure
+          ? (noTemp ? (s.duration ? fmtRestSecs(s.duration) : '—') : (s.temp ? `${s.temp}°F` : '—'))
+          : (s.weight ? `${s.weight} ${weightUnitLabel()}` : '—');
+        val2 = isExposure
+          ? (noTemp ? '' : (s.duration ? fmtRestSecs(s.duration) : '—'))
+          : (s.reps ? `${s.reps} reps` : '—');
+      }
       row.innerHTML = `<span class="exd-set-num">${i + 1}</span><span class="exd-set-val">${val1}</span><span class="exd-set-val">${val2}</span>`;
       card.appendChild(row);
     });
@@ -13472,6 +14049,7 @@ function openPREditModal(exName, muscle, isExposure, editIndex = null) {
   const { displayName } = parseCableExName(exName);
   document.getElementById('pr-edit-title').textContent = editIndex == null ? `Log PR — ${displayName}` : `Edit PR — ${displayName}`;
   document.getElementById('pr-edit-field-weight').style.display = isExposure ? 'none' : '';
+  document.getElementById('pr-edit-weight-label').textContent = `Weight (${weightUnitLabel()})`;
   document.getElementById('pr-edit-field-reps').style.display = isExposure ? 'none' : '';
   document.getElementById('pr-edit-field-temp').style.display = (isExposure && !noTemp) ? '' : 'none';
   document.getElementById('pr-edit-field-duration').style.display = isExposure ? '' : 'none';
@@ -13535,6 +14113,7 @@ document.getElementById('pr-edit-save').addEventListener('click', () => {
   recalcAllPRs();
   recalcAllRepPRs();
   recalcAllExposurePRs();
+  recalcAllCardioPRs();
   applyPROverrides();
   save();
   document.getElementById('pr-edit-modal').classList.remove('open');
@@ -13553,6 +14132,7 @@ function deleteManualPREntry(exName, isExposure, index) {
   recalcAllPRs();
   recalcAllRepPRs();
   recalcAllExposurePRs();
+  recalcAllCardioPRs();
   applyPROverrides();
   save();
 }
@@ -13642,7 +14222,7 @@ function renderChestChart(muscle) {
   const isDuration = !!EXPOSURE_SUBTYPES[muscle];
 
   // Group total sets (or, for Heat/Cold Exposure, total duration in seconds)
-  // for this muscle by week (Monday-start week)
+  // for this muscle by week (using the user's configured week-start day)
   const weekTotals = new Map(); // weekStart ms -> sets/seconds
   for (const w of state.history) {
     if (!w.exercises || !w.date) continue;
@@ -13657,23 +14237,13 @@ function renderChestChart(muscle) {
       : muscleExs.reduce((sum, ex) => sum + (exerciseNoTemp(ex.name, muscle) ? 0 : ex.sets.length), 0);
     if (muscleTotal === 0) continue;
 
-    const weekStart = new Date(d);
-    const day = weekStart.getDay(); // 0=Sun..6=Sat
-    const diffToMonday = (day === 0) ? 6 : day - 1;
-    weekStart.setDate(weekStart.getDate() - diffToMonday);
-    weekStart.setHours(0, 0, 0, 0);
-    const key = weekStart.getTime();
+    const key = getWeekStartDate(d).getTime();
     weekTotals.set(key, (weekTotals.get(key) || 0) + muscleTotal);
   }
 
-  // The current week (Monday-start) is always shown, even with 0 sets so far —
-  // labeled "current" instead of just being missing, since it isn't over yet.
-  const now = new Date();
-  const curWeekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const curDay = curWeekStart.getDay();
-  curWeekStart.setDate(curWeekStart.getDate() - ((curDay === 0) ? 6 : curDay - 1));
-  curWeekStart.setHours(0, 0, 0, 0);
-  const curWeekMs = curWeekStart.getTime();
+  // The current week is always shown, even with 0 sets so far — labeled
+  // "current" instead of just being missing, since it isn't over yet.
+  const curWeekMs = getWeekStartDate(new Date()).getTime();
   if (!weekTotals.has(curWeekMs)) weekTotals.set(curWeekMs, null);
 
   if (!weekTotals.size) {
@@ -13878,15 +14448,11 @@ function estimate1RM(weight, reps) {
   return weight * (1 + reps / 30);
 }
 
-// UTC-based day index (see renderExerciseChartBlock) of the Monday that starts
-// the current Monday-Sunday week, so charts can extend through today even if
-// the most recent logged session was weeks ago.
+// UTC-based day index (see renderExerciseChartBlock) of the day that starts
+// the current week (per the user's configured week-start day), so charts can
+// extend through today even if the most recent logged session was weeks ago.
 function currentWeekDayIndex() {
-  const now = new Date();
-  const weekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const day = weekStart.getDay();
-  const diffToMonday = (day === 0) ? 6 : day - 1;
-  weekStart.setDate(weekStart.getDate() - diffToMonday);
+  const weekStart = getWeekStartDate(new Date());
   return Math.round(Date.UTC(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate()) / 86400000);
 }
 
@@ -13904,8 +14470,9 @@ function buildGrowthLevelLegend() {
 }
 
 function renderExerciseChartBlock(exName) {
-  // Best estimated-1RM set logged for this exercise, per Monday-start week
-  // (falls back to reps for bodyweight/no-weight exercises where e1RM can't be computed)
+  // Best estimated-1RM set logged for this exercise, per week (using the
+  // user's configured week-start day) — falls back to reps for bodyweight/
+  // no-weight exercises where e1RM can't be computed
   // Keyed by a UTC-based day index (not local getTime()) so week-to-week gaps stay
   // an exact multiple of 7 across DST transitions instead of drifting by an hour.
   const weekBest = new Map(); // dayIndex -> {ms, weight, reps, e1rm}
@@ -13929,10 +14496,7 @@ function renderExerciseChartBlock(exName) {
     }
     if (!best) continue;
 
-    const weekStart = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-    const day = weekStart.getDay();
-    const diffToMonday = (day === 0) ? 6 : day - 1;
-    weekStart.setDate(weekStart.getDate() - diffToMonday);
+    const weekStart = getWeekStartDate(d);
     const key = Math.round(Date.UTC(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate()) / 86400000);
     const existing = weekBest.get(key);
     if (!existing || best.e1rm > existing.e1rm || (best.e1rm === existing.e1rm && best.reps > existing.reps)) {
@@ -14001,7 +14565,7 @@ function renderExerciseChartBlock(exName) {
 
     const val = usingE1rm ? v.e1rm : v.reps;
     const heightPct = maxVal > 0 ? Math.max(6, Math.round((val / maxVal) * 100)) : 6;
-    const valLabel = usingE1rm ? `~${Math.round(v.e1rm)} lbs e1RM` : `${v.reps} reps`;
+    const valLabel = usingE1rm ? `~${Math.round(v.e1rm)} ${weightUnitLabel()} e1RM` : `${v.reps} reps`;
     const prPrefix = dayIndex === prKey ? `<span class="chest-ex-bar-pr-star">★</span> ` : '';
 
     let growthHtml, barLevel;
@@ -14115,6 +14679,15 @@ function fmtDurationHMS(secs) {
   return h > 0
     ? `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
     : `${m}:${String(s).padStart(2, '0')}`;
+}
+
+// Cardio pace PR — secPerUnit is seconds per one distance-unit (mile/km),
+// shown the way runners actually write pace (e.g. "6:30/mi"), not as a raw
+// duration.
+function fmtCardioPace(secPerUnit) {
+  const m = Math.floor(secPerUnit / 60);
+  const s = Math.round(secPerUnit % 60);
+  return `${m}:${String(s).padStart(2, '0')}/${distanceUnitLabel()}`;
 }
 
 function updateEditRestDisplay() {
@@ -14368,7 +14941,7 @@ document.getElementById('ex-delete-yes').addEventListener('click', () => {
 
   // Recount weekly sets from remaining history
   state.weeklySets = Object.fromEntries(MUSCLES.map(m => [m, 0]));
-  const monday = getMondayStr();
+  const monday = getWeekStartStr();
   for (const w of state.history) {
     if (w.date && isThisWeek(w.date, monday)) {
       for (const ex of w.exercises) {
@@ -15316,7 +15889,7 @@ function addTplExerciseBlock(name, muscle, initialSets, replaceIdx, replaceBlock
 
   const cols = document.createElement('div');
   cols.className = 'tpl-set-cols';
-  cols.innerHTML = '<span>Set</span><span>lbs</span><span>Reps</span><span></span>';
+  cols.innerHTML = `<span>Set</span><span>${weightUnitLabel()}</span><span>Reps</span><span></span>`;
 
   const setsContainer = document.createElement('div');
   setsContainer.className = 'sets-container';
@@ -15569,11 +16142,32 @@ function addExerciseBlock(name, muscle, initialSets, noteOverride, replaceIdx, r
           : `PR: <span>${epr.comboTemp}°F × ${fmtRestSecs(epr.comboDuration)}</span>`)
       : '';
   } else if (shape) {
-    prEl.innerHTML = '';
+    // One headline combo, same single-line convention as the strength PR
+    // and exposure PR above it — weight-combo takes priority when this
+    // exercise has weight (mirrors weight lifting's own PR line), then best
+    // pace, then whichever independent max actually has a value. The full
+    // breakdown lives in the Exercise Detail popup (see openExDetail).
+    const cpr = (state.cardioPRs || {})[name];
+    let headline = '';
+    if (cpr) {
+      if (cpr.comboWeight > 0) {
+        const pairLabel = cpr.comboWeightPairKind === 'distance'
+          ? `${cpr.comboWeightPair} ${distanceUnitLabel()}`
+          : fmtDurationHMS(cpr.comboWeightPair);
+        headline = `${cpr.comboWeight} ${weightUnitLabel()} @ ${pairLabel}`;
+      } else if (cpr.bestPaceSecPerUnit != null) {
+        headline = fmtCardioPace(cpr.bestPaceSecPerUnit);
+      } else if (cpr.maxDistance > 0) {
+        headline = `${cpr.maxDistance} ${distanceUnitLabel()}`;
+      } else if (cpr.maxDuration > 0) {
+        headline = fmtDurationHMS(cpr.maxDuration);
+      }
+    }
+    prEl.innerHTML = headline ? `PR: <span>${headline}</span>` : '';
   } else {
     const pr = state.prs[name];
     const agoLabel = pr && pr.date ? `<span class="train-ex-pr-ago">(${fmtPRDaysAgo(pr.date)})</span>` : '';
-    prEl.innerHTML = pr ? `PR Max Lbs x Max Reps: <span>${pr.weight} lbs × ${pr.reps}</span>${agoLabel}` : '';
+    prEl.innerHTML = pr ? `PR Max ${weightUnitLabelCap()} x Max Reps: <span>${pr.weight} ${weightUnitLabel()} × ${pr.reps}</span>${agoLabel}` : '';
   }
 
   const curPrEl = document.createElement('div');
@@ -15586,13 +16180,15 @@ function addExerciseBlock(name, muscle, initialSets, noteOverride, replaceIdx, r
   } else if (shape) {
     // Time only gets bumped to its own row below when there isn't room for
     // it alongside the other field(s) — i.e. only for the 3-field shape.
+    // No "Previous" column here — it's its own full-width line above each
+    // set instead (see .field-prev-line in renderFieldSets).
     const rowFields = shape.fields.length > 2 ? shape.fields.filter(f => f.type !== 'time') : shape.fields;
     cols.className = 'set-cols ' + fieldGridClassSuffix(rowFields.length, 'cols');
-    cols.innerHTML = '<span>Set</span><span> Previous</span>'
-      + rowFields.map(f => `<span>${f.label}</span>`).join('') + '<span></span><span></span>';
+    cols.innerHTML = '<span>Set</span>'
+      + rowFields.map(f => `<span>${fieldUnitLabel(f)}</span>`).join('') + '<span></span><span></span>';
   } else {
     cols.className = 'set-cols';
-    cols.innerHTML = '<span>Set</span><span> Previous</span><span>lbs</span><span>Reps</span><span></span><span></span>';
+    cols.innerHTML = `<span>Set</span><span> Previous</span><span>${weightUnitLabel()}</span><span>Reps</span><span></span><span></span>`;
   }
 
   const setsContainer = document.createElement('div');
@@ -15607,7 +16203,10 @@ function addExerciseBlock(name, muscle, initialSets, noteOverride, replaceIdx, r
   block.appendChild(top);
   block.appendChild(noteEl);
   block.appendChild(prEl);
-  if (!isExposure && !shape) block.appendChild(curPrEl);
+  // Cardio now gets a live current-PR line too (see updateCurrentCardioPR) —
+  // exposure (Heat/Cold) still doesn't have an analogous "what's needed"
+  // calculation, so it stays excluded.
+  if (!isExposure) block.appendChild(curPrEl);
   block.appendChild(cols);
   block.appendChild(setsContainer);
   block.appendChild(addSetBtn);
@@ -15660,23 +16259,11 @@ function updateCurrentLbsPR(exIdx, block) {
   const w = parseFloat(activeSet && activeSet.weight) || 0;
   if (!w) { curPrEl.innerHTML = ''; return; }
 
-  let bestReps = 0;
-  for (const wk of state.history) {
-    const hEx = wk.exercises.find(e => e.name === ex.name);
-    if (!hEx) continue;
-    for (const s of hEx.sets) {
-      if ((parseFloat(s.weight) || 0) === w) {
-        const r = parseInt(s.reps) || 0;
-        if (r > bestReps) bestReps = r;
-      }
-    }
-  }
-
-  if (bestReps > 0) {
-    curPrEl.innerHTML = `PR for Current Lbs: <span>${w} lbs × ${bestReps}</span>`;
-    return;
-  }
-
+  // Always shows what it'd take to set a NEW record at this weight — never
+  // "here's what you did last time at this weight" (that's what the
+  // history/placeholder hints are for). Applies the same whether or not
+  // this exact weight has been logged before; only the rep-PR floor table
+  // below decides what still counts as new.
   const repPRs = (state.repPRs || {})[ex.name] || {};
   // A record at r reps is also a valid strength floor for any rep count <= r
   // (if you can lift X for 4 reps, doing 1 rep of X+1 isn't meaningfully new).
@@ -15693,8 +16280,44 @@ function updateCurrentLbsPR(exIdx, block) {
     if (w > floors[r]) { neededReps = r; break; }
   }
   curPrEl.innerHTML = neededReps != null
-    ? `PR for Current Lbs: <span>${w} lbs needs ${neededReps} rep${neededReps === 1 ? '' : 's'} for PR</span>`
-    : `PR for Current Lbs: <span>${w} lbs needs 13+ reps for PR</span>`;
+    ? `PR for Current ${weightUnitLabelCap()}: <span>${w} ${weightUnitLabel()} needs ${neededReps} rep${neededReps === 1 ? '' : 's'} for PR</span>`
+    : `PR for Current ${weightUnitLabelCap()}: <span>${w} ${weightUnitLabel()} needs 13+ reps for PR</span>`;
+}
+
+// Cardio's live "what would set a new PR" indicator — same principle as
+// updateCurrentLbsPR above (show what it'd take, never what you already did
+// at this exact value), scoped to exercises with a weight field
+// (Duration+Weight / Weighted+Distance) since that's the one continuous
+// "primary" metric cardio shares with strength training, and the
+// weight-primary/pair-tiebreak combo PR (see recalcAllCardioPRs) it's
+// compared against. Plain Distance exercises don't get a live indicator —
+// there's no discrete rep-style bracket to compare a live pace against.
+function updateCurrentCardioPR(exIdx, block) {
+  const ex = session[exIdx];
+  if (!ex || !ex.fieldKind) return;
+  const curPrEl = block.querySelector('.train-ex-cur-pr');
+  if (!curPrEl) return;
+  const hasWeight = ex.fieldKind === 'durationWeight' || ex.fieldKind === 'weightedDistance';
+  if (!hasWeight) { curPrEl.innerHTML = ''; return; }
+
+  const activeSet = ex.sets.find(s => !s.done) || ex.sets[ex.sets.length - 1];
+  const w = parseFloat(activeSet && activeSet.weight) || 0;
+  if (!w) { curPrEl.innerHTML = ''; return; }
+
+  const cpr = (state.cardioPRs || {})[ex.name];
+  const pairIsDistance = ex.fieldKind === 'weightedDistance';
+
+  if (!cpr || w > cpr.comboWeight) {
+    curPrEl.innerHTML = `PR for Current ${weightUnitLabelCap()}: <span>${w} ${weightUnitLabel()} is a new PR</span>`;
+  } else if (w === cpr.comboWeight) {
+    const pairLabel = pairIsDistance ? `${cpr.comboWeightPair} ${distanceUnitLabel()}` : fmtDurationHMS(cpr.comboWeightPair);
+    curPrEl.innerHTML = `PR for Current ${weightUnitLabelCap()}: <span>${w} ${weightUnitLabel()} needs more than ${pairLabel} for PR</span>`;
+  } else {
+    // Weight is strictly below the combo PR's weight — since weight is the
+    // primary/tiebreak-winning field, no distance/duration at this lower
+    // weight can beat it, so there's nothing meaningful to show.
+    curPrEl.innerHTML = '';
+  }
 }
 
 // ─── Generic drag-to-reorder list (long-press on a .drag-handle) ───────
@@ -15704,6 +16327,8 @@ function updateCurrentLbsPR(exIdx, block) {
 function setupDragReorder(container, itemSelector, { collapsedClass, scrollLockEl, onDrop } = {}) {
   const LONG_PRESS_MS = 280;
   const CANCEL_MOVE_PX = 10;
+  const EDGE_ZONE_PX = 60;
+  const MAX_AUTOSCROLL_SPEED = 14;
 
   let dragEl = null;
   let ghostEl = null;
@@ -15711,6 +16336,9 @@ function setupDragReorder(container, itemSelector, { collapsedClass, scrollLockE
   let longPressTimer = null;
   let touchStartY = 0;
   let active = false;
+  let lastTouchY = 0;
+  let autoScrollSpeed = 0;
+  let autoScrollRAF = null;
 
   container.addEventListener('touchstart', e => {
     if (!e.target.closest('.drag-handle')) return;
@@ -15733,8 +16361,10 @@ function setupDragReorder(container, itemSelector, { collapsedClass, scrollLockE
     if (!active) return;
     e.preventDefault();
     const touch = e.touches[0];
+    lastTouchY = touch.clientY;
     if (ghostEl) ghostEl.style.top = (touch.clientY - dragOffsetY) + 'px';
     reorderLive(touch.clientY);
+    updateAutoScroll(touch.clientY);
   }, { passive: false });
 
   document.addEventListener('touchend', () => {
@@ -15757,7 +16387,15 @@ function setupDragReorder(container, itemSelector, { collapsedClass, scrollLockE
     // block ends up after the reflow.
     const rect = block.getBoundingClientRect();
     dragOffsetY = clientY - rect.top;
-    if (collapsedClass) document.body.classList.add(collapsedClass);
+    // Collapsing shrinks every block in the list, which can shift (or clamp)
+    // the scroll position enough to dump the view back to the top of the
+    // session — anchor on the block being dragged so it stays exactly where
+    // the finger already is instead of jumping away underneath it.
+    if (collapsedClass) {
+      const beforeTop = block.getBoundingClientRect().top;
+      document.body.classList.add(collapsedClass);
+      if (scrollLockEl) scrollLockEl.scrollTop += block.getBoundingClientRect().top - beforeTop;
+    }
 
     // Lock the scrolling container so rubber-band/inertia doesn't fight the drag
     if (scrollLockEl) scrollLockEl.style.overflow = 'hidden';
@@ -15816,20 +16454,64 @@ function setupDragReorder(container, itemSelector, { collapsedClass, scrollLockE
     });
   }
 
-  function unlock() {
+  // Scrolls the list while the drag is held near its top/bottom edge, so a
+  // long list can be dragged straight to the opposite end in one gesture
+  // instead of requiring a drag-scroll-drag-again dance.
+  function updateAutoScroll(clientY) {
+    if (!scrollLockEl) return;
+    const rect = scrollLockEl.getBoundingClientRect();
+    let speed = 0;
+    if (clientY < rect.top + EDGE_ZONE_PX) {
+      speed = -MAX_AUTOSCROLL_SPEED * (1 - Math.max(0, clientY - rect.top) / EDGE_ZONE_PX);
+    } else if (clientY > rect.bottom - EDGE_ZONE_PX) {
+      speed = MAX_AUTOSCROLL_SPEED * (1 - Math.max(0, rect.bottom - clientY) / EDGE_ZONE_PX);
+    }
+    autoScrollSpeed = speed;
+    if (speed && !autoScrollRAF) {
+      const step = () => {
+        if (!active || !autoScrollSpeed) { autoScrollRAF = null; return; }
+        scrollLockEl.scrollTop += autoScrollSpeed;
+        // The list just moved under the finger-anchored ghost — re-run the
+        // live reorder so blocks keep swapping as new ones scroll into range.
+        reorderLive(lastTouchY);
+        autoScrollRAF = requestAnimationFrame(step);
+      };
+      autoScrollRAF = requestAnimationFrame(step);
+    }
+  }
+
+  function stopAutoScroll() {
+    autoScrollSpeed = 0;
+    if (autoScrollRAF) cancelAnimationFrame(autoScrollRAF);
+    autoScrollRAF = null;
+  }
+
+  function unlock(anchorBlock) {
+    stopAutoScroll();
     if (scrollLockEl) scrollLockEl.style.overflow = '';
-    if (collapsedClass) document.body.classList.remove(collapsedClass);
+    if (collapsedClass) {
+      if (anchorBlock && scrollLockEl) {
+        // Same anchor trick as startDrag, in reverse — keep the just-dropped
+        // block in place as its neighbors expand back to full height.
+        const beforeTop = anchorBlock.getBoundingClientRect().top;
+        document.body.classList.remove(collapsedClass);
+        scrollLockEl.scrollTop += anchorBlock.getBoundingClientRect().top - beforeTop;
+      } else {
+        document.body.classList.remove(collapsedClass);
+      }
+    }
   }
 
   function finishDrag() {
     // DOM order is already live-updated by reorderLive() as the drag moved.
     dragEl.classList.remove('dragging');
+    const anchorBlock = dragEl;
 
     ghostEl.remove();
     ghostEl = null;
     dragEl = null;
     active = false;
-    unlock();
+    unlock(anchorBlock);
 
     const allBlocks = [...container.querySelectorAll(itemSelector)];
     if (onDrop) onDrop(allBlocks);
@@ -15942,7 +16624,7 @@ function renderSets(exIdx, block) {
     prevEl.className = 'set-previous';
     const prevSet = lastSets && setIdx < lastSets.length ? lastSets[setIdx] : null;
     prevEl.textContent = (prevSet && prevSet.reps !== '' && prevSet.reps != null)
-      ? `${(prevSet.weight !== '' && prevSet.weight != null) ? prevSet.weight : 0}lbs x ${prevSet.reps}`
+      ? `${(prevSet.weight !== '' && prevSet.weight != null) ? prevSet.weight : 0}${weightUnitLabel()} x ${prevSet.reps}`
       : '—';
 
     const { wrap: wWrap, inp: wInp } = makeStepper(ex.sets[setIdx].weight, 5, 0, val => {
@@ -16005,8 +16687,8 @@ function renderSets(exIdx, block) {
     });
 
     // Attach custom numpad to weight and reps inputs
-    attachTrainNumpad(wInp, rInp, checkBtn, 'weight');
-    attachTrainNumpad(rInp, wInp, checkBtn, 'reps');
+    attachTrainNumpad(wInp, 'weight', checkBtn, { inp: rInp, field: 'reps' });
+    attachTrainNumpad(rInp, 'reps', checkBtn, null);
 
     const delBtn = document.createElement('button');
     delBtn.className = 'set-delete';
@@ -16069,6 +16751,7 @@ function renderFieldSets(exIdx, block, kind) {
         }
       }
       saveActiveSession();
+      updateCurrentCardioPR(exIdx, block);
     };
     const { wrap, inp } = f.type === 'time'
       ? makeDurationField(curVal, onChange)
@@ -16093,30 +16776,37 @@ function renderFieldSets(exIdx, block, kind) {
       container.appendChild(marker);
     }
     const setIdx = i;
+
+    // The previous set's values, as their own full-width line above the
+    // inputs (see .field-prev-line) — a cardio set can carry 2-3 values, and
+    // there's nowhere in the tight input grid that fits all of them cleanly.
+    const prevSet = lastSets && setIdx < lastSets.length ? lastSets[setIdx] : null;
+    const prevParts = prevSet
+      ? shape.fields.map(f => {
+          const v = formatFieldValue(f, prevSet[f.key]);
+          return v ? (f.type === 'time' ? v : `${v} ${fieldUnitLabel(f).toLowerCase()}`) : null;
+        }).filter(Boolean)
+      : [];
+    if (prevParts.length) {
+      const prevLine = document.createElement('div');
+      prevLine.className = 'field-prev-line';
+      prevLine.innerHTML = `<span class="field-prev-tag">Last</span><span class="field-prev-values">${prevParts.join(' · ')}</span>`;
+      container.appendChild(prevLine);
+    }
+
     const row = document.createElement('div');
     row.className = 'set-row ' + fieldGridClassSuffix(rowFields.length, 'row');
 
     const numEl = document.createElement('div');
     numEl.className = 'set-num';
     numEl.textContent = setIdx + 1;
-
-    const prevEl = document.createElement('div');
-    prevEl.className = 'set-previous';
-    const prevSet = lastSets && setIdx < lastSets.length ? lastSets[setIdx] : null;
-    prevEl.textContent = prevSet
-      ? shape.fields.map(f => {
-          const v = formatFieldValue(f, prevSet[f.key]);
-          return v ? (f.type === 'time' ? v : `${v}${f.label.toLowerCase()}`) : null;
-        }).filter(Boolean).join(' x ') || '—'
-      : '—';
-
     row.appendChild(numEl);
-    row.appendChild(prevEl);
 
-    rowFields.forEach((f, fi) => {
+    const builtFields = rowFields.map((f, fi) => {
       const { wrap, inp } = makeFieldWidget(f, setIdx, rowInps[fi]);
       rowInps[fi][setIdx] = inp;
       row.appendChild(wrap);
+      return { field: f, inp };
     });
 
     const primaryField = shape.fields[shape.fields.length - 1].key;
@@ -16146,6 +16836,18 @@ function renderFieldSets(exIdx, block, kind) {
     });
     row.appendChild(checkBtn);
 
+    // Weight/Distance go through the same custom numpad weight/reps already
+    // use, chained in field order, instead of falling back to a real OS
+    // keyboard — that keyboard (and its collapse animation racing against
+    // whatever opened next) was the actual source of "the numpad doesn't pop
+    // up right"/inaccurate-taps reports on cardio sets. The Time field is
+    // untouched — it already opens its own numpad via makeDurationField.
+    const numpadFields = builtFields.filter(w => w.field.type !== 'time');
+    numpadFields.forEach((w, i) => {
+      const next = numpadFields[i + 1];
+      attachTrainNumpad(w.inp, w.field.key, checkBtn, next ? { inp: next.inp, field: next.field.key } : null);
+    });
+
     const delBtn = document.createElement('button');
     delBtn.className = 'set-delete';
     delBtn.type = 'button';
@@ -16169,8 +16871,8 @@ function renderFieldSets(exIdx, block, kind) {
       const timeRow = document.createElement('div');
       timeRow.className = 'field-time-row';
 
-      // Empty spacer so the label/field land in the same grid columns as the
-      // Previous/field slots above (rather than starting flush at column 1).
+      // Empty spacer so the label/field land under the set-number column
+      // above (rather than starting flush at column 1).
       timeRow.appendChild(document.createElement('div'));
 
       const label = document.createElement('span');
@@ -16184,6 +16886,7 @@ function renderFieldSets(exIdx, block, kind) {
       container.appendChild(timeRow);
     }
   }
+  updateCurrentCardioPR(exIdx, block);
 }
 
 function fmtExposureBtnValue(temp, duration, noTemp) {
@@ -16949,8 +17652,9 @@ function updateAllTrainExSets() {
 // Current Catch Up state per overlay — lives here rather than on a button's
 // dataset since each overlay now has two buttons sharing one active state.
 // mode: 0 = off, 1 = Level, 2 = Oldest. stage (only meaningful when mode is
-// 1 or 2): 1 = static highlight (single most-extreme row, no animation),
-// 2 = pulsing highlight (steps through every rank + a pulsing button glow).
+// 1 or 2) is the 0-based rank index currently highlighted — each tap of the
+// active button advances stage by one (most-extreme rank first); once every
+// rank has been shown, the next tap turns Catch Up off.
 let pickerCatchupMode = 0;
 let pickerCatchupStage = 0;
 let weeklyCatchupMode = 0;
@@ -16959,53 +17663,30 @@ let weeklyCatchupStage = 0;
 // Drives a pair of independent Catch Up toggle buttons (Level / Oldest)
 // sharing one set of rows. Only one can be active at a time — turning one on
 // switches the other off — since both would otherwise fight over the same
-// rows' highlight class.
+// rows' highlight class. Returns the rank count so callers can tell when a
+// full cycle has been shown.
 function applyCatchupMode(mode, stage, rowSelector, levelBtn, oldestBtn) {
   const rows = document.querySelectorAll(rowSelector);
   rows.forEach(r => r.classList.remove('catchup-highlight', 'catchup-highlight-oldest'));
-  [levelBtn, oldestBtn].forEach(b => {
-    if (b._catchupTimer) {
-      clearTimeout(b._catchupTimer);
-      b._catchupTimer = null;
-    }
-    b.classList.remove('active', 'pulsing');
-  });
-  if (mode !== 1 && mode !== 2) return;
+  [levelBtn, oldestBtn].forEach(b => b.classList.remove('active'));
+  if (mode !== 1 && mode !== 2) return 0;
 
   const btn = mode === 1 ? levelBtn : oldestBtn;
   const highlightClass = mode === 1 ? 'catchup-highlight' : 'catchup-highlight-oldest';
-  btn.classList.add('active');
 
   const getVal = r => mode === 1 ? parseInt(r.dataset.level) : parseFloat(r.dataset.hoursAgo);
   const rowsArr = [...rows];
   const ranks = [...new Set(rowsArr.map(getVal))].sort((a, b) => mode === 1 ? a - b : b - a);
-  if (!ranks.length) return;
+  // Nothing left to show this cycle — leave the button un-highlighted
+  // (already cleared above) instead of looking "stuck on" with a blank list.
+  if (!ranks.length || stage >= ranks.length) return ranks.length;
 
-  if (stage === 1) {
-    // Static highlight — just the single most-extreme rank, held constant.
-    const val = ranks[0];
-    rowsArr.forEach(r => r.classList.toggle(highlightClass, getVal(r) === val));
-    return;
-  }
-
-  // stage 2 — pulsing: button glow pulses, and it steps through every rank
-  // (lowest level / oldest last-worked first) one at a time, holding each
-  // for 2s, pausing 4s before looping back to the start.
-  btn.classList.add('pulsing');
-  let i = 0;
-  const step = () => {
-    if (i >= ranks.length) {
-      rowsArr.forEach(r => r.classList.remove(highlightClass));
-      i = 0;
-      btn._catchupTimer = setTimeout(step, 4000);
-      return;
-    }
-    const val = ranks[i];
-    rowsArr.forEach(r => r.classList.toggle(highlightClass, getVal(r) === val));
-    i++;
-    btn._catchupTimer = setTimeout(step, 2000);
-  };
-  step();
+  btn.classList.add('active');
+  // Static highlight — just the single rank for this tap, held constant
+  // until the next tap (no auto-advance, no pulsing animation).
+  const val = ranks[stage];
+  rowsArr.forEach(r => r.classList.toggle(highlightClass, getVal(r) === val));
+  return ranks.length;
 }
 
 function refreshPickerIfOpen() {
@@ -17175,7 +17856,7 @@ function openPickerExPopup(muscle) {
 
   const picker = document.getElementById('picker');
   const newBtn = document.getElementById('picker-ex-new');
-  if (picker._histMode || picker._replaceMode) {
+  if (picker._histMode) {
     newBtn.style.display = 'none';
   } else {
     newBtn.style.display = 'block';
@@ -17183,6 +17864,10 @@ function openPickerExPopup(muscle) {
       const isTpl = picker._tplMode;
       const isChallenge = picker._challengeMode;
       const challengeCb = picker._challengeCallback;
+      const isReplace = picker._replaceMode;
+      const replaceInfo = isReplace
+        ? { target: picker._replaceTarget, idx: picker._replaceIdx, block: picker._replaceBlock }
+        : null;
       document.getElementById('picker-ex-popup').classList.remove('open');
       picker.classList.remove('open');
       if (isChallenge) {
@@ -17197,6 +17882,14 @@ function openPickerExPopup(muscle) {
       } else {
         nexChallengeCallback = null;
       }
+      if (isReplace) {
+        picker._replaceMode = false;
+        picker._replaceTarget = null;
+        picker._replaceIdx = null;
+        picker._replaceBlock = null;
+        document.getElementById('picker-heading').textContent = 'Add Exercise';
+      }
+      nexReplaceInfo = replaceInfo;
       nexTplMode = isTpl;
       nexFromPicker = muscle;
       openNewExModal(muscle);
@@ -17247,19 +17940,22 @@ document.getElementById('picker-close').addEventListener('click', () => {
 });
 
 function pickerCatchupToggle(which) {
+  const levelBtn = document.getElementById('picker-catchup-level-btn');
+  const oldestBtn = document.getElementById('picker-catchup-oldest-btn');
   if (pickerCatchupMode !== which) {
-    // Switching to this button (or turning on from off) — start at stage 1.
+    // Switching to this button (or turning on from off) — start at rank 0.
     pickerCatchupMode = which;
-    pickerCatchupStage = 1;
+    pickerCatchupStage = 0;
   } else {
     pickerCatchupStage++;
-    if (pickerCatchupStage > 2) { pickerCatchupMode = 0; pickerCatchupStage = 0; }
   }
-  applyCatchupMode(
-    pickerCatchupMode, pickerCatchupStage, '.picker-muscle-btn',
-    document.getElementById('picker-catchup-level-btn'),
-    document.getElementById('picker-catchup-oldest-btn')
-  );
+  const rankCount = applyCatchupMode(pickerCatchupMode, pickerCatchupStage, '.picker-muscle-btn', levelBtn, oldestBtn);
+  // One full cycle shown (every rank, then a blank "stopped" tap) — the next
+  // tap starts over from the first rank instead of stalling past the end.
+  if (pickerCatchupStage > rankCount) {
+    pickerCatchupStage = 0;
+    applyCatchupMode(pickerCatchupMode, pickerCatchupStage, '.picker-muscle-btn', levelBtn, oldestBtn);
+  }
 }
 document.getElementById('picker-catchup-level-btn').addEventListener('click', () => pickerCatchupToggle(1));
 document.getElementById('picker-catchup-oldest-btn').addEventListener('click', () => pickerCatchupToggle(2));
@@ -17802,6 +18498,69 @@ function recalcAllExposurePRs() {
   }
 }
 
+// Cardio (Duration+Weight / Distance / Weighted+Distance) PRs. Independent
+// best-ever value per field this exercise actually has, PLUS two combo PRs
+// mirroring how strength exercises pair weight with reps:
+//  - comboWeight/comboWeightPair: heaviest weight, tie-broken by whichever
+//    other field this exercise has (distance for Weighted+Distance, duration
+//    for Duration+Weight) — "max weight AND distance/duration together",
+//    not just independently.
+//  - bestPaceSecPerUnit: lowest seconds-per-distance-unit across any single
+//    set with both distance and duration logged — "max distance in the
+//    shortest time", i.e. the fastest pace, not just the longest distance.
+// A field/combo only ever appears in the result if the exercise's own
+// fieldKind actually includes it, so e.g. a plain Distance exercise never
+// shows a weight PR.
+function recalcAllCardioPRs() {
+  state.cardioPRs = {};
+  for (const w of state.history) {
+    for (const ex of w.exercises) {
+      // No FIELD_KIND_SHAPES lookup here on purpose — this can run during
+      // early app boot (see the initial recalcAllPRs()/etc. call), before
+      // that const further down the file has initialized. exerciseMeta only
+      // ever carries a fieldKind that new-ex-save itself assigned from a
+      // real FIELD_KIND_CATEGORIES value, so presence alone is enough.
+      const fieldKind = (state.exerciseMeta[ex.name] || {}).fieldKind;
+      if (!fieldKind) continue;
+      const hasWeight = fieldKind === 'durationWeight' || fieldKind === 'weightedDistance';
+      const hasDistance = fieldKind === 'distance' || fieldKind === 'weightedDistance';
+      for (const s of ex.sets) {
+        const weight = parseFloat(s.weight) || 0;
+        const distance = parseFloat(s.distance) || 0;
+        const duration = parseInt(s.duration) || 0;
+        if (weight <= 0 && distance <= 0 && duration <= 0) continue;
+        const curr = state.cardioPRs[ex.name] || {
+          maxWeight: 0, maxDistance: 0, maxDuration: 0,
+          comboWeight: 0, comboWeightPair: 0, comboWeightPairKind: null,
+          bestPaceSecPerUnit: null,
+        };
+        if (weight > curr.maxWeight) curr.maxWeight = weight;
+        if (distance > curr.maxDistance) curr.maxDistance = distance;
+        if (duration > curr.maxDuration) curr.maxDuration = duration;
+
+        if (hasWeight && weight > 0) {
+          const pairKind = hasDistance ? 'distance' : 'duration';
+          const pair = hasDistance ? distance : duration;
+          if (weight > curr.comboWeight || (weight === curr.comboWeight && pair > curr.comboWeightPair)) {
+            curr.comboWeight = weight;
+            curr.comboWeightPair = pair;
+            curr.comboWeightPairKind = pairKind;
+          }
+        }
+
+        if (hasDistance && distance > 0 && duration > 0) {
+          const pace = duration / distance;
+          if (curr.bestPaceSecPerUnit === null || pace < curr.bestPaceSecPerUnit) {
+            curr.bestPaceSecPerUnit = pace;
+          }
+        }
+
+        state.cardioPRs[ex.name] = curr;
+      }
+    }
+  }
+}
+
 // Manual PR entries — let the Stats > Exercise Stats view log a PR by hand
 // (weight/reps or temp/duration, plus the date it happened) without it counting
 // as a real logged workout. Stored separately from state.history and replayed
@@ -17942,7 +18701,7 @@ function renderFocusStats() {
       const d = entry && typeof entry === 'object' ? fmtPRDate(entry.date) : '—';
       rows += `<div class="focus-rep-row">
         <span class="focus-rep-label">${r}${r===1?'RM':'RM'}</span>
-        <span class="focus-rep-val">${entry ? w + ' lbs' : '—'}</span>
+        <span class="focus-rep-val">${entry ? w + ' ' + weightUnitLabel() : '—'}</span>
         <span class="focus-rep-date">${entry ? d : '—'}</span>
       </div>`;
     }
@@ -18096,14 +18855,20 @@ const FIELD_KIND_SHAPES = {
   weightedDistance: { fields: [{ key: 'weight', label: 'Lbs', type: 'stepper', step: 5 }, { key: 'distance', label: 'Mi', type: 'stepper', step: 0.1 }, { key: 'duration', label: 'Time', type: 'time' }] },
 };
 
+// FIELD_KIND_SHAPES' labels above are the imperial defaults — this resolves
+// the actual current-unit label for a field, so weight/distance columns
+// follow Profile > Advanced > Units instead of always reading Lbs/Mi.
+function fieldUnitLabel(f) {
+  if (f.key === 'weight') return weightUnitLabelCap();
+  if (f.key === 'distance') return distanceUnitLabel() === 'km' ? 'Km' : 'Mi';
+  return f.label;
+}
+
 // The Time field (see FIELD_KIND_SHAPES) always renders in its own row below
-// the main one, so the main row only ever has 0-2 non-time fields: 0 reuses
-// the compact exposure-style grid, 1 uses the 5-column single-field grid,
-// and 2 reuse the standard weight+reps 6-column grid as-is.
+// the main one, so the main row only ever has 1-2 non-time fields — see
+// .field-set-row-1/-2 for the actual column widths.
 function fieldGridClassSuffix(fieldCount, kind) {
-  if (fieldCount === 0) return `field-set-${kind}-none`;
-  if (fieldCount === 1) return `field-set-${kind}-single`;
-  return '';
+  return `field-set-${kind}-${fieldCount}`;
 }
 
 // Heat/Cold Exposure keep the existing Temp+Duration timer flow regardless of
@@ -18123,6 +18888,7 @@ let nexBodyPart = null;
 let nexCategory = null;
 let nexFromPicker = null;
 let nexChallengeCallback = null; // set when "+ New Exercise" is opened from the challenge exercise picker
+let nexReplaceInfo = null; // { target, idx, block } — set when "+ New Exercise" is opened from a replace-mode picker
 let nexRestSecs = 90;
 
 function updateNexRestDisplay() {
@@ -18223,6 +18989,7 @@ function closeNewExModal() {
   document.getElementById('new-ex-modal').classList.remove('open');
   nexFromPicker = null;
   nexChallengeCallback = null;
+  nexReplaceInfo = null;
 }
 
 document.getElementById('new-ex-btn').addEventListener('click', () => openNewExModal());
@@ -18279,9 +19046,10 @@ document.getElementById('new-ex-save').addEventListener('click', () => {
   const fromPicker = nexFromPicker;
   const isTpl = nexTplMode;
   const challengeCb = nexChallengeCallback;
+  const replaceInfo = nexReplaceInfo;
 
   if (nexCategory === 'Cable Machine') {
-    pendingCableExercise = { name, muscle, restSecs: nexRestSecs, fromPicker, isTpl, challengeCb };
+    pendingCableExercise = { name, muscle, restSecs: nexRestSecs, fromPicker, isTpl, challengeCb, replaceInfo };
     closeNewExModal();
     document.getElementById('pulley-modal').classList.add('open');
     return;
@@ -18313,6 +19081,14 @@ document.getElementById('new-ex-save').addEventListener('click', () => {
 
   if (challengeCb) {
     challengeCb(storedName, muscle);
+  } else if (replaceInfo) {
+    if (replaceInfo.target === 'tpl') {
+      const oldSetCount = (tplSession[replaceInfo.idx] && tplSession[replaceInfo.idx].sets.length) || 1;
+      addTplExerciseBlock(storedName, muscle, Array.from({ length: oldSetCount }, () => ({})), replaceInfo.idx, replaceInfo.block);
+    } else {
+      const oldSetCount = (session[replaceInfo.idx] && session[replaceInfo.idx].sets.length) || 1;
+      addExerciseBlock(storedName, muscle, Array.from({ length: oldSetCount }, () => ({})), null, replaceInfo.idx, replaceInfo.block);
+    }
   } else if (fromPicker) {
     if (isTpl) { addTplExerciseBlock(storedName, muscle); } else { addExerciseBlock(storedName, muscle); }
   }
@@ -18363,7 +19139,7 @@ function splitExerciseNameCategory(storedName, meta) {
 
 function savePendingCableExercise(pulleyCount) {
   if (!pendingCableExercise) return;
-  const { name, muscle, restSecs, fromPicker, isTpl, challengeCb } = pendingCableExercise;
+  const { name, muscle, restSecs, fromPicker, isTpl, challengeCb, replaceInfo } = pendingCableExercise;
   pendingCableExercise = null;
   document.querySelectorAll('.pulley-btn').forEach(b => b.classList.remove('pulley-btn-active'));
 
@@ -18383,6 +19159,14 @@ function savePendingCableExercise(pulleyCount) {
 
   if (challengeCb) {
     challengeCb(storedName, muscle);
+  } else if (replaceInfo) {
+    if (replaceInfo.target === 'tpl') {
+      const oldSetCount = (tplSession[replaceInfo.idx] && tplSession[replaceInfo.idx].sets.length) || 1;
+      addTplExerciseBlock(storedName, muscle, Array.from({ length: oldSetCount }, () => ({})), replaceInfo.idx, replaceInfo.block);
+    } else {
+      const oldSetCount = (session[replaceInfo.idx] && session[replaceInfo.idx].sets.length) || 1;
+      addExerciseBlock(storedName, muscle, Array.from({ length: oldSetCount }, () => ({})), null, replaceInfo.idx, replaceInfo.block);
+    }
   } else if (fromPicker) {
     if (isTpl) { addTplExerciseBlock(storedName, muscle); } else { addExerciseBlock(storedName, muscle); }
   }
@@ -18514,6 +19298,8 @@ function fmtMeasDate(iso) {
 function buildMeasurementsList() {
   const list = document.getElementById('measurements-list');
   list.innerHTML = '';
+  document.getElementById('measurements-hint').textContent =
+    `Tap a body part to log a new measurement in ${lengthUnitLabel() === 'cm' ? 'centimeters' : 'inches'} and see your history and growth over time.`;
 
   for (const field of MEASUREMENT_FIELDS) {
     const group = document.createElement('div');
@@ -18592,7 +19378,7 @@ function buildMeasChartHtml(entries) {
 
     return `
       <div class="chest-ex-bar-col" style="flex:0 0 64px;height:100%;">
-        <div class="chest-ex-bar-val">${e.value}"</div>
+        <div class="chest-ex-bar-val">${e.value}${lengthUnitSuffix()}</div>
         ${growthHtml}
         <div class="chest-ex-bar-track" style="flex:1;">
           <div class="chest-ex-bar" style="height:${heightPct}%;background:linear-gradient(180deg, ${barColor}, ${barColorDim});box-shadow:0 0 10px ${barGlow};"></div>
@@ -18617,7 +19403,7 @@ function buildMeasSideBlock(key, side, sideLabel) {
       <button type="button" class="meas-date-btn cal-field-btn" data-iso="${todayIso}">${fmtCalBtnLabel(todayIso)}</button>
     </div>
     <div class="meas-entry-row">
-      <input type="number" inputmode="decimal" step="0.1" min="0" class="meas-entry-input" placeholder="Enter inches">
+      <input type="number" inputmode="decimal" step="0.1" min="0" class="meas-entry-input" placeholder="Enter ${lengthUnitLabel() === 'cm' ? 'centimeters' : 'inches'}">
       <button class="meas-entry-add">Add</button>
     </div>
     ${buildMeasChartHtml(entries)}
@@ -18626,7 +19412,7 @@ function buildMeasSideBlock(key, side, sideLabel) {
         <div class="meas-history-row">
           <div class="meas-history-date">${fmtMeasDate(e.date)}</div>
           <div class="meas-history-right">
-            <div class="meas-history-val">${e.value}"</div>
+            <div class="meas-history-val">${e.value}${lengthUnitSuffix()}</div>
             <button class="meas-history-delete" data-date="${e.date}">✕</button>
           </div>
         </div>
@@ -18794,7 +19580,7 @@ function buildGoalsList() {
 }
 
 function getWellnessWeeklySets(muscle) {
-  const monday = getMondayStr();
+  const monday = getWeekStartStr();
   let count = 0;
   for (const w of state.history) {
     if (w.date && isThisWeek(w.date, monday)) {
@@ -18807,7 +19593,7 @@ function getWellnessWeeklySets(muscle) {
 }
 
 function getWellnessWeeklyDuration(muscle) {
-  const monday = getMondayStr();
+  const monday = getWeekStartStr();
   let secs = 0;
   for (const w of state.history) {
     if (w.date && isThisWeek(w.date, monday)) {
@@ -19243,8 +20029,24 @@ document.getElementById('challenges-btn').addEventListener('click', () => {
   if (signedIn) refreshChallenges();
 });
 
+function updateEatPlentyMissedHighlight() {
+  const btn = document.getElementById('eat-plenty-btn');
+  if (!btn) return;
+  const y = new Date();
+  y.setDate(y.getDate() - 1);
+  const yKey = `${y.getFullYear()}-${String(y.getMonth() + 1).padStart(2, '0')}-${String(y.getDate()).padStart(2, '0')}`;
+  let logged = false;
+  try {
+    const data = JSON.parse(localStorage.getItem('trainhard_nutrition') || '{}');
+    logged = Array.isArray(data[yKey]) && data[yKey].length > 0;
+  } catch {}
+  btn.classList.toggle('eat-plenty-missed', !logged);
+}
+updateEatPlentyMissedHighlight();
+
 document.getElementById('eat-plenty-btn').addEventListener('click', () => {
   playSound('commonButton');
+  document.getElementById('eat-plenty-btn').classList.remove('eat-plenty-missed');
   location.href = 'eat-plenty.html';
 });
 
@@ -19914,6 +20716,111 @@ document.getElementById('weekly-overview-overlay').addEventListener('click', (e)
 });
 
 // ═══════════════════════════════════════════════════════════
+// PROFILE > ADVANCED — WEEK START DAY
+// ═══════════════════════════════════════════════════════════
+
+const WEEK_DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const WEEK_DAY_ABBREV = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+function syncWeekStartBtnLabel() {
+  document.getElementById('week-start-btn-day').textContent = WEEK_DAY_NAMES[getWeekStartDay()];
+}
+syncWeekStartBtnLabel();
+
+function renderWeekStartGrid() {
+  const grid = document.getElementById('week-start-grid');
+  grid.innerHTML = '';
+  const current = getWeekStartDay();
+  WEEK_DAY_ABBREV.forEach((label, dayIdx) => {
+    const block = document.createElement('div');
+    block.className = 'week-start-day-block' + (dayIdx === current ? ' selected' : '');
+    block.textContent = label;
+    block.addEventListener('click', () => {
+      playSound('commonButton');
+      state.weekStartDay = dayIdx;
+      save();
+      syncWeekStartBtnLabel();
+      renderWeekStartGrid();
+      // recalcStats() rescans all of history and re-renders Stats/the 3D
+      // model — deferred a beat so the block highlights immediately instead
+      // of the tap feeling like it didn't register.
+      setTimeout(() => recalcStats(), 0);
+    });
+    grid.appendChild(block);
+  });
+}
+
+document.getElementById('week-start-btn').addEventListener('click', () => {
+  playSound('commonButton');
+  renderWeekStartGrid();
+  document.getElementById('week-start-overlay').classList.add('open');
+});
+document.getElementById('week-start-close-btn').addEventListener('click', () => {
+  playSound('delete');
+  document.getElementById('week-start-overlay').classList.remove('open');
+});
+document.getElementById('week-start-overlay').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('week-start-overlay')) {
+    document.getElementById('week-start-overlay').classList.remove('open');
+  }
+});
+
+// ═══════════════════════════════════════════════════════════
+// PROFILE > ADVANCED — UNITS
+// ═══════════════════════════════════════════════════════════
+
+function syncUnitsUI() {
+  const units = getUnits();
+  document.getElementById('units-weight-lbs-btn').classList.toggle('active', units.weight === 'lbs');
+  document.getElementById('units-weight-kg-btn').classList.toggle('active', units.weight === 'kg');
+  document.getElementById('units-distance-mi-btn').classList.toggle('active', units.distance === 'mi');
+  document.getElementById('units-distance-km-btn').classList.toggle('active', units.distance === 'km');
+  document.getElementById('units-length-in-btn').classList.toggle('active', units.length === 'in');
+  document.getElementById('units-length-cm-btn').classList.toggle('active', units.length === 'cm');
+
+  const allImperial = units.weight === 'lbs' && units.distance === 'mi' && units.length === 'in';
+  const allMetric = units.weight === 'kg' && units.distance === 'km' && units.length === 'cm';
+  document.getElementById('units-imperial-btn').classList.toggle('active', allImperial);
+  document.getElementById('units-metric-btn').classList.toggle('active', allMetric);
+  document.getElementById('units-btn-summary').textContent = allImperial ? 'Imperial' : allMetric ? 'Metric' : 'Custom';
+}
+syncUnitsUI();
+
+document.getElementById('units-btn').addEventListener('click', () => {
+  playSound('commonButton');
+  syncUnitsUI();
+  document.getElementById('units-overlay').classList.add('open');
+});
+document.getElementById('units-close-btn').addEventListener('click', () => {
+  playSound('delete');
+  document.getElementById('units-overlay').classList.remove('open');
+});
+document.getElementById('units-overlay').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('units-overlay')) {
+    document.getElementById('units-overlay').classList.remove('open');
+  }
+});
+
+document.getElementById('units-imperial-btn').addEventListener('click', () => {
+  playSound('commonButton');
+  setWeightUnit('lbs');
+  setDistanceUnit('mi');
+  setLengthUnit('in');
+});
+document.getElementById('units-metric-btn').addEventListener('click', () => {
+  playSound('commonButton');
+  setWeightUnit('kg');
+  setDistanceUnit('km');
+  setLengthUnit('cm');
+});
+document.getElementById('units-weight-lbs-btn').addEventListener('click', () => { playSound('commonButton'); setWeightUnit('lbs'); });
+document.getElementById('units-weight-kg-btn').addEventListener('click', () => { playSound('commonButton'); setWeightUnit('kg'); });
+document.getElementById('units-distance-mi-btn').addEventListener('click', () => { playSound('commonButton'); setDistanceUnit('mi'); });
+document.getElementById('units-distance-km-btn').addEventListener('click', () => { playSound('commonButton'); setDistanceUnit('km'); });
+document.getElementById('units-length-in-btn').addEventListener('click', () => { playSound('commonButton'); setLengthUnit('in'); });
+document.getElementById('units-length-cm-btn').addEventListener('click', () => { playSound('commonButton'); setLengthUnit('cm'); });
+
+// ═══════════════════════════════════════════════════════════
 // RESTORE DEFAULT EXERCISES
 // ═══════════════════════════════════════════════════════════
 
@@ -20065,19 +20972,62 @@ document.getElementById('update-history-overlay').addEventListener('click', (e) 
   }
 });
 
+// ═══════════════════════════════════════════════════════════
+// TUTORIAL — behavior lives in tutorial.js (a classic script — see its own
+// header comment for why); this call hands it the live app internals it
+// can't reach on its own. checkForTutorial()/checkForTutorialResume()/
+// startTutorial() etc. are then callable directly by bare name below and
+// from runPostLoadPopupChecks(), same as any other function in this file.
+// ═══════════════════════════════════════════════════════════
+initTrainHardTutorial({
+  goToTab,
+  getCardioLevel,
+  updateCoreAuraForLevel,
+  meshMap,
+  LEVEL_COLORS,
+  updateModel,
+  supabase,
+  getCloudSession: () => cloudSession,
+});
+
+// Runs after the loading screen has fully faded (same timing constraint as
+// checkForUpdatePopup — see its own comment), tutorial first: a signed-out
+// user gets the tutorial instead of the update popup on any given open, so
+// the two never stack on top of each other.
+function runPostLoadPopupChecks() {
+  setTimeout(async () => {
+    if (checkForTutorialResume()) return;
+    // Set by eat-plenty.html's Exit button (leaving the tutorial from over
+    // there, not finishing it) — without this, landing back here would
+    // otherwise immediately auto-replay the whole tutorial from scratch for
+    // a still-signed-out user, right after they just asked to stop.
+    if (localStorage.getItem(TUTORIAL_SUPPRESS_KEY)) {
+      localStorage.removeItem(TUTORIAL_SUPPRESS_KEY);
+      checkForUpdatePopup();
+      return;
+    }
+    const tutorialShown = await checkForTutorial();
+    if (!tutorialShown) checkForUpdatePopup();
+  }, 1000);
+}
+
 function weeklyCatchupToggle(which) {
+  const levelBtn = document.getElementById('catchup-level-btn');
+  const oldestBtn = document.getElementById('catchup-oldest-btn');
   if (weeklyCatchupMode !== which) {
+    // Switching to this button (or turning on from off) — start at rank 0.
     weeklyCatchupMode = which;
-    weeklyCatchupStage = 1;
+    weeklyCatchupStage = 0;
   } else {
     weeklyCatchupStage++;
-    if (weeklyCatchupStage > 2) { weeklyCatchupMode = 0; weeklyCatchupStage = 0; }
   }
-  applyCatchupMode(
-    weeklyCatchupMode, weeklyCatchupStage, '.wo-row',
-    document.getElementById('catchup-level-btn'),
-    document.getElementById('catchup-oldest-btn')
-  );
+  const rankCount = applyCatchupMode(weeklyCatchupMode, weeklyCatchupStage, '.wo-row', levelBtn, oldestBtn);
+  // One full cycle shown (every rank, then a blank "stopped" tap) — the next
+  // tap starts over from the first rank instead of stalling past the end.
+  if (weeklyCatchupStage > rankCount) {
+    weeklyCatchupStage = 0;
+    applyCatchupMode(weeklyCatchupMode, weeklyCatchupStage, '.wo-row', levelBtn, oldestBtn);
+  }
 }
 document.getElementById('catchup-level-btn').addEventListener('click', () => weeklyCatchupToggle(1));
 document.getElementById('catchup-oldest-btn').addEventListener('click', () => weeklyCatchupToggle(2));
@@ -20236,10 +21186,16 @@ function bindNumpadTap(el, handler) {
   const actionsEl= document.getElementById('tnp-actions');
 
   let activeInp   = null;
-  let pairInp     = null;
   let checkBtnRef = null;
   let fieldType   = 'weight';
+  let nextField   = null; // { inp, field } to chain "→" into, or null if this is the terminal field
   let currentStr  = '';
+
+  function tnpFieldLabel(field) {
+    if (field === 'weight') return weightUnitLabelCap().toUpperCase();
+    if (field === 'distance') return distanceUnitLabel().toUpperCase();
+    return 'REPS';
+  }
 
   function updateDisplay() {
     displayEl.textContent = currentStr === '' ? '0' : currentStr;
@@ -20252,19 +21208,36 @@ function bindNumpadTap(el, handler) {
     activeInp.dispatchEvent(new Event('input', { bubbles: true }));
   }
 
-  function openNumpad(inp, pair, checkBtn, field) {
-    activeInp   = inp;
-    pairInp     = pair;
-    checkBtnRef = checkBtn;
-    fieldType   = field;
-    currentStr  = '';           // always start fresh — type to set a new value
+  // Reads its field type/chain/check-button straight off the input (see
+  // attachTrainNumpad) — the input is the single source of truth, so
+  // switching fields mid-numpad doesn't need to thread all of that through
+  // every call site.
+  function openNumpad(inp) {
+    const openNow = () => {
+      activeInp   = inp;
+      checkBtnRef = inp._tnpCheckBtn;
+      fieldType   = inp._tnpField;
+      nextField   = inp._tnpNext;
+      currentStr  = '';           // always start fresh — type to set a new value
 
-    labelEl.textContent = field === 'weight' ? 'LBS' : 'REPS';
-    updateDisplay();
-    renderActions();
-    overlay.classList.add('open');
-    scrollActiveRowAboveNumpad();
-    lockKeysUntilSettled();
+      labelEl.textContent = tnpFieldLabel(fieldType);
+      updateDisplay();
+      renderActions();
+      overlay.classList.add('open');
+      scrollActiveRowAboveNumpad();
+      lockKeysUntilSettled();
+    };
+    // Cardio's Distance/Weight fields go through this same numpad now
+    // instead of a real OS keyboard (see attachTrainNumpad) specifically to
+    // avoid this race, but an exercise note (a real OS keyboard) focused
+    // right before still needs the same head start.
+    const active = document.activeElement;
+    if (active && active !== document.body && active !== inp && typeof active.blur === 'function') {
+      active.blur();
+      setTimeout(openNow, 80);
+    } else {
+      openNow();
+    }
   }
 
   function lockKeysUntilSettled() {
@@ -20316,35 +21289,47 @@ function bindNumpadTap(el, handler) {
     removeScrollRoom();
   }
 
-  function switchToField(inp, pair, checkBtn, field) {
+  function switchToField(next) {
     commitToInput();
-    openNumpad(inp, pair, checkBtn, field);
+    openNumpad(next.inp);
   }
 
   function renderActions() {
     actionsEl.innerHTML = '';
-    if (fieldType === 'weight') {
-      const repsBtn = document.createElement('button');
-      repsBtn.className = 'tnp-reps-btn';
-      repsBtn.textContent = 'REPS →';
-      bindNumpadTap(repsBtn, () => {
-        switchToField(pairInp, activeInp, checkBtnRef, 'reps');
-      });
-      actionsEl.appendChild(repsBtn);
-    } else {
+    if (nextField) {
+      const nextBtn = document.createElement('button');
+      nextBtn.className = 'tnp-reps-btn';
+      nextBtn.textContent = tnpFieldLabel(nextField.field) + ' →';
+      bindNumpadTap(nextBtn, () => switchToField(nextField));
+      actionsEl.appendChild(nextBtn);
+    } else if (fieldType === 'reps') {
       const completeBtn = document.createElement('button');
       completeBtn.className = 'tnp-complete-btn';
       completeBtn.textContent = 'COMPLETE SET';
       bindNumpadTap(completeBtn, () => {
         commitToInput();
-        const repsVal = parseInt(activeInp.value) || 0;
-        if (repsVal < 1) return;
+        const val = parseFloat(activeInp.value) || 0;
+        if (val <= 0) return;
         closeNumpad();
         if (checkBtnRef && !checkBtnRef.classList.contains('done')) {
           checkBtnRef.click();
         }
       });
       actionsEl.appendChild(completeBtn);
+    } else {
+      // Terminal stepper field with no reps to complete into (cardio's
+      // weight/distance chain) — the set still needs its Duration filled in
+      // separately (checking the box requires it; see primaryField in
+      // renderFieldSets), which lives in its own numpad, so there's nothing
+      // real to "complete" from here. Just close.
+      const doneBtn = document.createElement('button');
+      doneBtn.className = 'tnp-complete-btn';
+      doneBtn.textContent = 'DONE';
+      bindNumpadTap(doneBtn, () => {
+        commitToInput();
+        closeNumpad();
+      });
+      actionsEl.appendChild(doneBtn);
     }
   }
 
@@ -20376,19 +21361,26 @@ function bindNumpadTap(el, handler) {
   window._openTrainNumpad = openNumpad;
 })();
 
-function attachTrainNumpad(inp, pairInp, checkBtn, field) {
+// field: 'weight' | 'reps' | 'distance' — this input's own value type.
+// next: { inp, field } to chain a "→" button into once this one's filled in
+// (e.g. weight → reps, or cardio's weight → distance), or null if this is
+// the terminal field for the set (shows "COMPLETE SET" instead).
+function attachTrainNumpad(inp, field, checkBtn, next) {
   // Must be type="text", not "number" — the numpad commits intermediate
   // strings while typing (e.g. "12." mid-decimal, or "" after backspacing
   // to empty). A number input silently resets .value to "" whenever it's
   // set to a string that isn't a fully valid number, which was wiping the
-  // weight/reps the user was mid-typing on every partial value.
+  // weight/reps/distance the user was mid-typing on every partial value.
   inp.type = 'text';
   inp.readOnly = true;
   inp.inputMode = 'none';
   inp.style.cursor = 'pointer';
+  inp._tnpField = field;
+  inp._tnpCheckBtn = checkBtn;
+  inp._tnpNext = next || null;
   inp.addEventListener('pointerdown', (e) => {
     e.preventDefault();
-    window._openTrainNumpad(inp, pairInp, checkBtn, field);
+    window._openTrainNumpad(inp);
   });
 }
 
@@ -20528,14 +21520,32 @@ function attachTrainNumpad(inp, pairInp, checkBtn, field) {
   // longer/unbounded durations (e.g. cardio sets), not just the 15s-10min rest timer.
   window.openRestNumpad = function (currentSecs, onDone, opts) {
     opts = opts || {};
-    rnpTyped = '';
-    rnpCallback = onDone;
-    rnpMin = opts.min != null ? opts.min : 15;
-    rnpMax = opts.max != null ? opts.max : 600;
-    display.textContent = (opts.fmt || fmtRestSecs)(currentSecs);
-    if (labelEl) labelEl.textContent = opts.label || 'REST TIME';
-    numpad.classList.add('open');
-    lockRnpKeysUntilSettled();
+    const openNow = () => {
+      rnpTyped = '';
+      rnpCallback = onDone;
+      rnpMin = opts.min != null ? opts.min : 15;
+      rnpMax = opts.max != null ? opts.max : 600;
+      display.textContent = (opts.fmt || fmtRestSecs)(currentSecs);
+      if (labelEl) labelEl.textContent = opts.label || 'REST TIME';
+      numpad.classList.add('open');
+      lockRnpKeysUntilSettled();
+    };
+    // Cardio's Distance/Weight stepper fields use a real OS keyboard, and
+    // tapping Duration right after (very common — they're in the same row)
+    // opens this numpad while that keyboard is still mid-collapse. Sliding
+    // the panel up in the middle of that collapse is what made it visually
+    // glitch into place and swallow/misregister the first several taps —
+    // lockRnpKeysUntilSettled() only ever accounted for the panel's OWN
+    // animation, not a still-collapsing native keyboard underneath it.
+    // Blurring here lets that collapse actually start, and the short delay
+    // gives it a head start so the two animations don't fight each other.
+    const active = document.activeElement;
+    if (active && active !== document.body && typeof active.blur === 'function') {
+      active.blur();
+      setTimeout(openNow, 80);
+    } else {
+      openNow();
+    }
   };
 
   function lockRnpKeysUntilSettled() {

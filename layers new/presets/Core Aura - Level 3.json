@@ -1,0 +1,77 @@
+{
+    "name": "Level 3",
+    "layerType": "Core Aura",
+    "label": "Core Aura - Level 3",
+    "CONFIG": {
+        "global": {
+            "yOffset": 2.5,
+            "zOffset": 0,
+            "systemPrecision": 720,
+            "auraScale": 1,
+            "layerSpacing": 50,
+            "vertToHorizRatio": 1,
+            "timeSpeed": 1,
+            "pulseFrequency": 1,
+            "beatRhythm": 1,
+            "cameraShake": 0,
+            "shakeSpeed": 10
+        },
+        "presetName": "Level 3",
+        "presetLayerType": "Core Aura"
+    },
+    "MODEL": {
+        "visible": true,
+        "scale": 6.599999966098976,
+        "yOffset": -0.66,
+        "xOffset": 0,
+        "zOffset": 0,
+        "rotationY": -1.5707963267948966,
+        "modelId": "generic-male",
+        "hairId": "none",
+        "autoBalanceDetail": false
+    },
+    "MODEL_GLOW": {
+        "fresnelEnabled": false,
+        "fresnelColor": "#ff0055",
+        "fresnelPower": 2.2,
+        "fresnelIntensity": 1.4,
+        "rimLightEnabled": false,
+        "rimLightColor": "#66ccff",
+        "rimLightIntensity": 0.6
+    },
+    "SHELL": {
+        "enabled": true,
+        "pushAmount": 0.0075,
+        "color": "#c2003a",
+        "colorEdge": "#dc143c",
+        "opacity": 1,
+        "cloudAmp": 0.05,
+        "cloudFreq": 7,
+        "cloudSpeed": 0.45,
+        "topBias": 1.75,
+        "bottomBias": 0.5092,
+        "flowDirection": "vertical",
+        "flowSpeed": 0,
+        "flameSharpness": 5,
+        "riseFadeAmp": 0.75,
+        "driftAmp": 0,
+        "smokeColor": "#ff6d38",
+        "smokeAmount": 1
+    },
+    "BLOOM": {
+        "enabled": true,
+        "threshold": 0.25,
+        "strength": 0.75,
+        "radius": 1.5,
+        "resolutionScale": 0.5,
+        "source": "aura"
+    },
+    "auraAnchor": {
+        "position": {
+            "x": -4.010540082562051,
+            "y": -4.065056116899324,
+            "z": 0
+        },
+        "rotationY": 1.924723266601564
+    }
+}

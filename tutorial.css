@@ -1,0 +1,86 @@
+/* ═══════════════════════════════════════════════════════════
+   TUTORIAL — shared visual styles for both the Train Hard tutorial
+   (index.html) and the Eat Plenty tutorial (eat-plenty.html). Kept in one
+   file so a styling change (colors, blur amount, spacing) applies to both
+   at once instead of needing to be copy-pasted between the two apps.
+
+   No full-screen dim/blur — the app underneath stays crisp. Each step is
+   just a small frosted panel hugging the text itself (title in accent
+   gold, same treatment as the "HARD" loading-screen wordmark), placed next
+   to whatever it's pointing at, never on top of it — see
+   positionTutorialTarget() in tutorial.js / eat-plenty-tutorial.js for the
+   above/below placement logic. Tapping anywhere in the overlay advances to
+   the next step; only the separate, always-visible Exit control
+   (top-center) actually ends the tutorial.
+
+   Depends on the host page's own CSS custom properties (--c-accent,
+   --c-shadow, --c-text, --c-text3, --c-text4) already being defined —
+   both host pages define the same theme-variable set.
+   ═══════════════════════════════════════════════════════════ */
+#tutorial-overlay {
+  position: fixed; inset: 0; z-index: 900;
+  display: none;
+}
+#tutorial-overlay.open { display: block; }
+#tutorial-exit-btn {
+  position: fixed; z-index: 903;
+  top: calc(env(safe-area-inset-top) + 14px); left: 50%; transform: translateX(-50%);
+  background: rgba(var(--c-shadow),0.5); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(var(--c-text4),0.3); border-radius: 20px;
+  color: rgb(var(--c-text3)); font-size: 12px; font-weight: 700; letter-spacing: 0.3px;
+  padding: 7px 16px; cursor: pointer;
+}
+#tutorial-box {
+  position: fixed; left: 50%; z-index: 902;
+  max-width: 320px; width: max-content;
+  text-align: center;
+  background: rgba(var(--c-shadow),0.55);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 16px;
+  padding: 14px 20px;
+  animation: tutorial-text-in 0.25s cubic-bezier(0.25,0.46,0.45,0.94);
+}
+@keyframes tutorial-text-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+#tutorial-step-body { padding: 0; }
+.tutorial-step-title {
+  font-size: 18px; font-weight: 900; color: rgb(var(--c-accent));
+  text-shadow: 0 2px 16px rgba(var(--c-accent),0.6);
+}
+.tutorial-step-text {
+  font-size: 14px; font-weight: 600; color: rgb(var(--c-text));
+  margin-top: 8px; line-height: 1.5;
+}
+#tutorial-actions { display: flex; justify-content: center; gap: 30px; margin-top: 14px; }
+#tutorial-actions button {
+  background: none; border: none; cursor: pointer; padding: 6px 4px;
+  font-size: 14px; font-weight: 800; letter-spacing: 0.3px;
+}
+#tutorial-back-btn { color: rgb(var(--c-text)); }
+#tutorial-next-btn { color: rgb(var(--c-accent)); text-shadow: 0 2px 12px rgba(var(--c-accent),0.6); }
+/* Coach-marks — crisp, no blur; positioned via JS. */
+#tutorial-highlight {
+  position: fixed; z-index: 901; display: none; pointer-events: none;
+  border: 2px solid rgb(var(--c-accent)); border-radius: 14px;
+  box-shadow: 0 0 0 4px rgba(var(--c-accent),0.25), 0 0 18px rgba(var(--c-accent),0.6);
+  transition: left 0.25s ease, top 0.25s ease, width 0.25s ease, height 0.25s ease;
+  animation: tutorial-highlight-pulse 1.4s ease-in-out infinite;
+}
+#tutorial-arrow {
+  position: fixed; z-index: 901; display: none; pointer-events: none;
+  transform: translateX(-50%);
+  font-size: 26px; line-height: 1; color: rgb(var(--c-accent));
+  text-shadow: 0 0 10px rgba(var(--c-accent),0.8);
+  animation: tutorial-arrow-bounce 1s ease-in-out infinite;
+}
+@keyframes tutorial-highlight-pulse {
+  0%, 100% { box-shadow: 0 0 0 4px rgba(var(--c-accent),0.25), 0 0 18px rgba(var(--c-accent),0.6); }
+  50% { box-shadow: 0 0 0 7px rgba(var(--c-accent),0.15), 0 0 26px rgba(var(--c-accent),0.85); }
+}
+@keyframes tutorial-arrow-bounce {
+  0%, 100% { margin-top: 0; }
+  50% { margin-top: 8px; }
+}

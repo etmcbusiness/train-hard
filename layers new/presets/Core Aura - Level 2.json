@@ -1,0 +1,32 @@
+{
+    "name": "Level 2",
+    "layerType": "Core Aura",
+    "label": "Core Aura - Level 2",
+    "SHELL": {
+        "enabled": true,
+        "pushAmount": 0.0075,
+        "color": "#FFF3B0",
+        "colorEdge": "#ffd23f",
+        "opacity": 1,
+        "cloudAmp": 0.05,
+        "cloudFreq": 7,
+        "cloudSpeed": 0.45,
+        "topBias": 1.75,
+        "bottomBias": 0.5092,
+        "flowDirection": "vertical",
+        "flowSpeed": 0,
+        "flameSharpness": 5,
+        "riseFadeAmp": 0.75,
+        "driftAmp": 0,
+        "smokeColor": "#B3E5FC",
+        "smokeAmount": 1
+    },
+    "BLOOM": {
+        "enabled": true,
+        "threshold": 0.25,
+        "strength": 0.75,
+        "radius": 1.5,
+        "resolutionScale": 0.5,
+        "source": "aura"
+    }
+}

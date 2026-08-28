@@ -11,6 +11,7 @@
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="assets/icons/icon-192.png" />
+  <link rel="stylesheet" href="tutorial.css" />
   <title>Eat Plenty</title>
   <script>
     // Same theme key as Train Hard, so switching pages never jars the user
@@ -430,6 +431,26 @@
       padding: 9px 16px;
       cursor: pointer;
     }
+    .ep-meal-copy-btn {
+      background: rgba(var(--c-text4),0.12);
+      border: 1px solid rgba(var(--c-text4),0.3);
+      border-radius: 8px;
+      color: rgb(var(--c-text3));
+      width: 28px;
+      height: 28px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      cursor: pointer;
+    }
+    .ep-meal-copy-btn svg { width: 15px; height: 15px; }
+    .ep-meal-copy-btn .ep-copy-icon-done { display: none; }
+    .ep-meal-copy-btn.copied { color: rgb(var(--c-accent)); border-color: rgba(var(--c-accent),0.4); }
+    .ep-meal-copy-btn.copied .ep-copy-icon-default { display: none; }
+    .ep-meal-copy-btn.copied .ep-copy-icon-done { display: block; }
+    .ep-meal-copy-btn:disabled { opacity: 0.4; cursor: default; }
     .ep-meal-log-list { display: flex; flex-direction: column; gap: 8px; }
     .ep-meal-empty {
       font-size: 11px;
@@ -1008,7 +1029,17 @@
       margin-bottom: 14px;
     }
     .ep-card-title-row .ep-card-title { margin-bottom: 0; }
-    #ep-recalc-macros-btn {
+    .ep-goal-summary-val {
+      font-size: 13px;
+      font-weight: 700;
+      color: rgb(var(--c-text3));
+      font-variant-numeric: tabular-nums;
+      text-align: right;
+    }
+    .ep-card-title-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+    #ep-recalc-macros-btn,
+    #ep-goals-edit-btn,
+    #ep-adjust-macros-btn {
       background: rgba(var(--c-panel1),0.8);
       border: 1px solid rgba(var(--c-accent2),0.25);
       border-radius: 8px;
@@ -1022,6 +1053,25 @@
       touch-action: manipulation;
       -webkit-tap-highlight-color: transparent;
       flex-shrink: 0;
+    }
+    #ep-adjust-macros-btn.ep-adjust-active {
+      background: rgba(217,165,60,0.16);
+      border-color: rgba(217,165,60,0.5);
+      color: #d9a53c;
+    }
+    .ep-plateau-note {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(217,165,60,0.12);
+      border: 1px solid rgba(217,165,60,0.4);
+      border-radius: 10px;
+      color: #d9a53c;
+      font-size: 12px;
+      font-weight: 600;
+      line-height: 1.4;
+      padding: 10px 12px;
+      margin-top: 12px;
     }
     #ep-custom-delta-row {
       margin-top: 14px;
@@ -1038,6 +1088,33 @@
     }
     .ep-goal-row:first-child { padding-top: 2px; }
     .ep-goal-row:last-child { padding-bottom: 2px; border-bottom: none; }
+    .ep-progress-bar-wrap {
+      padding: 10px 0 14px;
+      border-bottom: 1px solid rgba(var(--c-accent2),0.15);
+    }
+    .ep-progress-track {
+      height: 10px;
+      border-radius: 999px;
+      background: rgba(var(--c-panel1),0.9);
+      border: 1px solid rgba(var(--c-accent2),0.25);
+      overflow: hidden;
+    }
+    .ep-progress-fill {
+      height: 100%;
+      width: 0%;
+      background: rgb(var(--c-accent));
+      border-radius: 999px;
+      transition: width 0.3s ease;
+    }
+    .ep-progress-scale-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10.5px;
+      font-weight: 600;
+      color: rgb(var(--c-text4));
+      font-variant-numeric: tabular-nums;
+      margin-top: 6px;
+    }
     .ep-goal-name { font-size: 13px; font-weight: 700; color: rgb(var(--c-text)); }
     .ep-goal-name-sub {
       font-size: 10px;
@@ -1168,6 +1245,7 @@
       border-bottom: 1px solid rgba(var(--c-accent2),0.12);
     }
     .ep-weight-row:last-child { border-bottom: none; }
+    .ep-weight-row-right { display: flex; align-items: center; gap: 4px; }
     .ep-weight-row-val { font-weight: 700; color: rgb(var(--c-text)); font-variant-numeric: tabular-nums; }
     .ep-weight-row-date { color: rgb(var(--c-text4)); }
 
@@ -1240,6 +1318,15 @@
       transition: opacity 0.2s ease;
     }
     .nav-btn.active img { opacity: 1; }
+
+    /* Shared tutorial styles moved to tutorial.css (same file index.html
+       uses) — see eat-plenty-tutorial.js for the accompanying behavior.
+       This one button stays here since it's specific to this app's UI. */
+    #ep-tutorial-btn {
+      background: rgba(var(--c-panel3),0.7); border: 1px solid rgba(var(--c-accent2),0.35);
+      border-radius: 12px; color: rgb(var(--c-text2)); font-size: 13px; font-weight: 700;
+      padding: 10px; cursor: pointer; width: 100%; margin-top: 10px;
+    }
   </style>
 </head>
 <body>
@@ -1271,6 +1358,58 @@
 
   <!-- Profile / Goals -->
   <div id="profile-section" class="section">
+    <div class="ep-card" id="ep-goals-summary">
+      <div class="ep-card-title-row">
+        <div class="ep-card-title">Your Goals</div>
+        <button id="ep-goals-edit-btn">Edit</button>
+      </div>
+      <div class="ep-goal-row">
+        <span class="ep-goal-name">Goal</span>
+        <span class="ep-goal-summary-val" id="ep-summary-mode"></span>
+      </div>
+      <div class="ep-goal-row">
+        <span class="ep-goal-name">Target Calories</span>
+        <span class="ep-goal-summary-val" id="ep-summary-calories"></span>
+      </div>
+      <div class="ep-goal-row">
+        <span class="ep-goal-name">Macros</span>
+        <span class="ep-goal-summary-val" id="ep-summary-macros"></span>
+      </div>
+      <div class="ep-goal-row">
+        <span class="ep-goal-name">Weight</span>
+        <span class="ep-goal-summary-val" id="ep-summary-weight"></span>
+      </div>
+      <div class="ep-goal-row">
+        <span class="ep-goal-name">Duration</span>
+        <span class="ep-goal-summary-val" id="ep-summary-duration"></span>
+      </div>
+    </div>
+
+    <div class="ep-card" id="ep-progress-card" style="display:none;">
+      <div class="ep-card-title">Progress</div>
+      <div class="ep-goal-row">
+        <span class="ep-goal-name">Current Weight</span>
+        <span class="ep-goal-summary-val" id="ep-progress-current"></span>
+      </div>
+      <div class="ep-progress-bar-wrap" id="ep-progress-bar-wrap">
+        <div class="ep-progress-track"><div class="ep-progress-fill" id="ep-progress-bar-fill"></div></div>
+        <div class="ep-progress-scale-labels">
+          <span id="ep-progress-start-label"></span>
+          <span id="ep-progress-goal-label"></span>
+        </div>
+      </div>
+      <div class="ep-goal-row">
+        <span class="ep-goal-name">Weight Change to Date</span>
+        <span class="ep-goal-summary-val" id="ep-progress-total-change"></span>
+      </div>
+      <div class="ep-goal-row">
+        <span class="ep-goal-name">Avg Weekly Change</span>
+        <span class="ep-goal-summary-val" id="ep-progress-weekly-avg"></span>
+      </div>
+      <div class="ep-plateau-note" id="ep-plateau-note" style="display:none;"></div>
+    </div>
+
+    <div id="ep-goals-edit" style="display:none;">
     <div class="ep-card">
       <div class="ep-card-title">Goal</div>
       <div class="ep-goalmode-row">
@@ -1334,7 +1473,10 @@
     <div class="ep-card">
       <div class="ep-card-title-row">
         <div class="ep-card-title">Macros</div>
-        <button id="ep-recalc-macros-btn">Recalculate</button>
+        <div class="ep-card-title-actions">
+          <button id="ep-recalc-macros-btn">Recalculate</button>
+          <button id="ep-adjust-macros-btn">Adjust</button>
+        </div>
       </div>
       <div class="ep-goal-row">
         <span class="ep-goal-name">Calories <span class="ep-goal-name-sub">(auto)</span></span>
@@ -1342,26 +1484,29 @@
       </div>
       <div class="ep-goal-row">
         <span class="ep-goal-name">Protein (g)</span>
-        <input type="number" class="ep-goal-input" id="ep-goal-protein" min="0" inputmode="numeric" />
+        <input type="number" class="ep-goal-input ep-goal-input-readonly" id="ep-goal-protein" min="0" inputmode="numeric" readonly tabindex="-1" />
       </div>
       <div class="ep-goal-row">
         <span class="ep-goal-name">Carbs (g)</span>
-        <input type="number" class="ep-goal-input" id="ep-goal-carbs" min="0" inputmode="numeric" />
+        <input type="number" class="ep-goal-input ep-goal-input-readonly" id="ep-goal-carbs" min="0" inputmode="numeric" readonly tabindex="-1" />
       </div>
       <div class="ep-goal-row">
         <span class="ep-goal-name">Fat (g)</span>
-        <input type="number" class="ep-goal-input" id="ep-goal-fat" min="0" inputmode="numeric" />
+        <input type="number" class="ep-goal-input ep-goal-input-readonly" id="ep-goal-fat" min="0" inputmode="numeric" readonly tabindex="-1" />
       </div>
       <div class="ep-macro-warning" id="ep-macro-warning" style="display:none;"></div>
-      <div class="ep-profile-note">Calories recalculate automatically from Protein/Carbs/Fat. Protein defaults to 1g per lb of goal weight; all macros are editable.</div>
+      <div class="ep-profile-note">Calories recalculate automatically from Protein/Carbs/Fat. Protein defaults to 1g per lb of goal weight. Macros are locked to prevent accidental changes — tap Adjust to override them manually.</div>
     </div>
 
-    <div class="ep-profile-note">Theme is set in Train Hard's Profile &gt; Avatar screen and carries over automatically. More profile options coming soon.</div>
+    <button class="ep-modal-save-btn" id="ep-goals-save-btn" style="margin-bottom:16px;">Save</button>
+    </div>
+
     <div id="ep-sync-status-row" style="display:none;">
       <span id="ep-sync-dot"></span>
       <span id="ep-sync-status"></span>
     </div>
     <div class="ep-profile-note" id="ep-sync-note" style="display:none;">Not signed in — sign in via Train Hard's Profile screen to sync your nutrition data across devices.</div>
+    <button id="ep-tutorial-btn">Tutorial</button>
   </div>
 
   <!-- Recipes — full create/edit/delete for custom foods -->
@@ -1493,6 +1638,22 @@
     <div id="ep-rest-alert-title">Rest Complete</div>
     <div id="ep-rest-alert-sub">Tap to get back to Train Hard</div>
   </div>
+
+  <!-- Tutorial Popup — same visual system as Train Hard's own tutorial
+       (index.html). Auto-opens for signed-out users on every open; also
+       replayable via the Tutorial button on the Goals tab. -->
+  <div id="tutorial-overlay">
+    <button id="tutorial-exit-btn">Exit</button>
+    <div id="tutorial-box">
+      <div id="tutorial-step-body"></div>
+      <div id="tutorial-actions">
+        <button id="tutorial-back-btn">Back</button>
+        <button id="tutorial-next-btn">Next</button>
+      </div>
+    </div>
+  </div>
+  <div id="tutorial-highlight"></div>
+  <div id="tutorial-arrow">▼</div>
 </div>
 
 <!-- Numeric entry popup — attached to every number field on this page -->
@@ -1567,6 +1728,28 @@
     <div class="ep-modal-close-row">
       <button class="ep-modal-cancel-btn" id="ep-goalmode-confirm-cancel">Cancel</button>
       <button class="ep-modal-save-btn" id="ep-goalmode-confirm-ok" style="flex:1;width:auto;margin-top:0;">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<div class="ep-modal-overlay" id="ep-adjust-macros-modal">
+  <div class="ep-modal-box">
+    <div class="ep-modal-title">Adjust Macros Manually?</div>
+    <div class="ep-modal-subtitle" id="ep-adjust-macros-subtitle"></div>
+    <div class="ep-modal-close-row">
+      <button class="ep-modal-cancel-btn" id="ep-adjust-macros-cancel">Cancel</button>
+      <button class="ep-modal-save-btn" id="ep-adjust-macros-ok" style="flex:1;width:auto;margin-top:0;">Unlock</button>
+    </div>
+  </div>
+</div>
+
+<div class="ep-modal-overlay" id="ep-missed-yesterday-modal">
+  <div class="ep-modal-box">
+    <div class="ep-modal-title">Missed a Day?</div>
+    <div class="ep-modal-subtitle">Looks like you didn't log any food yesterday. Want to go back and add it now?</div>
+    <div class="ep-modal-close-row">
+      <button class="ep-modal-cancel-btn" id="ep-missed-yesterday-ignore">Ignore</button>
+      <button class="ep-modal-save-btn" id="ep-missed-yesterday-log" style="flex:1;width:auto;margin-top:0;">Log Yesterday</button>
     </div>
   </div>
 </div>
@@ -1799,8 +1982,12 @@
   if (window.visualViewport) window.visualViewport.addEventListener('resize', stabilizeViewport);
 
   document.getElementById('ep-back-btn').addEventListener('click', () => {
+    discardUnsavedGoalsEdits();
     location.href = 'index.html';
   });
+  // Covers closing the tab/PWA directly instead of using the in-app back
+  // button or nav bar — same "unsaved edits don't stick" rule either way.
+  window.addEventListener('beforeunload', () => discardUnsavedGoalsEdits());
 
   // ═══════════════════════════════════════════════════════════
   // TRAIN HARD REST TIMER — surfaced here too
@@ -1850,11 +2037,14 @@
     stats: 'stats-section',
   };
   function showTab(tab) {
+    // Leaving the Goals tab mid-edit (any other nav button) abandons
+    // whatever wasn't committed via Save, rather than leaving it applied.
+    if (tab !== 'profile' && goalsEditMode) discardUnsavedGoalsEdits();
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
     Object.entries(TAB_SECTION_IDS).forEach(([t, id]) => {
       document.getElementById(id).classList.toggle('active', t === tab);
     });
-    if (tab === 'profile') { renderGoalsForm(); renderSyncUI(); }
+    if (tab === 'profile') { renderGoalsPage(); renderSyncUI(); }
     if (tab === 'recipes') renderRecipesList();
     if (tab === 'stats') renderStats();
     if (tab === 'weight') {
@@ -1915,6 +2105,35 @@
     localStorage.setItem(NUTRITION_KEY, JSON.stringify(data));
     markNutritionDataChanged();
   }
+  // Runs once when the page loads (i.e. when the user actually navigates
+  // here from Train Hard), not on every in-app tab switch back to Eat
+  // Plenty — otherwise it'd nag on every tap between tabs in the same visit.
+  function checkMissedYesterday() {
+    if (tutorialActive) return; // don't pop this over the tutorial
+    const data = loadNutrition();
+    // No log history at all yet (brand-new user, or nothing logged ever) —
+    // there's no established habit to have "missed", so don't nag.
+    if (!Object.keys(data).length) return;
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const entries = data[dateKey(yesterday)];
+    if (entries && entries.length) return;
+    document.getElementById('ep-missed-yesterday-modal').classList.add('open');
+  }
+  document.getElementById('ep-missed-yesterday-ignore').addEventListener('click', () => {
+    document.getElementById('ep-missed-yesterday-modal').classList.remove('open');
+  });
+  document.getElementById('ep-missed-yesterday-modal').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('ep-missed-yesterday-modal')) {
+      document.getElementById('ep-missed-yesterday-modal').classList.remove('open');
+    }
+  });
+  document.getElementById('ep-missed-yesterday-log').addEventListener('click', () => {
+    document.getElementById('ep-missed-yesterday-modal').classList.remove('open');
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    jumpToDate(yesterday);
+  });
   function getLogForViewedDate() {
     const data = loadNutrition();
     return data[dateKey(viewedDate)] || [];
@@ -2372,6 +2591,10 @@
           <span class="ep-meal-label">${section.label}</span>
           <div class="ep-meal-header-right">
             <span class="ep-meal-subtotal" id="ep-meal-subtotal-${section.key}"></span>
+            <button class="ep-meal-copy-btn" id="ep-meal-copy-${section.key}" data-meal="${section.key}" data-label="${section.label}" title="Copy macros" aria-label="Copy ${section.label} macros" disabled>
+              <svg class="ep-copy-icon-default" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M4 16V4a2 2 0 0 1 2-2h10"/></svg>
+              <svg class="ep-copy-icon-done" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            </button>
             <button class="ep-meal-add-btn" data-meal="${section.key}" data-label="${section.label}">+ Add</button>
           </div>
         </div>
@@ -2382,8 +2605,55 @@
     container.querySelectorAll('.ep-meal-add-btn').forEach(btn => {
       btn.addEventListener('click', () => openAddChoiceModal(btn.dataset.meal, btn.dataset.label));
     });
+    container.querySelectorAll('.ep-meal-copy-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const totals = getMealTotals(btn.dataset.meal);
+        const text = `Total Calories: ${Math.round(totals.cals)}\nProtein: ${Math.round(totals.protein)}\nCarbs: ${Math.round(totals.carbs)}\nFats: ${Math.round(totals.fat)}`;
+        copyTextToClipboard(text).then(() => {
+          btn.classList.add('copied');
+          setTimeout(() => btn.classList.remove('copied'), 1200);
+        }).catch(() => {});
+      });
+    });
   }
   buildMealSectionsDom();
+
+  // navigator.clipboard needs a secure context (https/localhost) — a plain
+  // file:// page doesn't qualify, so fall back to the old execCommand('copy')
+  // textarea trick there.
+  function copyTextToClipboard(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      return navigator.clipboard.writeText(text);
+    }
+    return new Promise((resolve, reject) => {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.cssText = 'position:fixed;top:-9999px;left:-9999px;';
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      try {
+        document.execCommand('copy') ? resolve() : reject(new Error('execCommand copy failed'));
+      } catch (err) {
+        reject(err);
+      } finally {
+        document.body.removeChild(ta);
+      }
+    });
+  }
+
+  function getMealTotals(sectionKey) {
+    const log = getLogForViewedDate();
+    return log
+      .filter(entry => entry.meal === sectionKey)
+      .reduce((totals, entry) => {
+        totals.cals += entry.cals || 0;
+        totals.protein += entry.protein || 0;
+        totals.carbs += entry.carbs || 0;
+        totals.fat += entry.fat || 0;
+        return totals;
+      }, { cals: 0, protein: 0, carbs: 0, fat: 0 });
+  }
 
   function renderMeals() {
     const log = getLogForViewedDate();
@@ -2430,9 +2700,11 @@
         });
       }
 
-      const subtotalCals = items.reduce((sum, { entry }) => sum + (entry.cals || 0), 0);
-      document.getElementById(`ep-meal-subtotal-${section.key}`).textContent =
-        items.length ? `${Math.round(subtotalCals)} cal` : '';
+      const totals = getMealTotals(section.key);
+      document.getElementById(`ep-meal-subtotal-${section.key}`).textContent = items.length
+        ? `${Math.round(totals.cals)} cal · ${Math.round(totals.protein)}p · ${Math.round(totals.carbs)}c · ${Math.round(totals.fat)}f`
+        : '';
+      document.getElementById(`ep-meal-copy-${section.key}`).disabled = !items.length;
     });
   }
 
@@ -3282,6 +3554,28 @@
   // ═══════════════════════════════════════════════════════════
   const GOAL_MODE_NAMES = { bulk: 'Bulk', cut: 'Cut', maintain: 'Maintain' };
   const INTENSITY_DELTA = { mild: 250, aggressive: 500 };
+  let goalsEditMode = false;
+  let macrosLocked = true;
+  const PLATEAU_THRESHOLD_LBS_PER_WEEK = 0.5;
+  function renderGoalsPage() {
+    document.getElementById('ep-goals-summary').style.display = goalsEditMode ? 'none' : '';
+    document.getElementById('ep-goals-edit').style.display = goalsEditMode ? '' : 'none';
+    renderGoalsForm();
+  }
+  // Every field inside the edit form saves to GOALS_KEY the instant it
+  // changes (so nothing's lost if the app crashes mid-edit), which means
+  // "discard" can't just be "don't save" — it has to actively roll GOALS_KEY
+  // back to what it was when Edit was pressed. goalsSnapshot holds that
+  // pre-edit copy for the duration of the edit session; null whenever
+  // there's nothing to roll back (not editing, or already saved).
+  let goalsSnapshot = null;
+  function discardUnsavedGoalsEdits() {
+    if (!goalsSnapshot) return;
+    saveGoals(goalsSnapshot);
+    goalsSnapshot = null;
+    goalsEditMode = false;
+    macrosLocked = true;
+  }
 
   function goalCalorieDelta(goals) {
     if (goals.mode === 'maintain') return 0;
@@ -3292,6 +3586,86 @@
     const log = loadWeightLog();
     const keys = Object.keys(log).sort();
     return keys.length ? log[keys[keys.length - 1]] : null;
+  }
+  function earliestLoggedWeight() {
+    const log = loadWeightLog();
+    const keys = Object.keys(log).sort();
+    return keys.length ? log[keys[0]] : null;
+  }
+  // Buckets logged weight into consecutive 7-day windows starting from the
+  // first-ever entry, summing each window's entries and dividing by 7 (not
+  // by however many days were actually logged) — a deliberately simple
+  // "weekly average" the user asked for, not a per-logged-day mean.
+  function computeWeeklyWeightAverages() {
+    const log = loadWeightLog();
+    const entries = Object.keys(log)
+      .map(dateStr => ({ dateStr, weight: log[dateStr] }))
+      .sort((a, b) => a.dateStr.localeCompare(b.dateStr));
+    if (!entries.length) return [];
+    const [y0, m0, d0] = entries[0].dateStr.split('-').map(Number);
+    const startDate = new Date(y0, m0 - 1, d0);
+    const weekSums = new Map();
+    entries.forEach(({ dateStr, weight }) => {
+      const [y, m, d] = dateStr.split('-').map(Number);
+      const days = Math.round((new Date(y, m - 1, d) - startDate) / 86400000);
+      const weekIdx = Math.floor(days / 7);
+      weekSums.set(weekIdx, (weekSums.get(weekIdx) || 0) + weight);
+    });
+    return [...weekSums.keys()].sort((a, b) => a - b).map(weekIdx => weekSums.get(weekIdx) / 7);
+  }
+  function computeAvgWeeklyChange() {
+    const weekAvgs = computeWeeklyWeightAverages();
+    if (weekAvgs.length < 2) return null;
+    return (weekAvgs[weekAvgs.length - 1] - weekAvgs[0]) / (weekAvgs.length - 1);
+  }
+  // Looks only at the most recent N logged weeks (not the whole history) so
+  // an early fast-loss stretch doesn't mask a plateau that started later.
+  function computeRecentWeeklyChange(weekCount) {
+    const weekAvgs = computeWeeklyWeightAverages();
+    if (weekAvgs.length < weekCount) return null;
+    const recent = weekAvgs.slice(-weekCount);
+    return (recent[recent.length - 1] - recent[0]) / (recent.length - 1);
+  }
+  function renderProgressCard() {
+    const goals = loadGoals();
+    const card = document.getElementById('ep-progress-card');
+    const startWeight = goals.startWeight != null ? goals.startWeight : earliestLoggedWeight();
+    const currentWeight = latestLoggedWeight();
+    if (startWeight == null || currentWeight == null) {
+      card.style.display = 'none';
+      return;
+    }
+    card.style.display = '';
+    document.getElementById('ep-progress-current').textContent = `${currentWeight} lbs`;
+
+    const totalChange = currentWeight - startWeight;
+    document.getElementById('ep-progress-total-change').textContent =
+      `${totalChange > 0 ? '+' : ''}${totalChange.toFixed(1)} lbs`;
+
+    const avgWeekly = computeAvgWeeklyChange();
+    document.getElementById('ep-progress-weekly-avg').textContent = avgWeekly == null
+      ? 'Need 2+ weeks of data'
+      : `${avgWeekly > 0 ? '+' : ''}${avgWeekly.toFixed(1)} lbs/week`;
+
+    const barWrap = document.getElementById('ep-progress-bar-wrap');
+    if (goals.goalWeight != null && goals.goalWeight !== startWeight) {
+      barWrap.style.display = '';
+      const pct = Math.max(0, Math.min(100, ((currentWeight - startWeight) / (goals.goalWeight - startWeight)) * 100));
+      document.getElementById('ep-progress-bar-fill').style.width = `${pct}%`;
+      document.getElementById('ep-progress-start-label').textContent = `${Math.round(startWeight)} lbs`;
+      document.getElementById('ep-progress-goal-label').textContent = `${Math.round(goals.goalWeight)} lbs goal`;
+    } else {
+      barWrap.style.display = 'none';
+    }
+
+    const plateauEl = document.getElementById('ep-plateau-note');
+    const recentChange = computeRecentWeeklyChange(3);
+    if (goals.mode !== 'maintain' && recentChange != null && Math.abs(recentChange) < PLATEAU_THRESHOLD_LBS_PER_WEEK) {
+      plateauEl.textContent = `Your weight has barely moved over your last 3 logged weeks (${recentChange > 0 ? '+' : ''}${recentChange.toFixed(1)} lbs/wk) — that looks like a plateau. Consider adjusting your macros below.`;
+      plateauEl.style.display = '';
+    } else {
+      plateauEl.style.display = 'none';
+    }
   }
   function computeAutoMacros(goals) {
     const target = goals.maintenanceCalories + goalCalorieDelta(goals);
@@ -3305,6 +3679,7 @@
     const goals = loadGoals();
     Object.assign(goals, computeAutoMacros(goals));
     saveGoals(goals);
+    macrosLocked = true;
     renderGoalsForm();
     renderTotals();
   }
@@ -3352,6 +3727,16 @@
     document.getElementById('ep-goal-fat').value = goals.fat;
     renderMacroWarning(goals, macroCalories, target);
 
+    ['protein', 'carbs', 'fat'].forEach(key => {
+      const el = document.getElementById(`ep-goal-${key}`);
+      el.readOnly = macrosLocked;
+      el.tabIndex = macrosLocked ? -1 : 0;
+      el.classList.toggle('ep-goal-input-readonly', macrosLocked);
+      el.dataset.epLocked = macrosLocked ? 'true' : 'false';
+    });
+    document.getElementById('ep-adjust-macros-btn').textContent = macrosLocked ? 'Adjust' : 'Lock';
+    document.getElementById('ep-adjust-macros-btn').classList.toggle('ep-adjust-active', !macrosLocked);
+
     document.querySelectorAll('.ep-duration-btn').forEach(b => b.classList.toggle('active', b.dataset.duration === goals.durationMode));
     document.getElementById('ep-duration-weeks-row').style.display = goals.durationMode === 'weeks' ? '' : 'none';
     document.getElementById('ep-duration-date-row').style.display = goals.durationMode === 'date' ? '' : 'none';
@@ -3376,6 +3761,9 @@
       const days = Math.round((durationEnd - today) / 86400000);
       durationNoteEl.textContent = days <= 0 ? 'Target date has passed.' : `${(days / 7).toFixed(1)} weeks from today`;
     }
+
+    renderGoalsSummary(goals, target, durationEnd);
+    renderProgressCard();
   }
   function computeDurationEndDate(goals) {
     if (goals.durationMode === 'date') {
@@ -3385,6 +3773,33 @@
     const d = new Date(today);
     d.setDate(d.getDate() + weeks * 7);
     return d;
+  }
+  function renderGoalsSummary(goals, target, durationEnd) {
+    const intensityLabel = goals.intensity === 'custom'
+      ? `Custom (${goals.customDelta || 0} cal)`
+      : (goals.intensity === 'mild' ? 'Mild' : 'Aggressive');
+    document.getElementById('ep-summary-mode').textContent = goals.mode === 'maintain'
+      ? GOAL_MODE_NAMES[goals.mode]
+      : `${GOAL_MODE_NAMES[goals.mode]} · ${intensityLabel}`;
+    document.getElementById('ep-summary-calories').textContent = `${Math.round(target)} cal/day`;
+    document.getElementById('ep-summary-macros').textContent =
+      `${Math.round(goals.protein)}p · ${Math.round(goals.carbs)}c · ${Math.round(goals.fat)}f`;
+
+    const startWeight = goals.startWeight != null ? goals.startWeight : latestLoggedWeight();
+    document.getElementById('ep-summary-weight').textContent = (startWeight != null || goals.goalWeight != null)
+      ? `${startWeight != null ? Math.round(startWeight) : '—'} → ${goals.goalWeight != null ? Math.round(goals.goalWeight) : '—'} lbs`
+      : 'Not set';
+
+    const durationEl = document.getElementById('ep-summary-duration');
+    if (goals.durationMode === 'date') {
+      durationEl.textContent = durationEnd
+        ? durationEnd.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
+        : 'Not set';
+    } else {
+      durationEl.textContent = durationEnd
+        ? `${goals.durationWeeks || 6} wks · ends ${durationEnd.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}`
+        : `${goals.durationWeeks || 6} wks`;
+    }
   }
 
   ['protein', 'carbs', 'fat'].forEach(key => {
@@ -3400,6 +3815,44 @@
     });
   });
   document.getElementById('ep-recalc-macros-btn').addEventListener('click', applyAutoMacros);
+  document.getElementById('ep-goals-edit-btn').addEventListener('click', () => {
+    goalsSnapshot = JSON.parse(JSON.stringify(loadGoals()));
+    goalsEditMode = true;
+    macrosLocked = true;
+    renderGoalsPage();
+  });
+  document.getElementById('ep-goals-save-btn').addEventListener('click', () => {
+    goalsSnapshot = null;
+    goalsEditMode = false;
+    macrosLocked = true;
+    renderGoalsPage();
+  });
+
+  document.getElementById('ep-adjust-macros-btn').addEventListener('click', () => {
+    if (!macrosLocked) {
+      macrosLocked = true;
+      renderGoalsForm();
+      return;
+    }
+    const goals = loadGoals();
+    const recentChange = computeRecentWeeklyChange(3);
+    const plateaued = goals.mode !== 'maintain' && recentChange != null && Math.abs(recentChange) < PLATEAU_THRESHOLD_LBS_PER_WEEK;
+    document.getElementById('ep-adjust-macros-subtitle').textContent = plateaued
+      ? `Your weight has barely moved over your last 3 logged weeks (${recentChange > 0 ? '+' : ''}${recentChange.toFixed(1)} lbs/wk) — that's a plateau, and a reasonable time to adjust. Manual changes stop auto-recalculating until you tap Recalculate again.`
+      : `You haven't shown signs of a plateau yet — recalculated macros are usually the better call. Only continue if you're sure you want to override them manually.`;
+    document.getElementById('ep-adjust-macros-modal').classList.add('open');
+  });
+  document.getElementById('ep-adjust-macros-cancel').addEventListener('click', () => {
+    document.getElementById('ep-adjust-macros-modal').classList.remove('open');
+  });
+  document.getElementById('ep-adjust-macros-modal').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('ep-adjust-macros-modal')) document.getElementById('ep-adjust-macros-modal').classList.remove('open');
+  });
+  document.getElementById('ep-adjust-macros-ok').addEventListener('click', () => {
+    macrosLocked = false;
+    document.getElementById('ep-adjust-macros-modal').classList.remove('open');
+    renderGoalsForm();
+  });
 
   let pendingGoalMode = null;
   document.querySelectorAll('.ep-goalmode-btn').forEach(btn => {
@@ -3605,6 +4058,7 @@
   // Opening the Weight tab jumps viewedDate to today (same as Eat Plenty),
   // so this checks whether *today* specifically still needs an entry.
   function maybePromptWeightToday() {
+    if (tutorialActive) return; // don't pop the numpad over the Weight tutorial step
     const log = loadWeightLog();
     if (log[dateKey(today)] != null) return;
     const inp = document.getElementById('ep-weight-input');
@@ -3657,7 +4111,19 @@
       const label = new Date(yr, mo - 1, day).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
       const row = document.createElement('div');
       row.className = 'ep-weight-row';
-      row.innerHTML = `<span class="ep-weight-row-date">${label}</span><span class="ep-weight-row-val">${weight} lbs</span>`;
+      row.innerHTML = `
+        <span class="ep-weight-row-date">${label}</span>
+        <div class="ep-weight-row-right">
+          <span class="ep-weight-row-val">${weight} lbs</span>
+          <button class="ep-log-delete" aria-label="Delete weight entry">&times;</button>
+        </div>
+      `;
+      row.querySelector('.ep-log-delete').addEventListener('click', () => {
+        const log = loadWeightLog();
+        delete log[dateStr];
+        saveWeightLog(log);
+        renderWeightTab();
+      });
       listEl.appendChild(row);
     });
   }
@@ -3854,6 +4320,11 @@
       inp.__epNumpadLabel = label;
       if (nextInp !== undefined) inp.__epNumpadNext = nextInp;
       inp.addEventListener('pointerdown', (e) => {
+        // Opt-in lock some callers (e.g. the Goals macro fields) toggle via
+        // dataset.epLocked — readOnly alone can't stop this, since it's the
+        // pointerdown handler itself (not native input behavior) that opens
+        // the popup.
+        if (inp.dataset.epLocked === 'true') return;
         e.preventDefault();
         // preventDefault above stops the browser's default focus handoff, so
         // a text field the OS keyboard is still open for (e.g. Food Name)
@@ -3895,15 +4366,28 @@
   attachEpNumpad(document.getElementById('ep-create-food-fat'), 'Fat (g)');
   attachEpNumpad(document.getElementById('ep-log-custom-amount'), 'Amount');
 
+  // Tutorial logic (TUTORIAL_STEPS, positioning, lifecycle, button wiring)
+  // now lives in eat-plenty-tutorial.js, loaded below — see that file to
+  // add/edit steps. checkForTutorial() and checkMissedYesterday() are
+  // sequenced together right below since only one nag should show per open.
+
   // ═══════════════════════════════════════════════════════════
   updateDateNav();
   renderTotals();
   renderMeals();
   initCloudSync();
+  // checkMissedYesterday() only runs once we know the tutorial isn't about
+  // to take over the screen — otherwise its modal could pop up right on
+  // top of (or right before) the tutorial's own first step.
+  setTimeout(async () => {
+    const tutorialShown = await checkForTutorial();
+    if (!tutorialShown) checkMissedYesterday();
+  }, 500);
 
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js').catch(() => {});
   }
 </script>
+<script src="eat-plenty-tutorial.js"></script>
 </body>
 </html>

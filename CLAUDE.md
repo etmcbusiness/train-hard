@@ -25,6 +25,29 @@ This must happen for every push to this repo, regardless of which
 conversation/session initiated it — it is not optional and does not need to
 be re-requested by the user each time.
 
+## Required tutorial-touch prompt
+
+This app has an in-app tutorial system, isolated in its own files so it can
+be updated independently of the rest of the app: `tutorial.js` (the main
+Train Hard walkthrough, plugged into `index.html`), `eat-plenty-tutorial.js`
+(the Eat Plenty walkthrough), and `tutorial.css` (shared visual styling for
+both). See each file's own header comment for how it plugs into its host
+page.
+
+Any time the tutorial is referenced in any way in a conversation about this
+project — asking about it, asking to change it, wondering if it's stale,
+etc. — read `tutorial.js`, `eat-plenty-tutorial.js`, and `tutorial.css`
+first, then ask the user whether they want to:
+
+1. Review the current tutorial (walk through what it currently covers), or
+2. Edit/re-adjust the tutorial to account for any UI changes or additional
+   functions/features added since it was last updated.
+
+Don't skip straight to editing or explaining without asking this first —
+this must happen every time the tutorial comes up, regardless of which
+conversation/session it's in, the same way the pre-push changelog workflow
+above is not optional and doesn't need to be re-requested.
+
 ## Other conventions
 
 - `sw.js`'s `CACHE_VERSION` only needs bumping when the `APP_SHELL` file list
