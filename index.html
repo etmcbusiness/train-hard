@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#000000" />
-  <meta name="app-version" content="111" />
+  <meta name="app-version" content="112" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -21105,7 +21105,16 @@ function lockNumpadKeysUntilSettled(panel, keys) {
   let baseSettled = false;
   let unlocked = false;
   let quietTimer = null;
+  let hardTimer = null;
   let vvAttached = false;
+  const startedAt = Date.now();
+  // True last-resort ceiling — if a still-collapsing keyboard keeps
+  // visualViewport firing resize events past the normal 400ms hard cap
+  // below, armHardCap keeps pushing that cap out right along with it
+  // (same signal armQuietWindow already reacts to) instead of unlocking
+  // keys mid-collapse. This absolute cap is what guarantees keys can never
+  // stay locked forever if something never settles.
+  const ABSOLUTE_CAP_MS = 1200;
 
   function finalUnlock() {
     if (unlocked) return;
@@ -21122,6 +21131,12 @@ function lockNumpadKeysUntilSettled(panel, keys) {
     quietTimer = setTimeout(finalUnlock, 100);
   }
 
+  function armHardCap(delayFromNow) {
+    clearTimeout(hardTimer);
+    const remaining = Math.max(0, Math.min(delayFromNow, ABSOLUTE_CAP_MS - (Date.now() - startedAt)));
+    hardTimer = setTimeout(finalUnlock, remaining);
+  }
+
   function onBaseSettled() {
     if (baseSettled) return;
     baseSettled = true;
@@ -21134,7 +21149,11 @@ function lockNumpadKeysUntilSettled(panel, keys) {
   }
 
   function onTransitionEnd(e) { if (e.target === panel && e.propertyName === 'transform') onBaseSettled(); }
-  function onViewportResize() { armQuietWindow(); } // keyboard still collapsing — push the unlock back out
+  // Keyboard still collapsing — push both the quiet window AND the hard cap
+  // back out (bounded by ABSOLUTE_CAP_MS), so a keyboard that's genuinely
+  // still resizing the viewport past 400ms can't get its keys unlocked out
+  // from under it mid-collapse, landing a tap on a not-yet-settled key.
+  function onViewportResize() { armQuietWindow(); armHardCap(400); }
 
   panel.addEventListener('transitionend', onTransitionEnd);
   setTimeout(onBaseSettled, 300); // fallback if transitionend never fires (e.g. reduced-motion)
@@ -21146,8 +21165,10 @@ function lockNumpadKeysUntilSettled(panel, keys) {
   // quickly right after it appeared — very common when entering cardio
   // durations back-to-back across several sets. 400ms still covers the
   // panel's real 250ms slide-in plus a buffer, without ever locking taps out
-  // for anywhere near a full second.
-  var hardTimer = setTimeout(finalUnlock, 400);
+  // for anywhere near a full second in the common case (no OS keyboard
+  // involved) — armHardCap above only extends past that when a keyboard
+  // collapse is the actual reason it's still moving.
+  armHardCap(400);
 }
 
 // Numpad keys register on `click`, which fires at the touch's LIFT-OFF
