@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#000000" />
-  <meta name="app-version" content="112" />
+  <meta name="app-version" content="113" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -6824,11 +6824,18 @@
     updateNavVisibility();
   })();
 </script>
+<!-- three.js + its GLTFLoader/OrbitControls/BufferGeometryUtils addons are vendored
+     locally under vendor/three/ (pulled from the jsdelivr CDN build, unmodified)
+     instead of imported straight from jsdelivr. Same-origin files get precached
+     by sw.js's APP_SHELL install step, so app boot never depends on a 3rd-party
+     CDN responding — that dependency was the main cause of slow/stalled first
+     paint on flaky connections and of the app failing to boot at all offline
+     before the CDN copy had ever been cached. -->
 <script type="importmap">
 {
   "imports": {
-    "three": "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js",
-    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/"
+    "three": "./vendor/three/three.module.js",
+    "three/addons/": "./vendor/three/addons/"
   }
 }
 </script>
@@ -6844,7 +6851,14 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 // bloom pass (no postprocessing addon imports needed — see "search CORE
 // AURA" further down, once spinGroup exists to serve as auraAnchor).
 import { EXTENDED_REST_STAGE_1_SEC, EXTENDED_REST_STAGE_2_SEC, EXTENDED_REST_STAGE_3_SEC, EXTENDED_REST_ASK_SEC } from './extended-rest-notifications.js';
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.110.8';
+// Vendored locally (vendor/supabase/, bundled from esm.sh) instead of importing
+// from esm.sh directly — the live esm.sh entry point fans out into 7+ chained
+// module requests (auth-js, postgrest-js, realtime-js, storage-js, functions-js,
+// node polyfills...) that serialize on slow/flaky connections and can stall the
+// entire app boot, since this whole file is one blocking module script. Same
+// reasoning as vendoring three.js below: same-origin + precached by sw.js means
+// the app never depends on a 3rd-party CDN being reachable just to start up.
+import { createClient } from './vendor/supabase/supabase-js.bundle.mjs';
 
 // ═══════════════════════════════════════════════════════════
 // CLOUD (Supabase) — auth + profile sync
@@ -7349,6 +7363,18 @@ function countedSets(sets) {
 // project's CLAUDE.md for the required pre-push changelog-confirmation step.
 // ═══════════════════════════════════════════════════════════
 const UPDATE_LOG = [
+  {
+    version: '113',
+    date: 'Aug 31, 2026',
+    title: 'Offline Reliability, Faster Loading & PR Fixes',
+    bullets: [
+      'The exercise PR screen now shows an estimated one-rep max (E1RM) as its own line under your Max PR.',
+      "Added \"Bands\" as a new exercise category when adding or editing exercises.",
+      'Fixed the app failing to load or getting stuck for a long time when you have no wifi or cell signal — it now works fully offline.',
+      'The app loads noticeably faster for everyone, since it no longer has to download the 3D avatar engine and account-sync library from the internet every time you open it.',
+      "Fixed the live PR indicator under an exercise's notes sometimes showing another exercise's PR (most noticeable after reordering exercises mid-workout) — it now always reflects the correct exercise.",
+    ]
+  },
   {
     version: '111',
     date: 'Aug 28, 2026',
@@ -13804,6 +13830,12 @@ function openExDetail(exName, muscle, readOnly = false) {
         maxRow.className = 'exd-pr-row exd-pr-max';
         maxRow.innerHTML = `<span class="exd-pr-label">Max</span><span class="exd-pr-val">${mx.reps}r @ ${mx.weight} ${weightUnitLabel()}</span><span class="exd-pr-date">${fmtPRDate(mx.date)}</span>`;
         grid.appendChild(maxRow);
+
+        const maxE1rm = Math.round(estimate1RM(mx.weight, mx.reps));
+        const e1rmRow = document.createElement('div');
+        e1rmRow.className = 'exd-pr-row';
+        e1rmRow.innerHTML = `<span class="exd-pr-label">E1RM</span><span class="exd-pr-val">~${maxE1rm} ${weightUnitLabel()}</span><span class="exd-pr-date">${fmtPRDate(mx.date)}</span>`;
+        grid.appendChild(e1rmRow);
       }
 
       body.appendChild(grid);
@@ -16251,6 +16283,16 @@ function openExerciseReplacePicker(idx, block) {
 // been lifted before, reports the fewest reps at this weight that would
 // beat the existing per-rep-count record instead.
 function updateCurrentLbsPR(exIdx, block) {
+  // Re-derive from the block's live data attribute instead of trusting the
+  // passed-in exIdx: this fires from set-input closures created back when
+  // the sets were rendered, and a drag-reorder anywhere in the list
+  // renumbers every block's dataset.sessionIdx + the session array (see
+  // setupDragReorder's onDrop below) without those older closures ever
+  // re-running — so their captured exIdx goes stale and used to point at
+  // whatever exercise now sits at that old position, showing that
+  // exercise's PR line instead of this one's. block itself never gets
+  // recreated on reorder, so its dataset.sessionIdx is always current.
+  exIdx = parseInt(block.dataset.sessionIdx);
   const ex = session[exIdx];
   if (!ex || ex.expType === 'exposure' || ex.fieldKind) return;
   const curPrEl = block.querySelector('.train-ex-cur-pr');
@@ -16293,6 +16335,10 @@ function updateCurrentLbsPR(exIdx, block) {
 // compared against. Plain Distance exercises don't get a live indicator —
 // there's no discrete rep-style bracket to compare a live pace against.
 function updateCurrentCardioPR(exIdx, block) {
+  // See the matching comment in updateCurrentLbsPR above — this also fires
+  // from set-input closures that can outlive a drag-reorder, so the passed
+  // exIdx can't be trusted; re-read the block's live index instead.
+  exIdx = parseInt(block.dataset.sessionIdx);
   const ex = session[exIdx];
   if (!ex || !ex.fieldKind) return;
   const curPrEl = block.querySelector('.train-ex-cur-pr');
@@ -18824,7 +18870,7 @@ document.getElementById('focus-picker-search').addEventListener('input', e => {
 
 const NEX_CATEGORIES = [
   'Barbell','Dumbbell','Cable Machine','Plate Loaded Machine',
-  'Weighted Body Weight','Assisted Body Weight','Reps Only',
+  'Weighted Body Weight','Assisted Body Weight','Bands','Reps Only',
   'Duration','Duration + Weight','Distance','Weighted + Distance'
 ];
 

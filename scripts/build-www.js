@@ -17,6 +17,7 @@ const INCLUDE = [
   'sw.js',
   'Aura',
   'assets',
+  'vendor',
 ];
 
 function copyRecursive(src, dst) {

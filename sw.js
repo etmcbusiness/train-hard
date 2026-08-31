@@ -3,14 +3,17 @@
 // still preferring fresh content whenever it's actually online. Bump
 // CACHE_VERSION when the APP_SHELL list below changes, to drop stale
 // entries from old versions.
-const CACHE_VERSION = 'v43';
+const CACHE_VERSION = 'v44';
 const CACHE_NAME = `trainhard-${CACHE_VERSION}`;
 
-// The bare minimum needed for the app to boot at all with no network.
-// Everything else — sound effects, 3D models, backgrounds, the pinned
-// three.js CDN modules — gets cached automatically the first time it's
-// fetched while online, via the runtime handler below, so a normal
-// at-home/on-wifi session is enough to make the next offline session work.
+// The bare minimum needed for the app to boot at all with no network,
+// including a full first-ever launch that has never been online before —
+// this is why the vendored three.js/supabase-js modules are listed
+// explicitly instead of relying on the runtime cache-first handler below to
+// pick them up "the first time they're fetched." Everything else — sound
+// effects, 3D models, backgrounds — still relies on that runtime caching,
+// so a normal at-home/on-wifi session is enough to make the next offline
+// session work for those.
 const APP_SHELL = [
   './',
   './index.html',
@@ -26,6 +29,16 @@ const APP_SHELL = [
   './assets/icons/icon-192.png',
   './assets/icons/icon-512.png',
   './assets/icons/apple-touch-icon.png',
+  './vendor/three/three.module.js',
+  './vendor/three/addons/loaders/GLTFLoader.js',
+  './vendor/three/addons/utils/BufferGeometryUtils.js',
+  './vendor/three/addons/controls/OrbitControls.js',
+  './vendor/supabase/supabase-js.bundle.mjs',
+  './vendor/supabase/process.mjs',
+  './vendor/supabase/buffer.mjs',
+  './vendor/supabase/events.mjs',
+  './vendor/supabase/tty.mjs',
+  './vendor/supabase/async_hooks.mjs',
 ];
 
 self.addEventListener('install', (e) => {
@@ -81,20 +94,40 @@ self.addEventListener('fetch', (e) => {
     // code when online (the in-app version check relies on getting a fresh
     // index.html to notice an update), falling back to whatever's cached
     // when there's no connection at all.
-    e.respondWith(
+    e.respondWith((async () => {
+      const cached = await caches.match(req);
       // cache: 'no-store' bypasses the browser's ordinary HTTP cache — a plain
       // fetch() here would honor the host's Cache-Control headers and could
       // silently hand back a stale index.html/JS even though this is meant to
       // be "network-first", which is exactly how installed PWAs kept running
       // old friend-request code after a push that "worked" in a fresh tab.
-      fetch(req, { cache: 'no-store' }).then(res => {
+      const networkPromise = fetch(req, { cache: 'no-store' }).then(res => {
         const copy = res.clone();
         caches.open(CACHE_NAME).then(c => c.put(req, copy));
         return res;
-      }).catch(() =>
-        caches.match(req).then(res => res || (isNavigation ? caches.match('./index.html') : undefined))
-      )
-    );
+      }).catch(() => null);
+
+      if (!cached) {
+        // Nothing to fall back to yet (first-ever launch) — network is the
+        // only option, however long it takes.
+        return (await networkPromise) || (isNavigation ? caches.match('./index.html') : undefined);
+      }
+
+      // On a weak/degraded connection ("lie-fi" — bars showing but requests
+      // stall) a fetch can sit unresolved far longer than a real timeout
+      // before it ever rejects, which used to leave the whole app stuck on
+      // a blank/loading screen even though a perfectly good cached copy was
+      // sitting right there — the .catch() above only helps once the
+      // request actually fails, not while it's silently hanging. Race it
+      // against a short timer instead: serve the cached copy the moment the
+      // network looks too slow to be usable, while letting the network
+      // request keep running in the background to refresh the cache for
+      // next time in case it does eventually complete.
+      return Promise.race([
+        networkPromise.then(res => res || cached),
+        new Promise(resolve => setTimeout(() => resolve(cached), 2500)),
+      ]);
+    })());
     return;
   }
 
