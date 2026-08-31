@@ -12613,15 +12613,23 @@ function prepModelScene(mdl, file) {
   return { scene: mdl, meshMap: meshMapOut, meshes, baseScale: autoScale, baseCenter: center.clone() };
 }
 function fetchModel(file) {
-  // These .glb files get replaced/edited in place during Model Testing
+  // Model Testing's .glb files get replaced/edited in place during local
   // iteration (same filename, new bytes) — a plain reload kept serving a
   // stale cached copy (missing e.g. a just-patched material) until a hard
   // reload forced a real re-fetch. `cache:'no-store'` alone isn't reliable
   // for file:// URLs (no real HTTP caching semantics to honor there), so
   // also cache-bust the URL itself with a per-page-load timestamp — a URL
   // that's never repeated can't be served from any cache, keyed by URL.
-  const cacheBustedFile = encodeURI(file) + (file.includes('?') ? '&' : '?') + '_cb=' + Date.now();
-  return fetch(cacheBustedFile, { cache: 'no-store' })
+  // Scoped to just that sandbox path: applying it to the real production
+  // model (assets/models/...) meant every load hit a brand-new never-cached
+  // URL, so the service worker's offline cache-first fallback could never
+  // have a matching entry to serve — the character just failed to load
+  // with no signal, even after a normal online session should have cached it.
+  const isModelTesting = file.startsWith('Model Testing/');
+  const fetchUrl = isModelTesting
+    ? encodeURI(file) + (file.includes('?') ? '&' : '?') + '_cb=' + Date.now()
+    : encodeURI(file);
+  return fetch(fetchUrl, isModelTesting ? { cache: 'no-store' } : {})
     .then(r => {
       if (!r.ok) throw new Error('HTTP ' + r.status);
       return r.arrayBuffer();
